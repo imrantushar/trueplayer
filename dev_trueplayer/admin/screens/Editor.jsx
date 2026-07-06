@@ -7,6 +7,7 @@ import AppearanceTab from './editor/AppearanceTab';
 import GatingTab from './editor/GatingTab';
 import SubscribeTab from './editor/SubscribeTab';
 import WebhooksTab from './editor/WebhooksTab';
+import LmsTab from './editor/LmsTab';
 import EmbedTab from './editor/EmbedTab';
 import PreviewPanel from './editor/PreviewPanel';
 import UpsellPanel from '../components/UpsellPanel';
@@ -17,6 +18,7 @@ const TABS = [
 	{ key: 'player', label: 'Player options', icon: '🎛️' },
 	{ key: 'appearance', label: 'Chapters & logo', icon: '🔖' },
 	{ key: 'gating', label: 'Questions & gating', icon: '✅', pro: true },
+	{ key: 'lms', label: 'Course (LMS)', icon: '🎓', pro: true },
 	{ key: 'subscribe', label: 'Subscribe', icon: '✉️', pro: true },
 	{ key: 'webhooks', label: 'Automation', icon: '🔗', pro: true },
 	{ key: 'embed', label: 'Embed', icon: '📋' },
@@ -24,6 +26,7 @@ const TABS = [
 
 const PRO_TAB_INFO = {
 	gating: { title: 'Watch-verification & quiz gating', features: [ 'Prove viewers actually watched (anti-skip)', 'Checkpoint & final quizzes', 'Lock the video on failure until re-watch' ] },
+	lms: { title: 'LMS course integration', features: [ 'Mark Academy lessons complete on watch', 'Gate playback by enrollment / purchase', 'Roll up to course certificates' ] },
 	subscribe: { title: 'Subscribe / email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] },
 	webhooks: { title: 'Automation & webhooks', features: [ 'Signed webhooks on every event', 'Zapier / gemcrm / zaplane ready' ] },
 };
@@ -113,6 +116,7 @@ export default function Editor( { id, onBack } ) {
 							{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } /> }
 							{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } /> }
 							{ tab === 'gating' && <GatingTab config={ config } patch={ patchConfig } /> }
+							{ tab === 'lms' && <LmsTab config={ config } patch={ patchConfig } /> }
 							{ tab === 'subscribe' && <SubscribeTab config={ config } patch={ patchConfig } /> }
 							{ tab === 'webhooks' && <WebhooksTab config={ config } patch={ patchConfig } /> }
 							{ tab === 'embed' && <EmbedTab video={ video } /> }
