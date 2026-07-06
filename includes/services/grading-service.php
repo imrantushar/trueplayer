@@ -1,0 +1,199 @@
+<?php
+
+namespace TruePlayer\Services;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+use TruePlayer\Subject;
+use TruePlayer\Helper;
+use TruePlayer\Events;
+
+/**
+ * Server-side quiz grading + lock enforcement. Correct answers live only here
+ * and in the stored config — never sent to the client.
+ *
+ * Fail policy `lock_retry_after_rewatch`: each fail consumes an attempt; when
+ * attempts run out the video locks and the coverage is reset so the viewer
+ * must re-watch to the threshold (ProgressService unlocks + resets attempts).
+ */
+class GradingService {
+
+	public static function attempts_table() {
+		global $wpdb;
+		return $wpdb->prefix . TRUEPLAYER_DB_PREFIX . '_quiz_attempts';
+	}
+
+	/**
+	 * Grade a submission for a checkpoint (`gate_id` = "checkpoint:<id>") or the
+	 * final quiz (`gate_id` = "final").
+	 *
+	 * @param array $answers Map of questionId => submitted answer.
+	 * @return array Sanitized verdict (never includes correct answers).
+	 */
+	public static function grade( $video_id, Subject $subject, $gate_id, array $answers ) {
+		// Quiz-gating is a pro feature.
+		if ( ! \TruePlayer\Pro::active() ) {
+			return [ 'error' => 'pro_required' ];
+		}
+		$gating    = ProgressService::gating_config( $video_id );
+		$quiz      = self::find_quiz( $gating, $gate_id );
+		$is_final  = ( 'final' === $gate_id );
+
+		if ( ! $quiz || empty( $quiz['questions'] ) ) {
+			return [ 'error' => 'quiz_not_found' ];
+		}
+
+		$questions   = $quiz['questions'];
+		$pass_pct    = isset( $quiz['passPercent'] ) ? (float) $quiz['passPercent'] : 70;
+		$total       = count( $questions );
+		$correct     = 0;
+		$per_q       = [];
+
+		foreach ( $questions as $q ) {
+			$qid   = $q['id'] ?? '';
+			$given = $answers[ $qid ] ?? null;
+			$ok    = self::is_correct( $q, $given );
+			$correct += $ok ? 1 : 0;
+			$per_q[ $qid ] = $ok; // correctness only — not the right answer
+		}
+
+		$score  = $total > 0 ? round( $correct / $total * 100, 2 ) : 0;
+		$passed = $score >= $pass_pct;
+
+		// Attempt bookkeeping.
+		$row       = ProgressService::get_row( $video_id, $subject );
+		$attempts  = (int) ( $row['attempts'] ?? 0 );
+		$attempt_no = $attempts + 1;
+
+		self::log_attempt( $video_id, $subject, $gate_id, $answers, $score, $passed, $attempt_no );
+
+		$payload_extra = [
+			'gate_id'    => $gate_id,
+			'score'      => $score,
+			'passed'     => $passed,
+			'attempt_no' => $attempt_no,
+		];
+
+		if ( $passed ) {
+			if ( $is_final ) {
+				ProgressService::upsert( $video_id, $subject, [ 'status' => 'completed', 'completed' => 1 ] );
+				Events::emit( 'quiz.passed', ProgressService::event_payload( $video_id, $subject, $payload_extra ) );
+				Events::emit( 'view.completed', ProgressService::event_payload( $video_id, $subject, [ 'coverage_percent' => (float) ( $row['percent'] ?? 0 ) ] ) );
+			} else {
+				Events::emit( 'checkpoint.passed', ProgressService::event_payload( $video_id, $subject, $payload_extra ) );
+			}
+			return [
+				'passed'    => true,
+				'score'     => $score,
+				'completed' => $is_final,
+				'perQuestion' => $per_q,
+			];
+		}
+
+		// Failed → consume an attempt.
+		$max_attempts = (int) $gating['maxAttempts'];
+		$locked       = false;
+		if ( $attempt_no >= $max_attempts ) {
+			// Lock + reset coverage so the retry requires a full re-watch.
+			ProgressService::upsert(
+				$video_id,
+				$subject,
+				[
+					'status'          => 'locked',
+					'attempts'        => $attempt_no,
+					'watched_ranges'  => wp_json_encode( [] ),
+					'watched_seconds' => 0,
+					'percent'         => 0,
+				]
+			);
+			$locked = true;
+			Events::emit( $is_final ? 'quiz.failed' : 'checkpoint.failed', ProgressService::event_payload( $video_id, $subject, $payload_extra ) );
+			Events::emit( 'video.locked', ProgressService::event_payload( $video_id, $subject, $payload_extra ) );
+		} else {
+			ProgressService::upsert( $video_id, $subject, [ 'attempts' => $attempt_no ] );
+			Events::emit( $is_final ? 'quiz.failed' : 'checkpoint.failed', ProgressService::event_payload( $video_id, $subject, $payload_extra ) );
+		}
+
+		return [
+			'passed'       => false,
+			'score'        => $score,
+			'locked'       => $locked,
+			'attemptsLeft' => max( 0, $max_attempts - $attempt_no ),
+			'perQuestion'  => $per_q,
+		];
+	}
+
+	private static function find_quiz( array $gating, $gate_id ) {
+		if ( 'final' === $gate_id ) {
+			return $gating['finalQuiz'] ?? null;
+		}
+		if ( 0 === strpos( $gate_id, 'checkpoint:' ) ) {
+			$cid = substr( $gate_id, strlen( 'checkpoint:' ) );
+			foreach ( (array) ( $gating['checkpoints'] ?? [] ) as $cp ) {
+				if ( (string) ( $cp['id'] ?? '' ) === (string) $cid ) {
+					return $cp;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Compare a submitted answer to the stored correct value. Supports mcq
+	 * (single or multi) and boolean questions. The "correct" marker may be an
+	 * option id, an array of ids, or per-option isCorrect flags.
+	 */
+	private static function is_correct( array $q, $given ) {
+		$type = $q['type'] ?? 'mcq';
+
+		if ( 'boolean' === $type ) {
+			$correct = $q['correct'] ?? ( $q['answer'] ?? null );
+			return self::bool( $given ) === self::bool( $correct );
+		}
+
+		// Determine the correct set of option ids.
+		$correct_ids = [];
+		if ( isset( $q['correct'] ) ) {
+			$correct_ids = is_array( $q['correct'] ) ? $q['correct'] : [ $q['correct'] ];
+		} elseif ( isset( $q['correctIndexes'] ) ) {
+			$correct_ids = (array) $q['correctIndexes'];
+		} elseif ( isset( $q['options'] ) && is_array( $q['options'] ) ) {
+			foreach ( $q['options'] as $opt ) {
+				if ( is_array( $opt ) && ! empty( $opt['isCorrect'] ) ) {
+					$correct_ids[] = $opt['id'] ?? '';
+				}
+			}
+		}
+
+		$given_ids   = is_array( $given ) ? $given : ( null === $given ? [] : [ $given ] );
+		$correct_ids = array_map( 'strval', $correct_ids );
+		$given_ids   = array_map( 'strval', $given_ids );
+		sort( $correct_ids );
+		sort( $given_ids );
+		return ! empty( $correct_ids ) && $correct_ids === $given_ids;
+	}
+
+	private static function bool( $v ) {
+		return filter_var( $v, FILTER_VALIDATE_BOOLEAN );
+	}
+
+	private static function log_attempt( $video_id, Subject $subject, $gate_id, array $answers, $score, $passed, $attempt_no ) {
+		global $wpdb;
+		$wpdb->insert(
+			self::attempts_table(),
+			[
+				'video_id'     => $video_id,
+				'gate_id'      => $gate_id,
+				'subject_type' => $subject->type,
+				'subject_id'   => $subject->id,
+				'answers'      => wp_json_encode( $answers ),
+				'score'        => $score,
+				'passed'       => $passed ? 1 : 0,
+				'attempt_no'   => $attempt_no,
+				'created_at'   => current_time( 'mysql', true ),
+			]
+		);
+	}
+}

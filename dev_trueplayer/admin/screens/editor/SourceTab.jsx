@@ -1,0 +1,70 @@
+import { Card, Field, Input, Select, Toggle, Button } from '../../components/UI';
+import { pickMedia } from '../../utils/media';
+import { isPro } from '../../pro';
+
+const TYPES = [
+	{ value: 'self', label: 'Self-hosted (media library)' },
+	{ value: 'youtube', label: 'YouTube' },
+	{ value: 'vimeo', label: 'Vimeo' },
+	{ value: 'url', label: 'External URL (mp4/webm)' },
+	{ value: 'bunny', label: 'Bunny.net Stream', pro: true },
+	{ value: 'hls', label: 'HLS stream (.m3u8)', pro: true },
+];
+
+export default function SourceTab( { config, patch } ) {
+	const source = config.source || { type: 'self' };
+	const set = ( partial ) => patch( { source: { ...source, ...partial } } );
+
+	return (
+		<Card className="p-6 max-w-2xl">
+			<Field label="Source type" hint={ ! isPro() ? 'Bunny.net & HLS streaming require TruePlayer Pro.' : undefined }>
+				<Select value={ source.type || 'self' } onChange={ ( e ) => set( { type: e.target.value } ) }>
+					{ TYPES.map( ( t ) => (
+						<option key={ t.value } value={ t.value } disabled={ t.pro && ! isPro() }>
+							{ t.label }{ t.pro && ! isPro() ? ' (Pro)' : '' }
+						</option>
+					) ) }
+				</Select>
+			</Field>
+
+			{ source.type === 'self' && (
+				<Field label="Video file" hint="Pick an uploaded video from the media library.">
+					<div className="flex gap-2">
+						<Input value={ source.src || '' } onChange={ ( e ) => set( { src: e.target.value } ) } placeholder="https://…/video.mp4" />
+						<Button variant="ghost" onClick={ () => pickMedia( 'video', ( url ) => set( { src: url } ) ) }>Media library</Button>
+					</div>
+				</Field>
+			) }
+
+			{ source.type === 'bunny' && (
+				<>
+					<Field label="Pull-zone hostname" hint="Your Bunny Stream CDN hostname, e.g. vz-abc123.b-cdn.net">
+						<Input value={ source.pullZone || '' } onChange={ ( e ) => set( { pullZone: e.target.value.replace( /^https?:\/\//, '' ).replace( /\/$/, '' ) } ) } placeholder="vz-abc123.b-cdn.net" />
+					</Field>
+					<Field label="Video ID" hint="The Bunny library video GUID. We build the HLS URL and play it with your custom controls.">
+						<Input value={ source.videoId || '' } onChange={ ( e ) => set( { videoId: e.target.value.trim() } ) } placeholder="e.g. 8f3b…-video-guid" />
+					</Field>
+				</>
+			) }
+
+			{ [ 'hls', 'youtube', 'vimeo', 'url' ].includes( source.type ) && (
+				<Field label={ source.type === 'youtube' || source.type === 'vimeo' ? 'Video URL or ID' : 'Media URL' }>
+					<Input value={ source.src || '' } onChange={ ( e ) => set( { src: e.target.value } ) } placeholder={ source.type === 'youtube' ? 'https://youtube.com/watch?v=…' : 'https://…' } />
+				</Field>
+			) }
+
+			<Field label="Poster image" hint="Shown before playback (optional).">
+				<div className="flex gap-2">
+					<Input value={ source.poster || '' } onChange={ ( e ) => set( { poster: e.target.value } ) } placeholder="https://…/poster.jpg" />
+					<Button variant="ghost" onClick={ () => pickMedia( 'image', ( url ) => set( { poster: url } ) ) }>Media library</Button>
+				</div>
+			</Field>
+
+			<Toggle
+				checked={ source.mediaType === 'audio' }
+				onChange={ ( v ) => set( { mediaType: v ? 'audio' : 'video' } ) }
+				label="Audio-only (podcast) player"
+			/>
+		</Card>
+	);
+}

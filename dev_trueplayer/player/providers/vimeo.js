@@ -1,0 +1,72 @@
+import { createEmitter } from './emitter';
+
+/**
+ * Vimeo provider via @vimeo/player (lazy-imported). Native controls hidden;
+ * our custom control bar drives it.
+ */
+export async function createVimeoProvider( container, source ) {
+	const Vimeo = ( await import( /* webpackChunkName: "vimeojs" */ '@vimeo/player' ) ).default;
+	const emitter = createEmitter();
+	const host = document.createElement( 'div' );
+	host.className = 'tp-media';
+	container.appendChild( host );
+
+	const id = source.videoId || ( source.src || '' ).match( /vimeo\.com\/(\d+)/ )?.[ 1 ] || source.src;
+	const player = new Vimeo( host, { id, controls: false, responsive: true, playsinline: true } );
+
+	let duration = 0;
+	let current = 0;
+	let paused = true;
+
+	await player.ready();
+	duration = await player.getDuration().catch( () => 0 );
+	emitter.emit( 'ready' );
+	emitter.emit( 'durationchange' );
+
+	player.on( 'timeupdate', ( d ) => {
+		current = d.seconds;
+		emitter.emit( 'timeupdate' );
+	} );
+	player.on( 'play', () => {
+		paused = false;
+		emitter.emit( 'play' );
+		emitter.emit( 'playing' );
+	} );
+	player.on( 'pause', () => {
+		paused = true;
+		emitter.emit( 'pause' );
+	} );
+	player.on( 'ended', () => emitter.emit( 'ended' ) );
+	player.on( 'bufferstart', () => emitter.emit( 'waiting' ) );
+
+	return {
+		kind: 'vimeo',
+		element: host,
+		capabilities: { pip: true, quality: false, rate: true, tracks: false },
+		on: emitter.on,
+		play: () => player.play(),
+		pause: () => player.pause(),
+		seek: ( t ) => player.setCurrentTime( t ),
+		setVolume: ( v ) => player.setVolume( v ),
+		setMuted: ( m ) => player.setMuted( m ),
+		setRate: ( r ) => player.setPlaybackRate( r ),
+		getCurrentTime: () => current,
+		getDuration: () => duration,
+		getBufferedEnd: () => current,
+		isPaused: () => paused,
+		isMuted: () => false,
+		getVolume: () => 1,
+		getRate: () => 1,
+		getQualities: () => [],
+		setQuality: () => {},
+		getTextTracks: () => [],
+		setTextTrack: () => {},
+		requestPiP: () => player.requestPictureInPicture(),
+		destroy: () => {
+			try {
+				player.destroy();
+			} catch ( e ) {}
+			emitter.clear();
+		},
+	};
+}

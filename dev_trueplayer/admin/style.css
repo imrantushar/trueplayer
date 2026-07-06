@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Scoped mini-preflight. Tailwind's preflight is disabled globally (so it
+   can't fight WP admin), which means raw elements keep UA borders + button
+   chrome. We re-add just the border/button reset, scoped to .tp-admin and at
+   ZERO specificity via :where() — so it beats the UA styles (author origin
+   wins over UA regardless of specificity) but loses to our own utilities
+   (bg-*, border-*) AND to the frontend player's own CSS in the preview. */
+@layer base {
+	:where( .tp-admin ) *,
+	:where( .tp-admin ) ::before,
+	:where( .tp-admin ) ::after {
+		border-width: 0;
+		border-style: solid;
+		border-color: #dedede;
+	}
+	:where( .tp-admin button ) {
+		background-color: transparent;
+		background-image: none;
+		padding: 0;
+		cursor: pointer;
+		font: inherit;
+		color: inherit;
+		line-height: normal;
+	}
+}
+
+/* StoreEngine-inspired admin shell: Poppins, crisp cards, calm surface. */
+.tp-admin {
+	font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--tp-primary: #008dff;
+	--tp-ink: #2c3135;
+	--tp-line: #dedede;
+	color: var(--tp-ink);
+	font-size: 14px;
+}
+
+.tp-admin *,
+.tp-admin *::before,
+.tp-admin *::after {
+	box-sizing: border-box;
+}
+
+/* Keep WP admin's default focus outlines from doubling up on our controls. */
+.tp-admin button:focus,
+.tp-admin input:focus,
+.tp-admin select:focus,
+.tp-admin textarea:focus {
+	box-shadow: none;
+	outline: none;
+}
+
+.tp-admin h1,
+.tp-admin h2,
+.tp-admin h3 {
+	color: var(--tp-ink);
+	font-weight: 600;
+}
