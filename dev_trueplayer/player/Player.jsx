@@ -91,7 +91,12 @@ export default function Player( { videoId, config, preview = false } ) {
 			}
 			setGate( gateState );
 			if ( gateState.canPlay === false ) {
-				setError( gateState.reason === 'login_required' ? 'Please log in to watch this video.' : 'This video is not available.' );
+				const messages = {
+					login_required: 'Please log in to watch this video.',
+					enroll_required: 'Enroll in this course to watch.',
+					purchase_required: 'Purchase this course to watch.',
+				};
+				setError( gateState.message || messages[ gateState.reason ] || 'This video is not available.' );
 				return;
 			}
 			if ( gateState.locked ) {

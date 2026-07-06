@@ -63,6 +63,24 @@ class GateController extends WP_REST_Controller {
 			] );
 		}
 
+		// Access seam: integrations (Academy enrollment, StoreEngine purchase,
+		// membership, drip) can deny playback here. Default = allowed.
+		$access = apply_filters(
+			'trueplayer/gate/access',
+			[ 'allowed' => true ],
+			$video_id,
+			$subject
+		);
+		if ( empty( $access['allowed'] ) ) {
+			return rest_ensure_response( [
+				'canPlay' => false,
+				'reason'  => $access['reason'] ?? 'access_denied',
+				'message' => $access['message'] ?? '',
+				'cta'     => $access['cta'] ?? null,
+				'subject' => [ 'type' => $subject->type ],
+			] );
+		}
+
 		$state = ProgressService::state( $video_id, $subject );
 
 		$row = ProgressService::get_row( $video_id, $subject );
