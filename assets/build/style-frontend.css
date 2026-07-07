@@ -129,10 +129,49 @@
 	line-height: 1;
 	cursor: pointer;
 }
+/* Audio: a proper compact player bar, not a short video box. Art tile on the
+   left, controls (progress + buttons) fill the rest — no empty picture area. */
 .tp-stage.is-audio {
 	aspect-ratio: auto;
-	height: 120px;
-	background: #111827;
+	height: auto;
+	min-height: 72px;
+	background: linear-gradient( 180deg, #232838, #171a22 );
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding-left: 12px;
+	overflow: visible; /* let the settings menu pop out of the short bar */
+}
+.tp-audio-art {
+	width: 48px;
+	height: 48px;
+	flex-shrink: 0;
+	border-radius: 8px;
+	overflow: hidden;
+	background: rgba( 255, 255, 255, 0.08 );
+	color: var( --tp-accent );
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 2;
+}
+.tp-audio-art img {
+	width: 100%;
+	height: 100%;
+	-o-object-fit: cover;
+	   object-fit: cover;
+}
+.tp-audio-art svg {
+	width: 24px;
+	height: 24px;
+	fill: currentColor;
+}
+.tp-stage.is-audio .tp-controls {
+	position: static;
+	background: none;
+	flex: 1;
+	min-width: 0;
+	padding: 10px 14px 10px 0;
 }
 
 .tp-media-container,
@@ -776,6 +815,27 @@
 .tp-pl-item.is-active {
 	background: rgba( 0, 0, 0, 0.06 );
 	border-color: var(--tp-accent);
+}
+/* Compact icon used in the sidebar list (keeps rows slim vs. a poster thumb). */
+.tp-pl-icon {
+	width: 30px;
+	height: 30px;
+	flex-shrink: 0;
+	border-radius: 6px;
+	background: rgba( 0, 0, 0, 0.06 );
+	color: #4b5563;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.tp-pl-icon svg {
+	width: 15px;
+	height: 15px;
+	fill: currentColor;
+}
+.tp-pl-item.is-active .tp-pl-icon {
+	background: var( --tp-accent );
+	color: #fff;
 }
 .tp-pl-thumb {
 	width: 72px;

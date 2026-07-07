@@ -475,6 +475,18 @@ export default function Player( { videoId, config, preview = false, onEnded: onE
 			) }
 			<div ref={ containerRef } className="tp-media-container" onClick={ () => ready && ! activeQuiz && playPause() } />
 
+			{ /* Audio has no picture — show a compact "now playing" tile (album art
+			     if provided, otherwise a note glyph) so the bar reads as a player. */ }
+			{ source.mediaType === 'audio' && (
+				<div className="tp-audio-art" aria-hidden="true">
+					{ source.poster ? (
+						<img src={ source.poster } alt="" />
+					) : (
+						<svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" /></svg>
+					) }
+				</div>
+			) }
+
 			{ /* Click-shield for embedded providers (YouTube/Vimeo): captures pointer
 			     events so their in-frame links — title, "Watch on YouTube", channel,
 			     end-screen suggestions — can't be clicked through to leave the site.
@@ -484,8 +496,9 @@ export default function Player( { videoId, config, preview = false, onEnded: onE
 				<div className="tp-shield" aria-hidden="true" onClick={ () => ready && playPause() } />
 			) }
 
-			{ /* Universal poster: works for every provider (not just html5's poster attr). */ }
-			{ source.poster && ! started && ! error && (
+			{ /* Universal poster: works for every provider (not just html5's poster attr).
+			     Audio uses the compact art tile above instead of a full-bleed poster. */ }
+			{ source.poster && ! started && ! error && source.mediaType !== 'audio' && (
 				<div className="tp-poster" style={ { backgroundImage: `url("${ source.poster }")` } } />
 			) }
 

@@ -27,6 +27,10 @@ export default function Playlist( { data } ) {
 		return null;
 	}
 
+	// Grid shows poster thumbnails; the sidebar uses a compact icon so the list
+	// stays slim (and titles get more room).
+	const isGrid = data.layout === 'grid';
+
 	return (
 		<div className={ `tp-pl tp-pl-${ data.layout }` }>
 			{ data.title && <div className="tp-pl-title">{ data.title }</div> }
@@ -39,9 +43,15 @@ export default function Playlist( { data } ) {
 				<div className="tp-pl-list">
 					{ items.map( ( it, i ) => (
 						<button key={ it.videoId } className={ `tp-pl-item ${ i === active ? 'is-active' : '' }` } onClick={ () => pick( i ) }>
-							<span className="tp-pl-thumb" style={ it.poster ? { backgroundImage: `url("${ it.poster }")` } : undefined }>
-								{ ! it.poster && ( i + 1 ) }
-							</span>
+							{ isGrid ? (
+								<span className="tp-pl-thumb" style={ it.poster ? { backgroundImage: `url("${ it.poster }")` } : undefined }>
+									{ ! it.poster && ( i + 1 ) }
+								</span>
+							) : (
+								<span className="tp-pl-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+								</span>
+							) }
 							{ data.showTitles && <span className="tp-pl-item-title">{ it.title || `Video ${ i + 1 }` }</span> }
 						</button>
 					) ) }
