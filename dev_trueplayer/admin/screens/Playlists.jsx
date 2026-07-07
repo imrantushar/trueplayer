@@ -1,6 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
-import { Card, Button, Input, Select, Toggle, Badge, Field } from '../components/UI';
+import { Card, Button, Input, Select, Toggle, Badge, Field, Thumb, sourceMeta } from '../components/UI';
 
 function Editor( { playlist, videos, onBack, onSaved } ) {
 	const [ title, setTitle ] = useState( playlist.title );
@@ -80,13 +80,16 @@ function Editor( { playlist, videos, onBack, onSaved } ) {
 					</div>
 					<p className="text-[13px] font-medium text-ink mb-2">Add a video</p>
 					<div className="space-y-1 max-h-64 overflow-y-auto">
-						{ available.map( ( v ) => (
-							<button key={ v.id } className="flex items-center gap-2 w-full text-left border border-line rounded-md p-2 hover:bg-gray-50" onClick={ () => add( v.id ) }>
-								<span className="text-brand-600">＋</span>
-								<span className="flex-1 text-sm truncate">{ v.title }</span>
-								<Badge>{ v.config?.source?.type || '—' }</Badge>
-							</button>
-						) ) }
+						{ available.map( ( v ) => {
+							const meta = sourceMeta( v.config?.source || {} );
+							return (
+								<button key={ v.id } className="flex items-center gap-2 w-full text-left border border-line rounded-md p-2 hover:bg-gray-50" onClick={ () => add( v.id ) }>
+									<span className="text-brand-600">＋</span>
+									<span className="flex-1 text-sm truncate">{ v.title }</span>
+									<Badge tone={ meta.tone }>{ meta.label }</Badge>
+								</button>
+							);
+						} ) }
 						{ available.length === 0 && <p className="text-sm text-gray-400">All videos added.</p> }
 					</div>
 				</Card>
@@ -123,6 +126,8 @@ export default function Playlists() {
 		return <Editor playlist={ editing } videos={ videos } onBack={ () => { setEditing( null ); load(); } } onSaved={ load } />;
 	}
 
+	const byId = Object.fromEntries( videos.map( ( v ) => [ v.id, v ] ) );
+
 	return (
 		<div>
 			<div className="mb-6">
@@ -136,23 +141,38 @@ export default function Playlists() {
 			</Card>
 
 			{ playlists === null && <p className="text-gray-400">Loading…</p> }
-			{ playlists && playlists.length === 0 && <p className="text-gray-400">No playlists yet.</p> }
+			{ playlists && playlists.length === 0 && (
+				<Card className="p-12 text-center border-dashed">
+					<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center">
+						<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M4 6h11v2H4V6zm0 5h11v2H4v-2zm0 5h7v2H4v-2zm13-5l5 3-5 3v-6z" /></svg>
+					</div>
+					<p className="font-semibold text-gray-900">No playlists yet</p>
+					<p className="text-sm text-gray-500">Group videos into a course sequence or a grid above.</p>
+				</Card>
+			) }
 
 			<div className="space-y-3">
-				{ ( playlists || [] ).map( ( p ) => (
-					<Card key={ p.id } className="p-4 flex items-center gap-4">
-						<div className="flex-1 min-w-0">
-							<div className="font-semibold text-ink truncate">{ p.title }</div>
-							<div className="flex items-center gap-2 mt-1">
-								<Badge tone="brand">{ p.config?.layout || 'sidebar' }</Badge>
-								<Badge>{ ( p.config?.videos || [] ).length } videos</Badge>
-								<code className="text-xs text-gray-500">{ p.shortcode }</code>
+				{ ( playlists || [] ).map( ( p ) => {
+					const ids = p.config?.videos || [];
+					const first = ids.map( ( id ) => byId[ id ] ).find( Boolean );
+					const src = first?.config?.source || {};
+					return (
+						<Card key={ p.id } className="p-3 flex items-center gap-4 hover:border-brand-200 transition-colors">
+							<Thumb poster={ src.poster } type={ src.mediaType === 'audio' ? 'audio' : src.type } />
+							<div className="flex-1 min-w-0">
+								<div className="font-semibold text-ink truncate">{ p.title }</div>
+								<div className="flex items-center flex-wrap gap-2 mt-1.5">
+									<Badge tone="brand">{ p.config?.layout || 'sidebar' }</Badge>
+									<Badge>{ ids.length } video{ ids.length === 1 ? '' : 's' }</Badge>
+									{ p.config?.autoplayNext && <Badge tone="green">autoplay</Badge> }
+									<code className="text-xs text-gray-500">{ p.shortcode }</code>
+								</div>
 							</div>
-						</div>
-						<Button variant="ghost" onClick={ () => setEditing( p ) }>Edit</Button>
-						<Button variant="danger" onClick={ () => remove( p.id ) }>Delete</Button>
-					</Card>
-				) ) }
+							<Button variant="ghost" onClick={ () => setEditing( p ) }>Edit</Button>
+							<Button variant="danger" onClick={ () => remove( p.id ) }>Delete</Button>
+						</Card>
+					);
+				} ) }
 			</div>
 		</div>
 	);

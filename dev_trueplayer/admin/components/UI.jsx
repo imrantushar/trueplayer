@@ -1,4 +1,5 @@
 /** Shared Tailwind UI primitives — StoreEngine-inspired design language. */
+import { useState } from '@wordpress/element';
 
 export function Button( { children, variant = 'primary', size = 'md', className = '', ...rest } ) {
 	const styles = {
@@ -82,4 +83,39 @@ export function Badge( { children, tone = 'gray' } ) {
 		red: 'bg-red-100 text-red-700',
 	};
 	return <span className={ `inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${ tones[ tone ] }` }>{ children }</span>;
+}
+
+/** Per-source-type display metadata (label + badge tone) for a video's source. */
+export function sourceMeta( source = {} ) {
+	const type = source.mediaType === 'audio' ? 'audio' : source.type;
+	const map = {
+		url: { label: 'MP4', tone: 'brand' },
+		hls: { label: 'HLS', tone: 'amber' },
+		youtube: { label: 'YouTube', tone: 'red' },
+		vimeo: { label: 'Vimeo', tone: 'brand' },
+		bunny: { label: 'Bunny', tone: 'green' },
+		mux: { label: 'Mux', tone: 'brand' },
+		audio: { label: 'Audio', tone: 'gray' },
+	};
+	return map[ type ] || { label: type || 'no source', tone: 'gray' };
+}
+
+/** 16:9 poster thumbnail with a graceful fallback tile keyed to the source type. */
+export function Thumb( { poster, type, className = '' } ) {
+	const [ broken, setBroken ] = useState( false );
+	const isAudio = type === 'audio';
+	const showPoster = poster && ! broken;
+	return (
+		<div className={ `relative shrink-0 w-24 aspect-video rounded-lg overflow-hidden border border-line bg-gray-100 ${ className }` }>
+			{ showPoster ? (
+				<img src={ poster } alt="" loading="lazy" onError={ () => setBroken( true ) } className="w-full h-full object-cover" />
+			) : (
+				<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 text-gray-400">
+					<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+						<path d={ isAudio ? 'M12 3v10.55A4 4 0 1014 17V7h4V3h-6z' : 'M8 5v14l11-7z' } />
+					</svg>
+				</div>
+			) }
+		</div>
+	);
 }
