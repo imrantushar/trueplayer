@@ -19,6 +19,35 @@ class Shortcode {
 	public static function init() {
 		$self = new self();
 		add_shortcode( self::TAG, [ $self, 'render' ] );
+		add_shortcode( 'trueplayer_popup', [ $self, 'render_popup' ] );
+	}
+
+	/**
+	 * `[trueplayer_popup id="N" label="Watch"]` (or wrapping content) — a trigger
+	 * that opens the player in a lightbox. Nothing loads until it's clicked.
+	 */
+	public function render_popup( $atts, $content = '' ) {
+		$atts     = shortcode_atts( [ 'id' => 0, 'label' => '' ], $atts, 'trueplayer_popup' );
+		$video_id = (int) $atts['id'];
+		if ( ! $video_id || get_post_type( $video_id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
+			return '';
+		}
+		wp_enqueue_style( Assets::FRONTEND_STYLE_HANDLE );
+		wp_enqueue_script( Assets::FRONTEND_SCRIPT_HANDLE );
+
+		$config = self::strip_answer_keys( Helper::apply_preset( Helper::get_video_config( $video_id ) ) );
+		$json   = wp_json_encode( [ 'videoId' => $video_id, 'title' => get_the_title( $video_id ), 'config' => $config ] );
+		$label  = '' !== trim( (string) $content ) ? do_shortcode( $content ) : ( $atts['label'] ?: __( 'Watch video', 'trueplayer' ) );
+		$accent = $config['customize']['appearance']['accent'] ?? '';
+		$style  = $accent ? sprintf( ' style="--tp-accent:%s"', esc_attr( $accent ) ) : '';
+
+		return sprintf(
+			'<span class="trueplayer-popup" data-trueplayer-popup data-video-id="%1$d"%4$s><script type="application/json" class="trueplayer-popup-config">%2$s</script><button type="button" class="trueplayer-popup-trigger"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>%3$s</button></span>',
+			$video_id,
+			$json,
+			wp_kses_post( $label ),
+			$style
+		);
 	}
 
 	public function render( $atts ) {

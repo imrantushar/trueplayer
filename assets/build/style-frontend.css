@@ -610,6 +610,62 @@
 	padding: 16px;
 }
 
+/* ---- popup (lightbox) ---- */
+.trueplayer-popup {
+	display: inline-block;
+}
+.trueplayer-popup-trigger {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	background: var( --tp-accent, #008dff );
+	color: #fff;
+	border: 0;
+	border-radius: 8px;
+	padding: 10px 18px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	font-family: inherit;
+	transition: filter 0.15s ease;
+}
+.trueplayer-popup-trigger:hover {
+	filter: brightness( 1.08 );
+}
+.tp-popup-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	background: rgba( 0, 0, 0, 0.82 );
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	animation: tp-cta-in 0.18s ease;
+}
+.tp-popup-dialog {
+	position: relative;
+	width: min( 900px, 92vw );
+}
+.tp-popup-close {
+	position: absolute;
+	top: -38px;
+	right: 0;
+	background: none;
+	border: 0;
+	color: #fff;
+	font-size: 30px;
+	line-height: 1;
+	cursor: pointer;
+	opacity: 0.85;
+}
+.tp-popup-close:hover {
+	opacity: 1;
+}
+.tp-popup-player {
+	width: 100%;
+}
+
 /* ---- CTA / end-screen overlay ---- */
 .tp-cta-card {
 	position: relative;

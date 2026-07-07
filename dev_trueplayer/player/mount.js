@@ -117,6 +117,67 @@ export function mountPlayers() {
 	} );
 }
 
+/**
+ * Discovers [data-trueplayer-popup] triggers and opens the player in a lightbox
+ * on click. Nothing loads until then — the player is mounted into the modal and
+ * torn down on close.
+ */
+export function mountPopups() {
+	document.querySelectorAll( '[data-trueplayer-popup]' ).forEach( ( node ) => {
+		if ( node.dataset.tpPopupBound ) {
+			return;
+		}
+		node.dataset.tpPopupBound = '1';
+		const el = node.querySelector( 'script.trueplayer-popup-config' );
+		let data = {};
+		try {
+			data = el ? JSON.parse( el.textContent ) : {};
+		} catch ( e ) {
+			data = {};
+		}
+		const videoId = data.videoId || parseInt( node.dataset.videoId, 10 );
+		if ( ! videoId ) {
+			return;
+		}
+		const trigger = node.querySelector( '.trueplayer-popup-trigger' ) || node;
+		trigger.addEventListener( 'click', ( e ) => {
+			e.preventDefault();
+			openPopup( videoId, data.config || {} );
+		} );
+	} );
+}
+
+function openPopup( videoId, config ) {
+	const backdrop = document.createElement( 'div' );
+	backdrop.className = 'tp-popup-backdrop';
+	backdrop.innerHTML =
+		'<div class="tp-popup-dialog"><button class="tp-popup-close" aria-label="Close">×</button><div class="tp-popup-player"></div></div>';
+	document.body.appendChild( backdrop );
+	document.body.style.overflow = 'hidden';
+
+	const root = createRoot( backdrop.querySelector( '.tp-popup-player' ) );
+	root.render( <Player videoId={ videoId } config={ config } autoStart={ true } /> );
+
+	const close = () => {
+		root.unmount();
+		backdrop.remove();
+		document.body.style.overflow = '';
+		document.removeEventListener( 'keydown', onKey );
+	};
+	const onKey = ( e ) => {
+		if ( e.key === 'Escape' ) {
+			close();
+		}
+	};
+	backdrop.querySelector( '.tp-popup-close' ).addEventListener( 'click', close );
+	backdrop.addEventListener( 'click', ( e ) => {
+		if ( e.target === backdrop ) {
+			close();
+		}
+	} );
+	document.addEventListener( 'keydown', onKey );
+}
+
 /** Discovers [data-trueplayer-playlist] nodes and boots a Playlist per node. */
 export function mountPlaylists() {
 	document.querySelectorAll( '[data-trueplayer-playlist]' ).forEach( ( node ) => {
