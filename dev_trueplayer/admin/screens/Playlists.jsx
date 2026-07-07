@@ -8,10 +8,17 @@ function Editor( { playlist, videos, onBack, onSaved } ) {
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
 
+	const [ adding, setAdding ] = useState( false );
+	const [ query, setQuery ] = useState( '' );
+	const [ dragIndex, setDragIndex ] = useState( null );
+	const [ overIndex, setOverIndex ] = useState( null );
+
 	const set = ( partial ) => setConfig( ( c ) => ( { ...c, ...partial } ) );
 	const selected = config.videos || [];
 	const byId = Object.fromEntries( videos.map( ( v ) => [ v.id, v ] ) );
+	// Videos not already in the playlist, filtered by the search box.
 	const available = videos.filter( ( v ) => ! selected.includes( v.id ) );
+	const results = available.filter( ( v ) => ( v.title || '' ).toLowerCase().includes( query.trim().toLowerCase() ) );
 
 	const add = ( id ) => set( { videos: [ ...selected, id ] } );
 	const remove = ( id ) => set( { videos: selected.filter( ( x ) => x !== id ) } );
@@ -22,6 +29,15 @@ function Editor( { playlist, videos, onBack, onSaved } ) {
 			return;
 		}
 		[ next[ i ], next[ j ] ] = [ next[ j ], next[ i ] ];
+		set( { videos: next } );
+	};
+	const reorder = ( from, to ) => {
+		if ( from === null || to === null || from === to ) {
+			return;
+		}
+		const next = [ ...selected ];
+		const [ moved ] = next.splice( from, 1 );
+		next.splice( to, 0, moved );
 		set( { videos: next } );
 	};
 
@@ -65,33 +81,60 @@ function Editor( { playlist, videos, onBack, onSaved } ) {
 
 				<Card className="p-6">
 					<h3 className="font-semibold text-ink mb-1">Videos in this playlist</h3>
-					<p className="text-sm text-gray-500 mb-3">{ selected.length } selected · drag order with the arrows.</p>
+					<p className="text-sm text-gray-500 mb-3">{ selected.length } selected · drag to reorder.</p>
 					<div className="space-y-2 mb-4">
-						{ selected.map( ( id, i ) => (
-							<div key={ id } className="flex items-center gap-2 border border-line rounded-md p-2">
-								<span className="text-xs text-gray-400 w-5">{ i + 1 }</span>
-								<span className="flex-1 text-sm truncate">{ byId[ id ]?.title || `#${ id }` }</span>
-								<button className="text-gray-400 hover:text-ink px-1" onClick={ () => move( i, -1 ) }>↑</button>
-								<button className="text-gray-400 hover:text-ink px-1" onClick={ () => move( i, 1 ) }>↓</button>
-								<Button variant="danger" size="sm" onClick={ () => remove( id ) }>×</Button>
-							</div>
-						) ) }
-						{ selected.length === 0 && <p className="text-sm text-gray-400">No videos yet — add from below.</p> }
-					</div>
-					<p className="text-[13px] font-medium text-ink mb-2">Add a video</p>
-					<div className="space-y-1 max-h-64 overflow-y-auto">
-						{ available.map( ( v ) => {
-							const meta = sourceMeta( v.config?.source || {} );
+						{ selected.map( ( id, i ) => {
+							const meta = sourceMeta( byId[ id ]?.config?.source || {} );
 							return (
-								<button key={ v.id } className="flex items-center gap-2 w-full text-left border border-line rounded-md p-2 hover:bg-gray-50" onClick={ () => add( v.id ) }>
-									<span className="text-brand-600">＋</span>
-									<span className="flex-1 text-sm truncate">{ v.title }</span>
+								<div
+									key={ id }
+									draggable
+									onDragStart={ () => setDragIndex( i ) }
+									onDragOver={ ( e ) => { e.preventDefault(); if ( overIndex !== i ) setOverIndex( i ); } }
+									onDrop={ () => { reorder( dragIndex, i ); setDragIndex( null ); setOverIndex( null ); } }
+									onDragEnd={ () => { setDragIndex( null ); setOverIndex( null ); } }
+									className={ `flex items-center gap-2 border rounded-md p-2 bg-white transition ${ overIndex === i && dragIndex !== i ? 'border-brand-400 ring-2 ring-brand-100' : 'border-line' } ${ dragIndex === i ? 'opacity-50' : '' }` }
+								>
+									<span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 select-none px-0.5" title="Drag to reorder" aria-hidden="true">⠿</span>
+									<span className="text-xs text-gray-400 w-4 text-center">{ i + 1 }</span>
+									<span className="flex-1 text-sm truncate">{ byId[ id ]?.title || `#${ id }` }</span>
 									<Badge tone={ meta.tone }>{ meta.label }</Badge>
-								</button>
+									<div className="flex">
+										<button className="text-gray-300 hover:text-ink px-1" title="Move up" onClick={ () => move( i, -1 ) }>↑</button>
+										<button className="text-gray-300 hover:text-ink px-1" title="Move down" onClick={ () => move( i, 1 ) }>↓</button>
+									</div>
+									<Button variant="danger" size="sm" onClick={ () => remove( id ) }>×</Button>
+								</div>
 							);
 						} ) }
-						{ available.length === 0 && <p className="text-sm text-gray-400">All videos added.</p> }
+						{ selected.length === 0 && <p className="text-sm text-gray-400">No videos yet — add one below.</p> }
 					</div>
+
+					{ ! adding ? (
+						<Button variant="subtle" onClick={ () => { setAdding( true ); setQuery( '' ); } }>+ Add video</Button>
+					) : (
+						<div className="border border-line rounded-md p-2">
+							<Input autoFocus placeholder="Search videos to add…" value={ query } onChange={ ( e ) => setQuery( e.target.value ) } />
+							<div className="space-y-1 max-h-56 overflow-y-auto mt-2">
+								{ results.map( ( v ) => {
+									const meta = sourceMeta( v.config?.source || {} );
+									return (
+										<button key={ v.id } className="flex items-center gap-2 w-full text-left rounded-md p-2 hover:bg-gray-50" onClick={ () => { add( v.id ); setQuery( '' ); } }>
+											<span className="text-brand-600">＋</span>
+											<span className="flex-1 text-sm truncate">{ v.title }</span>
+											<Badge tone={ meta.tone }>{ meta.label }</Badge>
+										</button>
+									);
+								} ) }
+								{ results.length === 0 && (
+									<p className="text-sm text-gray-400 px-2 py-3">{ available.length === 0 ? 'All videos are already in this playlist.' : 'No videos match your search.' }</p>
+								) }
+							</div>
+							<div className="flex justify-end mt-2 pt-2 border-t border-line">
+								<Button variant="ghost" size="sm" onClick={ () => { setAdding( false ); setQuery( '' ); } }>Done</Button>
+							</div>
+						</div>
+					) }
 				</Card>
 			</div>
 		</div>
