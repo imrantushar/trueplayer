@@ -54,16 +54,26 @@ export default function Editor( { id, onBack } ) {
 		setDirty( true );
 	};
 
-	const save = async () => {
-		setSaving( true );
-		try {
-			const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
-			setVideo( updated );
-			setDirty( false );
-			setSaved( true );
-			setTimeout( () => setSaved( false ), 2000 );
-		} finally {
-			setSaving( false );
+	const tabIndex = TABS.findIndex( ( t ) => t.key === tab );
+	const isLastTab = tabIndex === TABS.length - 1;
+
+	// Save (only hits the API when there are changes), then optionally advance to
+	// the next step — a light wizard flow through the editor.
+	const save = async ( continueNext = false ) => {
+		if ( dirty ) {
+			setSaving( true );
+			try {
+				const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
+				setVideo( updated );
+				setDirty( false );
+				setSaved( true );
+				setTimeout( () => setSaved( false ), 2000 );
+			} finally {
+				setSaving( false );
+			}
+		}
+		if ( continueNext && tabIndex > -1 && tabIndex < TABS.length - 1 ) {
+			setTab( TABS[ tabIndex + 1 ].key );
 		}
 	};
 
@@ -125,7 +135,14 @@ export default function Editor( { id, onBack } ) {
 						) }
 						{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
 						{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
-						<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+						{ isLastTab ? (
+							<Button onClick={ () => save( false ) } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+						) : (
+							<>
+								<Button variant="ghost" onClick={ () => save( false ) } disabled={ saving || ! dirty }>Save</Button>
+								<Button onClick={ () => save( true ) } disabled={ saving }>{ saving ? 'Saving…' : 'Save & Continue' }</Button>
+							</>
+						) }
 					</div>
 
 					<div className="flex flex-col xl:flex-row gap-6 items-start">
