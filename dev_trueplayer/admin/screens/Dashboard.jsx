@@ -1,0 +1,124 @@
+import { useEffect, useState } from '@wordpress/element';
+import { api } from '../api';
+import { Card, Button, Thumb, Badge, sourceMeta } from '../components/UI';
+import { Icon } from '../components/icons';
+import { isPro } from '../pro';
+
+const PURCHASE = ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.purchase_url ) || 'https://kodezen.com/trueplayer';
+
+function Stat( { icon, label, value, tone = 'brand' } ) {
+	const tones = {
+		brand: 'bg-brand-50 text-brand-600',
+		green: 'bg-green-100 text-green-600',
+		amber: 'bg-amber-100 text-amber-600',
+		gray: 'bg-gray-100 text-gray-500',
+	};
+	return (
+		<Card className="p-5 flex items-center gap-4">
+			<span className={ `w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${ tones[ tone ] }` }><Icon name={ icon } className="w-5 h-5" /></span>
+			<div className="min-w-0">
+				<div className="text-2xl font-bold text-ink leading-none">{ value }</div>
+				<div className="text-[13px] text-gray-500 mt-1 truncate">{ label }</div>
+			</div>
+		</Card>
+	);
+}
+
+function QuickLink( { icon, label, onClick } ) {
+	return (
+		<button onClick={ onClick } className="flex items-center gap-3 w-full text-left rounded-lg p-2.5 hover:bg-gray-50 text-sm font-medium text-gray-700">
+			<span className="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center"><Icon name={ icon } className="w-4 h-4" /></span>
+			{ label }
+		</button>
+	);
+}
+
+export default function Dashboard( { onNavigate } ) {
+	const [ videos, setVideos ] = useState( null );
+	const [ playlists, setPlaylists ] = useState( [] );
+
+	useEffect( () => {
+		api.listVideos().then( setVideos ).catch( () => setVideos( [] ) );
+		api.listPlaylists().then( setPlaylists ).catch( () => {} );
+	}, [] );
+
+	const vids = videos || [];
+	const quizzed = vids.filter( ( v ) => {
+		const g = v.config?.gating || {};
+		return ( g.checkpoints?.length || 0 ) > 0 || !! g.finalQuiz;
+	} ).length;
+	const withChapters = vids.filter( ( v ) => ( v.config?.chapters?.length || 0 ) > 0 ).length;
+	const recent = vids.slice( 0, 5 );
+
+	return (
+		<div className="space-y-8">
+			<div className="flex items-center justify-between gap-4 flex-wrap">
+				<div>
+					<h1 className="text-2xl font-bold text-ink">Dashboard</h1>
+					<p className="text-sm text-gray-500">Your watch-verified video library at a glance.</p>
+				</div>
+				<div className="flex gap-2">
+					<Button variant="ghost" onClick={ () => onNavigate( 'playlists' ) }>New playlist</Button>
+					<Button onClick={ () => onNavigate( 'library' ) }><Icon name="plus" className="w-4 h-4" /> New video</Button>
+				</div>
+			</div>
+
+			<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+				<Stat icon="video" label="Videos" value={ videos === null ? '—' : vids.length } tone="brand" />
+				<Stat icon="playlist" label="Playlists" value={ playlists.length } tone="gray" />
+				<Stat icon="check" label="Quiz-gated" value={ quizzed } tone="green" />
+				<Stat icon="book" label="With chapters" value={ withChapters } tone="amber" />
+			</div>
+
+			<div className="grid lg:grid-cols-3 gap-6 items-start">
+				<Card className="lg:col-span-2 p-6">
+					<div className="flex items-center justify-between mb-4">
+						<h3 className="font-semibold text-ink">Recent videos</h3>
+						<button className="text-sm text-brand-600 font-medium hover:text-brand-700" onClick={ () => onNavigate( 'library' ) }>View all →</button>
+					</div>
+					{ videos === null && <p className="text-gray-400 text-sm">Loading…</p> }
+					{ videos && recent.length === 0 && (
+						<div className="text-center py-10 border border-dashed border-line rounded-lg">
+							<div className="mx-auto mb-3 w-11 h-11 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="video" className="w-5 h-5" /></div>
+							<p className="text-sm text-gray-500 mb-3">No videos yet — add your first one.</p>
+							<Button onClick={ () => onNavigate( 'library' ) }>Create a video</Button>
+						</div>
+					) }
+					<div className="space-y-2">
+						{ recent.map( ( v ) => {
+							const src = v.config?.source || {};
+							const meta = sourceMeta( src );
+							return (
+								<button key={ v.id } onClick={ () => onNavigate( 'editor', { id: v.id } ) } className="flex items-center gap-3 w-full text-left rounded-lg p-2 hover:bg-gray-50">
+									<Thumb poster={ src.poster } type={ src.mediaType === 'audio' ? 'audio' : src.type } />
+									<span className="flex-1 min-w-0">
+										<span className="block font-medium text-sm text-ink truncate">{ v.title }</span>
+										<span className="inline-flex mt-1"><Badge tone={ meta.tone }>{ meta.label }</Badge></span>
+									</span>
+								</button>
+							);
+						} ) }
+					</div>
+				</Card>
+
+				<div className="space-y-6">
+					<Card className="p-6">
+						<h3 className="font-semibold text-ink mb-3">Quick start</h3>
+						<div className="space-y-1">
+							<QuickLink icon="video" label="Add a video" onClick={ () => onNavigate( 'library' ) } />
+							<QuickLink icon="playlist" label="Build a playlist" onClick={ () => onNavigate( 'playlists' ) } />
+							<QuickLink icon="settings" label="Player defaults" onClick={ () => onNavigate( 'settings' ) } />
+						</div>
+					</Card>
+					{ ! isPro() && (
+						<Card className="p-6 border-brand-100 bg-gradient-to-br from-brand-50 to-white">
+							<div className="flex items-center gap-1.5 font-semibold text-ink"><Icon name="spark" className="w-4 h-4 text-brand-500" /> Unlock Pro</div>
+							<p className="text-[13px] text-gray-600 mt-1.5 mb-3 leading-snug">Prove students watched, gate with quizzes, and see deep analytics.</p>
+							<a href={ PURCHASE } target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 rounded-md px-4 py-2">See Pro features</a>
+						</Card>
+					) }
+				</div>
+			</div>
+		</div>
+	);
+}
