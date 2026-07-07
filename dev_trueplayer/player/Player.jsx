@@ -11,7 +11,7 @@ import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
-export default function Player( { videoId, config, preview = false, onEnded: onEndedProp, autoStart = false } ) {
+export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, autoStart = false } ) {
 	const stageRef = useRef( null );
 	const containerRef = useRef( null );
 	const providerRef = useRef( null );
@@ -560,6 +560,9 @@ export default function Player( { videoId, config, preview = false, onEnded: onE
 					onInfo={ () => setInfoOpen( ( o ) => ! o ) }
 					hasInfo={ hasInfo }
 					infoOpen={ infoOpen }
+					audio={ source.mediaType === 'audio' }
+					title={ title }
+					waveSeed={ videoId }
 				/>
 			) }
 

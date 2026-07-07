@@ -45,6 +45,7 @@ class Shortcode {
 		$json = wp_json_encode(
 			[
 				'videoId' => $video_id,
+				'title'   => get_the_title( $video_id ),
 				'config'  => $config,
 			]
 		);

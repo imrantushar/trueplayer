@@ -67,7 +67,7 @@ function bootPlayer( node, data, videoId, autoStart ) {
 	const root = document.createElement( 'div' );
 	root.className = 'tp-root';
 	node.appendChild( root );
-	createRoot( root ).render( <Player videoId={ videoId } config={ data.config || {} } autoStart={ autoStart } /> );
+	createRoot( root ).render( <Player videoId={ videoId } config={ data.config || {} } title={ data.title || '' } autoStart={ autoStart } /> );
 }
 
 /**

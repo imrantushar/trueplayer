@@ -37,7 +37,7 @@ export default function Playlist( { data } ) {
 			<div className="tp-pl-body">
 				<div className="tp-pl-main">
 					<div className="trueplayer-mount">
-						<Player key={ item.videoId } videoId={ item.videoId } config={ item.config } autoStart={ autoStart } onEnded={ goNext } />
+						<Player key={ item.videoId } videoId={ item.videoId } config={ item.config } title={ item.title } autoStart={ autoStart } onEnded={ goNext } />
 					</div>
 				</div>
 				<div className="tp-pl-list">

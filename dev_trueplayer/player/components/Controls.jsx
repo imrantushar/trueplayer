@@ -1,4 +1,4 @@
-import { useState } from '@wordpress/element';
+import { useState, useMemo } from '@wordpress/element';
 import { formatTime } from '@Utils/format';
 
 const Icon = ( { d } ) => (
@@ -38,8 +38,22 @@ function buildSegments( chapters, duration ) {
 	return segs;
 }
 
-function Scrubber( { current, duration, buffered, chapters, seekable, onSeek } ) {
+// Deterministic pseudo-waveform bar heights (0.2–1) seeded by the track, so an
+// audio player looks like a waveform without decoding the file. Same seed →
+// same shape every render.
+function waveBars( seed, n ) {
+	let s = ( seed || 1 ) >>> 0 || 1;
+	const out = [];
+	for ( let i = 0; i < n; i++ ) {
+		s = ( s * 1103515245 + 12345 ) & 0x7fffffff;
+		out.push( 0.2 + ( s % 1000 ) / 1000 * 0.8 );
+	}
+	return out;
+}
+
+function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, waveform, waveSeed } ) {
 	const [ hover, setHover ] = useState( null );
+	const bars = useMemo( () => ( waveform ? waveBars( waveSeed, 56 ) : [] ), [ waveform, waveSeed ] );
 	const pct = duration ? ( current / duration ) * 100 : 0;
 	const bpct = duration ? ( buffered / duration ) * 100 : 0;
 	const spct = duration && seekable < duration ? ( seekable / duration ) * 100 : 100;
@@ -83,6 +97,17 @@ function Scrubber( { current, duration, buffered, chapters, seekable, onSeek } )
 					} ) }
 					{ seekable < duration && <div className="tp-scrubber-lockline" style={ { left: `${ spct }%` } } /> }
 					<div className="tp-scrubber-thumb" style={ { left: `${ pct }%` } } />
+				</div>
+			) : waveform ? (
+				<div className="tp-wave">
+					{ bars.map( ( h, i ) => (
+						<span
+							key={ i }
+							className={ `tp-wave-bar ${ ( i + 0.5 ) / bars.length <= ( duration ? current / duration : 0 ) ? 'is-played' : '' }` }
+							style={ { height: `${ Math.round( h * 100 ) }%` } }
+						/>
+					) ) }
+					{ seekable < duration && <div className="tp-scrubber-lockline" style={ { left: `${ spct }%` } } /> }
 				</div>
 			) : (
 				<div className="tp-scrubber-track">
@@ -157,7 +182,7 @@ export default function Controls( props ) {
 		playing, current, duration, buffered, muted, volume, rate, quality, track, seekable,
 		chapters, provider, capabilities, controls = {}, speeds, skipSeconds = 10,
 		onPlayPause, onSeek, onVolume, onMute, onRate, onQuality, onTrack, onPiP, onFullscreen, onSkip, onDownload,
-		onInfo, hasInfo, infoOpen,
+		onInfo, hasInfo, infoOpen, audio, title, waveSeed,
 	} = props;
 
 	const show = ( key, fallback = true ) => ( controls[ key ] === undefined ? fallback : controls[ key ] );
@@ -169,8 +194,9 @@ export default function Controls( props ) {
 
 	return (
 		<div className="tp-controls">
+			{ audio && title && <div className="tp-audio-title" title={ title }>{ title }</div> }
 			{ show( 'progress' ) && (
-				<Scrubber current={ current } duration={ duration } buffered={ buffered } chapters={ chapters } seekable={ seekable } onSeek={ onSeek } />
+				<Scrubber current={ current } duration={ duration } buffered={ buffered } chapters={ chapters } seekable={ seekable } onSeek={ onSeek } waveform={ audio } waveSeed={ waveSeed } />
 			) }
 			<div className="tp-controls-row">
 				{ show( 'play' ) && (
