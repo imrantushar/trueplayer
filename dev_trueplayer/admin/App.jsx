@@ -54,7 +54,7 @@ export default function App() {
 	const activeKey = [ 'editor', 'analytics' ].includes( route.name ) ? 'library' : route.name;
 
 	return (
-		<div className="tp-admin flex flex-col min-h-[calc(100vh-32px)] bg-gray-50 text-ink -ml-5 -mt-5 -mr-5">
+		<div className="tp-admin flex flex-col min-h-[calc(100vh-32px)] bg-gray-50 text-ink -ml-5 -mr-5">
 			{ /* Topbar */ }
 			<header className="bg-white border-b border-line h-14 flex items-center px-5 gap-3 shrink-0">
 				<span className="inline-flex w-8 h-8 rounded-lg bg-brand-500 text-white items-center justify-center shrink-0">
