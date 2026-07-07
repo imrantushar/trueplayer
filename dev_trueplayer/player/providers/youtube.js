@@ -57,6 +57,7 @@ export async function createYouTubeProvider( container, source ) {
 				playsinline: 1,
 				fs: 0,
 				disablekb: 1,
+				iv_load_policy: 3,
 			},
 			events: {
 				onReady: () => {

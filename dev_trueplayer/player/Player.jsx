@@ -457,6 +457,15 @@ export default function Player( { videoId, config, preview = false, onEnded: onE
 			) }
 			<div ref={ containerRef } className="tp-media-container" onClick={ () => ready && ! activeQuiz && playPause() } />
 
+			{ /* Click-shield for embedded providers (YouTube/Vimeo): captures pointer
+			     events so their in-frame links — title, "Watch on YouTube", channel,
+			     end-screen suggestions — can't be clicked through to leave the site.
+			     Clicking still toggles play, exactly like the native players. */ }
+			{ ( source.type === 'youtube' || source.type === 'vimeo' ) && ! activeQuiz && ! locked && ! error && (
+				// eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
+				<div className="tp-shield" aria-hidden="true" onClick={ () => ready && playPause() } />
+			) }
+
 			{ /* Universal poster: works for every provider (not just html5's poster attr). */ }
 			{ source.poster && ! started && ! error && (
 				<div className="tp-poster" style={ { backgroundImage: `url("${ source.poster }")` } } />

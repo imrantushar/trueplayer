@@ -94,6 +94,17 @@
 	border: 0;
 }
 
+/* Transparent click-shield over embedded players (YouTube/Vimeo): swallows
+   pointer events so their in-frame links can't be clicked, while our own
+   controls (z-index 5) and big-play button sit above it and stay usable. */
+.tp-shield {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	cursor: pointer;
+	background: transparent;
+}
+
 .tp-poster {
 	position: absolute;
 	inset: 0;
