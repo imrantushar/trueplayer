@@ -18,9 +18,13 @@ function loadYT() {
 			}
 			resolve( window.YT );
 		};
-		const tag = document.createElement( 'script' );
-		tag.src = 'https://www.youtube.com/iframe_api';
-		document.head.appendChild( tag );
+		// The script may already be in flight (warmed on facade hover). Only
+		// inject once so the ready callback fires exactly one time.
+		if ( ! document.querySelector( 'script[src*="youtube.com/iframe_api"]' ) ) {
+			const tag = document.createElement( 'script' );
+			tag.src = 'https://www.youtube.com/iframe_api';
+			document.head.appendChild( tag );
+		}
 	} );
 	return ytReady;
 }

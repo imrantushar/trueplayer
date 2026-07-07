@@ -2,6 +2,43 @@ import { createRoot } from 'react-dom/client';
 import Player from './Player';
 import Playlist from './Playlist';
 
+// Domains to warm (DNS + TLS) so an embed starts fast once clicked.
+const WARM_HOSTS = {
+	youtube: [
+		'https://www.youtube.com',
+		'https://www.youtube-nocookie.com',
+		'https://i.ytimg.com',
+		'https://s.ytimg.com',
+		'https://googleads.g.doubleclick.net',
+	],
+	vimeo: [ 'https://player.vimeo.com', 'https://i.vimeocdn.com', 'https://f.vimeocdn.com' ],
+};
+
+function preconnect( href ) {
+	if ( document.querySelector( `link[rel="preconnect"][href="${ href }"]` ) ) {
+		return;
+	}
+	const link = document.createElement( 'link' );
+	link.rel = 'preconnect';
+	link.href = href;
+	link.crossOrigin = '';
+	document.head.appendChild( link );
+}
+
+/**
+ * Warm the network for an embed the moment the visitor shows intent (hover /
+ * focus / touch), so the click-to-play chain isn't waiting on DNS, TLS, or the
+ * YouTube IFrame API script. Called once per node.
+ */
+function warm( type ) {
+	( WARM_HOSTS[ type ] || [] ).forEach( preconnect );
+	if ( type === 'youtube' && ! document.querySelector( 'script[src*="youtube.com/iframe_api"]' ) ) {
+		const tag = document.createElement( 'script' );
+		tag.src = 'https://www.youtube.com/iframe_api';
+		document.head.appendChild( tag );
+	}
+}
+
 /**
  * Read + parse the inline JSON config a mount node carries.
  */
@@ -54,10 +91,22 @@ export function mountPlayers() {
 		const autoplay = node.dataset.tpAutoplay === '1';
 
 		if ( facade && ! autoplay ) {
+			const type = data.config && data.config.source && data.config.source.type;
+			let warmed = false;
+			const doWarm = () => {
+				if ( ! warmed ) {
+					warmed = true;
+					warm( type );
+				}
+			};
+			[ 'pointerenter', 'touchstart', 'focusin' ].forEach( ( ev ) =>
+				facade.addEventListener( ev, doWarm, { once: true, passive: true } )
+			);
 			const boot = ( e ) => {
 				if ( e ) {
 					e.preventDefault();
 				}
+				doWarm();
 				bootPlayer( node, data, videoId, true );
 			};
 			facade.addEventListener( 'click', boot, { once: true } );
