@@ -278,6 +278,9 @@
 .max-h-10 {
 		max-height: 2.5rem;
 }
+.max-h-64 {
+		max-height: 16rem;
+}
 .min-h-screen {
 		min-height: 100vh;
 }
@@ -295,6 +298,9 @@
 }
 .w-40 {
 		width: 10rem;
+}
+.w-5 {
+		width: 1.25rem;
 }
 .w-7 {
 		width: 1.75rem;
@@ -417,6 +423,9 @@
 .overflow-hidden {
 		overflow: hidden;
 }
+.overflow-y-auto {
+		overflow-y: auto;
+}
 .truncate {
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -533,6 +542,9 @@
 .bg-no-repeat {
 		background-repeat: no-repeat;
 }
+.p-2 {
+		padding: 0.5rem;
+}
 .p-3 {
 		padding: 0.75rem;
 }
@@ -608,6 +620,9 @@
 }
 .pt-0 {
 		padding-top: 0px;
+}
+.pt-4 {
+		padding-top: 1rem;
 }
 .text-left {
 		text-align: right;
@@ -854,6 +869,11 @@
 .hover\:text-gray-800:hover {
 		--tw-text-opacity: 1;
 		color: rgb(31 41 55 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-ink:hover {
+		--tw-text-opacity: 1;
+		color: rgb(44 49 53 / var(--tw-text-opacity, 1));
 }
 
 .focus\:border-brand-500:focus {

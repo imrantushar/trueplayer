@@ -86,6 +86,7 @@ final class TruePlayer {
 		TruePlayer\Api::init();
 		TruePlayer\Database::init();
 		TruePlayer\Shortcode::init();
+		TruePlayer\Playlist::init();
 		TruePlayer\Block::init();
 		TruePlayer\Events::init();
 		TruePlayer\Webhook\Dispatcher::init();

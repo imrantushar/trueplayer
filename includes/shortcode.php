@@ -60,7 +60,7 @@ class Shortcode {
 	 * Remove `correct`/`answer` keys from any question set before the config
 	 * reaches the browser. The gate/grade endpoints hold the source of truth.
 	 */
-	private static function strip_answer_keys( array $config ): array {
+	public static function strip_answer_keys( array $config ): array {
 		if ( empty( $config['gating'] ) || ! is_array( $config['gating'] ) ) {
 			return $config;
 		}

@@ -14,6 +14,11 @@ export const api = {
 	getViewerDetail: ( id ) => rest.get( `analytics/viewer?id=${ id }` ),
 	testWebhook: ( url, secret ) => rest.post( 'webhooks/test', { url, secret } ),
 	getIntegrations: () => rest.get( 'integrations' ),
+	listPlaylists: () => rest.get( 'playlists' ),
+	getPlaylist: ( id ) => rest.get( `playlists/${ id }` ),
+	createPlaylist: ( title ) => rest.post( 'playlists', { title, config: { layout: 'sidebar', videos: [] } } ),
+	updatePlaylist: ( id, data ) => rest.put( `playlists/${ id }`, data ),
+	deletePlaylist: ( id ) => rest.del( `playlists/${ id }` ),
 };
 
 export const EVENT_TYPES = [

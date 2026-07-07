@@ -10,7 +10,7 @@ import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
-export default function Player( { videoId, config, preview = false } ) {
+export default function Player( { videoId, config, preview = false, onEnded: onEndedProp } ) {
 	const stageRef = useRef( null );
 	const containerRef = useRef( null );
 	const providerRef = useRef( null );
@@ -271,15 +271,22 @@ export default function Player( { videoId, config, preview = false } ) {
 		if ( coverageRef.current ) {
 			coverageRef.current.flush( true );
 		}
+		let gated = false;
 		if ( gatingOn && gating.finalQuiz && gating.finalQuiz.questions && gating.finalQuiz.questions.length ) {
 			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || 'Final quiz' } );
+			gated = true;
 		} else if ( gatingOn && optin.enabled && optin.position === 'end' && ! optinDoneRef.current ) {
 			setActiveOptin( true );
+			gated = true;
 		} else if ( behavior.resetOnEnd ) {
 			providerRef.current.seek( 0 );
 			setStarted( false );
 		}
 		sync();
+		// Playlist autoplay-next: only when nothing is gating the end.
+		if ( ! gated && onEndedProp ) {
+			onEndedProp();
+		}
 	};
 
 	const finishOptin = () => {
