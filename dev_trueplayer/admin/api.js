@@ -14,7 +14,6 @@ export const api = {
 	getViewerDetail: ( id ) => rest.get( `analytics/viewer?id=${ id }` ),
 	testWebhook: ( url, secret ) => rest.post( 'webhooks/test', { url, secret } ),
 	getIntegrations: () => rest.get( 'integrations' ),
-	getAcademyCourses: () => rest.get( 'academy/courses' ),
 };
 
 export const EVENT_TYPES = [
