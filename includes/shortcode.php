@@ -55,13 +55,49 @@ class Shortcode {
 
 		$autoplay = ! empty( $config['customize']['behavior']['autoplay'] );
 
-		return sprintf(
+		return self::video_schema( $video_id, $config ) . sprintf(
 			'<div class="trueplayer-mount" data-trueplayer data-video-id="%1$d"%4$s><script type="application/json" class="trueplayer-config">%2$s</script>%3$s</div>',
 			$video_id,
 			$json, // already JSON-encoded; rendered inside a JSON script tag.
 			$autoplay ? '' : self::render_facade( $config ),
 			$autoplay ? ' data-tp-autoplay="1"' : ''
 		);
+	}
+
+	/**
+	 * VideoObject JSON-LD for SEO (Google video rich results). Requires a
+	 * thumbnail — YouTube posters are derived when none is set. Filterable/
+	 * disable-able via `trueplayer/seo_schema`.
+	 */
+	private static function video_schema( int $video_id, array $config ): string {
+		$source = is_array( $config['source'] ?? null ) ? $config['source'] : [];
+		$poster = is_string( $source['poster'] ?? null ) ? $source['poster'] : '';
+		if ( '' === $poster && 'youtube' === ( $source['type'] ?? '' ) ) {
+			$yid = self::youtube_id( $source['src'] ?? '' );
+			$poster = $yid ? 'https://i.ytimg.com/vi/' . $yid . '/hqdefault.jpg' : '';
+		}
+		// Google requires a thumbnail — skip schema rather than emit an invalid one.
+		if ( '' === $poster ) {
+			return '';
+		}
+		$post   = get_post( $video_id );
+		$schema = [
+			'@context'     => 'https://schema.org',
+			'@type'        => 'VideoObject',
+			'name'         => get_the_title( $video_id ),
+			'description'  => wp_strip_all_tags( $post && $post->post_excerpt ? $post->post_excerpt : get_the_title( $video_id ) ),
+			'thumbnailUrl' => $poster,
+			'uploadDate'   => $post ? get_post_time( 'c', true, $post ) : '',
+		];
+		if ( ! empty( $source['src'] ) && in_array( $source['type'] ?? '', [ 'url', 'hls' ], true ) ) {
+			$schema['contentUrl'] = $source['src'];
+		}
+
+		$schema = apply_filters( 'trueplayer/seo_schema', $schema, $video_id, $config );
+		if ( empty( $schema ) || ! is_array( $schema ) ) {
+			return '';
+		}
+		return sprintf( '<script type="application/ld+json">%s</script>', wp_json_encode( $schema, JSON_UNESCAPED_SLASHES ) );
 	}
 
 	/**

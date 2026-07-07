@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from '@wordpress/element';
 import { createProvider } from './providers';
 import { CoverageTracker } from './coverage';
 import { resolveCustomize } from './customize';
+import { gaEvent } from './ga';
 import { rest } from '@Utils/rest';
 import Controls from './components/Controls';
 import InfoPanel from './components/InfoPanel';
@@ -28,6 +29,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const overlays = Array.isArray( config.overlays ) ? config.overlays : [];
 	const firedOverlays = useRef( new Set() );
 	const overlayActiveRef = useRef( false );
+	const gaStartedRef = useRef( false );
 
 	// "Player free, intelligence pro": watch-verification, quiz-gating and
 	// opt-in only run with a pro license. In admin preview we simulate them so
@@ -213,7 +215,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				sync();
 			} );
 			provider.on( 'durationchange', sync );
-			provider.on( 'play', () => { setStarted( true ); sync(); } );
+			provider.on( 'play', () => {
+					if ( ! gaStartedRef.current ) {
+						gaStartedRef.current = true;
+						gaEvent( 'video_start', { video_id: videoId, video_title: title } );
+					}
+					setStarted( true );
+					sync();
+				} );
 			provider.on( 'pause', () => { if ( tracker ) { tracker.flush(); } sync(); } );
 			provider.on( 'playing', sync );
 			provider.on( 'waiting', sync );
@@ -328,6 +337,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		if ( coverageRef.current ) {
 			coverageRef.current.flush( true );
 		}
+		gaEvent( 'video_complete', { video_id: videoId, video_title: title } );
 		let gated = false;
 		if ( gatingOn && gating.finalQuiz && gating.finalQuiz.questions && gating.finalQuiz.questions.length ) {
 			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || 'Final quiz' } );
