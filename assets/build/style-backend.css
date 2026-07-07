@@ -254,6 +254,9 @@
 .grid {
 		display: grid;
 }
+.contents {
+		display: contents;
+}
 .hidden {
 		display: none;
 }
@@ -677,6 +680,9 @@
 .text-right {
 		text-align: right;
 }
+.font-mono {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
 .text-2xl {
 		font-size: 1.5rem;
 		line-height: 2rem;
@@ -723,6 +729,10 @@
 }
 .capitalize {
 		text-transform: capitalize;
+}
+.tabular-nums {
+		--tw-numeric-spacing: tabular-nums;
+		font-variant-numeric: var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction);
 }
 .leading-none {
 		line-height: 1;
@@ -811,6 +821,10 @@
 .outline-none {
 		outline: 2px solid transparent;
 		outline-offset: 2px;
+}
+.blur {
+		--tw-blur: blur(8px);
+		filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 .filter {
 		filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
