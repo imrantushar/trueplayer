@@ -4,6 +4,7 @@ import Editor from './screens/Editor';
 import Settings from './screens/Settings';
 import Analytics from './screens/Analytics';
 import Playlists from './screens/Playlists';
+import Presets from './screens/Presets';
 import Dashboard from './screens/Dashboard';
 import { Icon } from './components/icons';
 import { isPro } from './pro';
@@ -12,6 +13,7 @@ const NAV = [
 	{ key: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
 	{ key: 'library', label: 'Videos', icon: 'video' },
 	{ key: 'playlists', label: 'Playlists', icon: 'playlist' },
+	{ key: 'presets', label: 'Presets', icon: 'presets' },
 	{ key: 'settings', label: 'Settings', icon: 'settings' },
 ];
 
@@ -61,6 +63,7 @@ export default function App() {
 					{ route.name === 'editor' && <Editor id={ route.id } onBack={ () => go( 'library' ) } /> }
 					{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library' ) } /> }
 					{ route.name === 'playlists' && <Playlists /> }
+					{ route.name === 'presets' && <Presets /> }
 					{ route.name === 'settings' && <Settings /> }
 				</main>
 			</div>

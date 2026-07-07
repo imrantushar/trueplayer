@@ -39,6 +39,9 @@ class Shortcode {
 
 		$config = Helper::get_video_config( $video_id );
 
+		// Merge a referenced preset under the video's own settings.
+		$config = Helper::apply_preset( $config );
+
 		// Never leak quiz answer keys into the DOM — grading is server-side.
 		$config = self::strip_answer_keys( $config );
 

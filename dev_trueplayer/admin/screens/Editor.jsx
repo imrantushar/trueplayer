@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from '@wordpress/element';
 import { api } from '../api';
-import { Button } from '../components/UI';
+import { Button, Select } from '../components/UI';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
@@ -34,9 +34,11 @@ export default function Editor( { id, onBack } ) {
 	const [ dirty, setDirty ] = useState( false );
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
+	const [ presets, setPresets ] = useState( [] );
 
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
+		api.listPresets().then( setPresets ).catch( () => {} );
 	}, [ id ] );
 
 	const patchConfig = useCallback( ( partial ) => {
@@ -80,6 +82,19 @@ export default function Editor( { id, onBack } ) {
 					value={ video.title }
 					onChange={ ( e ) => setTitle( e.target.value ) }
 				/>
+				{ presets.length > 0 && (
+					<label className="flex items-center gap-2 text-[13px] text-gray-500">
+						Preset
+						<Select
+							className="w-40 h-9"
+							value={ config.presetId || '' }
+							onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
+						>
+							<option value="">None</option>
+							{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+						</Select>
+					</label>
+				) }
 				{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
 				{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
 				<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>

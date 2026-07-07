@@ -61,4 +61,50 @@ class Helper {
 		 */
 		return apply_filters( 'trueplayer/config', $config, (int) $video_id );
 	}
+
+	/** Decode a preset's `_trueplayer_preset` JSON meta into an array. */
+	public static function get_preset_config( $preset_id ) {
+		$raw = get_post_meta( (int) $preset_id, '_trueplayer_preset', true );
+		$cfg = is_string( $raw ) && '' !== $raw ? json_decode( $raw, true ) : ( is_array( $raw ) ? $raw : [] );
+		return is_array( $cfg ) ? $cfg : [];
+	}
+
+	/**
+	 * If a video references a preset (config.presetId), merge the preset's
+	 * customize + branding UNDER the video's own settings so per-video values
+	 * win. Applied at frontend render only — the admin editor edits the raw
+	 * config so authors always see their own overrides.
+	 */
+	public static function apply_preset( array $config ): array {
+		$preset_id = isset( $config['presetId'] ) ? (int) $config['presetId'] : 0;
+		if ( ! $preset_id || get_post_type( $preset_id ) !== TRUEPLAYER_PRESET_POST_TYPE ) {
+			return $config;
+		}
+		$preset = self::get_preset_config( $preset_id );
+		if ( ! empty( $preset['customize'] ) && is_array( $preset['customize'] ) ) {
+			$over               = isset( $config['customize'] ) && is_array( $config['customize'] ) ? $config['customize'] : [];
+			$config['customize'] = self::deep_merge( $preset['customize'], $over );
+		}
+		if ( ! empty( $preset['branding'] ) && is_array( $preset['branding'] ) ) {
+			$over               = isset( $config['branding'] ) && is_array( $config['branding'] ) ? $config['branding'] : [];
+			$config['branding'] = array_merge( $preset['branding'], $over );
+		}
+		return $config;
+	}
+
+	/** Recursive array merge where $over wins; list (numeric) arrays are replaced. */
+	private static function deep_merge( array $base, array $over ): array {
+		foreach ( $over as $k => $v ) {
+			if ( is_array( $v ) && isset( $base[ $k ] ) && is_array( $base[ $k ] ) && ! self::is_list( $v ) ) {
+				$base[ $k ] = self::deep_merge( $base[ $k ], $v );
+			} else {
+				$base[ $k ] = $v;
+			}
+		}
+		return $base;
+	}
+
+	private static function is_list( array $a ): bool {
+		return array_keys( $a ) === range( 0, count( $a ) - 1 );
+	}
 }

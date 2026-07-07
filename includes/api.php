@@ -16,6 +16,7 @@ class Api {
 	public function register_routes() {
 		( new API\SettingsController() )->register_routes();
 		( new API\VideosController() )->register_routes();
+		( new API\PresetsController() )->register_routes();
 		( new API\PlaylistsController() )->register_routes();
 		( new API\ViewersController() )->register_routes();
 		( new API\WebhooksController() )->register_routes();
