@@ -7,6 +7,7 @@ import Controls from './components/Controls';
 import InfoPanel from './components/InfoPanel';
 import Quiz from './components/Quiz';
 import Optin from './components/Optin';
+import Overlay from './components/Overlay';
 import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
@@ -24,6 +25,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const branding = config.branding || {};
 	const optin = config.optin || {};
 	const optinDoneRef = useRef( false );
+	const overlays = Array.isArray( config.overlays ) ? config.overlays : [];
+	const firedOverlays = useRef( new Set() );
+	const overlayActiveRef = useRef( false );
 
 	// "Player free, intelligence pro": watch-verification, quiz-gating and
 	// opt-in only run with a pro license. In admin preview we simulate them so
@@ -55,6 +59,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ idle, setIdle ] = useState( false );
 	const [ sticky, setSticky ] = useState( false );
 	const [ activeOptin, setActiveOptin ] = useState( false );
+	const [ activeOverlay, setActiveOverlay ] = useState( null );
 	const [ infoOpen, setInfoOpen ] = useState( false );
 
 	const getCues = useCallback( () => ( providerRef.current?.getCues ? providerRef.current.getCues() : [] ), [] );
@@ -203,6 +208,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					if ( gatingOn && ! maybeOptin( t ) ) {
 						maybeCheckpoint( t );
 					}
+					maybeOverlay( t );
 				}
 				sync();
 			} );
@@ -285,6 +291,39 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 	};
 
+	// Time/pause-triggered marketing overlays. Deduped via a ref so a fired
+	// overlay never re-shows until an explicit replay.
+	const maybeOverlay = ( t ) => {
+		if ( overlayActiveRef.current || ! overlays.length ) {
+			return;
+		}
+		const due = overlays.find(
+			( o ) => ( o.trigger || 'time' ) === 'time' && ! firedOverlays.current.has( o.id ) && t >= ( parseFloat( o.at ) || 0 )
+		);
+		if ( due ) {
+			firedOverlays.current.add( due.id );
+			overlayActiveRef.current = true;
+			if ( due.pause && providerRef.current ) {
+				providerRef.current.pause();
+			}
+			setActiveOverlay( due );
+		}
+	};
+	const closeOverlay = () => {
+		overlayActiveRef.current = false;
+		setActiveOverlay( null );
+	};
+	const replayFromStart = () => {
+		firedOverlays.current.clear();
+		overlayActiveRef.current = false;
+		setActiveOverlay( null );
+		setStarted( false );
+		if ( providerRef.current ) {
+			providerRef.current.seek( 0 );
+			providerRef.current.play();
+		}
+	};
+
 	const onEnded = () => {
 		if ( coverageRef.current ) {
 			coverageRef.current.flush( true );
@@ -299,6 +338,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		} else if ( behavior.resetOnEnd ) {
 			providerRef.current.seek( 0 );
 			setStarted( false );
+		}
+		// End screen — takes precedence over playlist auto-advance.
+		const endOverlay = overlays.find( ( o ) => o.trigger === 'end' );
+		if ( ! gated && endOverlay && ! firedOverlays.current.has( endOverlay.id ) ) {
+			firedOverlays.current.add( endOverlay.id );
+			overlayActiveRef.current = true;
+			setActiveOverlay( endOverlay );
+			gated = true;
 		}
 		sync();
 		// Playlist autoplay-next: only when nothing is gating the end.
@@ -516,6 +563,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					preview={ preview }
 					onDone={ finishOptin }
 					onSkip={ finishOptin }
+				/>
+			) }
+
+			{ activeOverlay && ! activeQuiz && ! activeOptin && ! locked && (
+				<Overlay
+					overlay={ activeOverlay }
+					onClose={ closeOverlay }
+					onReplay={ activeOverlay.trigger === 'end' ? replayFromStart : null }
 				/>
 			) }
 

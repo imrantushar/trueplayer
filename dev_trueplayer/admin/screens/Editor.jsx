@@ -4,6 +4,7 @@ import { Button, Select } from '../components/UI';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
+import OverlaysTab from './editor/OverlaysTab';
 import GatingTab from './editor/GatingTab';
 import SubscribeTab from './editor/SubscribeTab';
 import WebhooksTab from './editor/WebhooksTab';
@@ -16,6 +17,7 @@ const TABS = [
 	{ key: 'source', label: 'Source', icon: '🎬' },
 	{ key: 'player', label: 'Player options', icon: '🎛️' },
 	{ key: 'appearance', label: 'Chapters & logo', icon: '🔖' },
+	{ key: 'overlays', label: 'Call to action', icon: '📣' },
 	{ key: 'gating', label: 'Questions & gating', icon: '✅', pro: true },
 	{ key: 'subscribe', label: 'Subscribe', icon: '✉️', pro: true },
 	{ key: 'webhooks', label: 'Automation', icon: '🔗', pro: true },
@@ -127,6 +129,7 @@ export default function Editor( { id, onBack } ) {
 							{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
 							{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } /> }
 							{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } /> }
+							{ tab === 'overlays' && <OverlaysTab config={ config } patch={ patchConfig } /> }
 							{ tab === 'gating' && <GatingTab config={ config } patch={ patchConfig } /> }
 							{ tab === 'subscribe' && <SubscribeTab config={ config } patch={ patchConfig } /> }
 							{ tab === 'webhooks' && <WebhooksTab config={ config } patch={ patchConfig } /> }
