@@ -216,7 +216,7 @@ export default function Controls( props ) {
 						<Icon d={ P.pip } />
 					</button>
 				) }
-				{ show( 'fullscreen' ) && (
+				{ show( 'fullscreen' ) && capabilities?.fullscreen !== false && (
 					<button className="tp-btn" aria-label="Fullscreen" onClick={ onFullscreen }>
 						<Icon d={ P.full } />
 					</button>

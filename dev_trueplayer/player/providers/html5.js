@@ -94,7 +94,7 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 		kind: 'html5',
 		element: el,
 		sourceUrl: src,
-		capabilities: { pip: ! isAudio && 'requestPictureInPicture' in el, quality: qualities.length > 0, rate: true, tracks: true, download: true },
+		capabilities: { pip: ! isAudio && 'requestPictureInPicture' in el, quality: qualities.length > 0, rate: true, tracks: true, download: true, fullscreen: ! isAudio },
 		on: emitter.on,
 		play: () => el.play(),
 		pause: () => el.pause(),

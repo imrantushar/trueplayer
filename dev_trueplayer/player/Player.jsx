@@ -467,7 +467,7 @@ export default function Player( { videoId, config, preview = false, onEnded: onE
 			{ ! ready && ! error && <Spinner /> }
 			{ error && <Message>{ error }</Message> }
 
-			{ ready && ! started && ! locked && ! activeQuiz && ! activeOptin && ! error && appearance.bigPlay && <BigPlay onPlay={ playPause } /> }
+			{ ready && ! started && ! locked && ! activeQuiz && ! activeOptin && ! error && appearance.bigPlay && source.mediaType !== 'audio' && <BigPlay onPlay={ playPause } /> }
 
 			{ activeOptin && (
 				<Optin
