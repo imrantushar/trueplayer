@@ -125,6 +125,140 @@
 	pointer-events: none;
 }
 
+/* ---- "In this video" drawer: chapters + transcript ---- */
+.tp-info {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 3.4rem;
+	width: min( 340px, 42% );
+	z-index: 6;
+	display: flex;
+	flex-direction: column;
+	background: rgba( 18, 18, 18, 0.94 );
+	backdrop-filter: blur( 6px );
+	color: #fff;
+	border-top-left-radius: var( --tp-radius, 8px );
+	overflow: hidden;
+	animation: tp-info-in 0.2s ease;
+}
+@keyframes tp-info-in {
+	from {
+		transform: translateX( 16px );
+		opacity: 0;
+	}
+	to {
+		transform: none;
+		opacity: 1;
+	}
+}
+.tp-info-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 6px 8px 12px;
+	border-bottom: 1px solid rgba( 255, 255, 255, 0.1 );
+	flex-shrink: 0;
+}
+.tp-info-tabs {
+	display: flex;
+	gap: 4px;
+}
+.tp-info-tab {
+	background: transparent;
+	border: 0;
+	color: rgba( 255, 255, 255, 0.6 );
+	font-size: 13px;
+	font-weight: 600;
+	padding: 6px 10px;
+	border-radius: 6px;
+	cursor: pointer;
+}
+.tp-info-tab:hover {
+	color: #fff;
+}
+.tp-info-tab.is-active {
+	color: #fff;
+	background: rgba( 255, 255, 255, 0.14 );
+}
+.tp-info-close {
+	background: transparent;
+	border: 0;
+	color: rgba( 255, 255, 255, 0.7 );
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+	width: 30px;
+	height: 30px;
+	border-radius: 6px;
+}
+.tp-info-close:hover {
+	background: rgba( 255, 255, 255, 0.12 );
+	color: #fff;
+}
+.tp-info-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 6px;
+	scrollbar-width: thin;
+}
+.tp-info-row {
+	display: flex;
+	gap: 10px;
+	width: 100%;
+	text-align: left;
+	background: transparent;
+	border: 0;
+	color: #eaeaea;
+	padding: 8px 10px;
+	border-radius: 8px;
+	cursor: pointer;
+	font-size: 13px;
+	line-height: 1.4;
+	align-items: flex-start;
+}
+.tp-info-row:hover {
+	background: rgba( 255, 255, 255, 0.08 );
+}
+.tp-info-row.is-active {
+	background: rgba( 255, 255, 255, 0.14 );
+}
+.tp-info-row.is-locked {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+.tp-info-time {
+	color: var( --tp-accent );
+	font-variant-numeric: tabular-nums;
+	font-weight: 600;
+	flex-shrink: 0;
+	min-width: 44px;
+}
+.tp-info-cue .tp-info-time {
+	color: rgba( 255, 255, 255, 0.45 );
+	font-weight: 500;
+}
+.tp-info-cue.is-active .tp-info-time {
+	color: var( --tp-accent );
+}
+.tp-info-label {
+	flex: 1;
+}
+.tp-info-empty {
+	color: rgba( 255, 255, 255, 0.6 );
+	font-size: 13px;
+	padding: 20px 16px;
+	text-align: center;
+}
+.tp-controls .tp-btn.is-active {
+	color: var( --tp-accent );
+}
+@media ( max-width: 520px ) {
+	.tp-info {
+		width: 100%;
+	}
+}
+
 /* ---- controls ---- */
 .tp-controls {
 	position: absolute;

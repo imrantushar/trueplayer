@@ -4,6 +4,7 @@ import { CoverageTracker } from './coverage';
 import { resolveCustomize } from './customize';
 import { rest } from '@Utils/rest';
 import Controls from './components/Controls';
+import InfoPanel from './components/InfoPanel';
 import Quiz from './components/Quiz';
 import Optin from './components/Optin';
 import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
@@ -34,6 +35,12 @@ export default function Player( { videoId, config, preview = false, onEnded: onE
 	const appearance = cz.appearance;
 	const behavior = cz.behavior;
 
+	// "In this video" drawer: chapters (any provider) + transcript (from the
+	// caption track on the html5-backed providers; embeds have no cue access).
+	const chapterList = config.chapters || [];
+	const isEmbedProvider = source.type === 'youtube' || source.type === 'vimeo';
+	const hasInfo = chapterList.length > 0 || ( ! isEmbedProvider && ( source.subtitles || [] ).length > 0 );
+
 	const [ ready, setReady ] = useState( false );
 	const [ error, setError ] = useState( null );
 	const [ started, setStarted ] = useState( false );
@@ -48,6 +55,9 @@ export default function Player( { videoId, config, preview = false, onEnded: onE
 	const [ idle, setIdle ] = useState( false );
 	const [ sticky, setSticky ] = useState( false );
 	const [ activeOptin, setActiveOptin ] = useState( false );
+	const [ infoOpen, setInfoOpen ] = useState( false );
+
+	const getCues = useCallback( () => ( providerRef.current?.getCues ? providerRef.current.getCues() : [] ), [] );
 
 	const sync = useCallback( () => {
 		const p = providerRef.current;
@@ -526,6 +536,20 @@ export default function Player( { videoId, config, preview = false, onEnded: onE
 					onPiP={ pip }
 					onDownload={ download }
 					onFullscreen={ fullscreen }
+					onInfo={ () => setInfoOpen( ( o ) => ! o ) }
+					hasInfo={ hasInfo }
+					infoOpen={ infoOpen }
+				/>
+			) }
+
+			{ infoOpen && ready && ! error && ! activeQuiz && ! locked && ! activeOptin && (
+				<InfoPanel
+					chapters={ chapterList }
+					getCues={ getCues }
+					current={ ui.current }
+					seekable={ seekable }
+					onSeek={ seek }
+					onClose={ () => setInfoOpen( false ) }
 				/>
 			) }
 		</div>

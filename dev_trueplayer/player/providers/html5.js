@@ -136,6 +136,24 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 				t.mode = String( i ) === String( id ) ? 'showing' : 'hidden';
 			} );
 		},
+		// Cues for the interactive transcript. Force the track to load (mode
+		// 'hidden' parses cues without rendering them) and flatten to plain data.
+		getCues: () => {
+			const tracks = Array.from( el.textTracks || [] );
+			const t = tracks.find( ( x ) => x.cues && x.cues.length ) ||
+				tracks.find( ( x ) => x.mode !== 'disabled' ) || tracks[ 0 ];
+			if ( ! t ) {
+				return [];
+			}
+			if ( t.mode === 'disabled' ) {
+				t.mode = 'hidden'; // triggers async cue parsing
+			}
+			return Array.from( t.cues || [] ).map( ( c ) => ( {
+				start: c.startTime,
+				end: c.endTime,
+				text: ( c.text || '' ).replace( /<[^>]+>/g, '' ),
+			} ) );
+		},
 		requestPiP: () => ( el.requestPictureInPicture ? el.requestPictureInPicture() : Promise.reject() ),
 		destroy: () => {
 			if ( hls ) {

@@ -17,6 +17,7 @@ const P = {
 	rewind: 'M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z',
 	forward: 'M13 6v12l8.5-6L13 6zM4 18l8.5-6L4 6v12z',
 	download: 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z',
+	list: 'M3 5h13v2H3V5zm0 6h13v2H3v-2zm0 6h9v2H3v-2zm15.5-6L22 13l-3.5 2v-4z',
 };
 
 function buildSegments( chapters, duration ) {
@@ -156,6 +157,7 @@ export default function Controls( props ) {
 		playing, current, duration, buffered, muted, volume, rate, quality, track, seekable,
 		chapters, provider, capabilities, controls = {}, speeds, skipSeconds = 10,
 		onPlayPause, onSeek, onVolume, onMute, onRate, onQuality, onTrack, onPiP, onFullscreen, onSkip, onDownload,
+		onInfo, hasInfo, infoOpen,
 	} = props;
 
 	const show = ( key, fallback = true ) => ( controls[ key ] === undefined ? fallback : controls[ key ] );
@@ -206,6 +208,11 @@ export default function Controls( props ) {
 				{ show( 'download' ) && capabilities?.download && (
 					<button className="tp-btn" aria-label="Download" onClick={ onDownload }>
 						<Icon d={ P.download } />
+					</button>
+				) }
+				{ hasInfo && (
+					<button className={ `tp-btn ${ infoOpen ? 'is-active' : '' }` } aria-label="Chapters &amp; transcript" aria-pressed={ infoOpen } onClick={ onInfo }>
+						<Icon d={ P.list } />
 					</button>
 				) }
 				{ show( 'settings' ) && settingsHasContent && (
