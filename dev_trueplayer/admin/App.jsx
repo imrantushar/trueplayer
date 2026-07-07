@@ -63,6 +63,8 @@ export default function App() {
 				<span className="font-bold text-[15px] tracking-tight">TruePlayer</span>
 				<span className="w-px h-5 bg-line mx-1" />
 				<span className="text-sm font-medium text-gray-500">{ TITLES[ route.name ] || '' }</span>
+				{ /* Screens (e.g. the editor) portal their toolbar actions here. */ }
+				<div id="tp-topbar-slot" className="ml-auto flex items-center gap-2.5" />
 			</header>
 
 			<div className="flex flex-1 min-h-0">

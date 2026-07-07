@@ -219,6 +219,9 @@
 .mb-6 {
 		margin-bottom: 1.5rem;
 }
+.ml-auto {
+		margin-right: auto;
+}
 .mr-2 {
 		margin-left: 0.5rem;
 }

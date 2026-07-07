@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from '@wordpress/element';
+import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
 import { Button, Select } from '../components/UI';
 import SourceTab from './editor/SourceTab';
@@ -37,10 +37,12 @@ export default function Editor( { id, onBack } ) {
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
 	const [ presets, setPresets ] = useState( [] );
+	const [ toolbarSlot, setToolbarSlot ] = useState( null );
 
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
 		api.listPresets().then( setPresets ).catch( () => {} );
+		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
 	}, [ id ] );
 
 	const patchConfig = useCallback( ( partial ) => {
@@ -114,35 +116,42 @@ export default function Editor( { id, onBack } ) {
 			{ /* Content */ }
 			<main className="flex-1 min-w-0">
 				<div className="max-w-5xl mx-auto px-8 py-8">
-					<div className="flex items-center gap-3 mb-6">
+					{ /* Toolbar actions live in the topbar (portaled). */ }
+					{ toolbarSlot && createPortal(
+						<>
+							{ presets.length > 0 && (
+								<label className="flex items-center gap-2 text-[13px] text-gray-500">
+									Preset
+									<Select
+										className="w-40 h-9"
+										value={ config.presetId || '' }
+										onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
+									>
+										<option value="">None</option>
+										{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+									</Select>
+								</label>
+							) }
+							{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
+							{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
+							{ isLastTab ? (
+								<Button onClick={ () => save( false ) } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+							) : (
+								<>
+									<Button variant="ghost" onClick={ () => save( false ) } disabled={ saving || ! dirty }>Save</Button>
+									<Button onClick={ () => save( true ) } disabled={ saving }>{ saving ? 'Saving…' : 'Save & Continue' }</Button>
+								</>
+							) }
+						</>,
+						toolbarSlot
+					) }
+
+					<div className="mb-6">
 						<input
-							className="flex-1 text-2xl font-bold text-gray-900 bg-transparent outline-none border-b border-transparent focus:border-line"
+							className="w-full text-2xl font-bold text-gray-900 bg-transparent outline-none border-b border-transparent focus:border-line"
 							value={ video.title }
 							onChange={ ( e ) => setTitle( e.target.value ) }
 						/>
-						{ presets.length > 0 && (
-							<label className="flex items-center gap-2 text-[13px] text-gray-500">
-								Preset
-								<Select
-									className="w-40 h-9"
-									value={ config.presetId || '' }
-									onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
-								>
-									<option value="">None</option>
-									{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
-								</Select>
-							</label>
-						) }
-						{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-						{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
-						{ isLastTab ? (
-							<Button onClick={ () => save( false ) } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
-						) : (
-							<>
-								<Button variant="ghost" onClick={ () => save( false ) } disabled={ saving || ! dirty }>Save</Button>
-								<Button onClick={ () => save( true ) } disabled={ saving }>{ saving ? 'Saving…' : 'Save & Continue' }</Button>
-							</>
-						) }
 					</div>
 
 					<div className="flex flex-col xl:flex-row gap-6 items-start">
