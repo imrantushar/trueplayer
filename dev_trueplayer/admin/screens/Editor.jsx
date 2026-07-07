@@ -68,7 +68,7 @@ export default function Editor( { id, onBack } ) {
 	};
 
 	if ( ! video ) {
-		return <p className="text-gray-400">Loading…</p>;
+		return <main className="flex-1 p-8 text-gray-400">Loading…</main>;
 	}
 
 	const config = video.config || {};
@@ -76,77 +76,84 @@ export default function Editor( { id, onBack } ) {
 	const isProTab = !! TABS.find( ( t ) => t.key === tab )?.pro;
 
 	return (
-		<div>
-			<div className="flex items-center gap-3 mb-6">
-				<Button variant="ghost" onClick={ onBack }>← Back</Button>
-				<input
-					className="flex-1 text-2xl font-bold text-gray-900 bg-transparent outline-none border-b border-transparent focus:border-line"
-					value={ video.title }
-					onChange={ ( e ) => setTitle( e.target.value ) }
-				/>
-				{ presets.length > 0 && (
-					<label className="flex items-center gap-2 text-[13px] text-gray-500">
-						Preset
-						<Select
-							className="w-40 h-9"
-							value={ config.presetId || '' }
-							onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
-						>
-							<option value="">None</option>
-							{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
-						</Select>
-					</label>
-				) }
-				{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-				{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
-				<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
-			</div>
-
-			{ /* Steps as a horizontal sub-topbar → the editor content gets full width. */ }
-			<div className="border-b border-line mb-6 overflow-x-auto">
-				<nav className="flex gap-1 min-w-max">
+		<>
+			{ /* Contextual sidebar: the video editor's own step menu */ }
+			<aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col">
+				<div className="p-3 border-b border-line">
+					<button onClick={ onBack } className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+						← Back to videos
+					</button>
+				</div>
+				<nav className="flex-1 p-3 space-y-1 overflow-y-auto">
 					{ TABS.map( ( t ) => (
 						<button
 							key={ t.key }
 							onClick={ () => setTab( t.key ) }
-							className={ `flex items-center gap-2 px-3.5 py-2.5 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition ${
-								tab === t.key ? 'border-brand-500 text-brand-700' : 'border-transparent text-gray-600 hover:text-gray-900'
+							className={ `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${
+								tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
 							}` }
 						>
 							<span className="text-base leading-none">{ t.icon }</span>
-							{ t.label }
+							<span className="flex-1">{ t.label }</span>
 							{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
 						</button>
 					) ) }
 				</nav>
-			</div>
+			</aside>
 
-			<div className="flex flex-col xl:flex-row gap-6 items-start">
-				{ /* Active settings panel — now full width */ }
-				<div className="flex-1 min-w-0 w-full">
-					{ isProTab && ! pro ? (
-						<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
-					) : (
-						<>
-							{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
-							{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } /> }
-							{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } /> }
-							{ tab === 'overlays' && <OverlaysTab config={ config } patch={ patchConfig } /> }
-							{ tab === 'gating' && <GatingTab config={ config } patch={ patchConfig } /> }
-							{ tab === 'subscribe' && <SubscribeTab config={ config } patch={ patchConfig } /> }
-							{ tab === 'webhooks' && <WebhooksTab config={ config } patch={ patchConfig } /> }
-							{ tab === 'embed' && <EmbedTab video={ video } /> }
-						</>
-					) }
-				</div>
+			{ /* Content */ }
+			<main className="flex-1 min-w-0">
+				<div className="max-w-5xl mx-auto px-8 py-8">
+					<div className="flex items-center gap-3 mb-6">
+						<input
+							className="flex-1 text-2xl font-bold text-gray-900 bg-transparent outline-none border-b border-transparent focus:border-line"
+							value={ video.title }
+							onChange={ ( e ) => setTitle( e.target.value ) }
+						/>
+						{ presets.length > 0 && (
+							<label className="flex items-center gap-2 text-[13px] text-gray-500">
+								Preset
+								<Select
+									className="w-40 h-9"
+									value={ config.presetId || '' }
+									onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
+								>
+									<option value="">None</option>
+									{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+								</Select>
+							</label>
+						) }
+						{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
+						{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
+						<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+					</div>
 
-				{ /* Persistent live preview */ }
-				<div className="w-full xl:w-[380px] shrink-0">
-					<div className="xl:sticky xl:top-4">
-						<PreviewPanel id={ id } config={ config } />
+					<div className="flex flex-col xl:flex-row gap-6 items-start">
+						<div className="flex-1 min-w-0 w-full">
+							{ isProTab && ! pro ? (
+								<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
+							) : (
+								<>
+									{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'overlays' && <OverlaysTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'gating' && <GatingTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'subscribe' && <SubscribeTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'webhooks' && <WebhooksTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'embed' && <EmbedTab video={ video } /> }
+								</>
+							) }
+						</div>
+
+						<div className="w-full xl:w-[380px] shrink-0">
+							<div className="xl:sticky xl:top-4">
+								<PreviewPanel id={ id } config={ config } />
+							</div>
+						</div>
 					</div>
 				</div>
-			</div>
-		</div>
+			</main>
+		</>
 	);
 }
