@@ -30,6 +30,7 @@ export const CUSTOMIZE_DEFAULTS = {
 		sticky: false, // float on scroll-out
 		stickyPosition: 'bottom-right',
 		preload: 'metadata', // auto | metadata | none
+		noSkip: false, // block seeking past the furthest point watched (rewind ok)
 	},
 	appearance: {
 		accent: '#4f46e5',

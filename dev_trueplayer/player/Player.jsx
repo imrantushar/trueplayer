@@ -16,6 +16,7 @@ export default function Player( { videoId, config, preview = false } ) {
 	const providerRef = useRef( null );
 	const coverageRef = useRef( null );
 	const passedCheckpoints = useRef( new Set() );
+	const furthestRef = useRef( 0 ); // furthest naturally-watched second (for no-skip)
 
 	const gating = { ...DEFAULT_GATING, ...( config.gating || {} ) };
 	const source = config.source || {};
@@ -148,6 +149,7 @@ export default function Player( { videoId, config, preview = false } ) {
 				if ( tracker ) {
 					tracker.frontier = resumeAt;
 				}
+				furthestRef.current = resumeAt;
 				setFrontier( resumeAt );
 			}
 
@@ -167,6 +169,10 @@ export default function Player( { videoId, config, preview = false } ) {
 			provider.on( 'timeupdate', () => {
 				const t = provider.getCurrentTime();
 				if ( ! provider.isPaused() ) {
+					// Advance the furthest-watched marker on natural playback only.
+					if ( t > furthestRef.current && t - furthestRef.current < 6 ) {
+						furthestRef.current = t;
+					}
 					if ( tracker ) {
 						tracker.mark( t );
 						if ( tracker.frontier > frontier ) {
@@ -285,9 +291,13 @@ export default function Player( { videoId, config, preview = false } ) {
 		}
 	};
 
-	// Anti-skip only applies with pro (and never in preview, so the admin can scrub).
-	const seekable = gatingOn && ! preview && gating.antiSkip && ! ( gate && gate.completed )
-		? Math.min( ui.duration, Math.max( frontier + 2, ui.current + 0.5 ) )
+	// Cap seeking to the furthest point watched when "no skip" (free behavior)
+	// or pro anti-skip is on. Never in preview, and released once completed.
+	const noSkipActive = ! preview && ! ( gate && gate.completed ) &&
+		( behavior.noSkip || ( gatingOn && gating.antiSkip ) );
+	const watchedTo = Math.max( furthestRef.current, frontier );
+	const seekable = noSkipActive
+		? Math.min( ui.duration, Math.max( watchedTo + 1.5, ui.current + 0.5 ) )
 		: ui.duration;
 
 	useEffect( () => {

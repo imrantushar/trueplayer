@@ -19,7 +19,7 @@ const CONTROL_LABELS = {
 
 const DEFAULTS = {
 	controls: { play: true, rewind: true, forward: true, progress: true, currentTime: true, duration: true, mute: true, volume: true, captions: true, settings: true, speed: true, pip: true, fullscreen: true, download: false },
-	behavior: { autoplay: false, muted: false, loop: false, resetOnEnd: false, savePosition: true, hideControls: true, sticky: false, stickyPosition: 'bottom-right', preload: 'metadata' },
+	behavior: { autoplay: false, muted: false, loop: false, resetOnEnd: false, savePosition: true, hideControls: true, sticky: false, stickyPosition: 'bottom-right', preload: 'metadata', noSkip: false },
 	appearance: { accent: '#4f46e5', hoverColor: '', bigPlay: true, playButtonStyle: 'circle', roundness: 10, controlBarStyle: 'gradient' },
 	speeds: [ 0.5, 0.75, 1, 1.25, 1.5, 2 ],
 	skipSeconds: 10,
@@ -106,6 +106,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 						<Toggle checked={ behavior.savePosition } onChange={ ( v ) => setSection( 'behavior', { savePosition: v } ) } label="Save & resume playback position" />
 						<Toggle checked={ behavior.hideControls } onChange={ ( v ) => setSection( 'behavior', { hideControls: v } ) } label="Auto-hide controls while playing" />
 						<Toggle checked={ behavior.sticky } onChange={ ( v ) => setSection( 'behavior', { sticky: v } ) } label="Float player when scrolling away" />
+						<Toggle checked={ behavior.noSkip } onChange={ ( v ) => setSection( 'behavior', { noSkip: v } ) } label="Prevent skipping ahead (no jumping to unwatched parts)" />
 					</div>
 				</div>
 				<div className="grid md:grid-cols-2 gap-x-6 mt-2">
