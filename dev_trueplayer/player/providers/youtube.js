@@ -41,7 +41,7 @@ function parseId( source ) {
  * YouTube provider with our own controls overlaid (controls=0, modestbranding).
  * A poll loop synthesizes timeupdate since the IFrame API has no such event.
  */
-export async function createYouTubeProvider( container, source ) {
+export async function createYouTubeProvider( container, source, opts = {} ) {
 	const YT = await loadYT();
 	const emitter = createEmitter();
 	const host = document.createElement( 'div' );
@@ -51,42 +51,46 @@ export async function createYouTubeProvider( container, source ) {
 	let poll = null;
 	let duration = 0;
 
-	const player = await new Promise( ( resolve ) => {
-		const p = new YT.Player( host, {
-			videoId: parseId( source ),
-			playerVars: {
-				controls: 0,
-				modestbranding: 1,
-				rel: 0,
-				playsinline: 1,
-				fs: 0,
-				disablekb: 1,
-				iv_load_policy: 3,
+	// The YT.Player constructor returns synchronously; `onReady` fires later.
+	// Build and return the provider now, and emit our own 'ready' from the
+	// handler — waiting on onReady before returning would emit 'ready' before
+	// the Player has subscribed to it, leaving it stuck on the spinner.
+	const player = new YT.Player( host, {
+		videoId: parseId( source ),
+		playerVars: {
+			controls: 0,
+			modestbranding: 1,
+			rel: 0,
+			playsinline: 1,
+			fs: 0,
+			disablekb: 1,
+			iv_load_policy: 3,
+			// Booted from a click → begin playing as soon as the player is ready.
+			autoplay: opts.autoStart ? 1 : 0,
+			origin: window.location.origin,
+		},
+		events: {
+			onReady: () => {
+				duration = player.getDuration() || 0;
+				emitter.emit( 'ready' );
+				emitter.emit( 'durationchange' );
 			},
-			events: {
-				onReady: () => {
-					duration = p.getDuration() || 0;
-					emitter.emit( 'ready' );
-					emitter.emit( 'durationchange' );
-					resolve( p );
-				},
-				onStateChange: ( e ) => {
-					if ( e.data === YT.PlayerState.PLAYING ) {
-						emitter.emit( 'play' );
-						emitter.emit( 'playing' );
-						if ( ! poll ) {
-							poll = setInterval( () => emitter.emit( 'timeupdate' ), 250 );
-						}
-					} else if ( e.data === YT.PlayerState.PAUSED ) {
-						emitter.emit( 'pause' );
-					} else if ( e.data === YT.PlayerState.ENDED ) {
-						emitter.emit( 'ended' );
-					} else if ( e.data === YT.PlayerState.BUFFERING ) {
-						emitter.emit( 'waiting' );
+			onStateChange: ( e ) => {
+				if ( e.data === YT.PlayerState.PLAYING ) {
+					emitter.emit( 'play' );
+					emitter.emit( 'playing' );
+					if ( ! poll ) {
+						poll = setInterval( () => emitter.emit( 'timeupdate' ), 250 );
 					}
-				},
+				} else if ( e.data === YT.PlayerState.PAUSED ) {
+					emitter.emit( 'pause' );
+				} else if ( e.data === YT.PlayerState.ENDED ) {
+					emitter.emit( 'ended' );
+				} else if ( e.data === YT.PlayerState.BUFFERING ) {
+					emitter.emit( 'waiting' );
+				}
 			},
-		} );
+		},
 	} );
 
 	return {

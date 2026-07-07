@@ -4,7 +4,7 @@ import { createEmitter } from './emitter';
  * Vimeo provider via @vimeo/player (lazy-imported). Native controls hidden;
  * our custom control bar drives it.
  */
-export async function createVimeoProvider( container, source ) {
+export async function createVimeoProvider( container, source, opts = {} ) {
 	const Vimeo = ( await import( /* webpackChunkName: "vimeojs" */ '@vimeo/player' ) ).default;
 	const emitter = createEmitter();
 	const host = document.createElement( 'div' );
@@ -12,16 +12,11 @@ export async function createVimeoProvider( container, source ) {
 	container.appendChild( host );
 
 	const id = source.videoId || ( source.src || '' ).match( /vimeo\.com\/(\d+)/ )?.[ 1 ] || source.src;
-	const player = new Vimeo( host, { id, controls: false, responsive: true, playsinline: true } );
+	const player = new Vimeo( host, { id, controls: false, responsive: true, playsinline: true, autoplay: !! opts.autoStart } );
 
 	let duration = 0;
 	let current = 0;
 	let paused = true;
-
-	await player.ready();
-	duration = await player.getDuration().catch( () => 0 );
-	emitter.emit( 'ready' );
-	emitter.emit( 'durationchange' );
 
 	player.on( 'timeupdate', ( d ) => {
 		current = d.seconds;
@@ -38,6 +33,15 @@ export async function createVimeoProvider( container, source ) {
 	} );
 	player.on( 'ended', () => emitter.emit( 'ended' ) );
 	player.on( 'bufferstart', () => emitter.emit( 'waiting' ) );
+
+	// Emit 'ready' asynchronously (player.ready() resolves over the network),
+	// so the Player has subscribed by the time it fires. Awaiting it before we
+	// return would emit into the void and leave the player stuck on the spinner.
+	player.ready().then( async () => {
+		duration = await player.getDuration().catch( () => 0 );
+		emitter.emit( 'ready' );
+		emitter.emit( 'durationchange' );
+	} );
 
 	return {
 		kind: 'vimeo',

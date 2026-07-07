@@ -116,7 +116,7 @@ export default function Player( { videoId, config, preview = false, onEnded: onE
 
 			let provider;
 			try {
-				provider = await createProvider( containerRef.current, source, { behavior } );
+				provider = await createProvider( containerRef.current, source, { behavior, autoStart } );
 			} catch ( e ) {
 				setError( 'Unable to load the player.' );
 				return;
