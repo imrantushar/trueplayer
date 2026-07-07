@@ -19,7 +19,26 @@ const P = {
 	download: 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z',
 };
 
+function buildSegments( chapters, duration ) {
+	if ( ! duration ) {
+		return [];
+	}
+	const cs = ( chapters || [] )
+		.filter( ( c ) => c.at >= 0 && c.at < duration )
+		.sort( ( a, b ) => a.at - b.at );
+	if ( ! cs.length ) {
+		return [];
+	}
+	const segs = [];
+	if ( cs[ 0 ].at > 0.5 ) {
+		segs.push( { start: 0, end: cs[ 0 ].at, label: '' } );
+	}
+	cs.forEach( ( c, i ) => segs.push( { start: c.at, end: cs[ i + 1 ] ? cs[ i + 1 ].at : duration, label: c.label } ) );
+	return segs;
+}
+
 function Scrubber( { current, duration, buffered, chapters, seekable, onSeek } ) {
+	const [ hover, setHover ] = useState( null );
 	const pct = duration ? ( current / duration ) * 100 : 0;
 	const bpct = duration ? ( buffered / duration ) * 100 : 0;
 	const spct = duration && seekable < duration ? ( seekable / duration ) * 100 : 100;
@@ -34,23 +53,52 @@ function Scrubber( { current, duration, buffered, chapters, seekable, onSeek } )
 		onSeek( t );
 	};
 
+	const segs = buildSegments( chapters, duration );
+	const fill = ( value, start, end ) => {
+		const span = end - start;
+		return span > 0 ? Math.min( 100, Math.max( 0, ( ( value - start ) / span ) * 100 ) ) : 0;
+	};
+
 	return (
 		<div className="tp-scrubber" onClick={ handle } role="slider" aria-valuenow={ Math.floor( current ) } aria-valuemax={ Math.floor( duration ) } tabIndex={ 0 }>
-			<div className="tp-scrubber-track">
-				<div className="tp-scrubber-buffered" style={ { width: `${ bpct }%` } } />
-				{ seekable < duration && (
-					<div className="tp-scrubber-lockline" style={ { left: `${ spct }%` } } title="Anti-skip: watch to unlock" />
-				) }
-				<div className="tp-scrubber-played" style={ { width: `${ pct }%` } } />
-				{ ( chapters || [] ).map( ( c, i ) =>
-					duration ? (
-						<span key={ i } className="tp-chapter-marker" style={ { left: `${ ( c.at / duration ) * 100 }%` } } title={ c.label } />
-					) : null
-				) }
-				<div className="tp-scrubber-thumb" style={ { left: `${ pct }%` } } />
-			</div>
+			{ hover && <div className="tp-chapter-tip" style={ { left: `${ hover.left }%` } }>{ hover.label }</div> }
+			{ segs.length > 1 ? (
+				<div className="tp-scrubber-segs">
+					{ segs.map( ( s, i ) => {
+						const left = ( s.start / duration ) * 100;
+						const width = ( ( s.end - s.start ) / duration ) * 100;
+						return (
+							<div
+								key={ i }
+								className="tp-seg"
+								style={ { left: `${ left }%`, width: `calc(${ width }% - 3px)` } }
+								onMouseEnter={ () => s.label && setHover( { label: s.label, left: left + width / 2 } ) }
+								onMouseLeave={ () => setHover( null ) }
+							>
+								<div className="tp-seg-buffered" style={ { width: `${ fill( buffered, s.start, s.end ) }%` } } />
+								<div className="tp-seg-played" style={ { width: `${ fill( current, s.start, s.end ) }%` } } />
+							</div>
+						);
+					} ) }
+					{ seekable < duration && <div className="tp-scrubber-lockline" style={ { left: `${ spct }%` } } /> }
+					<div className="tp-scrubber-thumb" style={ { left: `${ pct }%` } } />
+				</div>
+			) : (
+				<div className="tp-scrubber-track">
+					<div className="tp-scrubber-buffered" style={ { width: `${ bpct }%` } } />
+					{ seekable < duration && <div className="tp-scrubber-lockline" style={ { left: `${ spct }%` } } /> }
+					<div className="tp-scrubber-played" style={ { width: `${ pct }%` } } />
+					<div className="tp-scrubber-thumb" style={ { left: `${ pct }%` } } />
+				</div>
+			) }
 		</div>
 	);
+}
+
+export function currentChapter( chapters, current, duration ) {
+	const segs = buildSegments( chapters, duration );
+	const seg = segs.find( ( s ) => current >= s.start && current < s.end );
+	return seg && seg.label ? seg.label : '';
 }
 
 function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, speeds, showSpeed } ) {
@@ -111,6 +159,7 @@ export default function Controls( props ) {
 	} = props;
 
 	const show = ( key, fallback = true ) => ( controls[ key ] === undefined ? fallback : controls[ key ] );
+	const chapterNow = currentChapter( chapters, current, duration );
 	const settingsHasContent =
 		( show( 'speed' ) ) ||
 		( provider?.getQualities?.().length > 0 ) ||
@@ -152,6 +201,7 @@ export default function Controls( props ) {
 						{ show( 'duration' ) && formatTime( duration ) }
 					</span>
 				) }
+				{ chapterNow && <span className="tp-chapter-now" title={ chapterNow }>· { chapterNow }</span> }
 				<div className="tp-spacer" />
 				{ show( 'download' ) && capabilities?.download && (
 					<button className="tp-btn" aria-label="Download" onClick={ onDownload }>

@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import Player from './Player';
+import Playlist from './Playlist';
 
 /**
  * Discovers [data-trueplayer] mount nodes and boots one React player per node,
@@ -30,5 +31,28 @@ export function mountPlayers() {
 		root.className = 'tp-root';
 		node.appendChild( root );
 		createRoot( root ).render( <Player videoId={ videoId } config={ data.config || {} } /> );
+	} );
+}
+
+/** Discovers [data-trueplayer-playlist] nodes and boots a Playlist per node. */
+export function mountPlaylists() {
+	document.querySelectorAll( '[data-trueplayer-playlist]' ).forEach( ( node ) => {
+		if ( node.dataset.tpBooted ) {
+			return;
+		}
+		node.dataset.tpBooted = '1';
+		const configEl = node.querySelector( 'script.trueplayer-playlist-config' );
+		let data = {};
+		try {
+			data = configEl ? JSON.parse( configEl.textContent ) : {};
+		} catch ( e ) {
+			data = {};
+		}
+		if ( ! ( data.items && data.items.length ) ) {
+			return;
+		}
+		const root = document.createElement( 'div' );
+		node.appendChild( root );
+		createRoot( root ).render( <Playlist data={ data } /> );
 	} );
 }

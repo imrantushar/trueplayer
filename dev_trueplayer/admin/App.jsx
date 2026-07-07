@@ -3,9 +3,11 @@ import Library from './screens/Library';
 import Editor from './screens/Editor';
 import Settings from './screens/Settings';
 import Analytics from './screens/Analytics';
+import Playlists from './screens/Playlists';
 
 const NAV = [
 	{ key: 'library', label: 'Videos' },
+	{ key: 'playlists', label: 'Playlists' },
 	{ key: 'settings', label: 'Settings' },
 ];
 
@@ -44,6 +46,7 @@ export default function App() {
 				{ route.name === 'library' && <Library onEdit={ ( id ) => go( 'editor', { id } ) } onViewers={ ( id ) => go( 'analytics', { id } ) } /> }
 				{ route.name === 'editor' && <Editor id={ route.id } onBack={ () => go( 'library' ) } /> }
 				{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library' ) } /> }
+				{ route.name === 'playlists' && <Playlists /> }
 				{ route.name === 'settings' && <Settings /> }
 			</main>
 		</div>

@@ -10,12 +10,13 @@ import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
-export default function Player( { videoId, config, preview = false } ) {
+export default function Player( { videoId, config, preview = false, onEnded: onEndedProp } ) {
 	const stageRef = useRef( null );
 	const containerRef = useRef( null );
 	const providerRef = useRef( null );
 	const coverageRef = useRef( null );
 	const passedCheckpoints = useRef( new Set() );
+	const furthestRef = useRef( 0 ); // furthest naturally-watched second (for no-skip)
 
 	const gating = { ...DEFAULT_GATING, ...( config.gating || {} ) };
 	const source = config.source || {};
@@ -91,7 +92,12 @@ export default function Player( { videoId, config, preview = false } ) {
 			}
 			setGate( gateState );
 			if ( gateState.canPlay === false ) {
-				setError( gateState.reason === 'login_required' ? 'Please log in to watch this video.' : 'This video is not available.' );
+				const messages = {
+					login_required: 'Please log in to watch this video.',
+					enroll_required: 'Enroll in this course to watch.',
+					purchase_required: 'Purchase this course to watch.',
+				};
+				setError( gateState.message || messages[ gateState.reason ] || 'This video is not available.' );
 				return;
 			}
 			if ( gateState.locked ) {
@@ -143,6 +149,7 @@ export default function Player( { videoId, config, preview = false } ) {
 				if ( tracker ) {
 					tracker.frontier = resumeAt;
 				}
+				furthestRef.current = resumeAt;
 				setFrontier( resumeAt );
 			}
 
@@ -162,6 +169,10 @@ export default function Player( { videoId, config, preview = false } ) {
 			provider.on( 'timeupdate', () => {
 				const t = provider.getCurrentTime();
 				if ( ! provider.isPaused() ) {
+					// Advance the furthest-watched marker on natural playback only.
+					if ( t > furthestRef.current && t - furthestRef.current < 6 ) {
+						furthestRef.current = t;
+					}
 					if ( tracker ) {
 						tracker.mark( t );
 						if ( tracker.frontier > frontier ) {
@@ -260,15 +271,22 @@ export default function Player( { videoId, config, preview = false } ) {
 		if ( coverageRef.current ) {
 			coverageRef.current.flush( true );
 		}
+		let gated = false;
 		if ( gatingOn && gating.finalQuiz && gating.finalQuiz.questions && gating.finalQuiz.questions.length ) {
 			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || 'Final quiz' } );
+			gated = true;
 		} else if ( gatingOn && optin.enabled && optin.position === 'end' && ! optinDoneRef.current ) {
 			setActiveOptin( true );
+			gated = true;
 		} else if ( behavior.resetOnEnd ) {
 			providerRef.current.seek( 0 );
 			setStarted( false );
 		}
 		sync();
+		// Playlist autoplay-next: only when nothing is gating the end.
+		if ( ! gated && onEndedProp ) {
+			onEndedProp();
+		}
 	};
 
 	const finishOptin = () => {
@@ -280,9 +298,13 @@ export default function Player( { videoId, config, preview = false } ) {
 		}
 	};
 
-	// Anti-skip only applies with pro (and never in preview, so the admin can scrub).
-	const seekable = gatingOn && ! preview && gating.antiSkip && ! ( gate && gate.completed )
-		? Math.min( ui.duration, Math.max( frontier + 2, ui.current + 0.5 ) )
+	// Cap seeking to the furthest point watched when "no skip" (free behavior)
+	// or pro anti-skip is on. Never in preview, and released once completed.
+	const noSkipActive = ! preview && ! ( gate && gate.completed ) &&
+		( behavior.noSkip || ( gatingOn && gating.antiSkip ) );
+	const watchedTo = Math.max( furthestRef.current, frontier );
+	const seekable = noSkipActive
+		? Math.min( ui.duration, Math.max( watchedTo + 1.5, ui.current + 0.5 ) )
 		: ui.duration;
 
 	useEffect( () => {

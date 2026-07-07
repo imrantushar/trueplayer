@@ -1,5 +1,5 @@
 import './player/style.css';
-import { mountPlayers } from '@Player/mount';
+import { mountPlayers, mountPlaylists } from '@Player/mount';
 
 /**
  * Frontend runtime entry. Scans the DOM for [data-trueplayer] mount nodes and
@@ -8,6 +8,7 @@ import { mountPlayers } from '@Player/mount';
  */
 function boot() {
 	mountPlayers();
+	mountPlaylists();
 }
 
 if ( document.readyState === 'loading' ) {
