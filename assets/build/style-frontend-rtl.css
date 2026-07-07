@@ -222,6 +222,61 @@
 	opacity: 0.85;
 }
 
+/* ---- YouTube-style segmented chapters ---- */
+.tp-scrubber-segs {
+	position: relative;
+	height: 5px;
+	transition: height 0.1s ease;
+}
+.tp-scrubber:hover .tp-scrubber-segs {
+	height: 7px;
+}
+.tp-seg {
+	position: absolute;
+	top: 0;
+	height: 100%;
+	background: rgba( 255, 255, 255, 0.28 );
+	border-radius: 3px;
+	overflow: hidden;
+}
+.tp-seg-buffered {
+	position: absolute;
+	right: 0;
+	top: 0;
+	height: 100%;
+	background: rgba( 255, 255, 255, 0.4 );
+}
+.tp-seg-played {
+	position: absolute;
+	right: 0;
+	top: 0;
+	height: 100%;
+	background: var(--tp-accent);
+}
+.tp-chapter-tip {
+	position: absolute;
+	bottom: 22px;
+	transform: translateX( 50% );
+	background: rgba( 17, 24, 39, 0.95 );
+	color: #fff;
+	font-size: 12px;
+	padding: 4px 9px;
+	border-radius: 6px;
+	white-space: nowrap;
+	pointer-events: none;
+	max-width: 240px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.tp-chapter-now {
+	font-size: 12px;
+	color: #d1d5db;
+	max-width: 180px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 /* ---- settings menu ---- */
 .tp-menu-wrap {
 	position: relative;
