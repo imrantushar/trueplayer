@@ -3,34 +3,68 @@ import Player from './Player';
 import Playlist from './Playlist';
 
 /**
- * Discovers [data-trueplayer] mount nodes and boots one React player per node,
- * reading the inline JSON config the shortcode/block rendered.
+ * Read + parse the inline JSON config a mount node carries.
+ */
+function readConfig( node ) {
+	const configEl = node.querySelector( 'script.trueplayer-config' );
+	try {
+		return configEl ? JSON.parse( configEl.textContent ) : {};
+	} catch ( e ) {
+		return {};
+	}
+}
+
+/**
+ * Boot the real React player into a node, replacing any poster facade. When
+ * `autoStart` is set the player begins playing as soon as its provider is ready.
+ */
+function bootPlayer( node, data, videoId, autoStart ) {
+	if ( node.dataset.tpBooted ) {
+		return;
+	}
+	node.dataset.tpBooted = '1';
+	const facade = node.querySelector( '.tp-facade' );
+	if ( facade ) {
+		facade.remove();
+	}
+	const root = document.createElement( 'div' );
+	root.className = 'tp-root';
+	node.appendChild( root );
+	createRoot( root ).render( <Player videoId={ videoId } config={ data.config || {} } autoStart={ autoStart } /> );
+}
+
+/**
+ * Discovers [data-trueplayer] mount nodes. To keep pages fast, a node that
+ * rendered a poster facade stays inert — no video element, no YouTube/Vimeo
+ * iframe, no hls.js, no gate request — until the visitor clicks to play. Nodes
+ * with autoplay (or no facade) boot immediately.
  */
 export function mountPlayers() {
-	const nodes = document.querySelectorAll( '[data-trueplayer]' );
-	nodes.forEach( ( node ) => {
+	document.querySelectorAll( '[data-trueplayer]' ).forEach( ( node ) => {
 		if ( node.dataset.tpBooted ) {
 			return;
 		}
-		node.dataset.tpBooted = '1';
-
-		const configEl = node.querySelector( 'script.trueplayer-config' );
-		let data = {};
-		try {
-			data = configEl ? JSON.parse( configEl.textContent ) : {};
-		} catch ( e ) {
-			data = {};
-		}
-
+		const data = readConfig( node );
 		const videoId = data.videoId || parseInt( node.dataset.videoId, 10 );
 		if ( ! videoId ) {
 			return;
 		}
 
-		const root = document.createElement( 'div' );
-		root.className = 'tp-root';
-		node.appendChild( root );
-		createRoot( root ).render( <Player videoId={ videoId } config={ data.config || {} } /> );
+		const facade = node.querySelector( '.tp-facade' );
+		const autoplay = node.dataset.tpAutoplay === '1';
+
+		if ( facade && ! autoplay ) {
+			const boot = ( e ) => {
+				if ( e ) {
+					e.preventDefault();
+				}
+				bootPlayer( node, data, videoId, true );
+			};
+			facade.addEventListener( 'click', boot, { once: true } );
+			return;
+		}
+
+		bootPlayer( node, data, videoId, autoplay );
 	} );
 }
 

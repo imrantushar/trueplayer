@@ -11,7 +11,7 @@ import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
-export default function Player( { videoId, config, preview = false, onEnded: onEndedProp } ) {
+export default function Player( { videoId, config, preview = false, onEnded: onEndedProp, autoStart = false } ) {
 	const stageRef = useRef( null );
 	const containerRef = useRef( null );
 	const providerRef = useRef( null );
@@ -173,6 +173,14 @@ export default function Player( { videoId, config, preview = false, onEnded: onE
 				// Pre-roll opt-in gate.
 				if ( optin.enabled && optin.position === 'pre' && ! optinDoneRef.current ) {
 					setActiveOptin( true );
+				} else if ( autoStart && ! gateState.locked ) {
+					// Booted from a click-to-load poster: begin playing at once. If
+					// the browser blocks it (autoplay policy), the big-play button
+					// stays visible as the fallback — so swallow the rejection.
+					const r = provider.play();
+					if ( r && typeof r.catch === 'function' ) {
+						r.catch( () => {} );
+					}
 				}
 				sync();
 			} );

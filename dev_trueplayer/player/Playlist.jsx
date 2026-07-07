@@ -8,11 +8,18 @@ import Player from './Player';
 export default function Playlist( { data } ) {
 	const items = data.items || [];
 	const [ active, setActive ] = useState( 0 );
+	const [ autoStart, setAutoStart ] = useState( false );
 	const item = items[ active ];
 
+	// Picking an item (or auto-advancing) should play it; the first render just
+	// shows its poster so nothing loads until the viewer chooses to watch.
+	const pick = ( i ) => {
+		setActive( i );
+		setAutoStart( true );
+	};
 	const goNext = () => {
 		if ( data.autoplayNext && active < items.length - 1 ) {
-			setActive( active + 1 );
+			pick( active + 1 );
 		}
 	};
 
@@ -26,12 +33,12 @@ export default function Playlist( { data } ) {
 			<div className="tp-pl-body">
 				<div className="tp-pl-main">
 					<div className="trueplayer-mount">
-						<Player key={ item.videoId } videoId={ item.videoId } config={ item.config } onEnded={ goNext } />
+						<Player key={ item.videoId } videoId={ item.videoId } config={ item.config } autoStart={ autoStart } onEnded={ goNext } />
 					</div>
 				</div>
 				<div className="tp-pl-list">
 					{ items.map( ( it, i ) => (
-						<button key={ it.videoId } className={ `tp-pl-item ${ i === active ? 'is-active' : '' }` } onClick={ () => setActive( i ) }>
+						<button key={ it.videoId } className={ `tp-pl-item ${ i === active ? 'is-active' : '' }` } onClick={ () => pick( i ) }>
 							<span className="tp-pl-thumb" style={ it.poster ? { backgroundImage: `url("${ it.poster }")` } : undefined }>
 								{ ! it.poster && ( i + 1 ) }
 							</span>

@@ -49,11 +49,56 @@ class Shortcode {
 			]
 		);
 
+		$autoplay = ! empty( $config['customize']['behavior']['autoplay'] );
+
 		return sprintf(
-			'<div class="trueplayer-mount" data-trueplayer data-video-id="%1$d"><script type="application/json" class="trueplayer-config">%2$s</script></div>',
+			'<div class="trueplayer-mount" data-trueplayer data-video-id="%1$d"%4$s><script type="application/json" class="trueplayer-config">%2$s</script>%3$s</div>',
 			$video_id,
-			$json // already JSON-encoded; rendered inside a JSON script tag.
+			$json, // already JSON-encoded; rendered inside a JSON script tag.
+			$autoplay ? '' : self::render_facade( $config ),
+			$autoplay ? ' data-tp-autoplay="1"' : ''
 		);
+	}
+
+	/**
+	 * Static poster + play button rendered up front so a page with videos stays
+	 * fast: nothing heavy (video element, YouTube/Vimeo iframe, hls.js, gate
+	 * request) loads until the visitor clicks this. Pure HTML — no JS needed to
+	 * paint it. Skipped when autoplay is on.
+	 */
+	private static function render_facade( array $config ): string {
+		$source   = is_array( $config['source'] ?? null ) ? $config['source'] : [];
+		$is_audio = ( $source['mediaType'] ?? '' ) === 'audio';
+		$poster   = is_string( $source['poster'] ?? null ) ? $source['poster'] : '';
+
+		if ( '' === $poster && 'youtube' === ( $source['type'] ?? '' ) ) {
+			$yid = self::youtube_id( $source['src'] ?? '' );
+			if ( $yid ) {
+				$poster = 'https://i.ytimg.com/vi/' . $yid . '/hqdefault.jpg';
+			}
+		}
+
+		$accent = $config['customize']['appearance']['accent'] ?? ( $config['branding']['accent'] ?? '' );
+		$style  = $accent ? sprintf( ' style="--tp-accent:%s"', esc_attr( $accent ) ) : '';
+		$img    = $poster
+			? sprintf( '<img class="tp-facade-poster" src="%s" alt="" loading="lazy" decoding="async" />', esc_url( $poster ) )
+			: '';
+
+		return sprintf(
+			'<button type="button" class="tp-facade%1$s"%2$s aria-label="%3$s">%4$s<span class="tp-facade-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button>',
+			$is_audio ? ' is-audio' : '',
+			$style,
+			esc_attr__( 'Play video', 'trueplayer' ),
+			$img
+		);
+	}
+
+	/** Extract an 11-char YouTube id from a watch/share/embed URL. */
+	private static function youtube_id( string $url ): string {
+		if ( preg_match( '/(?:v=|\.be\/|embed\/|shorts\/)([\w-]{11})/', $url, $m ) ) {
+			return $m[1];
+		}
+		return '';
 	}
 
 	/**

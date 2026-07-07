@@ -9,6 +9,65 @@
 	max-width: 100%;
 }
 
+/* Click-to-load poster facade — static HTML shown until the visitor plays, so
+   the real player (and its network cost) never loads on page render. */
+.tp-facade {
+	position: relative;
+	display: block;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	cursor: pointer;
+	overflow: hidden;
+	background: #000;
+	border-radius: var( --tp-radius, 10px );
+	-moz-appearance: none;
+	     appearance: none;
+	-webkit-appearance: none;
+}
+.tp-facade.is-audio {
+	aspect-ratio: auto;
+	height: 120px;
+	background: #111827;
+}
+.tp-facade-poster {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	-o-object-fit: contain;
+	   object-fit: contain;
+	background: #000;
+}
+.tp-facade-btn {
+	position: absolute;
+	top: 50%;
+	right: 50%;
+	transform: translate( 50%, -50% );
+	width: 68px;
+	height: 68px;
+	border-radius: 50%;
+	background: var( --tp-accent, #4f46e5 );
+	color: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 14px rgba( 0, 0, 0, 0.35 );
+	transition: transform 0.15s ease, filter 0.15s ease;
+}
+.tp-facade:hover .tp-facade-btn {
+	transform: translate( 50%, -50% ) scale( 1.06 );
+	filter: brightness( 1.08 );
+}
+.tp-facade-btn svg {
+	width: 30px;
+	height: 30px;
+	fill: currentColor;
+	margin-right: 3px;
+}
+
 .tp-stage {
 	position: relative;
 	width: 100%;
