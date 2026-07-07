@@ -736,7 +736,9 @@
 	align-items: flex-start;
 }
 .tp-pl-sidebar .tp-pl-list {
-	width: 300px;
+	/* Proportional so the video keeps the lion's share of a medium column,
+	   instead of a fixed 300px list squeezing it. */
+	width: clamp( 200px, 30%, 300px );
 	flex-shrink: 0;
 	max-height: 70vh;
 	overflow-y: auto;
@@ -797,7 +799,7 @@
 	width: 100%;
 	height: 96px;
 }
-@container ( max-width: 640px ) {
+@container ( max-width: 700px ) {
 	.tp-pl-sidebar .tp-pl-body {
 		flex-direction: column;
 		align-items: stretch; /* full-width video when stacked */
@@ -811,7 +813,7 @@
 }
 /* Fallback for browsers without container queries: stack on a narrow viewport. */
 @supports not ( container-type: inline-size ) {
-	@media ( max-width: 640px ) {
+	@media ( max-width: 700px ) {
 		.tp-pl-sidebar .tp-pl-body {
 			flex-direction: column;
 			align-items: stretch;
