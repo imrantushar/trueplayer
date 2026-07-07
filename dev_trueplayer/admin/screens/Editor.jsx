@@ -102,25 +102,27 @@ export default function Editor( { id, onBack } ) {
 				<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
 			</div>
 
-			<div className="flex flex-col xl:flex-row gap-6 items-start">
-				{ /* Left: vertical tab rail */ }
-				<nav className="flex xl:flex-col gap-1 xl:w-52 shrink-0 flex-wrap">
+			{ /* Steps as a horizontal sub-topbar → the editor content gets full width. */ }
+			<div className="border-b border-line mb-6 overflow-x-auto">
+				<nav className="flex gap-1 min-w-max">
 					{ TABS.map( ( t ) => (
 						<button
 							key={ t.key }
 							onClick={ () => setTab( t.key ) }
-							className={ `flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-left transition ${
-								tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
+							className={ `flex items-center gap-2 px-3.5 py-2.5 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition ${
+								tab === t.key ? 'border-brand-500 text-brand-700' : 'border-transparent text-gray-600 hover:text-gray-900'
 							}` }
 						>
 							<span className="text-base leading-none">{ t.icon }</span>
-							<span className="whitespace-nowrap">{ t.label }</span>
-							{ t.pro && ! pro && <span className="ml-auto text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
+							{ t.label }
+							{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
 						</button>
 					) ) }
 				</nav>
+			</div>
 
-				{ /* Middle: active settings panel */ }
+			<div className="flex flex-col xl:flex-row gap-6 items-start">
+				{ /* Active settings panel — now full width */ }
 				<div className="flex-1 min-w-0 w-full">
 					{ isProTab && ! pro ? (
 						<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
@@ -138,7 +140,7 @@ export default function Editor( { id, onBack } ) {
 					) }
 				</div>
 
-				{ /* Right: persistent live preview */ }
+				{ /* Persistent live preview */ }
 				<div className="w-full xl:w-[380px] shrink-0">
 					<div className="xl:sticky xl:top-4">
 						<PreviewPanel id={ id } config={ config } />

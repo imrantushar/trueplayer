@@ -23,9 +23,25 @@ class Menu {
 			'dashicons-format-video',
 			30
 		);
+
+		// Child menu (StoreEngine-style): each section is its own page slug so it
+		// gets a real URL and appears in the WP admin submenu. All boot the same SPA.
+		$slug = TRUEPLAYER_PLUGIN_SLUG;
+		$subs = [
+			$slug                => __( 'Dashboard', 'trueplayer' ),
+			$slug . '-videos'    => __( 'Videos', 'trueplayer' ),
+			$slug . '-playlists' => __( 'Playlists', 'trueplayer' ),
+			$slug . '-presets'   => __( 'Presets', 'trueplayer' ),
+			$slug . '-settings'  => __( 'Settings', 'trueplayer' ),
+		];
+		foreach ( $subs as $page_slug => $label ) {
+			add_submenu_page( $slug, $label . ' – ' . __( 'TruePlayer', 'trueplayer' ), $label, 'manage_options', $page_slug, [ $this, 'render_app' ] );
+		}
 	}
 
 	public function render_app() {
-		echo '<div id="trueplayer-app" class="trueplayer-app"></div>';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : TRUEPLAYER_PLUGIN_SLUG;
+		printf( '<div id="trueplayer-app" class="trueplayer-app" data-page="%s"></div>', esc_attr( $page ) );
 	}
 }
