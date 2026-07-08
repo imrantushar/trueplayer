@@ -111,6 +111,20 @@
 }
 
 /* sticky (float on scroll) */
+/* Reserves the stage's normal footprint once it goes `position: fixed`
+   (sticky), and hosts the sentinel the sticky-on-scroll observer watches —
+   see the comment in Player.jsx for why this can't be the stage itself. */
+.tp-stage-slot {
+	position: relative;
+	width: 100%;
+}
+.tp-stage-sentinel {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
 .tp-sticky {
 	position: fixed !important;
 	z-index: 99999;

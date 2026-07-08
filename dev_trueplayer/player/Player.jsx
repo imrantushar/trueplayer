@@ -25,6 +25,8 @@ function hexToRgba( hex, alpha ) {
 
 export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, autoStart = false } ) {
 	const stageRef = useRef( null );
+	const stickySentinelRef = useRef( null );
+	const stickyDismissedRef = useRef( false ); // explicit close, until back at the top
 	const containerRef = useRef( null );
 	const providerRef = useRef( null );
 	const coverageRef = useRef( null );
@@ -300,16 +302,33 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	}, [] );
 
 	// Sticky-on-scroll: pin the player to a corner when scrolled out of view
-	// while playing.
+	// while playing. Watches a fixed sentinel that stays put in the document
+	// flow — NOT the stage itself, which flips to `position: fixed` once sticky
+	// engages. Observing the stage directly caused a feedback loop (it leaves
+	// its flow slot → the observer immediately reports it "visible" again in
+	// its new fixed spot → sticky turns back off → it un-fixes and reports
+	// "hidden" again → repeat), which is what showed up as flicker on scroll.
 	useEffect( () => {
-		if ( ! behavior.sticky || ! stageRef.current ) {
+		if ( ! behavior.sticky || ! stickySentinelRef.current ) {
 			return undefined;
 		}
 		const io = new IntersectionObserver(
-			( entries ) => setSticky( ! entries[ 0 ].isIntersecting && ui.playing ),
+			( entries ) => {
+				if ( entries[ 0 ].isIntersecting ) {
+					// Back at the top, main player in view — clear any earlier
+					// dismissal so scrolling away again can re-dock it.
+					stickyDismissedRef.current = false;
+					setSticky( false );
+				} else if ( ui.playing && ! stickyDismissedRef.current ) {
+					setSticky( true );
+				}
+				// Otherwise (still out of view but paused, or explicitly dismissed):
+				// leave `sticky` exactly as it is — pausing/seeking while docked
+				// must not un-dock it, and a dismissal must not re-engage on its own.
+			},
 			{ threshold: 0.1 }
 		);
-		io.observe( stageRef.current );
+		io.observe( stickySentinelRef.current );
 		return () => io.disconnect();
 	}, [ behavior.sticky, ui.playing ] );
 
@@ -595,7 +614,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
 		<div ref={ stageRef } className={ stageClass } style={ stageStyle } tabIndex={ 0 } onKeyDown={ onKeyDown }>
 			{ sticky && (
-				<button className="tp-sticky-close" aria-label="Close" onClick={ () => setSticky( false ) }>×</button>
+				<button
+					className="tp-sticky-close"
+					aria-label="Close"
+					onClick={ () => {
+						stickyDismissedRef.current = true;
+						setSticky( false );
+					} }
+				>×</button>
 			) }
 			<div ref={ containerRef } className="tp-media-container" onClick={ () => ready && ! activeQuiz && playPause() } />
 
@@ -781,6 +807,20 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		</div>
 	);
 
+	// Once `sticky` engages, the stage leaves the document flow (`position:
+	// fixed`), so this slot reserves its normal footprint — matching the
+	// aspect ratio it would otherwise render at — to avoid a layout jump, and
+	// hosts the sentinel the observer above watches.
+	const slotStyle = sticky
+		? ( source.mediaType === 'audio' ? { minHeight: '72px' } : { aspectRatio: stageStyle.aspectRatio || '16 / 9' } )
+		: undefined;
+	const stageInSlot = (
+		<div className="tp-stage-slot" style={ slotStyle }>
+			<span ref={ stickySentinelRef } className="tp-stage-sentinel" aria-hidden="true" />
+			{ stage }
+		</div>
+	);
+
 	// Ambient skin: a blurred, oversized copy of the poster glows behind the
 	// stage (the stage clips its own children, so the glow needs a wrapper).
 	// The wrapper renders unconditionally for the skin — toggling it (e.g. on
@@ -798,9 +838,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					} }
 					aria-hidden="true"
 				/>
-				{ stage }
+				{ stageInSlot }
 			</div>
 		);
 	}
-	return stage;
+	return stageInSlot;
 }
