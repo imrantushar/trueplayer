@@ -13,6 +13,7 @@ const P = {
 	clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
 	check: <><circle cx="12" cy="12" r="9" /><path d="M8 12l3 3 5-6" /></>,
 	eye: <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></>,
+	chevronRight: <path d="M9 6l6 6-6 6" />,
 };
 
 export function Icon( { name, className = 'w-5 h-5', strokeWidth = 1.8 } ) {

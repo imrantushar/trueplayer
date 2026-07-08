@@ -181,10 +181,6 @@
 .m-3 {
 		margin: 0.75rem;
 }
-.mx-1 {
-		margin-right: 0.25rem;
-		margin-left: 0.25rem;
-}
 .mx-auto {
 		margin-right: auto;
 		margin-left: auto;
@@ -377,9 +373,6 @@
 }
 .w-full {
 		width: 100%;
-}
-.w-px {
-		width: 1px;
 }
 .min-w-0 {
 		min-width: 0px;
@@ -636,10 +629,6 @@
 .bg-green-100 {
 		--tw-bg-opacity: 1;
 		background-color: rgb(220 252 231 / var(--tw-bg-opacity, 1));
-}
-.bg-line {
-		--tw-bg-opacity: 1;
-		background-color: rgb(222 222 222 / var(--tw-bg-opacity, 1));
 }
 .bg-red-100 {
 		--tw-bg-opacity: 1;
