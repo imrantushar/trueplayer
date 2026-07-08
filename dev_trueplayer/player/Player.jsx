@@ -14,6 +14,25 @@ import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
+/** Best-effort filename for the download button — from the title, else the URL. */
+function downloadFilename( url, title ) {
+	let base = 'video';
+	let ext = '';
+	try {
+		const path = new URL( url, window.location.href ).pathname.split( '/' ).pop() || '';
+		if ( path.includes( '.' ) ) {
+			ext = path.slice( path.lastIndexOf( '.' ) );
+			base = path.slice( 0, path.lastIndexOf( '.' ) );
+		} else if ( path ) {
+			base = path;
+		}
+	} catch ( e ) {
+		// keep defaults
+	}
+	const name = ( title || '' ).replace( /[\\/:*?"<>|]+/g, '' ).trim();
+	return ( name || base || 'video' ) + ext;
+}
+
 function hexToRgba( hex, alpha ) {
 	const m = /^#?([0-9a-f]{6})$/i.exec( hex || '' );
 	if ( ! m ) {
@@ -34,6 +53,15 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const furthestRef = useRef( 0 ); // furthest naturally-watched second (for no-skip)
 
 	const gating = { ...DEFAULT_GATING, ...( config.gating || {} ) };
+	// Anti-skip is an opt-in restriction the admin sets per video (Questions &
+	// gating tab). DEFAULT_GATING.antiSkip is only a form default for that tab
+	// — a video whose config has never been saved with gating at all must not
+	// silently inherit it just because Pro happens to be active, or every
+	// video's forward-seeking gets capped at "furthest watched" with no admin
+	// choice behind it (this is what looked like "can't drag forward").
+	if ( ! config.gating ) {
+		gating.antiSkip = false;
+	}
 	const source = config.source || {};
 	const branding = config.branding || {};
 	const optin = config.optin || {};
@@ -512,13 +540,33 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const setQuality = ( q ) => { providerRef.current.setQuality( q ); setUi( ( s ) => ( { ...s, quality: q } ) ); };
 	const setTrack = ( id ) => { providerRef.current.setTextTrack( id === 'off' ? -1 : id ); setUi( ( s ) => ( { ...s, track: id } ) ); };
 	const pip = () => providerRef.current.requestPiP().catch( () => {} );
-	const download = () => {
+	const download = async () => {
 		const url = providerRef.current?.sourceUrl || source.src;
-		if ( url ) {
+		if ( ! url ) {
+			return;
+		}
+		// The `download` attribute is silently ignored by browsers for
+		// cross-origin URLs — the anchor then just navigates the tab to the raw
+		// file (a bare native video "panel" with no way back to the page). Fetch
+		// it as a blob instead, which `download` always honors regardless of the
+		// original resource's origin, so the page itself is never left.
+		try {
+			const res = await fetch( url );
+			if ( ! res.ok ) {
+				throw new Error( 'download fetch failed' );
+			}
+			const blobUrl = URL.createObjectURL( await res.blob() );
 			const a = document.createElement( 'a' );
-			a.href = url;
-			a.download = '';
+			a.href = blobUrl;
+			a.download = downloadFilename( url, title );
+			document.body.appendChild( a );
 			a.click();
+			a.remove();
+			setTimeout( () => URL.revokeObjectURL( blobUrl ), 4000 );
+		} catch ( e ) {
+			// Truly unreachable via fetch (no CORS headers, network error, …) —
+			// open in a new tab rather than navigating away with no way back.
+			window.open( url, '_blank', 'noopener' );
 		}
 	};
 	const fullscreen = () => {

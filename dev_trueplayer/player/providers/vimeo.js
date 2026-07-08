@@ -50,7 +50,22 @@ export async function createVimeoProvider( container, source, opts = {} ) {
 		on: emitter.on,
 		play: () => player.play(),
 		pause: () => player.pause(),
-		seek: ( t ) => player.setCurrentTime( t ),
+		// `current` only otherwise moves on the 'timeupdate' event, which Vimeo
+		// fires during playback but not reliably right after a seek made while
+		// paused (dragging the scrubber without hitting play). Without this,
+		// getCurrentTime() kept returning the pre-drag value, so the Scrubber's
+		// "wait for playback to catch up" reconciliation never saw it catch up
+		// and the thumb snapped back after its timeout — set it optimistically
+		// so a paused seek is reflected immediately, then reconcile with the
+		// real (resolved) position once the postMessage round-trip completes.
+		seek: ( t ) => {
+			current = t;
+			emitter.emit( 'timeupdate' );
+			return player.setCurrentTime( t ).then( ( seconds ) => {
+				current = seconds;
+				emitter.emit( 'timeupdate' );
+			} ).catch( () => {} );
+		},
 		setVolume: ( v ) => player.setVolume( v ),
 		setMuted: ( m ) => player.setMuted( m ),
 		setRate: ( r ) => player.setPlaybackRate( r ),
