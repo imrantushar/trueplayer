@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "esnext",
+		"moduleResolution": "node",
+		"jsx": "react-jsx",
+		"baseUrl": ".",
+		"paths": {
+			"@Admin/*": ["dev_trueplayer/admin/*"],
+			"@Player/*": ["dev_trueplayer/player/*"],
+			"@Providers/*": ["dev_trueplayer/player/providers/*"],
+			"@Global/*": ["dev_trueplayer/global/*"],
+			"@Utils/*": ["dev_trueplayer/utils/*"]
+		},
+		"checkJs": false,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true
+	},
+	"include": ["dev_trueplayer/**/*"],
+	"exclude": ["node_modules", "assets/build"]
+}
