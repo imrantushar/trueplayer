@@ -1,5 +1,5 @@
 import { useEffect, useState } from '@wordpress/element';
-import { Card, Field, Input, Button, Textarea } from '../../components/UI';
+import { Card, Field, Input, Button, Select, Textarea } from '../../components/UI';
 import { pickMedia } from '../../utils/media';
 import { parseChapters, secToClock, clockToSec } from '../../utils/chapters';
 
@@ -89,16 +89,34 @@ export default function AppearanceTab( { config, patch } ) {
 			<div className="grid md:grid-cols-2 gap-6">
 				<Card className="p-6">
 					<h3 className="font-semibold text-gray-900 mb-4">Logo / watermark</h3>
-					<Field label="Logo image" hint="Shown top-right during playback. Colors live under Player options.">
+					<Field label="Logo image" hint="Shown during playback. Colors live under Player options.">
 						<div className="flex gap-2">
 							<Input value={ branding.logo || '' } onChange={ ( e ) => setBranding( { logo: e.target.value } ) } placeholder="https://…/logo.png" />
 							<Button variant="ghost" onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }>Media library</Button>
 						</div>
 					</Field>
 					{ branding.logo && (
-						<div className="mt-3 p-3 bg-gray-900 rounded-md inline-flex">
-							<img src={ branding.logo } alt="" className="max-h-10 max-w-[140px]" />
-						</div>
+						<>
+							<div className="grid grid-cols-2 gap-x-4">
+								<Field label="Position">
+									<Select value={ branding.logoPosition || 'top-right' } onChange={ ( e ) => setBranding( { logoPosition: e.target.value } ) }>
+										<option value="top-right">Top right</option>
+										<option value="top-left">Top left</option>
+										<option value="bottom-right">Bottom right</option>
+										<option value="bottom-left">Bottom left</option>
+									</Select>
+								</Field>
+								<Field label={ `Opacity (${ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) }%)` }>
+									<input type="range" min="10" max="100" step="5" value={ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) } onChange={ ( e ) => setBranding( { logoOpacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full" />
+								</Field>
+							</div>
+							<Field label="Click-through link" hint="Optional — makes the logo clickable (opens in a new tab).">
+								<Input value={ branding.logoUrl || '' } onChange={ ( e ) => setBranding( { logoUrl: e.target.value } ) } placeholder="https://your-site.com" />
+							</Field>
+							<div className="mt-3 p-3 bg-gray-900 rounded-md inline-flex">
+								<img src={ branding.logo } alt="" className="max-h-10 max-w-[140px]" style={ { opacity: branding.logoOpacity ?? 0.9 } } />
+							</div>
+						</>
 					) }
 				</Card>
 
@@ -113,6 +131,17 @@ export default function AppearanceTab( { config, patch } ) {
 					<p className="text-xs text-gray-400">Works with self-hosted, HLS and Bunny videos. YouTube/Vimeo embeds use their own captions.</p>
 				</Card>
 			</div>
+
+			<Card className="p-6">
+				<h3 className="font-semibold text-gray-900 mb-1">Description below player</h3>
+				<p className="text-sm text-gray-500 mb-3">Shown directly under the player wherever it's embedded. Basic HTML allowed.</p>
+				<Textarea
+					rows={ 4 }
+					value={ config.description || '' }
+					onChange={ ( e ) => patch( { description: e.target.value } ) }
+					placeholder="What this video covers, links, resources…"
+				/>
+			</Card>
 
 			<Card className="p-6">
 				<div className="flex items-center justify-between mb-1">

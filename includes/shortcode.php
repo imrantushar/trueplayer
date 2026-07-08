@@ -35,7 +35,7 @@ class Shortcode {
 		wp_enqueue_style( Assets::FRONTEND_STYLE_HANDLE );
 		wp_enqueue_script( Assets::FRONTEND_SCRIPT_HANDLE );
 
-		$config = self::strip_answer_keys( Helper::apply_preset( Helper::get_video_config( $video_id ) ) );
+		$config = self::resolved_config( $video_id );
 		$json   = wp_json_encode( [ 'videoId' => $video_id, 'title' => get_the_title( $video_id ), 'config' => $config ] );
 		$label  = '' !== trim( (string) $content ) ? do_shortcode( $content ) : ( $atts['label'] ?: __( 'Watch video', 'trueplayer' ) );
 		$accent = $config['customize']['appearance']['accent'] ?? '';
@@ -66,13 +66,7 @@ class Shortcode {
 		wp_enqueue_style( Assets::FRONTEND_STYLE_HANDLE );
 		wp_enqueue_script( Assets::FRONTEND_SCRIPT_HANDLE );
 
-		$config = Helper::get_video_config( $video_id );
-
-		// Merge a referenced preset under the video's own settings.
-		$config = Helper::apply_preset( $config );
-
-		// Never leak quiz answer keys into the DOM — grading is server-side.
-		$config = self::strip_answer_keys( $config );
+		$config = self::resolved_config( $video_id );
 
 		$json = wp_json_encode(
 			[
@@ -82,15 +76,98 @@ class Shortcode {
 			]
 		);
 
-		$autoplay = ! empty( $config['customize']['behavior']['autoplay'] );
+		$behavior = is_array( $config['customize']['behavior'] ?? null ) ? $config['customize']['behavior'] : [];
+		$ap_mode  = $behavior['autoplayMode'] ?? '';
+		$autoplay = $ap_mode ? 'off' !== $ap_mode : ! empty( $behavior['autoplay'] );
 
-		return self::video_schema( $video_id, $config ) . sprintf(
-			'<div class="trueplayer-mount" data-trueplayer data-video-id="%1$d"%4$s><script type="application/json" class="trueplayer-config">%2$s</script>%3$s</div>',
+		// Dynamic description rendered under the player.
+		$description = '';
+		if ( ! empty( $config['description'] ) && is_string( $config['description'] ) ) {
+			$description = sprintf( '<div class="tp-description">%s</div>', wp_kses_post( wpautop( $config['description'] ) ) );
+		}
+
+		return self::video_schema( $video_id, $config ) . self::custom_css( $video_id, $config ) . sprintf(
+			'<div class="trueplayer-mount tp-v%1$d" data-trueplayer data-video-id="%1$d"%4$s><script type="application/json" class="trueplayer-config">%2$s</script>%3$s</div>%5$s',
 			$video_id,
 			$json, // already JSON-encoded; rendered inside a JSON script tag.
 			$autoplay ? '' : self::render_facade( $config ),
-			$autoplay ? ' data-tp-autoplay="1"' : ''
+			$autoplay ? ' data-tp-autoplay="1"' : '',
+			$description
 		);
+	}
+
+	/**
+	 * The full frontend config pipeline, shared by the inline and popup embeds:
+	 * raw meta → preset merge → free clamp → pro layer/watermark/private-source
+	 * preparation → answer-key strip.
+	 */
+	public static function resolved_config( int $video_id ): array {
+		$config = Helper::apply_preset( Helper::get_video_config( $video_id ) );
+		$config = Helper::enforce_pro_limits( $config );
+		if ( Pro::active() ) {
+			$config = self::prepare_layers( $config );
+			$config = self::prepare_watermark( $config );
+			$config = PrivateVideo::prepare_source( $config, $video_id );
+		}
+		return self::strip_answer_keys( $config );
+	}
+
+	/**
+	 * Shortcode layers can't run PHP in the browser — render them now and ship
+	 * the HTML. Admin-authored content (manage_options), so shortcodes are
+	 * trusted the same way post content is.
+	 */
+	private static function prepare_layers( array $config ): array {
+		if ( empty( $config['layers'] ) || ! is_array( $config['layers'] ) ) {
+			return $config;
+		}
+		foreach ( $config['layers'] as &$layer ) {
+			if ( ( $layer['type'] ?? '' ) === 'shortcode' && ! empty( $layer['shortcode'] ) ) {
+				$layer['html'] = do_shortcode( wp_kses_post( (string) $layer['shortcode'] ) );
+				unset( $layer['shortcode'] );
+			}
+		}
+		unset( $layer );
+		return $config;
+	}
+
+	/**
+	 * Resolve the dynamic-watermark display text server-side (the browser never
+	 * decides what identity to burn in).
+	 */
+	private static function prepare_watermark( array $config ): array {
+		$wm = $config['protection']['dynamicWatermark'] ?? null;
+		if ( empty( $wm['enabled'] ) ) {
+			return $config;
+		}
+		$fields = is_array( $wm['fields'] ?? null ) ? $wm['fields'] : [ 'email' ];
+		$parts  = [];
+		$user   = wp_get_current_user();
+		foreach ( $fields as $f ) {
+			if ( 'email' === $f && $user && $user->exists() ) {
+				$parts[] = $user->user_email;
+			} elseif ( 'name' === $f && $user && $user->exists() ) {
+				$parts[] = $user->display_name;
+			} elseif ( 'ip' === $f && ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+				$parts[] = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+			}
+		}
+		$config['protection']['dynamicWatermark']['text'] = implode( ' · ', array_filter( $parts ) );
+		return $config;
+	}
+
+	/**
+	 * Per-video custom CSS (`customize.css`, preset-mergeable). Tag content is
+	 * neutralized so the style block can't be broken out of. The mount carries
+	 * a `tp-v{ID}` class for scoping.
+	 */
+	private static function custom_css( int $video_id, array $config ): string {
+		$css = $config['customize']['css'] ?? '';
+		if ( ! is_string( $css ) || '' === trim( $css ) ) {
+			return '';
+		}
+		$css = wp_strip_all_tags( $css );
+		return sprintf( '<style id="tp-custom-css-%d">%s</style>', $video_id, $css );
 	}
 
 	/**
@@ -148,8 +225,17 @@ class Shortcode {
 		}
 
 		$accent = $config['customize']['appearance']['accent'] ?? ( $config['branding']['accent'] ?? '' );
-		$style  = $accent ? sprintf( ' style="--tp-accent:%s"', esc_attr( $accent ) ) : '';
-		$img    = $poster
+		$ratio  = $config['customize']['appearance']['aspectRatio'] ?? '';
+		$rules  = [];
+		if ( $accent ) {
+			$rules[] = '--tp-accent:' . $accent;
+		}
+		// Match the player's aspect ratio so the boot swap causes no layout shift.
+		if ( $ratio && '16:9' !== $ratio && ! $is_audio && preg_match( '/^\d+:\d+$/', $ratio ) ) {
+			$rules[] = 'aspect-ratio:' . str_replace( ':', ' / ', $ratio );
+		}
+		$style = $rules ? sprintf( ' style="%s"', esc_attr( implode( ';', $rules ) ) ) : '';
+		$img   = $poster
 			? sprintf( '<img class="tp-facade-poster" src="%s" alt="" loading="lazy" decoding="async" />', esc_url( $poster ) )
 			: '';
 

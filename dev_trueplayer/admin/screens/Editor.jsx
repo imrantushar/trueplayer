@@ -5,6 +5,8 @@ import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
 import OverlaysTab from './editor/OverlaysTab';
+import LayersTab from './editor/LayersTab';
+import ProtectionTab from './editor/ProtectionTab';
 import GatingTab from './editor/GatingTab';
 import SubscribeTab from './editor/SubscribeTab';
 import WebhooksTab from './editor/WebhooksTab';
@@ -18,6 +20,8 @@ const TABS = [
 	{ key: 'player', label: 'Player options', icon: '🎛️' },
 	{ key: 'appearance', label: 'Chapters & logo', icon: '🔖' },
 	{ key: 'overlays', label: 'Call to action', icon: '📣' },
+	{ key: 'layers', label: 'Layers', icon: '🧩', pro: true },
+	{ key: 'protection', label: 'Protection', icon: '🛡️', pro: true },
 	{ key: 'gating', label: 'Questions & gating', icon: '✅', pro: true },
 	{ key: 'subscribe', label: 'Subscribe', icon: '✉️', pro: true },
 	{ key: 'webhooks', label: 'Automation', icon: '🔗', pro: true },
@@ -25,6 +29,8 @@ const TABS = [
 ];
 
 const PRO_TAB_INFO = {
+	layers: { title: 'Interactive layers', features: [ 'Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Inline email-capture forms' ] },
+	protection: { title: 'Content protection', features: [ 'Private video with signed, expiring links', 'Bunny.net token authentication', 'Dynamic viewer-identity watermark' ] },
 	gating: { title: 'Watch-verification & quiz gating', features: [ 'Prove viewers actually watched (anti-skip)', 'Checkpoint & final quizzes', 'Lock the video on failure until re-watch' ] },
 	subscribe: { title: 'Subscribe / email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] },
 	webhooks: { title: 'Automation & webhooks', features: [ 'Signed webhooks on every event', 'Zapier / gemcrm / zaplane ready' ] },
@@ -164,10 +170,12 @@ export default function Editor( { id, onBack } ) {
 									{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } /> }
 									{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } /> }
 									{ tab === 'overlays' && <OverlaysTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'layers' && <LayersTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'protection' && <ProtectionTab config={ config } patch={ patchConfig } /> }
 									{ tab === 'gating' && <GatingTab config={ config } patch={ patchConfig } /> }
 									{ tab === 'subscribe' && <SubscribeTab config={ config } patch={ patchConfig } /> }
 									{ tab === 'webhooks' && <WebhooksTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'embed' && <EmbedTab video={ video } /> }
+									{ tab === 'embed' && <EmbedTab video={ video } config={ config } patch={ patchConfig } /> }
 								</>
 							) }
 						</div>

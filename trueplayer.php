@@ -43,7 +43,7 @@ final class TruePlayer {
 
 	public function define_constants() {
 		define( 'TRUEPLAYER_VERSION', '0.1.0' );
-		define( 'TRUEPLAYER_DB_VERSION', '2' );
+		define( 'TRUEPLAYER_DB_VERSION', '3' );
 		define( 'TRUEPLAYER_SETTINGS_NAME', 'trueplayer_settings' );
 		define( 'TRUEPLAYER_PLUGIN_FILE', __FILE__ );
 		define( 'TRUEPLAYER_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -86,6 +86,7 @@ final class TruePlayer {
 		TruePlayer\Api::init();
 		TruePlayer\Database::init();
 		TruePlayer\Shortcode::init();
+		TruePlayer\InstantPage::init();
 		TruePlayer\Playlist::init();
 		TruePlayer\Block::init();
 		TruePlayer\Events::init();

@@ -16,8 +16,8 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 	if ( behavior.loop ) {
 		el.loop = true;
 	}
-	if ( behavior.muted || behavior.autoplay ) {
-		el.muted = true; // autoplay only works muted
+	if ( behavior.muted || ( behavior.autoplay && ! behavior.autoplaySound ) ) {
+		el.muted = true; // autoplay only works muted (unless sound mode, which retries muted on rejection)
 	}
 	if ( behavior.autoplay ) {
 		el.autoplay = true;

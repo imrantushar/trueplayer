@@ -37,6 +37,14 @@ class Assets {
 			TRUEPLAYER_VERSION
 		);
 
+		// Site-wide custom player CSS (Settings → Player defaults → Custom CSS,
+		// stored in the settings option under customize.css).
+		$defaults   = self::player_defaults();
+		$custom_css = isset( $defaults['css'] ) && is_string( $defaults['css'] ) ? wp_strip_all_tags( $defaults['css'] ) : '';
+		if ( '' !== trim( $custom_css ) ) {
+			wp_add_inline_style( self::FRONTEND_STYLE_HANDLE, $custom_css );
+		}
+
 		wp_register_script(
 			self::FRONTEND_SCRIPT_HANDLE,
 			TRUEPLAYER_ASSETS_URI . sprintf( 'build/frontend.%s.js', TRUEPLAYER_VERSION ),

@@ -1,6 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
-import { Card, Button, Badge } from '../components/UI';
+import { Card, Button, Badge, Field, Input } from '../components/UI';
 import { EndpointList } from '../components/EndpointList';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
@@ -9,6 +9,7 @@ import PlayerOptionsTab from './editor/PlayerOptionsTab';
 const SUBTABS = [
 	{ key: 'defaults', label: 'Player defaults' },
 	{ key: 'webhooks', label: 'Global webhooks' },
+	{ key: 'bunny', label: 'Bunny.net' },
 	{ key: 'license', label: 'License' },
 ];
 
@@ -88,6 +89,28 @@ export default function Settings() {
 					</Card>
 				) : (
 					<UpsellPanel title="Automation & webhooks" features={ [ 'Signed webhooks on every player event', 'Site-wide + per-video endpoints' ] } />
+				)
+			) }
+
+			{ tab === 'bunny' && (
+				isPro() ? (
+					<Card className="p-6 max-w-xl">
+						<h3 className="font-semibold text-gray-900 mb-1">Bunny.net token authentication</h3>
+						<p className="text-sm text-gray-500 mb-4">
+							Needed for <strong>private</strong> Bunny videos: enable Token Authentication on your pull zone in the Bunny
+							dashboard, then paste its key here. TruePlayer signs expiring playback URLs with it.
+						</p>
+						<Field label="Token Authentication Key">
+							<Input
+								type="password"
+								value={ settings.bunny?.tokenKey || '' }
+								onChange={ ( e ) => setSettings( ( s ) => ( { ...s, bunny: { ...( s.bunny || {} ), tokenKey: e.target.value } } ) ) }
+								placeholder="••••••••-••••-••••"
+							/>
+						</Field>
+					</Card>
+				) : (
+					<UpsellPanel title="Private video via Bunny.net" features={ [ 'Token-signed, expiring playback URLs', 'Content protection for Bunny Stream' ] } />
 				)
 			) }
 

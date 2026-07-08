@@ -54,9 +54,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_Quiz__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./components/Quiz */ "./dev_trueplayer/player/components/Quiz.jsx");
 /* harmony import */ var _components_Optin__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./components/Optin */ "./dev_trueplayer/player/components/Optin.jsx");
 /* harmony import */ var _components_Overlay__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./components/Overlay */ "./dev_trueplayer/player/components/Overlay.jsx");
-/* harmony import */ var _components_Overlays__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./components/Overlays */ "./dev_trueplayer/player/components/Overlays.jsx");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__);
+/* harmony import */ var _components_Layers__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./components/Layers */ "./dev_trueplayer/player/components/Layers.jsx");
+/* harmony import */ var _components_Overlays__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./components/Overlays */ "./dev_trueplayer/player/components/Overlays.jsx");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__);
+
 
 
 
@@ -76,6 +78,14 @@ const DEFAULT_GATING = {
   checkpoints: [],
   finalQuiz: null
 };
+function hexToRgba(hex, alpha) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) {
+    return `rgba(0,0,0,${alpha})`;
+  }
+  const n = parseInt(m[1], 16);
+  return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${alpha})`;
+}
 function Player({
   videoId,
   config,
@@ -99,7 +109,20 @@ function Player({
   const branding = config.branding || {};
   const optin = config.optin || {};
   const optinDoneRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
-  const overlays = Array.isArray(config.overlays) ? config.overlays : [];
+  const allOverlays = Array.isArray(config.overlays) ? config.overlays : [];
+  // CTA cards use the fire-once modal engine; text overlays are non-blocking
+  // timed windows rendered over the picture.
+  const overlays = allOverlays.filter(o => (o.type || 'cta') !== 'text');
+  const textOverlays = allOverlays.filter(o => o.type === 'text');
+  const actionBar = config.actionBar || {};
+  // Pro: interactive layers + protection (server strips both when free).
+  const layers = Array.isArray(config.layers) ? config.layers : [];
+  const watermark = {
+    ...(config.protection && config.protection.dynamicWatermark || {})
+  };
+  if (preview && watermark.enabled && !watermark.text) {
+    watermark.text = 'viewer@example.com'; // live text is resolved server-side
+  }
   const firedOverlays = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)(new Set());
   const overlayActiveRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
   const gaStartedRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
@@ -112,6 +135,10 @@ function Player({
   const cz = (0,_customize__WEBPACK_IMPORTED_MODULE_3__.resolveCustomize)(config);
   const appearance = cz.appearance;
   const behavior = cz.behavior;
+
+  // 'off' | 'muted' | 'sound' — the boolean `autoplay` (legacy) means muted.
+  const apMode = (0,_customize__WEBPACK_IMPORTED_MODULE_3__.autoplayMode)(behavior);
+  const autoplayOn = apMode !== 'off';
 
   // "In this video" drawer: chapters (any provider) + transcript (from the
   // caption track on the html5-backed providers; embeds have no cue access).
@@ -126,7 +153,7 @@ function Player({
     current: 0,
     duration: 0,
     buffered: 0,
-    muted: !!(behavior.muted || behavior.autoplay),
+    muted: !!(behavior.muted || autoplayOn && apMode !== 'sound'),
     volume: 1,
     rate: 1,
     quality: 'auto',
@@ -140,6 +167,7 @@ function Player({
   const [sticky, setSticky] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [activeOptin, setActiveOptin] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [activeOverlay, setActiveOverlay] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+  const [activeTextIds, setActiveTextIds] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   const [infoOpen, setInfoOpen] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const getCues = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => providerRef.current?.getCues ? providerRef.current.getCues() : [], []);
   const sync = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
@@ -202,8 +230,16 @@ function Player({
       }
       let provider;
       try {
+        // Providers read `autoplay`/`muted` booleans; translate the mode.
+        // `autoplaySound` lets html5 skip the forced mute (we retry muted
+        // below if the browser's autoplay policy rejects it).
+        const providerBehavior = {
+          ...behavior,
+          autoplay: autoplayOn,
+          autoplaySound: apMode === 'sound'
+        };
         provider = await (0,_providers__WEBPACK_IMPORTED_MODULE_1__.createProvider)(containerRef.current, source, {
-          behavior,
+          behavior: providerBehavior,
           autoStart
         });
       } catch (e) {
@@ -264,12 +300,21 @@ function Player({
         if (optin.enabled && optin.position === 'pre' && !optinDoneRef.current) {
           setActiveOptin(true);
         } else if (autoStart && !gateState.locked) {
-          // Booted from a click-to-load poster: begin playing at once. If
-          // the browser blocks it (autoplay policy), the big-play button
-          // stays visible as the fallback — so swallow the rejection.
+          // Booted from a click-to-load poster or autoplay: begin playing
+          // at once. Autoplay-with-sound gets one unmuted attempt; when the
+          // browser's autoplay policy rejects it, retry muted (and if even
+          // that fails, the big-play button stays as the fallback).
           const r = provider.play();
           if (r && typeof r.catch === 'function') {
-            r.catch(() => {});
+            r.catch(() => {
+              if (apMode === 'sound') {
+                provider.setMuted(true);
+                const retry = provider.play();
+                if (retry && typeof retry.catch === 'function') {
+                  retry.catch(() => {});
+                }
+              }
+            });
           }
         }
         sync();
@@ -295,6 +340,7 @@ function Player({
           }
           maybeOverlay(t);
         }
+        syncTextOverlays(t);
         sync();
       });
       provider.on('durationchange', sync);
@@ -405,6 +451,15 @@ function Player({
       }
       setActiveOverlay(due);
     }
+  };
+  // Text overlays: timed show/hide windows — unlike CTAs they re-show whenever
+  // the playhead re-enters their window (rewinds included).
+  const syncTextOverlays = t => {
+    if (!textOverlays.length) {
+      return;
+    }
+    const ids = textOverlays.filter(o => t >= (parseFloat(o.start) || 0) && (!o.end || t < parseFloat(o.end))).map(o => o.id);
+    setActiveTextIds(prev => prev.length === ids.length && prev.every((id, i) => id === ids[i]) ? prev : ids);
   };
   const closeOverlay = () => {
     overlayActiveRef.current = false;
@@ -638,115 +693,204 @@ function Player({
   if (appearance.hoverColor) {
     stageStyle['--tp-hover'] = appearance.hoverColor;
   }
-  const stageClass = ['tp-stage', idle && ui.playing ? 'is-idle' : '', source.mediaType === 'audio' ? 'is-audio' : '', `tp-bar-${appearance.controlBarStyle}`, `tp-play-${appearance.playButtonStyle}`, sticky ? `tp-sticky tp-sticky-${behavior.stickyPosition}` : ''].filter(Boolean).join(' ');
-  return (
-    /*#__PURE__*/
-    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsxs)("div", {
-      ref: stageRef,
-      className: stageClass,
-      style: stageStyle,
-      tabIndex: 0,
-      onKeyDown: onKeyDown,
-      children: [sticky && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)("button", {
-        className: "tp-sticky-close",
-        "aria-label": "Close",
-        onClick: () => setSticky(false),
-        children: "\xD7"
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)("div", {
-        ref: containerRef,
-        className: "tp-media-container",
-        onClick: () => ready && !activeQuiz && playPause()
-      }), source.mediaType === 'audio' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)("div", {
-        className: "tp-audio-art",
-        "aria-hidden": "true",
-        children: source.poster ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)("img", {
-          src: source.poster,
-          alt: ""
-        }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)("svg", {
-          viewBox: "0 0 24 24",
-          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)("path", {
-            d: "M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"
-          })
+  // Caption cue styling (html5-backed providers; embeds render their own).
+  stageStyle['--tp-cap-scale'] = (appearance.captionSize || 100) / 100;
+  stageStyle['--tp-cap-color'] = appearance.captionColor || '#ffffff';
+  stageStyle['--tp-cap-bg'] = hexToRgba(appearance.captionBackground || '#000000', (appearance.captionOpacity ?? 75) / 100);
+  // Aspect ratio (audio keeps its compact bar; sticky keeps the ratio too so
+  // the mini player matches the video's shape).
+  if (source.mediaType !== 'audio' && appearance.aspectRatio && appearance.aspectRatio !== '16:9') {
+    stageStyle.aspectRatio = appearance.aspectRatio === 'auto' ? 'auto' : appearance.aspectRatio.replace(':', ' / ');
+  }
+  const skin = appearance.skin || 'default';
+  const stageClass = ['tp-stage', `tp-skin-${skin}`, idle && ui.playing ? 'is-idle' : '', source.mediaType === 'audio' ? 'is-audio' : '', `tp-bar-${appearance.controlBarStyle}`, `tp-play-${appearance.playButtonStyle}`, sticky ? `tp-sticky tp-sticky-${behavior.stickyPosition}` : ''].filter(Boolean).join(' ');
+  const stage =
+  /*#__PURE__*/
+  // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+  (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsxs)("div", {
+    ref: stageRef,
+    className: stageClass,
+    style: stageStyle,
+    tabIndex: 0,
+    onKeyDown: onKeyDown,
+    children: [sticky && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("button", {
+      className: "tp-sticky-close",
+      "aria-label": "Close",
+      onClick: () => setSticky(false),
+      children: "\xD7"
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("div", {
+      ref: containerRef,
+      className: "tp-media-container",
+      onClick: () => ready && !activeQuiz && playPause()
+    }), source.mediaType === 'audio' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("div", {
+      className: "tp-audio-art",
+      "aria-hidden": "true",
+      children: source.poster ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("img", {
+        src: source.poster,
+        alt: ""
+      }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("svg", {
+        viewBox: "0 0 24 24",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("path", {
+          d: "M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"
         })
-      }), (source.type === 'youtube' || source.type === 'vimeo') && !activeQuiz && !locked && !error &&
-      /*#__PURE__*/
-      // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
-      (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)("div", {
-        className: "tp-shield",
-        "aria-hidden": "true",
-        onClick: () => ready && playPause()
-      }), source.poster && !started && !error && source.mediaType !== 'audio' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)("div", {
-        className: "tp-poster",
-        style: {
-          backgroundImage: `url("${source.poster}")`
-        }
-      }), branding.logo && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)("img", {
-        className: "tp-logo",
+      })
+    }), (source.type === 'youtube' || source.type === 'vimeo') && !activeQuiz && !locked && !error &&
+    /*#__PURE__*/
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
+    (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("div", {
+      className: "tp-shield",
+      "aria-hidden": "true",
+      onClick: () => ready && playPause()
+    }), source.poster && !started && !error && source.mediaType !== 'audio' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("div", {
+      className: "tp-poster",
+      style: {
+        backgroundImage: `url("${source.poster}")`
+      }
+    }), branding.logo && (branding.logoUrl ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("a", {
+      className: `tp-logo tp-logo-${branding.logoPosition || 'top-right'} is-link`,
+      style: {
+        opacity: branding.logoOpacity ?? 0.9
+      },
+      href: branding.logoUrl,
+      target: "_blank",
+      rel: "noreferrer",
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("img", {
         src: branding.logo,
         alt: ""
-      }), !ready && !error && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_11__.Spinner, {}), error && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_11__.Message, {
-        children: error
-      }), ready && !started && !locked && !activeQuiz && !activeOptin && !error && appearance.bigPlay && source.mediaType !== 'audio' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_11__.BigPlay, {
-        onPlay: playPause
-      }), activeOptin && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)(_components_Optin__WEBPACK_IMPORTED_MODULE_9__["default"], {
-        videoId: videoId,
-        optin: optin,
-        preview: preview,
-        onDone: finishOptin,
-        onSkip: finishOptin
-      }), activeOverlay && !activeQuiz && !activeOptin && !locked && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)(_components_Overlay__WEBPACK_IMPORTED_MODULE_10__["default"], {
-        overlay: activeOverlay,
-        onClose: closeOverlay,
-        onReplay: activeOverlay.trigger === 'end' ? replayFromStart : null
-      }), locked && !activeQuiz && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_11__.LockScreen, {
-        requireRewatch: gate && gate.requireRewatch,
-        onRewatch: rewatch
-      }), activeQuiz && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)(_components_Quiz__WEBPACK_IMPORTED_MODULE_8__["default"], {
-        videoId: videoId,
-        gateId: activeQuiz.gateId,
-        quiz: activeQuiz.quiz,
-        title: activeQuiz.title,
-        preview: preview,
-        onPass: onQuizPass,
-        onFail: onQuizFail,
-        onLocked: onQuizLocked
-      }), ready && !error && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)(_components_Controls__WEBPACK_IMPORTED_MODULE_6__["default"], {
-        ...ui,
-        seekable: seekable,
-        chapters: config.chapters || [],
-        provider: providerRef.current,
-        capabilities: providerRef.current?.capabilities,
-        controls: cz.controls,
-        speeds: cz.speeds,
-        skipSeconds: cz.skipSeconds,
-        onPlayPause: playPause,
-        onSeek: seek,
-        onSkip: skip,
-        onVolume: setVolume,
-        onMute: toggleMute,
-        onRate: setRate,
-        onQuality: setQuality,
-        onTrack: setTrack,
-        onPiP: pip,
-        onDownload: download,
-        onFullscreen: fullscreen,
-        onInfo: () => setInfoOpen(o => !o),
-        hasInfo: hasInfo,
-        infoOpen: infoOpen,
-        audio: source.mediaType === 'audio',
-        title: title,
-        waveSeed: videoId
-      }), infoOpen && ready && !error && !activeQuiz && !locked && !activeOptin && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_12__.jsx)(_components_InfoPanel__WEBPACK_IMPORTED_MODULE_7__["default"], {
-        chapters: chapterList,
-        getCues: getCues,
-        current: ui.current,
-        seekable: seekable,
-        onSeek: seek,
-        onClose: () => setInfoOpen(false)
+      })
+    }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("img", {
+      className: `tp-logo tp-logo-${branding.logoPosition || 'top-right'}`,
+      style: {
+        opacity: branding.logoOpacity ?? 0.9
+      },
+      src: branding.logo,
+      alt: ""
+    })), textOverlays.filter(o => activeTextIds.includes(o.id)).map(o => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsxs)("div", {
+      className: `tp-text-overlay tp-pos-${o.position || 'top-left'}`,
+      style: {
+        background: hexToRgba(o.background || '#000000', (o.bgOpacity ?? 60) / 100)
+      },
+      children: [o.title && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("strong", {
+        className: "tp-text-overlay-title",
+        children: o.title
+      }), o.text && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("span", {
+        className: "tp-text-overlay-text",
+        children: o.text
       })]
-    })
-  );
+    }, o.id)), layers.length > 0 && !activeQuiz && !activeOptin && !locked && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)(_components_Layers__WEBPACK_IMPORTED_MODULE_11__["default"], {
+      layers: layers,
+      current: ui.current,
+      videoId: videoId,
+      onOptin: ({
+        email
+      }) => preview ? Promise.resolve() : _Utils_rest__WEBPACK_IMPORTED_MODULE_5__.rest.post('optin', {
+        video: videoId,
+        email
+      })
+    }), watermark.enabled && watermark.text && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("div", {
+      className: `tp-watermark${watermark.drift !== false ? ' is-drifting' : ''}`,
+      style: {
+        opacity: watermark.opacity ?? 0.35
+      },
+      "aria-hidden": "true",
+      children: watermark.text
+    }), actionBar.enabled && (actionBar.text || actionBar.buttonLabel) && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsxs)("div", {
+      className: `tp-actionbar tp-actionbar-${actionBar.position === 'top' ? 'top' : 'bottom'}`,
+      style: actionBar.background ? {
+        background: actionBar.background
+      } : undefined,
+      children: [actionBar.text && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("span", {
+        className: "tp-actionbar-text",
+        children: actionBar.text
+      }), actionBar.buttonLabel && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("a", {
+        className: "tp-actionbar-btn",
+        href: actionBar.buttonUrl || '#',
+        target: "_blank",
+        rel: "noreferrer noopener",
+        children: actionBar.buttonLabel
+      })]
+    }), !ready && !error && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_12__.Spinner, {}), error && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_12__.Message, {
+      children: error
+    }), ready && !started && !locked && !activeQuiz && !activeOptin && !error && appearance.bigPlay && source.mediaType !== 'audio' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_12__.BigPlay, {
+      onPlay: playPause
+    }), activeOptin && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)(_components_Optin__WEBPACK_IMPORTED_MODULE_9__["default"], {
+      videoId: videoId,
+      optin: optin,
+      preview: preview,
+      onDone: finishOptin,
+      onSkip: finishOptin
+    }), activeOverlay && !activeQuiz && !activeOptin && !locked && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)(_components_Overlay__WEBPACK_IMPORTED_MODULE_10__["default"], {
+      overlay: activeOverlay,
+      onClose: closeOverlay,
+      onReplay: activeOverlay.trigger === 'end' ? replayFromStart : null
+    }), locked && !activeQuiz && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_12__.LockScreen, {
+      requireRewatch: gate && gate.requireRewatch,
+      onRewatch: rewatch
+    }), activeQuiz && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)(_components_Quiz__WEBPACK_IMPORTED_MODULE_8__["default"], {
+      videoId: videoId,
+      gateId: activeQuiz.gateId,
+      quiz: activeQuiz.quiz,
+      title: activeQuiz.title,
+      preview: preview,
+      onPass: onQuizPass,
+      onFail: onQuizFail,
+      onLocked: onQuizLocked
+    }), ready && !error && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)(_components_Controls__WEBPACK_IMPORTED_MODULE_6__["default"], {
+      ...ui,
+      seekable: seekable,
+      chapters: config.chapters || [],
+      provider: providerRef.current,
+      capabilities: providerRef.current?.capabilities,
+      controls: cz.controls,
+      speeds: cz.speeds,
+      skipSeconds: cz.skipSeconds,
+      onPlayPause: playPause,
+      onSeek: seek,
+      onSkip: skip,
+      onVolume: setVolume,
+      onMute: toggleMute,
+      onRate: setRate,
+      onQuality: setQuality,
+      onTrack: setTrack,
+      onPiP: pip,
+      onDownload: download,
+      onFullscreen: fullscreen,
+      onInfo: () => setInfoOpen(o => !o),
+      hasInfo: hasInfo,
+      infoOpen: infoOpen,
+      audio: source.mediaType === 'audio',
+      title: title,
+      waveSeed: videoId
+    }), infoOpen && ready && !error && !activeQuiz && !locked && !activeOptin && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)(_components_InfoPanel__WEBPACK_IMPORTED_MODULE_7__["default"], {
+      chapters: chapterList,
+      getCues: getCues,
+      current: ui.current,
+      seekable: seekable,
+      onSeek: seek,
+      onClose: () => setInfoOpen(false)
+    })]
+  });
+
+  // Ambient skin: a blurred, oversized copy of the poster glows behind the
+  // stage (the stage clips its own children, so the glow needs a wrapper).
+  // The wrapper renders unconditionally for the skin — toggling it (e.g. on
+  // sticky) would remount the stage and destroy the provider's media element.
+  if (skin === 'ambient' && source.mediaType !== 'audio') {
+    // Both children stay mounted (hidden via style) — removing the glow
+    // would shift the stage's reconciliation slot and recreate its DOM.
+    return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsxs)("div", {
+      className: "tp-ambient-wrap",
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_13__.jsx)("div", {
+        className: "tp-ambient-glow",
+        style: {
+          backgroundImage: source.poster ? `url("${source.poster}")` : undefined,
+          display: source.poster && !sticky ? undefined : 'none'
+        },
+        "aria-hidden": "true"
+      }), stage]
+    });
+  }
+  return stage;
 }
 
 /***/ },
@@ -1440,6 +1584,201 @@ function InfoPanel({
 
 /***/ },
 
+/***/ "./dev_trueplayer/player/components/Layers.jsx"
+/*!*****************************************************!*\
+  !*** ./dev_trueplayer/player/components/Layers.jsx ***!
+  \*****************************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Layers)
+/* harmony export */ });
+/* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/element */ "@wordpress/element");
+/* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__);
+
+
+/**
+ * Interactive layers (pro) — timed, positioned elements over the picture:
+ *  - hotspot:  clickable region (percent coords) with an optional tooltip → URL
+ *  - banner:   image + link
+ *  - shortcode: server-rendered HTML (prepared by the shortcode pipeline)
+ *  - form:     lightweight email capture posting to the opt-in endpoint
+ * Layers show while `start <= t < end` (no end = until the video finishes).
+ */
+
+function active(layer, t) {
+  const start = parseFloat(layer.start) || 0;
+  const end = layer.end ? parseFloat(layer.end) : Infinity;
+  return t >= start && t < end;
+}
+function Hotspot({
+  layer
+}) {
+  const style = {
+    left: `${layer.x ?? 10}%`,
+    top: `${layer.y ?? 10}%`,
+    width: `${layer.w ?? 20}%`,
+    height: `${layer.h ?? 20}%`
+  };
+  const body = /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.Fragment, {
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("span", {
+      className: "tp-hotspot-pulse"
+    }), layer.tooltip && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("span", {
+      className: "tp-hotspot-tip",
+      children: layer.tooltip
+    })]
+  });
+  return layer.url ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("a", {
+    className: "tp-layer tp-hotspot",
+    style: style,
+    href: layer.url,
+    target: "_blank",
+    rel: "noreferrer noopener",
+    children: body
+  }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("span", {
+    className: "tp-layer tp-hotspot",
+    style: style,
+    children: body
+  });
+}
+function Banner({
+  layer
+}) {
+  if (!layer.image) {
+    return null;
+  }
+  const img = /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("img", {
+    src: layer.image,
+    alt: layer.alt || ''
+  });
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
+    className: `tp-layer tp-banner tp-pos-${layer.position || 'bottom-center'}`,
+    children: layer.url ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("a", {
+      href: layer.url,
+      target: "_blank",
+      rel: "noreferrer noopener",
+      children: img
+    }) : img
+  });
+}
+function ShortcodeLayer({
+  layer
+}) {
+  if (!layer.html) {
+    return null;
+  }
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
+    className: `tp-layer tp-shortcode-layer tp-pos-${layer.position || 'middle-center'}`
+    // Rendered server-side from admin-authored shortcodes (same trust
+    // model as post content).
+    ,
+    dangerouslySetInnerHTML: {
+      __html: layer.html
+    }
+  });
+}
+function FormLayer({
+  layer,
+  videoId,
+  onSubmit
+}) {
+  const [email, setEmail] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
+  const [state, setState] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('idle'); // idle | busy | done | error
+  if (state === 'done') {
+    return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
+      className: `tp-layer tp-form-layer tp-pos-${layer.position || 'middle-center'}`,
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("p", {
+        className: "tp-form-layer-thanks",
+        children: layer.thanks || 'Thanks — you’re in!'
+      })
+    });
+  }
+  const submit = async e => {
+    e.preventDefault();
+    if (!/.+@.+\..+/.test(email)) {
+      setState('error');
+      return;
+    }
+    setState('busy');
+    try {
+      await onSubmit({
+        email,
+        layerId: layer.id
+      });
+      setState('done');
+    } catch (err) {
+      setState('error');
+    }
+  };
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("form", {
+    className: `tp-layer tp-form-layer tp-pos-${layer.position || 'middle-center'}`,
+    onSubmit: submit,
+    children: [layer.title && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("strong", {
+      className: "tp-form-layer-title",
+      children: layer.title
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("div", {
+      className: "tp-form-layer-row",
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("input", {
+        type: "email",
+        value: email,
+        onChange: e => setEmail(e.target.value),
+        placeholder: layer.placeholder || 'you@email.com',
+        "aria-label": "Email"
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("button", {
+        type: "submit",
+        disabled: state === 'busy',
+        children: layer.buttonLabel || 'Subscribe'
+      })]
+    }), state === 'error' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("span", {
+      className: "tp-form-layer-error",
+      children: "Please enter a valid email."
+    })]
+  });
+}
+function Layers({
+  layers,
+  current,
+  videoId,
+  onOptin
+}) {
+  const due = (layers || []).filter(l => active(l, current));
+  if (!due.length) {
+    return null;
+  }
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
+    className: "tp-layers",
+    children: due.map(l => {
+      switch (l.type) {
+        case 'hotspot':
+          return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(Hotspot, {
+            layer: l
+          }, l.id);
+        case 'banner':
+          return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(Banner, {
+            layer: l
+          }, l.id);
+        case 'shortcode':
+          return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(ShortcodeLayer, {
+            layer: l
+          }, l.id);
+        case 'form':
+          return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(FormLayer, {
+            layer: l,
+            videoId: videoId,
+            onSubmit: onOptin
+          }, l.id);
+        default:
+          return null;
+      }
+    })
+  });
+}
+
+/***/ },
+
 /***/ "./dev_trueplayer/player/components/Optin.jsx"
 /*!****************************************************!*\
   !*** ./dev_trueplayer/player/components/Optin.jsx ***!
@@ -1995,6 +2334,7 @@ class CoverageTracker {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   CUSTOMIZE_DEFAULTS: () => (/* binding */ CUSTOMIZE_DEFAULTS),
+/* harmony export */   autoplayMode: () => (/* binding */ autoplayMode),
 /* harmony export */   resolveCustomize: () => (/* binding */ resolveCustomize)
 /* harmony export */ });
 /**
@@ -2022,6 +2362,8 @@ const CUSTOMIZE_DEFAULTS = {
   },
   behavior: {
     autoplay: false,
+    autoplayMode: '',
+    // '' (derive from autoplay) | off | muted | sound
     muted: false,
     loop: false,
     resetOnEnd: false,
@@ -2033,9 +2375,13 @@ const CUSTOMIZE_DEFAULTS = {
     stickyPosition: 'bottom-right',
     preload: 'metadata',
     // auto | metadata | none
-    noSkip: false // block seeking past the furthest point watched (rewind ok)
+    noSkip: false,
+    // block seeking past the furthest point watched (rewind ok)
+    hoverPreview: false // muted inline preview when hovering the poster facade (direct-file sources)
   },
   appearance: {
+    skin: 'default',
+    // default | modern | simple | minimal | standard | floating (pro) | ambient (pro)
     accent: '#4f46e5',
     hoverColor: '',
     bigPlay: true,
@@ -2043,11 +2389,32 @@ const CUSTOMIZE_DEFAULTS = {
     // circle | square | soft
     roundness: 10,
     // stage border radius, px
-    controlBarStyle: 'gradient' // gradient | solid | minimal
+    controlBarStyle: 'gradient',
+    // gradient | solid | minimal
+    aspectRatio: '16:9',
+    // 16:9 | 9:16 | 4:3 | 1:1 | 21:9 | auto
+    // Caption rendering (html5-backed providers). Flat keys — the section
+    // merge is shallow, so nested objects would override wholesale.
+    captionSize: 100,
+    // % of the player's base cue size
+    captionColor: '#ffffff',
+    captionBackground: '#000000',
+    captionOpacity: 75 // background opacity, %
   },
   speeds: [0.5, 0.75, 1, 1.25, 1.5, 2],
   skipSeconds: 10
 };
+
+/**
+ * Effective autoplay mode: 'off' | 'muted' | 'sound'. `autoplayMode` wins;
+ * older configs only have the boolean `autoplay` (which always meant muted).
+ */
+function autoplayMode(behavior = {}) {
+  if (behavior.autoplayMode) {
+    return behavior.autoplayMode;
+  }
+  return behavior.autoplay ? 'muted' : 'off';
+}
 function mergeSection(base, ...overrides) {
   return overrides.reduce((acc, o) => ({
     ...acc,
@@ -2265,6 +2632,56 @@ function bootPlayer(node, data, videoId, autoStart) {
 }
 
 /**
+ * Muted, looped inline preview while hovering the poster facade — Presto-style
+ * "muted autoplay preview". Direct-file sources only (no iframe/hls machinery);
+ * starts after a short intent delay and is torn down on pointer-leave.
+ */
+function attachHoverPreview(facade, config) {
+  const source = config && config.source || {};
+  const behavior = config && config.customize && config.customize.behavior || {};
+  const src = source.src || '';
+  const previewable = behavior.hoverPreview && ['self', 'url'].includes(source.type) && source.mediaType !== 'audio' && src && !/\.m3u8($|\?)/i.test(src);
+  if (!previewable) {
+    return;
+  }
+  let timer = null;
+  let vid = null;
+  const stop = () => {
+    clearTimeout(timer);
+    timer = null;
+    if (vid) {
+      vid.pause();
+      vid.remove();
+      vid = null;
+    }
+  };
+  facade.addEventListener('pointerenter', () => {
+    if (facade.closest('[data-tp-booted]') || timer || vid) {
+      return;
+    }
+    timer = setTimeout(() => {
+      vid = document.createElement('video');
+      vid.className = 'tp-facade-poster tp-hover-preview';
+      vid.src = src;
+      vid.muted = true;
+      vid.loop = true;
+      vid.playsInline = true;
+      vid.preload = 'auto';
+      facade.insertBefore(vid, facade.querySelector('.tp-facade-btn'));
+      const p = vid.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {});
+      }
+    }, 300);
+  });
+  facade.addEventListener('pointerleave', stop);
+  // The click boot removes the facade wholesale; just clear our timer.
+  facade.addEventListener('click', stop, {
+    once: true
+  });
+}
+
+/**
  * Discovers [data-trueplayer] mount nodes. To keep pages fast, a node that
  * rendered a poster facade stays inert — no video element, no YouTube/Vimeo
  * iframe, no hls.js, no gate request — until the visitor clicks to play. Nodes
@@ -2305,6 +2722,7 @@ function mountPlayers() {
       facade.addEventListener('click', boot, {
         once: true
       });
+      attachHoverPreview(facade, data.config);
       return;
     }
     bootPlayer(node, data, videoId, autoplay);
@@ -2466,8 +2884,8 @@ async function createHtml5Provider(container, source, opts = {}) {
   if (behavior.loop) {
     el.loop = true;
   }
-  if (behavior.muted || behavior.autoplay) {
-    el.muted = true; // autoplay only works muted
+  if (behavior.muted || behavior.autoplay && !behavior.autoplaySound) {
+    el.muted = true; // autoplay only works muted (unless sound mode, which retries muted on rejection)
   }
   if (behavior.autoplay) {
     el.autoplay = true;

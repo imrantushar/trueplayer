@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from '@wordpress/element';
 import { createProvider } from './providers';
 import { CoverageTracker } from './coverage';
-import { resolveCustomize } from './customize';
+import { resolveCustomize, autoplayMode } from './customize';
 import { gaEvent } from './ga';
 import { rest } from '@Utils/rest';
 import Controls from './components/Controls';
@@ -9,9 +9,19 @@ import InfoPanel from './components/InfoPanel';
 import Quiz from './components/Quiz';
 import Optin from './components/Optin';
 import Overlay from './components/Overlay';
+import Layers from './components/Layers';
 import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
+
+function hexToRgba( hex, alpha ) {
+	const m = /^#?([0-9a-f]{6})$/i.exec( hex || '' );
+	if ( ! m ) {
+		return `rgba(0,0,0,${ alpha })`;
+	}
+	const n = parseInt( m[ 1 ], 16 );
+	return `rgba(${ ( n >> 16 ) & 255 },${ ( n >> 8 ) & 255 },${ n & 255 },${ alpha })`;
+}
 
 export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, autoStart = false } ) {
 	const stageRef = useRef( null );
@@ -26,7 +36,18 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const branding = config.branding || {};
 	const optin = config.optin || {};
 	const optinDoneRef = useRef( false );
-	const overlays = Array.isArray( config.overlays ) ? config.overlays : [];
+	const allOverlays = Array.isArray( config.overlays ) ? config.overlays : [];
+	// CTA cards use the fire-once modal engine; text overlays are non-blocking
+	// timed windows rendered over the picture.
+	const overlays = allOverlays.filter( ( o ) => ( o.type || 'cta' ) !== 'text' );
+	const textOverlays = allOverlays.filter( ( o ) => o.type === 'text' );
+	const actionBar = config.actionBar || {};
+	// Pro: interactive layers + protection (server strips both when free).
+	const layers = Array.isArray( config.layers ) ? config.layers : [];
+	const watermark = { ...( ( config.protection && config.protection.dynamicWatermark ) || {} ) };
+	if ( preview && watermark.enabled && ! watermark.text ) {
+		watermark.text = 'viewer@example.com'; // live text is resolved server-side
+	}
 	const firedOverlays = useRef( new Set() );
 	const overlayActiveRef = useRef( false );
 	const gaStartedRef = useRef( false );
@@ -41,6 +62,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const appearance = cz.appearance;
 	const behavior = cz.behavior;
 
+	// 'off' | 'muted' | 'sound' — the boolean `autoplay` (legacy) means muted.
+	const apMode = autoplayMode( behavior );
+	const autoplayOn = apMode !== 'off';
+
 	// "In this video" drawer: chapters (any provider) + transcript (from the
 	// caption track on the html5-backed providers; embeds have no cue access).
 	const chapterList = config.chapters || [];
@@ -52,7 +77,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ started, setStarted ] = useState( false );
 	const [ ui, setUi ] = useState( {
 		playing: false, current: 0, duration: 0, buffered: 0,
-		muted: !! ( behavior.muted || behavior.autoplay ), volume: 1, rate: 1, quality: 'auto', track: 'off',
+		muted: !! ( behavior.muted || ( autoplayOn && apMode !== 'sound' ) ), volume: 1, rate: 1, quality: 'auto', track: 'off',
 	} );
 	const [ gate, setGate ] = useState( null );
 	const [ activeQuiz, setActiveQuiz ] = useState( null );
@@ -62,6 +87,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ sticky, setSticky ] = useState( false );
 	const [ activeOptin, setActiveOptin ] = useState( false );
 	const [ activeOverlay, setActiveOverlay ] = useState( null );
+	const [ activeTextIds, setActiveTextIds ] = useState( [] );
 	const [ infoOpen, setInfoOpen ] = useState( false );
 
 	const getCues = useCallback( () => ( providerRef.current?.getCues ? providerRef.current.getCues() : [] ), [] );
@@ -123,7 +149,15 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 			let provider;
 			try {
-				provider = await createProvider( containerRef.current, source, { behavior, autoStart } );
+				// Providers read `autoplay`/`muted` booleans; translate the mode.
+				// `autoplaySound` lets html5 skip the forced mute (we retry muted
+				// below if the browser's autoplay policy rejects it).
+				const providerBehavior = {
+					...behavior,
+					autoplay: autoplayOn,
+					autoplaySound: apMode === 'sound',
+				};
+				provider = await createProvider( containerRef.current, source, { behavior: providerBehavior, autoStart } );
 			} catch ( e ) {
 				setError( 'Unable to load the player.' );
 				return;
@@ -181,12 +215,21 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				if ( optin.enabled && optin.position === 'pre' && ! optinDoneRef.current ) {
 					setActiveOptin( true );
 				} else if ( autoStart && ! gateState.locked ) {
-					// Booted from a click-to-load poster: begin playing at once. If
-					// the browser blocks it (autoplay policy), the big-play button
-					// stays visible as the fallback — so swallow the rejection.
+					// Booted from a click-to-load poster or autoplay: begin playing
+					// at once. Autoplay-with-sound gets one unmuted attempt; when the
+					// browser's autoplay policy rejects it, retry muted (and if even
+					// that fails, the big-play button stays as the fallback).
 					const r = provider.play();
 					if ( r && typeof r.catch === 'function' ) {
-						r.catch( () => {} );
+						r.catch( () => {
+							if ( apMode === 'sound' ) {
+								provider.setMuted( true );
+								const retry = provider.play();
+								if ( retry && typeof retry.catch === 'function' ) {
+									retry.catch( () => {} );
+								}
+							}
+						} );
 					}
 				}
 				sync();
@@ -212,6 +255,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					}
 					maybeOverlay( t );
 				}
+				syncTextOverlays( t );
 				sync();
 			} );
 			provider.on( 'durationchange', sync );
@@ -318,6 +362,18 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			setActiveOverlay( due );
 		}
 	};
+	// Text overlays: timed show/hide windows — unlike CTAs they re-show whenever
+	// the playhead re-enters their window (rewinds included).
+	const syncTextOverlays = ( t ) => {
+		if ( ! textOverlays.length ) {
+			return;
+		}
+		const ids = textOverlays
+			.filter( ( o ) => t >= ( parseFloat( o.start ) || 0 ) && ( ! o.end || t < parseFloat( o.end ) ) )
+			.map( ( o ) => o.id );
+		setActiveTextIds( ( prev ) => ( prev.length === ids.length && prev.every( ( id, i ) => id === ids[ i ] ) ? prev : ids ) );
+	};
+
 	const closeOverlay = () => {
 		overlayActiveRef.current = false;
 		setActiveOverlay( null );
@@ -514,9 +570,20 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	if ( appearance.hoverColor ) {
 		stageStyle[ '--tp-hover' ] = appearance.hoverColor;
 	}
+	// Caption cue styling (html5-backed providers; embeds render their own).
+	stageStyle[ '--tp-cap-scale' ] = ( appearance.captionSize || 100 ) / 100;
+	stageStyle[ '--tp-cap-color' ] = appearance.captionColor || '#ffffff';
+	stageStyle[ '--tp-cap-bg' ] = hexToRgba( appearance.captionBackground || '#000000', ( appearance.captionOpacity ?? 75 ) / 100 );
+	// Aspect ratio (audio keeps its compact bar; sticky keeps the ratio too so
+	// the mini player matches the video's shape).
+	if ( source.mediaType !== 'audio' && appearance.aspectRatio && appearance.aspectRatio !== '16:9' ) {
+		stageStyle.aspectRatio = appearance.aspectRatio === 'auto' ? 'auto' : appearance.aspectRatio.replace( ':', ' / ' );
+	}
 
+	const skin = appearance.skin || 'default';
 	const stageClass = [
 		'tp-stage',
+		`tp-skin-${ skin }`,
 		idle && ui.playing ? 'is-idle' : '',
 		source.mediaType === 'audio' ? 'is-audio' : '',
 		`tp-bar-${ appearance.controlBarStyle }`,
@@ -524,7 +591,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		sticky ? `tp-sticky tp-sticky-${ behavior.stickyPosition }` : '',
 	].filter( Boolean ).join( ' ' );
 
-	return (
+	const stage = (
 		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
 		<div ref={ stageRef } className={ stageClass } style={ stageStyle } tabIndex={ 0 } onKeyDown={ onKeyDown }>
 			{ sticky && (
@@ -559,7 +626,76 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				<div className="tp-poster" style={ { backgroundImage: `url("${ source.poster }")` } } />
 			) }
 
-			{ branding.logo && <img className="tp-logo" src={ branding.logo } alt="" /> }
+			{ branding.logo && (
+				branding.logoUrl ? (
+					<a
+						className={ `tp-logo tp-logo-${ branding.logoPosition || 'top-right' } is-link` }
+						style={ { opacity: branding.logoOpacity ?? 0.9 } }
+						href={ branding.logoUrl }
+						target="_blank"
+						rel="noreferrer"
+					>
+						<img src={ branding.logo } alt="" />
+					</a>
+				) : (
+					<img
+						className={ `tp-logo tp-logo-${ branding.logoPosition || 'top-right' }` }
+						style={ { opacity: branding.logoOpacity ?? 0.9 } }
+						src={ branding.logo }
+						alt=""
+					/>
+				)
+			) }
+
+			{ /* Non-blocking timed text overlays (title/info cards over the picture). */ }
+			{ textOverlays
+				.filter( ( o ) => activeTextIds.includes( o.id ) )
+				.map( ( o ) => (
+					<div
+						key={ o.id }
+						className={ `tp-text-overlay tp-pos-${ o.position || 'top-left' }` }
+						style={ { background: hexToRgba( o.background || '#000000', ( o.bgOpacity ?? 60 ) / 100 ) } }
+					>
+						{ o.title && <strong className="tp-text-overlay-title">{ o.title }</strong> }
+						{ o.text && <span className="tp-text-overlay-text">{ o.text }</span> }
+					</div>
+				) ) }
+
+			{ /* Interactive layers (pro). */ }
+			{ layers.length > 0 && ! activeQuiz && ! activeOptin && ! locked && (
+				<Layers
+					layers={ layers }
+					current={ ui.current }
+					videoId={ videoId }
+					onOptin={ ( { email } ) => ( preview ? Promise.resolve() : rest.post( 'optin', { video: videoId, email } ) ) }
+				/>
+			) }
+
+			{ /* Dynamic watermark (pro): identity burned over the picture. */ }
+			{ watermark.enabled && watermark.text && (
+				<div
+					className={ `tp-watermark${ watermark.drift !== false ? ' is-drifting' : '' }` }
+					style={ { opacity: watermark.opacity ?? 0.35 } }
+					aria-hidden="true"
+				>
+					{ watermark.text }
+				</div>
+			) }
+
+			{ /* Persistent action bar. */ }
+			{ actionBar.enabled && ( actionBar.text || actionBar.buttonLabel ) && (
+				<div
+					className={ `tp-actionbar tp-actionbar-${ actionBar.position === 'top' ? 'top' : 'bottom' }` }
+					style={ actionBar.background ? { background: actionBar.background } : undefined }
+				>
+					{ actionBar.text && <span className="tp-actionbar-text">{ actionBar.text }</span> }
+					{ actionBar.buttonLabel && (
+						<a className="tp-actionbar-btn" href={ actionBar.buttonUrl || '#' } target="_blank" rel="noreferrer noopener">
+							{ actionBar.buttonLabel }
+						</a>
+					) }
+				</div>
+			) }
 
 			{ ! ready && ! error && <Spinner /> }
 			{ error && <Message>{ error }</Message> }
@@ -643,4 +779,27 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			) }
 		</div>
 	);
+
+	// Ambient skin: a blurred, oversized copy of the poster glows behind the
+	// stage (the stage clips its own children, so the glow needs a wrapper).
+	// The wrapper renders unconditionally for the skin — toggling it (e.g. on
+	// sticky) would remount the stage and destroy the provider's media element.
+	if ( skin === 'ambient' && source.mediaType !== 'audio' ) {
+		// Both children stay mounted (hidden via style) — removing the glow
+		// would shift the stage's reconciliation slot and recreate its DOM.
+		return (
+			<div className="tp-ambient-wrap">
+				<div
+					className="tp-ambient-glow"
+					style={ {
+						backgroundImage: source.poster ? `url("${ source.poster }")` : undefined,
+						display: source.poster && ! sticky ? undefined : 'none',
+					} }
+					aria-hidden="true"
+				/>
+				{ stage }
+			</div>
+		);
+	}
+	return stage;
 }

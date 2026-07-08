@@ -40,6 +40,8 @@ class Database {
 			return;
 		}
 		self::create_initial_custom_table();
+		// New rewrite rules (instant video pages) need a one-time flush.
+		Helper::request_rewrite_flush();
 		update_option( 'trueplayer_db_version', TRUEPLAYER_DB_VERSION );
 	}
 }

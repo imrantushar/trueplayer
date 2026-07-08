@@ -22,6 +22,7 @@ export const CUSTOMIZE_DEFAULTS = {
 	},
 	behavior: {
 		autoplay: false,
+		autoplayMode: '', // '' (derive from autoplay) | off | muted | sound
 		muted: false,
 		loop: false,
 		resetOnEnd: false,
@@ -31,18 +32,38 @@ export const CUSTOMIZE_DEFAULTS = {
 		stickyPosition: 'bottom-right',
 		preload: 'metadata', // auto | metadata | none
 		noSkip: false, // block seeking past the furthest point watched (rewind ok)
+		hoverPreview: false, // muted inline preview when hovering the poster facade (direct-file sources)
 	},
 	appearance: {
+		skin: 'default', // default | modern | simple | minimal | standard | floating (pro) | ambient (pro)
 		accent: '#4f46e5',
 		hoverColor: '',
 		bigPlay: true,
 		playButtonStyle: 'circle', // circle | square | soft
 		roundness: 10, // stage border radius, px
 		controlBarStyle: 'gradient', // gradient | solid | minimal
+		aspectRatio: '16:9', // 16:9 | 9:16 | 4:3 | 1:1 | 21:9 | auto
+		// Caption rendering (html5-backed providers). Flat keys — the section
+		// merge is shallow, so nested objects would override wholesale.
+		captionSize: 100, // % of the player's base cue size
+		captionColor: '#ffffff',
+		captionBackground: '#000000',
+		captionOpacity: 75, // background opacity, %
 	},
 	speeds: [ 0.5, 0.75, 1, 1.25, 1.5, 2 ],
 	skipSeconds: 10,
 };
+
+/**
+ * Effective autoplay mode: 'off' | 'muted' | 'sound'. `autoplayMode` wins;
+ * older configs only have the boolean `autoplay` (which always meant muted).
+ */
+export function autoplayMode( behavior = {} ) {
+	if ( behavior.autoplayMode ) {
+		return behavior.autoplayMode;
+	}
+	return behavior.autoplay ? 'muted' : 'off';
+}
 
 function mergeSection( base, ...overrides ) {
 	return overrides.reduce(
