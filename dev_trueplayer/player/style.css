@@ -122,6 +122,32 @@
 	pointer-events: none;
 }
 
+/* Shown in the stage's normal spot while it's actually floating in a
+   Picture-in-Picture window elsewhere. */
+.tp-pip-placeholder {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	background: #0b0d12;
+	color: rgba( 255, 255, 255, 0.75 );
+	font-size: 13px;
+	border-radius: var( --tp-radius, 10px );
+}
+.tp-pip-return {
+	background: var( --tp-accent );
+	color: #fff;
+	border: 0;
+	border-radius: 8px;
+	padding: 8px 16px;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
 .tp-sticky {
 	position: fixed !important;
 	z-index: 99999;

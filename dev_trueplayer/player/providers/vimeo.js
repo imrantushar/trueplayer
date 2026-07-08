@@ -46,7 +46,11 @@ export async function createVimeoProvider( container, source, opts = {} ) {
 	return {
 		kind: 'vimeo',
 		element: host,
-		capabilities: { pip: true, quality: false, rate: true, tracks: false },
+		// Whether a given embed actually supports it is only knowable async
+		// (player.getPictureInPicture() round-trips to the iframe), so this is
+		// a browser-level check; per-video support still governs whether
+		// requestPiP() itself resolves.
+		capabilities: { pip: !! document.pictureInPictureEnabled, quality: false, rate: true, tracks: false },
 		on: emitter.on,
 		play: () => player.play(),
 		pause: () => player.pause(),
@@ -81,6 +85,8 @@ export async function createVimeoProvider( container, source, opts = {} ) {
 		getTextTracks: () => [],
 		setTextTrack: () => {},
 		requestPiP: () => player.requestPictureInPicture(),
+		exitPiP: () => player.exitPictureInPicture(),
+		isPiPActive: () => player.getPictureInPicture().catch( () => false ),
 		destroy: () => {
 			try {
 				player.destroy();

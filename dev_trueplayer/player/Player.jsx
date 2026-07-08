@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from '@wordpress/element';
+import { useEffect, useRef, useState, useCallback, createPortal } from '@wordpress/element';
 import { createProvider } from './providers';
 import { CoverageTracker } from './coverage';
 import { resolveCustomize, autoplayMode } from './customize';
 import { gaEvent } from './ga';
 import { rest } from '@Utils/rest';
+import { supportsContainerPiP, cloneStylesInto } from './pip';
 import Controls from './components/Controls';
 import InfoPanel from './components/InfoPanel';
 import Quiz from './components/Quiz';
@@ -11,6 +12,8 @@ import Optin from './components/Optin';
 import Overlay from './components/Overlay';
 import Layers from './components/Layers';
 import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
+
+const containerPipSupported = supportsContainerPiP();
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
@@ -46,6 +49,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const stageRef = useRef( null );
 	const stickySentinelRef = useRef( null );
 	const stickyDismissedRef = useRef( false ); // explicit close, until back at the top
+	const pipWinRef = useRef( null );
 	const containerRef = useRef( null );
 	const providerRef = useRef( null );
 	const coverageRef = useRef( null );
@@ -115,6 +119,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ frontier, setFrontier ] = useState( 0 );
 	const [ idle, setIdle ] = useState( false );
 	const [ sticky, setSticky ] = useState( false );
+	const [ pipWin, setPipWin ] = useState( null );
 	const [ activeOptin, setActiveOptin ] = useState( false );
 	const [ activeOverlay, setActiveOverlay ] = useState( null );
 	const [ activeTextIds, setActiveTextIds ] = useState( [] );
@@ -539,7 +544,71 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const setRate = ( r ) => providerRef.current.setRate( r );
 	const setQuality = ( q ) => { providerRef.current.setQuality( q ); setUi( ( s ) => ( { ...s, quality: q } ) ); };
 	const setTrack = ( id ) => { providerRef.current.setTextTrack( id === 'off' ? -1 : id ); setUi( ( s ) => ( { ...s, track: id } ) ); };
-	const pip = () => providerRef.current.requestPiP().catch( () => {} );
+	const closePiP = () => {
+		if ( pipWinRef.current ) {
+			pipWinRef.current.close(); // triggers the 'pagehide' listener below
+		}
+	};
+
+	// Container PiP (see pip.js): floats the *whole stage* — video/iframe and
+	// our controls — into a real OS window. It's what makes PiP possible at
+	// all for YouTube (whose iframe a native per-<video> PiP call can't reach)
+	// and more reliable for Vimeo (independent of whether that specific embed
+	// has Vimeo's own PiP enabled).
+	const openContainerPiP = async () => {
+		try {
+			const win = await window.documentPictureInPicture.requestWindow( { width: 420, height: 236 } );
+			cloneStylesInto( win.document );
+			win.document.body.style.margin = '0';
+			win.document.body.style.background = '#000';
+			win.addEventListener( 'pagehide', () => {
+				pipWinRef.current = null;
+				setPipWin( null );
+			}, { once: true } );
+			pipWinRef.current = win;
+			setPipWin( win );
+			return true;
+		} catch ( e ) {
+			return false;
+		}
+	};
+
+	const pip = async () => {
+		if ( pipWinRef.current ) {
+			closePiP();
+			return;
+		}
+		if ( containerPipSupported && await openContainerPiP() ) {
+			return;
+		}
+		// Fallback: native per-<video>/per-embed PiP (html5, Vimeo only — the
+		// button is hidden entirely for sources with neither this nor the
+		// fallback available, e.g. YouTube on a non-Chromium browser).
+		const p = providerRef.current;
+		if ( ! p || ! p.requestPiP ) {
+			return;
+		}
+		try {
+			// Toggle: clicking again while already in PiP (e.g. re-entered via
+			// the OS controls) previously just re-requested it, which the
+			// browser silently ignores/rejects — nothing visibly happened.
+			const active = p.isPiPActive ? await p.isPiPActive() : false;
+			await ( active ? p.exitPiP() : p.requestPiP() );
+		} catch ( e ) {
+			// unsupported for this source/browser — swallow
+		}
+	};
+
+	// Close the floating window if the player unmounts entirely (a video
+	// change alone doesn't unmount this component, so PiP intentionally
+	// persists across e.g. a playlist auto-advancing to the next item).
+	useEffect( () => {
+		return () => {
+			if ( pipWinRef.current ) {
+				pipWinRef.current.close();
+			}
+		};
+	}, [] );
 	const download = async () => {
 		const url = providerRef.current?.sourceUrl || source.src;
 		if ( ! url ) {
@@ -655,13 +724,20 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		source.mediaType === 'audio' ? 'is-audio' : '',
 		`tp-bar-${ appearance.controlBarStyle }`,
 		`tp-play-${ appearance.playButtonStyle }`,
-		sticky ? `tp-sticky tp-sticky-${ behavior.stickyPosition }` : '',
+		// A real OS PiP window replaces the in-page floating corner — the two
+		// floating mechanisms together would fight over `position: fixed`.
+		( sticky && ! pipWin ) ? `tp-sticky tp-sticky-${ behavior.stickyPosition }` : '',
 	].filter( Boolean ).join( ' ' );
+
+	// Container PiP works regardless of provider (it just floats the whole
+	// stage), so it can make the button available even where the provider has
+	// no native fallback of its own (YouTube).
+	const pipAvailable = containerPipSupported || !! providerRef.current?.capabilities?.pip;
 
 	const stage = (
 		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
 		<div ref={ stageRef } className={ stageClass } style={ stageStyle } tabIndex={ 0 } onKeyDown={ onKeyDown }>
-			{ sticky && (
+			{ sticky && ! pipWin && (
 				<button
 					className="tp-sticky-close"
 					aria-label="Close"
@@ -817,11 +893,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					seekable={ seekable }
 					chapters={ config.chapters || [] }
 					provider={ providerRef.current }
-					capabilities={ providerRef.current?.capabilities }
+					capabilities={ { ...providerRef.current?.capabilities, pip: pipAvailable } }
 					controls={ cz.controls }
 					speeds={ cz.speeds }
 					skipSeconds={ cz.skipSeconds }
 					scrubDisabled={ !! behavior.disableSeek }
+					hidePiP={ sticky && ! pipWin }
 					onPlayPause={ playPause }
 					onSeek={ seek }
 					onSkip={ skip }
@@ -858,14 +935,20 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// Once `sticky` engages, the stage leaves the document flow (`position:
 	// fixed`), so this slot reserves its normal footprint — matching the
 	// aspect ratio it would otherwise render at — to avoid a layout jump, and
-	// hosts the sentinel the observer above watches.
-	const slotStyle = sticky
+	// hosts the sentinel the observer above watches. Container PiP moves the
+	// stage out entirely (into another window), so it reserves the same way.
+	const slotStyle = ( sticky || pipWin )
 		? ( source.mediaType === 'audio' ? { minHeight: '72px' } : { aspectRatio: stageStyle.aspectRatio || '16 / 9' } )
 		: undefined;
 	const stageInSlot = (
 		<div className="tp-stage-slot" style={ slotStyle }>
 			<span ref={ stickySentinelRef } className="tp-stage-sentinel" aria-hidden="true" />
-			{ stage }
+			{ pipWin ? (
+				<div className="tp-pip-placeholder">
+					<p>Playing in a floating window</p>
+					<button type="button" className="tp-pip-return" onClick={ closePiP }>Bring back</button>
+				</div>
+			) : stage }
 		</div>
 	);
 
@@ -873,10 +956,11 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// stage (the stage clips its own children, so the glow needs a wrapper).
 	// The wrapper renders unconditionally for the skin — toggling it (e.g. on
 	// sticky) would remount the stage and destroy the provider's media element.
+	let content;
 	if ( skin === 'ambient' && source.mediaType !== 'audio' ) {
 		// Both children stay mounted (hidden via style) — removing the glow
 		// would shift the stage's reconciliation slot and recreate its DOM.
-		return (
+		content = (
 			<div className="tp-ambient-wrap">
 				<div
 					className="tp-ambient-glow"
@@ -889,6 +973,17 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				{ stageInSlot }
 			</div>
 		);
+	} else {
+		content = stageInSlot;
 	}
-	return stageInSlot;
+
+	return (
+		<>
+			{ content }
+			{ /* The stage (video/iframe + controls) itself lives in the PiP
+			     window once open — a portal, not a copy, so it's the exact same
+			     live provider/DOM node, not a re-mounted one. */ }
+			{ pipWin && createPortal( stage, pipWin.document.body ) }
+		</>
+	);
 }

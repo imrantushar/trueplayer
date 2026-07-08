@@ -247,7 +247,7 @@ function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, 
 export default function Controls( props ) {
 	const {
 		playing, current, duration, buffered, muted, volume, rate, quality, track, seekable,
-		chapters, provider, capabilities, controls = {}, speeds, skipSeconds = 10, scrubDisabled,
+		chapters, provider, capabilities, controls = {}, speeds, skipSeconds = 10, scrubDisabled, hidePiP,
 		onPlayPause, onSeek, onVolume, onMute, onRate, onQuality, onTrack, onPiP, onFullscreen, onSkip, onDownload,
 		onInfo, hasInfo, infoOpen, audio, title, waveSeed,
 	} = props;
@@ -311,7 +311,7 @@ export default function Controls( props ) {
 				{ show( 'settings' ) && settingsHasContent && (
 					<Menu provider={ provider } rate={ rate } setRate={ onRate } quality={ quality } setQuality={ onQuality } track={ track } setTrack={ onTrack } speeds={ speeds } showSpeed={ show( 'speed' ) } />
 				) }
-				{ show( 'pip' ) && capabilities?.pip && (
+				{ show( 'pip' ) && capabilities?.pip && ! hidePiP && (
 					<button className="tp-btn" aria-label="Picture in picture" onClick={ onPiP }>
 						<Icon d={ P.pip } />
 					</button>
