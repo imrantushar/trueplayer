@@ -1,6 +1,3 @@
-/*!*********************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/@wordpress/scripts/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./dev_trueplayer/player/style.css ***!
-  \*********************************************************************************************************************************************************************************************************************/
 /* Frontend player — scoped, CSS-variable driven. No Tailwind (keeps the
    frontend bundle lean). */
 
@@ -577,6 +574,13 @@
 .tp-scrubber {
 	padding: 8px 0;
 	cursor: pointer;
+	touch-action: none; /* let a pointer drag scrub instead of scrolling the page */
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+}
+.tp-scrubber.is-disabled {
+	cursor: not-allowed;
 }
 .tp-scrubber-track {
 	position: relative;

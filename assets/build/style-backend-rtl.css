@@ -1,6 +1,3 @@
-/*!********************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/@wordpress/scripts/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./dev_trueplayer/admin/style.css ***!
-  \********************************************************************************************************************************************************************************************************************/
 *, ::before, ::after {
 		--tw-border-spacing-x: 0;
 		--tw-border-spacing-y: 0;
@@ -150,6 +147,9 @@
 		.container {
 				max-width: 1536px;
 		}
+}
+.visible {
+		visibility: visible;
 }
 .fixed {
 		position: fixed;
@@ -406,6 +406,9 @@
 }
 .cursor-grab {
 		cursor: grab;
+}
+.cursor-not-allowed {
+		cursor: not-allowed;
 }
 .cursor-pointer {
 		cursor: pointer;

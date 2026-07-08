@@ -39,7 +39,7 @@ const CONTROL_LABELS = {
 
 const DEFAULTS = {
 	controls: { play: true, rewind: true, forward: true, progress: true, currentTime: true, duration: true, mute: true, volume: true, captions: true, settings: true, speed: true, pip: true, fullscreen: true, download: false },
-	behavior: { autoplay: false, autoplayMode: '', muted: false, loop: false, resetOnEnd: false, savePosition: true, hideControls: true, sticky: false, stickyPosition: 'bottom-right', preload: 'metadata', noSkip: false, hoverPreview: false },
+	behavior: { autoplay: false, autoplayMode: '', muted: false, loop: false, resetOnEnd: false, savePosition: true, hideControls: true, sticky: false, stickyPosition: 'bottom-right', preload: 'metadata', noSkip: false, disableSeek: false, hoverPreview: false },
 	appearance: { skin: 'default', accent: '#4f46e5', hoverColor: '', bigPlay: true, playButtonStyle: 'circle', roundness: 10, controlBarStyle: 'gradient', aspectRatio: '16:9', captionSize: 100, captionColor: '#ffffff', captionBackground: '#000000', captionOpacity: 75 },
 	speeds: [ 0.5, 0.75, 1, 1.25, 1.5, 2 ],
 	skipSeconds: 10,
@@ -179,7 +179,8 @@ export default function PlayerOptionsTab( { config, patch } ) {
 						<Toggle checked={ behavior.savePosition } onChange={ ( v ) => setSection( 'behavior', { savePosition: v } ) } label="Save & resume playback position" />
 						<Toggle checked={ behavior.hideControls } onChange={ ( v ) => setSection( 'behavior', { hideControls: v } ) } label="Auto-hide controls while playing" />
 						<Toggle checked={ behavior.sticky } onChange={ ( v ) => setSection( 'behavior', { sticky: v } ) } label="Float player when scrolling away" />
-						<Toggle checked={ behavior.noSkip } onChange={ ( v ) => setSection( 'behavior', { noSkip: v } ) } label="Prevent skipping ahead (no jumping to unwatched parts)" />
+						<Toggle checked={ behavior.noSkip } onChange={ ( v ) => setSection( 'behavior', { noSkip: v } ) } label="Prevent skipping ahead (no jumping to unwatched parts)" disabled={ behavior.disableSeek } />
+						<Toggle checked={ behavior.disableSeek } onChange={ ( v ) => setSection( 'behavior', { disableSeek: v } ) } label="Disable the timeline entirely (no click or drag, forward or back)" />
 						<Toggle checked={ behavior.hoverPreview } onChange={ ( v ) => setSection( 'behavior', { hoverPreview: v } ) } label="Muted preview on hover (self-hosted video)" />
 					</div>
 				</div>

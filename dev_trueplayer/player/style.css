@@ -569,6 +569,11 @@
 .tp-scrubber {
 	padding: 8px 0;
 	cursor: pointer;
+	touch-action: none; /* let a pointer drag scrub instead of scrolling the page */
+	user-select: none;
+}
+.tp-scrubber.is-disabled {
+	cursor: not-allowed;
 }
 .tp-scrubber-track {
 	position: relative;

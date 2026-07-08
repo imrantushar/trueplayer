@@ -747,6 +747,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					controls={ cz.controls }
 					speeds={ cz.speeds }
 					skipSeconds={ cz.skipSeconds }
+					scrubDisabled={ !! behavior.disableSeek }
 					onPlayPause={ playPause }
 					onSeek={ seek }
 					onSkip={ skip }
