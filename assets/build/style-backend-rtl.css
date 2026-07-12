@@ -205,6 +205,9 @@
 .z-50 {
 		z-index: 50;
 }
+.col-span-2 {
+		grid-column: span 2 / span 2;
+}
 .mx-auto {
 		margin-right: auto;
 		margin-left: auto;

@@ -5,6 +5,7 @@ import { Icon } from '../components/icons';
 import { EndpointList } from '../components/EndpointList';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
+import { pickMedia } from '../utils/media';
 import { PRESET_TEMPLATES, ASPECT_RATIOS } from '../data/preset-templates';
 
 // A mini player preview rendered in the template's style.
@@ -45,6 +46,7 @@ function TemplateCard( { template, selected, disabled, accent, onSelect } ) {
 const NAV_GROUPS = [
 	{ label: 'Player', items: [
 		{ key: 'general', label: 'General', icon: 'settings' },
+		{ key: 'branding', label: 'Branding', icon: 'tag' },
 		{ key: 'sources', label: 'Sources & CDN', icon: 'cloud' },
 	] },
 	{ label: 'Trust & data', items: [
@@ -58,7 +60,6 @@ const NAV_GROUPS = [
 		{ key: 'logs', label: 'Webhook logs', icon: 'clock' },
 	] },
 	{ label: 'Account', items: [
-		{ key: 'whitelabel', label: 'White-label', icon: 'tag' },
 		{ key: 'license', label: 'License', icon: 'key' },
 	] },
 ];
@@ -365,30 +366,99 @@ export default function Settings() {
 				)
 			) }
 
-			{ tab === 'whitelabel' && (
-				isPro() ? (
-					<Card className="p-6 max-w-xl">
-						<h3 className="font-semibold text-gray-900 mb-1">White-label</h3>
-						<p className="text-sm text-gray-500 mb-4">Replace the TruePlayer name across the admin and hide the player attribution.</p>
-						<Toggle
-							checked={ !! settings.whiteLabel?.enabled }
-							onChange={ ( v ) => setSettings( ( s ) => ( { ...s, whiteLabel: { ...( s.whiteLabel || {} ), enabled: v } } ) ) }
-							label="Enable white-label"
-						/>
-						{ settings.whiteLabel?.enabled && (
-							<Field label="Brand name" hint="Shown in the admin menu &amp; titles.">
-								<Input
-									value={ settings.whiteLabel?.brand || '' }
-									onChange={ ( e ) => setSettings( ( s ) => ( { ...s, whiteLabel: { ...( s.whiteLabel || {} ), brand: e.target.value } } ) ) }
-									placeholder="Acme Video"
-								/>
-							</Field>
-						) }
-						<p className="text-xs text-gray-400 mt-2">Takes effect on the next page load after saving.</p>
-					</Card>
-				) : (
-					<UpsellPanel title="White-label" features={ [ 'Rebrand the admin', 'Remove player attribution' ] } />
-				)
+			{ tab === 'branding' && (
+				( () => {
+					const app = settings.customize?.appearance || {};
+					const setApp = ( partial ) => setSettings( ( s ) => ( { ...s, customize: { ...( s.customize || {} ), appearance: { ...( s.customize?.appearance || {} ), ...partial } } } ) );
+					const brand = settings.branding || {};
+					const setBrand = ( partial ) => setSettings( ( s ) => ( { ...s, branding: { ...( s.branding || {} ), ...partial } } ) );
+					return (
+						<div className="max-w-xl space-y-6">
+							<Card className="p-6">
+								<h3 className="font-semibold text-gray-900 mb-1">Brand colors</h3>
+								<p className="text-sm text-muted mb-4">The default accent for the scrubber, buttons &amp; highlights. Any video or preset can override it.</p>
+								<div className="grid grid-cols-2 gap-4">
+									<Field label="Accent color">
+										<div className="flex gap-2 items-center">
+											<input type="color" value={ app.accent || '#006BFF' } onChange={ ( e ) => setApp( { accent: e.target.value } ) } className="h-10 w-12 rounded border border-line" />
+											<Input value={ app.accent || '' } onChange={ ( e ) => setApp( { accent: e.target.value } ) } placeholder="#006BFF" />
+										</div>
+									</Field>
+									<Field label="Button hover color" hint="Optional.">
+										<div className="flex gap-2 items-center">
+											<input type="color" value={ app.hoverColor || '#ffffff' } onChange={ ( e ) => setApp( { hoverColor: e.target.value } ) } className="h-10 w-12 rounded border border-line" />
+											<Input value={ app.hoverColor || '' } onChange={ ( e ) => setApp( { hoverColor: e.target.value } ) } placeholder="(none)" />
+										</div>
+									</Field>
+								</div>
+							</Card>
+
+							<Card className="p-6">
+								<h3 className="font-semibold text-gray-900 mb-1">Player logo</h3>
+								<p className="text-sm text-muted mb-4">A watermark logo shown on every player by default.</p>
+								<Field label="Logo image">
+									<div className="flex gap-2">
+										<Input value={ brand.logo || '' } onChange={ ( e ) => setBrand( { logo: e.target.value } ) } placeholder="https://…/logo.png" />
+										<Button variant="ghost" onClick={ () => pickMedia( 'image', ( url ) => setBrand( { logo: url } ) ) }>Media library</Button>
+									</div>
+								</Field>
+								{ brand.logo && (
+									<div className="grid grid-cols-2 gap-4">
+										<Field label="Position">
+											<Select value={ brand.logoPosition || 'top-right' } onChange={ ( e ) => setBrand( { logoPosition: e.target.value } ) }>
+												<option value="top-left">Top left</option>
+												<option value="top-right">Top right</option>
+												<option value="bottom-left">Bottom left</option>
+												<option value="bottom-right">Bottom right</option>
+											</Select>
+										</Field>
+										<Field label={ `Opacity (${ Math.round( ( brand.logoOpacity ?? 0.9 ) * 100 ) }%)` }>
+											<input type="range" min="10" max="100" step="5" value={ Math.round( ( brand.logoOpacity ?? 0.9 ) * 100 ) } onChange={ ( e ) => setBrand( { logoOpacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full" />
+										</Field>
+										<div className="col-span-2">
+											<Field label="Click-through link" hint="Optional — makes the logo clickable.">
+												<Input value={ brand.logoUrl || '' } onChange={ ( e ) => setBrand( { logoUrl: e.target.value } ) } placeholder="https://your-site.com" />
+											</Field>
+										</div>
+									</div>
+								) }
+							</Card>
+
+							<Card className="p-6">
+								<div className="flex items-center gap-2 mb-1">
+									<h3 className="font-semibold text-gray-900">White-label</h3>
+									{ ! isPro() && <Badge tone="gray">Pro</Badge> }
+								</div>
+								<p className="text-sm text-muted mb-4">Replace the TruePlayer name across the admin and hide the player attribution.</p>
+								{ isPro() ? (
+									<>
+										<Toggle
+											checked={ !! settings.whiteLabel?.enabled }
+											onChange={ ( v ) => setSettings( ( s ) => ( { ...s, whiteLabel: { ...( s.whiteLabel || {} ), enabled: v } } ) ) }
+											label="Enable white-label"
+										/>
+										{ settings.whiteLabel?.enabled && (
+											<Field label="Brand name" hint="Shown in the admin menu &amp; titles.">
+												<Input
+													value={ settings.whiteLabel?.brand || '' }
+													onChange={ ( e ) => setSettings( ( s ) => ( { ...s, whiteLabel: { ...( s.whiteLabel || {} ), brand: e.target.value } } ) ) }
+													placeholder="Acme Video"
+												/>
+											</Field>
+										) }
+										<p className="text-xs text-muted mt-2">Takes effect on the next page load after saving.</p>
+									</>
+								) : (
+									<p className="text-sm text-muted">Upgrade to TruePlayer Pro to rebrand the admin and remove player attribution.</p>
+								) }
+							</Card>
+						</div>
+					);
+				} )()
+			) }
+
+			{ tab === 'logs' && (
+				isPro() ? <WebhookLogs /> : <UpsellPanel title="Webhook delivery logs" features={ [ 'Every delivery attempt recorded', 'See failures &amp; status codes' ] } />
 			) }
 
 			{ tab === 'logs' && (

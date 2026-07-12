@@ -60,6 +60,20 @@ class Helper {
 	}
 
 	/**
+	 * Merge the site-wide default branding (Settings → Branding: logo, position,
+	 * opacity, link) as the lowest priority — a preset or the video's own
+	 * branding overrides it per key.
+	 */
+	public static function apply_global_branding( array $config ): array {
+		$global = self::get_settings_section( 'branding' );
+		if ( ! empty( $global ) ) {
+			$over               = isset( $config['branding'] ) && is_array( $config['branding'] ) ? $config['branding'] : [];
+			$config['branding'] = array_merge( $global, $over );
+		}
+		return $config;
+	}
+
+	/**
 	 * Decode a video's `_trueplayer_config` JSON meta into an array.
 	 */
 	public static function get_video_config( $video_id ) {

@@ -121,6 +121,7 @@ class Shortcode {
 	 */
 	public static function resolved_config( int $video_id ): array {
 		$config = Helper::apply_preset( Helper::get_video_config( $video_id ) );
+		$config = Helper::apply_global_branding( $config );
 		$config = Helper::enforce_pro_limits( $config );
 		if ( Pro::active() ) {
 			$config = self::prepare_layers( $config );
