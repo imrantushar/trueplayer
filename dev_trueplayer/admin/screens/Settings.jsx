@@ -1,6 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
-import { Card, Button, Badge } from '../components/UI';
+import { Card, Button, Badge, Field, Input, Toggle } from '../components/UI';
 import { EndpointList } from '../components/EndpointList';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
@@ -8,9 +8,38 @@ import PlayerOptionsTab from './editor/PlayerOptionsTab';
 
 const SUBTABS = [
 	{ key: 'defaults', label: 'Player defaults' },
+	{ key: 'integrations', label: 'Integrations' },
+	{ key: 'whitelabel', label: 'White-label' },
 	{ key: 'webhooks', label: 'Global webhooks' },
+	{ key: 'logs', label: 'Webhook logs' },
 	{ key: 'license', label: 'License' },
 ];
+
+function WebhookLogs() {
+	const [ rows, setRows ] = useState( null );
+	useEffect( () => { api.getWebhookLogs( 100 ).then( setRows ).catch( () => setRows( [] ) ); }, [] );
+	return (
+		<Card className="overflow-hidden">
+			<table className="w-full text-sm">
+				<thead className="bg-gray-50 text-gray-500 text-left">
+					<tr><th className="px-4 py-3 font-medium">When</th><th className="px-4 py-3 font-medium">Event</th><th className="px-4 py-3 font-medium">Endpoint</th><th className="px-4 py-3 font-medium">Result</th></tr>
+				</thead>
+				<tbody>
+					{ ( rows || [] ).map( ( r ) => (
+						<tr key={ r.id } className="border-t border-gray-100">
+							<td className="px-4 py-3 text-gray-500 whitespace-nowrap">{ r.created }</td>
+							<td className="px-4 py-3">{ r.event }</td>
+							<td className="px-4 py-3 text-gray-500 truncate max-w-xs">{ r.url }</td>
+							<td className="px-4 py-3"><Badge tone={ r.ok ? 'green' : 'red' }>{ r.code || 'error' }</Badge>{ r.error ? <span className="text-xs text-red-500 ml-2">{ r.error }</span> : '' }</td>
+						</tr>
+					) ) }
+					{ rows && rows.length === 0 && <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">No deliveries logged yet.</td></tr> }
+					{ ! rows && <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">Loading…</td></tr> }
+				</tbody>
+			</table>
+		</Card>
+	);
+}
 
 export default function Settings() {
 	const [ settings, setSettings ] = useState( null );
@@ -74,6 +103,56 @@ export default function Settings() {
 						patch={ ( partial ) => setSettings( ( s ) => ( { ...s, ...partial } ) ) }
 					/>
 				</>
+			) }
+
+			{ tab === 'integrations' && (
+				isPro() ? (
+					<Card className="p-6 max-w-xl">
+						<h3 className="font-semibold text-gray-900 mb-1">Mailchimp</h3>
+						<p className="text-sm text-gray-500 mb-4">Send in-player opt-ins to Mailchimp audiences. Paste your API key (Account → Extras → API keys).</p>
+						<Field label="Mailchimp API key" hint="Looks like abc123…-us21. Stored on your site only.">
+							<Input
+								type="password"
+								value={ settings.integrations?.mailchimp?.api_key || '' }
+								onChange={ ( e ) => setSettings( ( s ) => ( { ...s, integrations: { ...( s.integrations || {} ), mailchimp: { ...( s.integrations?.mailchimp || {} ), api_key: e.target.value } } } ) ) }
+								placeholder="xxxxxxxxxxxxxxxx-us21"
+							/>
+						</Field>
+						<p className="text-xs text-gray-400">Once saved, Mailchimp audiences appear in each video’s Subscribe tab.</p>
+					</Card>
+				) : (
+					<UpsellPanel title="CRM &amp; email integrations" features={ [ 'Mailchimp audiences', 'GemCRM / FluentCRM', 'In-player opt-in capture' ] } />
+				)
+			) }
+
+			{ tab === 'whitelabel' && (
+				isPro() ? (
+					<Card className="p-6 max-w-xl">
+						<h3 className="font-semibold text-gray-900 mb-1">White-label</h3>
+						<p className="text-sm text-gray-500 mb-4">Replace the TruePlayer name across the admin and hide the player attribution.</p>
+						<Toggle
+							checked={ !! settings.whiteLabel?.enabled }
+							onChange={ ( v ) => setSettings( ( s ) => ( { ...s, whiteLabel: { ...( s.whiteLabel || {} ), enabled: v } } ) ) }
+							label="Enable white-label"
+						/>
+						{ settings.whiteLabel?.enabled && (
+							<Field label="Brand name" hint="Shown in the admin menu &amp; titles.">
+								<Input
+									value={ settings.whiteLabel?.brand || '' }
+									onChange={ ( e ) => setSettings( ( s ) => ( { ...s, whiteLabel: { ...( s.whiteLabel || {} ), brand: e.target.value } } ) ) }
+									placeholder="Acme Video"
+								/>
+							</Field>
+						) }
+						<p className="text-xs text-gray-400 mt-2">Takes effect on the next page load after saving.</p>
+					</Card>
+				) : (
+					<UpsellPanel title="White-label" features={ [ 'Rebrand the admin', 'Remove player attribution' ] } />
+				)
+			) }
+
+			{ tab === 'logs' && (
+				isPro() ? <WebhookLogs /> : <UpsellPanel title="Webhook delivery logs" features={ [ 'Every delivery attempt recorded', 'See failures &amp; status codes' ] } />
 			) }
 
 			{ tab === 'webhooks' && (

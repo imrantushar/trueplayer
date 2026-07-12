@@ -1,6 +1,58 @@
+import { useEffect, useState } from '@wordpress/element';
 import { Card, Field, Input, Select, Toggle, Button, Badge } from '../../components/UI';
+import { api } from '../../api';
 
 const uid = () => Math.random().toString( 36 ).slice( 2, 9 );
+
+/**
+ * Video → Academy course/lesson link. When set, the academy-sync pro addon
+ * gates playback by enrollment and marks the mapped lesson complete when the
+ * viewer passes watch-verification / the quiz.
+ */
+function LmsLink( { config, patch } ) {
+	const lms = config.lms || {};
+	const [ opts, setOpts ] = useState( null );
+	useEffect( () => { api.getLmsOptions().then( setOpts ).catch( () => setOpts( { available: false, courses: [], lessons: [] } ) ); }, [] );
+
+	const set = ( partial ) => patch( { lms: { ...lms, ...partial } } );
+	const enabled = ( lms.provider || '' ) === 'academy';
+
+	if ( opts && ! opts.available ) {
+		return (
+			<Card className="p-6 max-w-2xl">
+				<h3 className="font-semibold text-gray-900 mb-1">Course completion (LMS)</h3>
+				<p className="text-sm text-gray-400">Install Academy LMS to link this video to a course lesson.</p>
+			</Card>
+		);
+	}
+
+	return (
+		<Card className="p-6 max-w-2xl">
+			<h3 className="font-semibold text-gray-900 mb-1">Course completion (Academy LMS)</h3>
+			<p className="text-sm text-gray-500 mb-4">Link this video to a lesson: gate it by enrollment and mark it complete when watched/passed.</p>
+			<Toggle checked={ enabled } onChange={ ( v ) => set( { provider: v ? 'academy' : '' } ) } label="Link to an Academy course" />
+			{ enabled && (
+				<div className="mt-4 space-y-4">
+					<div className="grid grid-cols-2 gap-4">
+						<Field label="Course">
+							<Select value={ lms.course || '' } onChange={ ( e ) => set( { course: parseInt( e.target.value, 10 ) || 0 } ) }>
+								<option value="">— select —</option>
+								{ ( opts ? opts.courses : [] ).map( ( c ) => <option key={ c.id } value={ c.id }>{ c.title }</option> ) }
+							</Select>
+						</Field>
+						<Field label="Lesson">
+							<Select value={ lms.topic || '' } onChange={ ( e ) => set( { topic: parseInt( e.target.value, 10 ) || 0, topicType: 'lesson' } ) }>
+								<option value="">— select —</option>
+								{ ( opts ? opts.lessons : [] ).map( ( l ) => <option key={ l.id } value={ l.id }>{ l.title }</option> ) }
+							</Select>
+						</Field>
+					</div>
+					<Toggle checked={ lms.gateAccess !== false } onChange={ ( v ) => set( { gateAccess: v } ) } label="Block playback for non-enrolled viewers" />
+				</div>
+			) }
+		</Card>
+	);
+}
 
 function QuestionList( { questions, onChange } ) {
 	const setQ = ( i, partial ) => onChange( questions.map( ( q, idx ) => ( idx === i ? { ...q, ...partial } : q ) ) );
@@ -146,6 +198,8 @@ export default function GatingTab( { config, patch } ) {
 					</div>
 				) }
 			</Card>
+
+			<LmsLink config={ config } patch={ patch } />
 		</div>
 	);
 }

@@ -89,10 +89,12 @@ export default function Analytics( { id, onBack } ) {
 	const [ data, setData ] = useState( null );
 	const [ viewers, setViewers ] = useState( null );
 	const [ detailId, setDetailId ] = useState( null );
+	const [ atts, setAtts ] = useState( null );
 
 	const pro = isPro();
 	useEffect( () => { if ( pro ) { api.getAnalytics( id ).then( setData ); } }, [ id, pro ] );
 	useEffect( () => { if ( pro && tab === 'viewers' && ! viewers ) { api.listViewers( id ).then( setViewers ); } }, [ tab, id, viewers, pro ] );
+	useEffect( () => { if ( pro && tab === 'attestations' && ! atts ) { api.getAttestations( id ).then( setAtts ); } }, [ tab, id, atts, pro ] );
 
 	if ( ! pro ) {
 		return (
@@ -144,7 +146,7 @@ export default function Analytics( { id, onBack } ) {
 			</div>
 
 			<div className="flex gap-1 border-b border-line mb-6">
-				{ [ 'overview', 'viewers' ].map( ( t ) => (
+				{ [ 'overview', 'viewers', 'attestations' ].map( ( t ) => (
 					<button key={ t } onClick={ () => setTab( t ) }
 						className={ `px-4 py-2 text-sm font-medium border-b-2 -mb-px capitalize ${ tab === t ? 'border-brand-500 text-brand-700' : 'border-transparent text-gray-500 hover:text-gray-800' }` }>
 						{ t }
@@ -243,6 +245,43 @@ export default function Analytics( { id, onBack } ) {
 						</tbody>
 					</table>
 				</Card>
+			) }
+
+			{ tab === 'attestations' && (
+				<div className="space-y-4">
+					<div className="flex items-center justify-between">
+						<p className="text-sm text-gray-500">Tamper-evident proof of completion — verified from watch-tracking &amp; quiz results.</p>
+						<a href={ api.attestationExportUrl( id ) } className="tp-btn" target="_blank" rel="noreferrer">
+							<Button variant="secondary" size="sm">Export CSV</Button>
+						</a>
+					</div>
+					<Card className="overflow-hidden">
+						<table className="w-full text-sm">
+							<thead className="bg-gray-50 text-gray-500 text-left">
+								<tr>
+									<th className="px-4 py-3 font-medium">Name</th><th className="px-4 py-3 font-medium">Watched</th>
+									<th className="px-4 py-3 font-medium">Completed</th><th className="px-4 py-3 font-medium">Quiz</th>
+									<th className="px-4 py-3" />
+								</tr>
+							</thead>
+							<tbody>
+								{ ( atts ? atts.records : [] ).map( ( r, i ) => (
+									<tr key={ i } className="border-t border-gray-100 hover:bg-gray-50">
+										<td className="px-4 py-3">{ r.subject_name } <Badge>{ r.subject_type }</Badge></td>
+										<td className="px-4 py-3">{ Math.round( r.watched_percent ) }%</td>
+										<td className="px-4 py-3 text-gray-500">{ r.completed_at ? r.completed_at.slice( 0, 10 ) : '—' }</td>
+										<td className="px-4 py-3">{ r.quiz_passed === null ? '—' : <Badge tone={ r.quiz_passed ? 'green' : 'red' }>{ r.quiz_passed ? `${ Math.round( r.quiz_score ) }%` : 'failed' }</Badge> }</td>
+										<td className="px-4 py-3 text-right">
+											{ r.code && <a className="text-brand-600" href={ api.certificateUrl( r.code ) } target="_blank" rel="noreferrer">Certificate →</a> }
+										</td>
+									</tr>
+								) ) }
+								{ atts && atts.records.length === 0 && <tr><td colSpan="5" className="px-4 py-8 text-center text-gray-400">No completions yet.</td></tr> }
+								{ ! atts && <tr><td colSpan="5" className="px-4 py-8 text-center text-gray-400">Loading…</td></tr> }
+							</tbody>
+						</table>
+					</Card>
+				</div>
 			) }
 
 			{ detailId && (

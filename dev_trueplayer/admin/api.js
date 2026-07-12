@@ -24,7 +24,22 @@ export const api = {
 	createPlaylist: ( title ) => rest.post( 'playlists', { title, config: { layout: 'sidebar', videos: [] } } ),
 	updatePlaylist: ( id, data ) => rest.put( `playlists/${ id }`, data ),
 	deletePlaylist: ( id ) => rest.del( `playlists/${ id }` ),
+
+	// Attestation (pro)
+	getAttestations: ( id ) => rest.get( `attestation?video=${ id }` ),
+	attestationExportUrl: ( id ) => `${ rest.base() }attestation/export?video=${ id }&_wpnonce=${ nonce() }`,
+	certificateUrl: ( code ) => `${ rest.base() }attestation/certificate?code=${ encodeURIComponent( code ) }`,
+
+	// LMS course/lesson options (pro)
+	getLmsOptions: () => rest.get( 'lms/options' ),
+
+	// Webhook delivery logs (pro)
+	getWebhookLogs: ( limit = 100 ) => rest.get( `webhook-logs?limit=${ limit }` ),
 };
+
+function nonce() {
+	return ( window.TruePlayerGlobal || {} ).nonce || '';
+}
 
 export const EVENT_TYPES = [
 	'view.started',
