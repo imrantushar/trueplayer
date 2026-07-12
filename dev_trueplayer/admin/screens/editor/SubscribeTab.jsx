@@ -33,16 +33,23 @@ export default function SubscribeTab( { config, patch } ) {
 		set( { lists: has ? optin.lists.filter( ( x ) => x !== id ) : [ ...( optin.lists || [] ), id ] } );
 	};
 
+	const [ open, setOpen ] = useState( !! optin.enabled );
+
 	return (
 		<div className="space-y-6">
-			<Card className="p-6 max-w-2xl">
-				<div className="flex items-center justify-between mb-4">
-					<div>
-						<h3 className="font-semibold text-gray-900">Subscribe / email capture</h3>
-						<p className="text-sm text-gray-500">Ask viewers to subscribe, then let them keep watching. Sends the contact to your CRM.</p>
+			<Card className="overflow-hidden max-w-2xl">
+				<button type="button" onClick={ () => setOpen( ! open ) } className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50">
+					<div className="flex-1 min-w-0">
+						<div className="font-semibold text-gray-900">Subscribe / email capture</div>
+						<div className="text-xs text-muted">Ask viewers to subscribe, then let them keep watching.</div>
 					</div>
-					<Toggle checked={ optin.enabled } onChange={ ( v ) => set( { enabled: v } ) } label="Enable" />
-				</div>
+					<Badge tone={ optin.enabled ? 'green' : 'gray' }>{ optin.enabled ? 'On' : 'Off' }</Badge>
+					<span className="text-muted text-xs">{ open ? '▲' : '▼' }</span>
+				</button>
+
+				{ open && (
+				<div className="px-6 pb-6 pt-2 border-t border-line">
+				<Toggle checked={ optin.enabled } onChange={ ( v ) => set( { enabled: v } ) } label="Enable email capture" />
 
 				{ optin.enabled && (
 					<>
@@ -98,6 +105,8 @@ export default function SubscribeTab( { config, patch } ) {
 						<Field label="Description"><Input value={ optin.description } onChange={ ( e ) => set( { description: e.target.value } ) } /></Field>
 						<Field label="Button text"><Input value={ optin.buttonText } onChange={ ( e ) => set( { buttonText: e.target.value } ) } /></Field>
 					</>
+				) }
+				</div>
 				) }
 			</Card>
 

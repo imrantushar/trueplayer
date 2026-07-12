@@ -1,3 +1,4 @@
+import { useState } from '@wordpress/element';
 import { Card, Field, Input, Select, Button, Textarea } from '../../components/UI';
 import { pickMedia } from '../../utils/media';
 
@@ -103,6 +104,7 @@ export default function LayersTab( { config, patch } ) {
 	const setOne = ( i, partial ) => patch( { layers: layers.map( ( l, idx ) => ( idx === i ? { ...l, ...partial } : l ) ) } );
 	const add = ( type ) => patch( { layers: [ ...layers, newLayer( type ) ] } );
 	const remove = ( i ) => patch( { layers: layers.filter( ( _, idx ) => idx !== i ) } );
+	const [ menu, setMenu ] = useState( false );
 
 	return (
 		<div className="space-y-6">
@@ -111,10 +113,21 @@ export default function LayersTab( { config, patch } ) {
 					<h3 className="font-semibold text-gray-900">Interactive layers</h3>
 					<p className="text-sm text-gray-500">Timed elements over the video — hotspots, banners, shortcodes and email forms.</p>
 				</div>
-				<div className="flex gap-2 flex-wrap justify-end">
-					{ Object.keys( TYPE_META ).map( ( t ) => (
-						<Button key={ t } variant="ghost" onClick={ () => add( t ) }>+ { TYPE_META[ t ].label }</Button>
-					) ) }
+				<div className="relative shrink-0">
+					<Button onClick={ () => setMenu( ( m ) => ! m ) }>+ Add layer ▾</Button>
+					{ menu && (
+						<>
+							<div className="fixed inset-0 z-10" onClick={ () => setMenu( false ) } />
+							<div className="absolute right-0 mt-1 w-56 bg-white border border-line rounded-card shadow-pop z-20 py-1">
+								{ Object.keys( TYPE_META ).map( ( t ) => (
+									<button key={ t } type="button" onClick={ () => { add( t ); setMenu( false ); } } className="w-full text-left px-3 py-2 hover:bg-gray-100">
+										<div className="text-sm font-medium text-ink">{ TYPE_META[ t ].label }</div>
+										<div className="text-xs text-muted">{ TYPE_META[ t ].hint }</div>
+									</button>
+								) ) }
+							</div>
+						</>
+					) }
 				</div>
 			</div>
 
