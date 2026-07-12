@@ -5,11 +5,9 @@ import { Icon } from '../components/icons';
 import { EndpointList } from '../components/EndpointList';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
-import PlayerOptionsTab from './editor/PlayerOptionsTab';
 
 const NAV_GROUPS = [
 	{ label: 'Player', items: [
-		{ key: 'defaults', label: 'Player defaults', icon: 'sliders' },
 		{ key: 'general', label: 'General', icon: 'settings' },
 		{ key: 'sources', label: 'Sources & CDN', icon: 'cloud' },
 	] },
@@ -61,7 +59,7 @@ function WebhookLogs() {
 
 export default function Settings() {
 	const [ settings, setSettings ] = useState( null );
-	const [ tab, setTab ] = useState( 'defaults' );
+	const [ tab, setTab ] = useState( 'general' );
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
 	const [ presets, setPresets ] = useState( [] );
@@ -123,18 +121,6 @@ export default function Settings() {
 				</aside>
 
 				<div className="flex-1 min-w-0">
-
-			{ tab === 'defaults' && (
-				<>
-					<p className="text-sm text-gray-500 mb-4">
-						These apply to every video by default. A video's own <strong>Player options</strong> tab overrides them.
-					</p>
-					<PlayerOptionsTab
-						config={ { customize: settings.customize || {} } }
-						patch={ ( partial ) => setSettings( ( s ) => ( { ...s, ...partial } ) ) }
-					/>
-				</>
-			) }
 
 			{ tab === 'general' && (
 				<div className="max-w-xl space-y-6">
