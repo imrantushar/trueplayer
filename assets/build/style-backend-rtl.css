@@ -437,6 +437,9 @@
 .max-w-\[140px\] {
 		max-width: 140px;
 }
+.max-w-lg {
+		max-width: 32rem;
+}
 .max-w-md {
 		max-width: 28rem;
 }
@@ -820,6 +823,10 @@
 .px-3 {
 		padding-right: 0.75rem;
 		padding-left: 0.75rem;
+}
+.px-3\.5 {
+		padding-right: 0.875rem;
+		padding-left: 0.875rem;
 }
 .px-4 {
 		padding-right: 1rem;

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Select } from '../components/UI';
+import { Button, Select, Modal } from '../components/UI';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
@@ -10,7 +10,6 @@ import TimedContentTab from './editor/TimedContentTab';
 import ProtectionTab from './editor/ProtectionTab';
 import GatingTab from './editor/GatingTab';
 import SubscribeTab from './editor/SubscribeTab';
-import WebhooksTab from './editor/WebhooksTab';
 import EmbedTab from './editor/EmbedTab';
 import PreviewPanel from './editor/PreviewPanel';
 import UpsellPanel from '../components/UpsellPanel';
@@ -18,26 +17,65 @@ import { isPro } from '../pro';
 
 const TABS = [
 	{ key: 'source', label: 'Source', icon: '🎬' },
-	{ key: 'player', label: 'Player options', icon: '🎛️' },
-	{ key: 'appearance', label: 'Chapters & logo', icon: '🔖' },
-	{ key: 'overlays', label: 'Call to action', icon: '📣' },
-	{ key: 'layers', label: 'Layers', icon: '🧩', pro: true },
-	{ key: 'timed', label: 'Timed content', icon: '⏱️', pro: true },
-	{ key: 'protection', label: 'Protection', icon: '🛡️', pro: true },
-	{ key: 'gating', label: 'Questions & gating', icon: '✅', pro: true },
-	{ key: 'subscribe', label: 'Subscribe', icon: '✉️', pro: true },
-	{ key: 'webhooks', label: 'Automation', icon: '🔗', pro: true },
-	{ key: 'embed', label: 'Embed', icon: '📋' },
+	{ key: 'player', label: 'Player', icon: '🎛️' },
+	{ key: 'appearance', label: 'Chapters & branding', icon: '🔖' },
+	{ key: 'interactions', label: 'Interactions', icon: '🧩' },
+	{ key: 'access', label: 'Access & gating', icon: '🛡️', pro: true },
 ];
 
 const PRO_TAB_INFO = {
-	layers: { title: 'Interactive layers', features: [ 'Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Inline email-capture forms' ] },
-	timed: { title: 'Timed content', features: [ 'A content region below the player that changes with the video', 'Time-synced forms, buttons & text', 'Any shortcode, per time range' ] },
-	protection: { title: 'Content protection', features: [ 'Private video with signed, expiring links', 'Bunny.net token authentication', 'Dynamic viewer-identity watermark' ] },
-	gating: { title: 'Watch-verification & quiz gating', features: [ 'Prove viewers actually watched (anti-skip)', 'Checkpoint & final quizzes', 'Lock the video on failure until re-watch' ] },
-	subscribe: { title: 'Subscribe / email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] },
-	webhooks: { title: 'Automation & webhooks', features: [ 'Signed webhooks on every event', 'Zapier / gemcrm / zaplane ready' ] },
+	access: { title: 'Access & gating', features: [ 'Watch-verification (prove they watched, anti-skip)', 'Checkpoint & final quizzes, lock on failure', 'Private video with signed, expiring links' ] },
 };
+
+// Small pill sub-nav shared by the merged tabs.
+function SubNav( { subs, value, onChange } ) {
+	return (
+		<div className="inline-flex flex-wrap p-0.5 mb-6 rounded bg-gray-100">
+			{ subs.map( ( [ key, label ] ) => (
+				<button
+					key={ key }
+					onClick={ () => onChange( key ) }
+					className={ `px-3.5 py-1.5 rounded text-sm font-medium transition-colors ${ value === key ? 'bg-white text-brand-500 shadow-sm' : 'text-muted hover:text-ink' }` }
+				>
+					{ label }
+				</button>
+			) ) }
+		</div>
+	);
+}
+
+// Interactions = everything shown on/around the video. Overlays are free;
+// layers / timed content / email capture are pro (gated inline).
+function InteractionsTab( { config, patch, pro } ) {
+	const [ sub, setSub ] = useState( 'overlays' );
+	const gate = ( node, info ) => ( pro ? node : <UpsellPanel title={ info.title } features={ info.features } /> );
+	return (
+		<div>
+			<SubNav
+				value={ sub }
+				onChange={ setSub }
+				subs={ [ [ 'overlays', 'Call to action' ], [ 'layers', 'Layers' ], [ 'timed', 'Timed content' ], [ 'subscribe', 'Email capture' ] ] }
+			/>
+			{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } /> }
+			{ sub === 'layers' && gate( <LayersTab config={ config } patch={ patch } />, { title: 'Interactive layers', features: [ 'Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Conditional display rules' ] } ) }
+			{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, { title: 'Timed content', features: [ 'A content region below the player that changes with the video', 'Time-synced forms, buttons & text' ] } ) }
+			{ sub === 'subscribe' && gate( <SubscribeTab config={ config } patch={ patch } />, { title: 'Email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] } ) }
+		</div>
+	);
+}
+
+// Access & gating = who can watch + proving they watched. All pro (the Editor
+// upsells the whole tab for free users).
+function AccessTab( { config, patch } ) {
+	const [ sub, setSub ] = useState( 'gating' );
+	return (
+		<div>
+			<SubNav value={ sub } onChange={ setSub } subs={ [ [ 'gating', 'Verification & quiz' ], [ 'protection', 'Protection' ] ] } />
+			{ sub === 'gating' && <GatingTab config={ config } patch={ patch } /> }
+			{ sub === 'protection' && <ProtectionTab config={ config } patch={ patch } /> }
+		</div>
+	);
+}
 
 export default function Editor( { id, onBack } ) {
 	const [ video, setVideo ] = useState( null );
@@ -47,6 +85,7 @@ export default function Editor( { id, onBack } ) {
 	const [ saved, setSaved ] = useState( false );
 	const [ presets, setPresets ] = useState( [] );
 	const [ toolbarSlot, setToolbarSlot ] = useState( null );
+	const [ embedOpen, setEmbedOpen ] = useState( false );
 
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
@@ -143,6 +182,7 @@ export default function Editor( { id, onBack } ) {
 							) }
 							{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
 							{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
+							<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>Embed</Button>
 							{ isLastTab ? (
 								<Button onClick={ () => save( false ) } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
 							) : (
@@ -153,6 +193,12 @@ export default function Editor( { id, onBack } ) {
 							) }
 						</>,
 						toolbarSlot
+					) }
+
+					{ embedOpen && (
+						<Modal title="Embed this media" onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
+							<EmbedTab video={ video } config={ config } patch={ patchConfig } />
+						</Modal>
 					) }
 
 					<div className="mb-6">
@@ -172,14 +218,8 @@ export default function Editor( { id, onBack } ) {
 									{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
 									{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } /> }
 									{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'overlays' && <OverlaysTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'layers' && <LayersTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'timed' && <TimedContentTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'protection' && <ProtectionTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'gating' && <GatingTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'subscribe' && <SubscribeTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'webhooks' && <WebhooksTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'embed' && <EmbedTab video={ video } config={ config } patch={ patchConfig } /> }
+									{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } /> }
+									{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
 								</>
 							) }
 						</div>
