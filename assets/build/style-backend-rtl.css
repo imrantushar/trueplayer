@@ -172,6 +172,9 @@
 .bottom-2 {
 		bottom: 0.5rem;
 }
+.bottom-full {
+		bottom: 100%;
+}
 .left-0 {
 		right: 0px;
 }

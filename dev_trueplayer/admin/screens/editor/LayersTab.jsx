@@ -102,50 +102,41 @@ const newLayer = ( type ) => {
 export default function LayersTab( { config, patch } ) {
 	const layers = config.layers || [];
 	const setOne = ( i, partial ) => patch( { layers: layers.map( ( l, idx ) => ( idx === i ? { ...l, ...partial } : l ) ) } );
-	const add = ( type ) => patch( { layers: [ ...layers, newLayer( type ) ] } );
 	const remove = ( i ) => patch( { layers: layers.filter( ( _, idx ) => idx !== i ) } );
 	const [ menu, setMenu ] = useState( false );
+	const [ openId, setOpenId ] = useState( null );
+	const add = ( type ) => { const l = newLayer( type ); patch( { layers: [ ...layers, l ] } ); setOpenId( l.id ); setMenu( false ); };
 
 	return (
-		<div className="space-y-6">
-			<div className="flex items-center justify-between gap-4">
-				<div>
-					<h3 className="font-semibold text-gray-900">Interactive layers</h3>
-					<p className="text-sm text-gray-500">Timed elements over the video — hotspots, banners, shortcodes and email forms.</p>
-				</div>
-				<div className="relative shrink-0">
-					<Button onClick={ () => setMenu( ( m ) => ! m ) }>+ Add layer ▾</Button>
-					{ menu && (
-						<>
-							<div className="fixed inset-0 z-10" onClick={ () => setMenu( false ) } />
-							<div className="absolute right-0 mt-1 w-56 bg-white border border-line rounded-card shadow-pop z-20 py-1">
-								{ Object.keys( TYPE_META ).map( ( t ) => (
-									<button key={ t } type="button" onClick={ () => { add( t ); setMenu( false ); } } className="w-full text-left px-3 py-2 hover:bg-gray-100">
-										<div className="text-sm font-medium text-ink">{ TYPE_META[ t ].label }</div>
-										<div className="text-xs text-muted">{ TYPE_META[ t ].hint }</div>
-									</button>
-								) ) }
-							</div>
-						</>
-					) }
-				</div>
+		<div className="space-y-4">
+			<div>
+				<h3 className="font-semibold text-gray-900">Interactive layers</h3>
+				<p className="text-sm text-gray-500">Timed elements over the video — hotspots, banners, shortcodes and email forms.</p>
 			</div>
 
 			{ layers.length === 0 && (
 				<Card className="p-10 text-center border-dashed">
 					<p className="text-sm text-gray-500">No layers yet.</p>
-					<p className="text-xs text-gray-400 mt-1">Add a hotspot, banner, shortcode or email form.</p>
+					<p className="text-xs text-gray-400 mt-1">Add a hotspot, banner, shortcode or email form below.</p>
 				</Card>
 			) }
 
-			{ layers.map( ( l, i ) => (
-				<Card key={ l.id } className="p-6">
-					<div className="flex items-center justify-between mb-1">
-						<h4 className="font-semibold text-ink">{ TYPE_META[ l.type ]?.label || l.type } { i + 1 }</h4>
-						<Button variant="danger" size="sm" onClick={ () => remove( i ) }>Remove</Button>
-					</div>
-					<p className="text-xs text-gray-400 mb-4">{ TYPE_META[ l.type ]?.hint }</p>
-
+			<div className="space-y-2">
+			{ layers.map( ( l, i ) => {
+				const open = openId === l.id;
+				const summary = `${ TYPE_META[ l.type ]?.label || l.type } · ${ l.start ?? 0 }s – ${ l.end === '' || l.end == null ? 'end' : l.end + 's' }`;
+				const heading = l.title || l.tooltip || TYPE_META[ l.type ]?.label || l.type;
+				return (
+				<Card key={ l.id } className="overflow-hidden">
+					<button type="button" onClick={ () => setOpenId( open ? null : l.id ) } className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50">
+						<div className="flex-1 min-w-0">
+							<div className="font-medium text-ink truncate">{ heading }</div>
+							<div className="text-xs text-muted">{ summary }</div>
+						</div>
+						<span className="text-muted text-xs">{ open ? '▲' : '▼' }</span>
+					</button>
+					{ open && (
+					<div className="px-6 pb-6 pt-4 border-t border-line">
 					<div className="grid md:grid-cols-3 gap-x-6">
 						<Field label="Show from (seconds)">
 							<Input type="number" min="0" value={ l.start ?? 0 } onChange={ ( e ) => setOne( i, { start: parseInt( e.target.value, 10 ) || 0 } ) } />
@@ -203,8 +194,30 @@ export default function LayersTab( { config, patch } ) {
 					) }
 
 					<ConditionsEditor value={ l.conditions } onChange={ ( c ) => setOne( i, { conditions: c } ) } />
+					<div className="text-right mt-2"><Button variant="danger" size="sm" onClick={ () => remove( i ) }>Remove</Button></div>
+					</div>
+					) }
 				</Card>
-			) ) }
+				);
+			} ) }
+			</div>
+
+			<div className="relative inline-block">
+				<Button variant="secondary" onClick={ () => setMenu( ( m ) => ! m ) }>+ Add layer ▾</Button>
+				{ menu && (
+					<>
+						<div className="fixed inset-0 z-10" onClick={ () => setMenu( false ) } />
+						<div className="absolute left-0 bottom-full mb-1 w-56 bg-white border border-line rounded-card shadow-pop z-20 py-1">
+							{ Object.keys( TYPE_META ).map( ( t ) => (
+								<button key={ t } type="button" onClick={ () => add( t ) } className="w-full text-left px-3 py-2 hover:bg-gray-100">
+									<div className="text-sm font-medium text-ink">{ TYPE_META[ t ].label }</div>
+									<div className="text-xs text-muted">{ TYPE_META[ t ].hint }</div>
+								</button>
+							) ) }
+						</div>
+					</>
+				) }
+			</div>
 		</div>
 	);
 }
