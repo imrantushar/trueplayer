@@ -16,8 +16,8 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 	if ( behavior.loop ) {
 		el.loop = true;
 	}
-	if ( behavior.muted || behavior.autoplay ) {
-		el.muted = true; // autoplay only works muted
+	if ( behavior.muted || ( behavior.autoplay && ! behavior.autoplaySound ) ) {
+		el.muted = true; // autoplay only works muted (unless sound mode, which retries muted on rejection)
 	}
 	if ( behavior.autoplay ) {
 		el.autoplay = true;
@@ -94,7 +94,15 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 		kind: 'html5',
 		element: el,
 		sourceUrl: src,
-		capabilities: { pip: ! isAudio && 'requestPictureInPicture' in el, quality: qualities.length > 0, rate: true, tracks: true, download: true, fullscreen: ! isAudio },
+		capabilities: {
+			// `'requestPictureInPicture' in el` alone isn't enough — Firefox and
+			// permissions-policy-restricted frames (some embed contexts) expose
+			// the method but reject every call, which made the button look
+			// broken. `document.pictureInPictureEnabled` reflects whether it can
+			// actually succeed.
+			pip: ! isAudio && !! document.pictureInPictureEnabled && ! el.disablePictureInPicture,
+			quality: qualities.length > 0, rate: true, tracks: true, download: true, fullscreen: ! isAudio,
+		},
 		on: emitter.on,
 		play: () => el.play(),
 		pause: () => el.pause(),
@@ -155,6 +163,8 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 			} ) );
 		},
 		requestPiP: () => ( el.requestPictureInPicture ? el.requestPictureInPicture() : Promise.reject() ),
+		exitPiP: () => ( document.pictureInPictureElement ? document.exitPictureInPicture() : Promise.resolve() ),
+		isPiPActive: () => document.pictureInPictureElement === el,
 		destroy: () => {
 			if ( hls ) {
 				hls.destroy();

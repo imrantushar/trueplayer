@@ -1,6 +1,52 @@
+import { useEffect, useState } from '@wordpress/element';
 import { Card, Field, Input, Select, Toggle, Button, Badge } from '../../components/UI';
+import { api } from '../../api';
 
 const uid = () => Math.random().toString( 36 ).slice( 2, 9 );
+
+/**
+ * Academy LMS progression: pick the course + lesson this video belongs to; the
+ * pro academy-sync addon marks the lesson complete when the video is completed.
+ */
+function LmsSection( { config, patch } ) {
+	const [ options, setOptions ] = useState( null );
+	const lms = config.lms || {};
+	const set = ( partial ) => patch( { lms: { ...lms, ...partial } } );
+
+	useEffect( () => {
+		api.getLmsOptions().then( setOptions ).catch( () => setOptions( { available: false } ) );
+	}, [] );
+
+	if ( ! options || ! options.available ) {
+		return null; // Academy not installed — keep the tab uncluttered
+	}
+
+	return (
+		<Card className="p-6 max-w-2xl">
+			<div className="flex items-center gap-3 mb-1">
+				<h3 className="font-semibold text-gray-900">Academy LMS progression</h3>
+				{ lms.courseId && lms.lessonId ? <Badge tone="green">linked</Badge> : null }
+			</div>
+			<p className="text-sm text-gray-500 mb-4">
+				When a logged-in student completes this video, the linked Academy lesson is marked complete automatically.
+			</p>
+			<div className="grid md:grid-cols-2 gap-x-6">
+				<Field label="Course">
+					<Select value={ lms.courseId || '' } onChange={ ( e ) => set( { courseId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }>
+						<option value="">— none —</option>
+						{ ( options.courses || [] ).map( ( c ) => <option key={ c.id } value={ c.id }>{ c.title }</option> ) }
+					</Select>
+				</Field>
+				<Field label="Lesson">
+					<Select value={ lms.lessonId || '' } onChange={ ( e ) => set( { lessonId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }>
+						<option value="">— none —</option>
+						{ ( options.lessons || [] ).map( ( l ) => <option key={ l.id } value={ l.id }>{ l.title }</option> ) }
+					</Select>
+				</Field>
+			</div>
+		</Card>
+	);
+}
 
 function QuestionList( { questions, onChange } ) {
 	const setQ = ( i, partial ) => onChange( questions.map( ( q, idx ) => ( idx === i ? { ...q, ...partial } : q ) ) );
@@ -73,6 +119,8 @@ export default function GatingTab( { config, patch } ) {
 		antiSkip: true,
 		maxAttempts: 3,
 		requireLoginForGate: false,
+		strict: false,
+		availableFrom: '',
 		checkpoints: [],
 		finalQuiz: null,
 		...( config.gating || {} ),
@@ -102,6 +150,15 @@ export default function GatingTab( { config, patch } ) {
 				</div>
 				<Toggle checked={ gating.antiSkip } onChange={ ( v ) => set( { antiSkip: v } ) } label="Anti-skip (block seeking past unwatched parts)" />
 				<Toggle checked={ gating.requireLoginForGate } onChange={ ( v ) => set( { requireLoginForGate: v } ) } label="Require login to watch (reliable per-person tracking)" />
+				<Toggle checked={ !! gating.strict } onChange={ ( v ) => set( { strict: v } ) } label="Must-watch (strict): force 100% coverage + anti-skip for compliance" />
+			</Card>
+
+			<Card className="p-6 max-w-2xl">
+				<h3 className="font-semibold text-gray-900 mb-1">Scheduled release (drip)</h3>
+				<p className="text-sm text-gray-500 mb-4">Lock the video until a date. Viewers see a &ldquo;available on…&rdquo; message until then.</p>
+				<Field label="Available from" hint="Leave empty to make it available immediately.">
+					<Input type="datetime-local" value={ gating.availableFrom || '' } onChange={ ( e ) => set( { availableFrom: e.target.value } ) } />
+				</Field>
 			</Card>
 
 			<Card className="p-6">
@@ -146,6 +203,8 @@ export default function GatingTab( { config, patch } ) {
 					</div>
 				) }
 			</Card>
+
+			<LmsSection config={ config } patch={ patch } />
 		</div>
 	);
 }

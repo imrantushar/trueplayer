@@ -63,6 +63,23 @@ class GateController extends WP_REST_Controller {
 			] );
 		}
 
+		// Drip: not-yet-released videos are blocked with the release time so the
+		// player can show a countdown / "available on" message.
+		$available_from = ProgressService::available_from( $video_id, $subject );
+		if ( $available_from && time() < $available_from ) {
+			return rest_ensure_response( [
+				'canPlay'       => false,
+				'reason'        => 'not_yet_available',
+				'availableFrom' => gmdate( 'c', $available_from ),
+				'message'       => sprintf(
+					/* translators: %s: date the video becomes available */
+					__( 'Available on %s.', 'trueplayer' ),
+					date_i18n( get_option( 'date_format' ), $available_from )
+				),
+				'subject'       => [ 'type' => $subject->type ],
+			] );
+		}
+
 		// Access seam: integrations (Academy enrollment, StoreEngine purchase,
 		// membership, drip) can deny playback here. Default = allowed.
 		$access = apply_filters(

@@ -43,6 +43,7 @@ class Integrations {
 	public static function all(): array {
 		$built_in = [
 			new Integrations\GemCrm(),
+			new Integrations\Mailchimp(),
 		];
 		return apply_filters( 'trueplayer/integrations/register', $built_in );
 	}

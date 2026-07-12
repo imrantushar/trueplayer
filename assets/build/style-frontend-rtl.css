@@ -1,6 +1,3 @@
-/*!*********************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/@wordpress/scripts/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./dev_trueplayer/player/style.css ***!
-  \*********************************************************************************************************************************************************************************************************************/
 /* Frontend player — scoped, CSS-variable driven. No Tailwind (keeps the
    frontend bundle lean). */
 
@@ -43,6 +40,15 @@
 	-o-object-fit: contain;
 	   object-fit: contain;
 	background: #000;
+}
+.tp-hover-preview {
+	-o-object-fit: cover;
+	   object-fit: cover;
+	animation: tp-preview-in 0.25s ease;
+}
+@keyframes tp-preview-in {
+	from { opacity: 0; }
+	to { opacity: 1; }
 }
 .tp-facade-btn {
 	position: absolute;
@@ -105,6 +111,46 @@
 }
 
 /* sticky (float on scroll) */
+/* Reserves the stage's normal footprint once it goes `position: fixed`
+   (sticky), and hosts the sentinel the sticky-on-scroll observer watches —
+   see the comment in Player.jsx for why this can't be the stage itself. */
+.tp-stage-slot {
+	position: relative;
+	width: 100%;
+}
+.tp-stage-sentinel {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* Shown in the stage's normal spot while it's actually floating in a
+   Picture-in-Picture window elsewhere. */
+.tp-pip-placeholder {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	background: #0b0d12;
+	color: rgba( 255, 255, 255, 0.75 );
+	font-size: 13px;
+	border-radius: var( --tp-radius, 10px );
+}
+.tp-pip-return {
+	background: var( --tp-accent );
+	color: #fff;
+	border: 0;
+	border-radius: 8px;
+	padding: 8px 16px;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
 .tp-sticky {
 	position: fixed !important;
 	z-index: 99999;
@@ -249,13 +295,134 @@
 
 .tp-logo {
 	position: absolute;
-	top: 12px;
-	left: 12px;
 	max-height: 34px;
 	max-width: 120px;
 	opacity: 0.9;
 	z-index: 4;
 	pointer-events: none;
+}
+.tp-logo img {
+	max-height: 34px;
+	max-width: 120px;
+	display: block;
+}
+.tp-logo.is-link {
+	pointer-events: auto;
+	cursor: pointer;
+}
+.tp-logo,
+.tp-logo-top-right { top: 12px; left: 12px; }
+.tp-logo-top-left { top: 12px; right: 12px; left: auto; }
+.tp-logo-bottom-right { top: auto; bottom: 52px; left: 12px; }
+.tp-logo-bottom-left { top: auto; bottom: 52px; right: 12px; left: auto; }
+
+/* ---- caption cue styling (html5-backed providers) ---- */
+.tp-stage video::cue {
+	color: var( --tp-cap-color, #fff );
+	background-color: var( --tp-cap-bg, rgba( 0, 0, 0, 0.75 ) );
+	font-size: calc( 1em * var( --tp-cap-scale, 1 ) );
+}
+
+/* ---- skins ---- */
+/* modern: floating-feel solid bar, brighter accents, roomier padding */
+.tp-skin-modern .tp-controls {
+	background: linear-gradient( transparent, rgba( 10, 12, 20, 0.9 ) );
+	padding: 8px 14px 12px;
+}
+.tp-skin-modern .tp-scrubber-track,
+.tp-skin-modern .tp-scrubber-segs {
+	height: 6px;
+}
+.tp-skin-modern .tp-btn {
+	border-radius: 8px;
+}
+.tp-skin-modern .tp-bigplay {
+	background: var( --tp-accent );
+	width: 84px;
+	height: 84px;
+}
+
+/* simple: flat thin bar, no gradient wash */
+.tp-skin-simple .tp-controls {
+	background: rgba( 0, 0, 0, 0.6 );
+	padding: 4px 10px 6px;
+}
+.tp-skin-simple .tp-scrubber {
+	padding: 5px 0;
+}
+.tp-skin-simple .tp-scrubber-thumb {
+	width: 10px;
+	height: 10px;
+}
+.tp-skin-simple .tp-bigplay {
+	width: 64px;
+	height: 64px;
+	background: rgba( 0, 0, 0, 0.65 );
+}
+
+/* minimal: scrubber + essentials only; secondary controls hidden */
+.tp-skin-minimal .tp-controls {
+	background: transparent;
+	padding: 4px 10px 8px;
+}
+.tp-skin-minimal .tp-controls-row {
+	background: rgba( 0, 0, 0, 0.5 );
+	border-radius: 10px;
+	padding: 2px 8px;
+}
+.tp-skin-minimal .tp-time,
+.tp-skin-minimal .tp-volume,
+.tp-skin-minimal .tp-chapter-now {
+	display: none;
+}
+
+/* standard: classic opaque deck, square corners on the bar */
+.tp-skin-standard .tp-controls {
+	background: rgba( 12, 14, 18, 0.96 );
+	padding: 6px 12px 8px;
+}
+.tp-skin-standard .tp-scrubber-track,
+.tp-skin-standard .tp-scrubber-segs,
+.tp-skin-standard .tp-scrubber-buffered,
+.tp-skin-standard .tp-scrubber-played,
+.tp-skin-standard .tp-seg {
+	border-radius: 0;
+}
+
+/* floating (pro): detached rounded bar hovering above the bottom edge */
+.tp-skin-floating .tp-controls {
+	right: 12px;
+	left: 12px;
+	bottom: 12px;
+	border-radius: 14px;
+	background: rgba( 15, 17, 26, 0.82 );
+	backdrop-filter: blur( 10px );
+	padding: 6px 14px 8px;
+	box-shadow: 0 8px 28px rgba( 0, 0, 0, 0.35 );
+}
+.tp-skin-floating .tp-info {
+	bottom: 4.6rem;
+}
+
+/* ambient (pro): blurred poster glow behind the stage */
+.tp-ambient-wrap {
+	position: relative;
+	width: 100%;
+}
+.tp-ambient-glow {
+	position: absolute;
+	inset: -28px;
+	background-position: center;
+	background-size: cover;
+	filter: blur( 36px ) saturate( 1.5 );
+	opacity: 0.5;
+	border-radius: 24px;
+	pointer-events: none;
+	z-index: 0;
+}
+.tp-ambient-wrap .tp-stage {
+	position: relative;
+	z-index: 1;
 }
 
 /* ---- "In this video" drawer: chapters + transcript ---- */
@@ -447,6 +614,13 @@
 .tp-scrubber {
 	padding: 8px 0;
 	cursor: pointer;
+	touch-action: none; /* let a pointer drag scrub instead of scrolling the page */
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+}
+.tp-scrubber.is-disabled {
+	cursor: not-allowed;
 }
 .tp-scrubber-track {
 	position: relative;
@@ -599,6 +773,236 @@
 .tp-menu-item.is-active::after {
 	content: ' ✓';
 	color: var(--tp-accent);
+}
+
+/* ---- timed text overlays ---- */
+.tp-text-overlay {
+	position: absolute;
+	z-index: 4;
+	max-width: 60%;
+	padding: 8px 14px;
+	border-radius: 8px;
+	color: #fff;
+	font-size: 14px;
+	line-height: 1.45;
+	pointer-events: none;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	animation: tp-cta-in 0.25s ease;
+}
+.tp-text-overlay-title {
+	font-size: 15px;
+	font-weight: 700;
+}
+.tp-pos-top-left { top: 14px; right: 14px; }
+.tp-pos-top-center { top: 14px; right: 50%; transform: translateX( 50% ); text-align: center; }
+.tp-pos-top-right { top: 14px; left: 14px; text-align: left; }
+.tp-pos-middle-left { top: 50%; right: 14px; transform: translateY( -50% ); }
+.tp-pos-middle-center { top: 50%; right: 50%; transform: translate( 50%, -50% ); text-align: center; }
+.tp-pos-middle-right { top: 50%; left: 14px; transform: translateY( -50% ); text-align: left; }
+.tp-pos-bottom-left { bottom: 64px; right: 14px; }
+.tp-pos-bottom-center { bottom: 64px; right: 50%; transform: translateX( 50% ); text-align: center; }
+.tp-pos-bottom-right { bottom: 64px; left: 14px; text-align: left; }
+
+/* ---- action bar ---- */
+.tp-actionbar {
+	position: absolute;
+	right: 0;
+	left: 0;
+	z-index: 5;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding: 8px 14px;
+	background: var( --tp-accent );
+	color: #fff;
+	font-size: 14px;
+	font-weight: 500;
+}
+.tp-actionbar-top { top: 0; }
+.tp-actionbar-bottom { bottom: 0; }
+/* When the control bar is visible, lift a bottom action bar above it. */
+.tp-stage:not( .is-idle ) .tp-actionbar-bottom {
+	bottom: 3.6rem;
+}
+.tp-stage.is-audio .tp-actionbar {
+	display: none; /* the compact audio bar has no room for it */
+}
+.tp-actionbar-text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.tp-actionbar-btn {
+	flex-shrink: 0;
+	background: rgba( 255, 255, 255, 0.18 );
+	border: 1px solid rgba( 255, 255, 255, 0.5 );
+	color: #fff;
+	border-radius: 6px;
+	padding: 4px 14px;
+	font-size: 13px;
+	font-weight: 600;
+	text-decoration: none;
+	transition: background 0.15s ease;
+}
+.tp-actionbar-btn:hover {
+	background: rgba( 255, 255, 255, 0.3 );
+	color: #fff;
+}
+
+/* ---- description under the player ---- */
+.tp-description {
+	margin-top: 12px;
+	font-size: 14.5px;
+	line-height: 1.6;
+	color: inherit;
+}
+
+/* ---- interactive layers (pro) ---- */
+.tp-layers {
+	position: absolute;
+	inset: 0;
+	z-index: 4;
+	pointer-events: none;
+}
+.tp-layer {
+	pointer-events: auto;
+}
+.tp-hotspot {
+	position: absolute;
+	display: block;
+	cursor: pointer;
+	border-radius: 8px;
+}
+.tp-hotspot-pulse {
+	position: absolute;
+	top: 50%;
+	right: 50%;
+	width: 16px;
+	height: 16px;
+	margin: -8px -8px 0 0;
+	border-radius: 50%;
+	background: var( --tp-accent );
+	box-shadow: 0 0 0 0 var( --tp-accent );
+	animation: tp-hotspot-pulse 1.8s infinite;
+}
+@keyframes tp-hotspot-pulse {
+	0% { box-shadow: 0 0 0 0 rgba( 255, 255, 255, 0.5 ); }
+	70% { box-shadow: 0 0 0 14px rgba( 255, 255, 255, 0 ); }
+	100% { box-shadow: 0 0 0 0 rgba( 255, 255, 255, 0 ); }
+}
+.tp-hotspot-tip {
+	position: absolute;
+	bottom: calc( 50% + 18px );
+	right: 50%;
+	transform: translateX( 50% );
+	background: rgba( 17, 24, 39, 0.95 );
+	color: #fff;
+	font-size: 12px;
+	padding: 4px 9px;
+	border-radius: 6px;
+	white-space: nowrap;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+	pointer-events: none;
+}
+.tp-hotspot:hover .tp-hotspot-tip {
+	opacity: 1;
+}
+.tp-banner {
+	position: absolute;
+	max-width: 70%;
+}
+.tp-banner img {
+	max-width: 100%;
+	max-height: 110px;
+	display: block;
+	border-radius: 8px;
+}
+.tp-shortcode-layer {
+	position: absolute;
+	max-width: 80%;
+	background: rgba( 255, 255, 255, 0.96 );
+	color: #111827;
+	border-radius: 10px;
+	padding: 14px 16px;
+}
+.tp-form-layer {
+	position: absolute;
+	background: rgba( 17, 24, 39, 0.92 );
+	backdrop-filter: blur( 4px );
+	border-radius: 12px;
+	padding: 14px 16px;
+	color: #fff;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-width: min( 360px, 84% );
+}
+.tp-form-layer-title {
+	font-size: 14px;
+}
+.tp-form-layer-row {
+	display: flex;
+	gap: 6px;
+}
+.tp-form-layer-row input {
+	flex: 1;
+	min-width: 0;
+	border: 1px solid rgba( 255, 255, 255, 0.25 );
+	background: rgba( 255, 255, 255, 0.1 );
+	color: #fff;
+	border-radius: 7px;
+	padding: 8px 10px;
+	font-size: 13px;
+}
+.tp-form-layer-row button {
+	background: var( --tp-accent );
+	color: #fff;
+	border: 0;
+	border-radius: 7px;
+	padding: 8px 14px;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+}
+.tp-form-layer-error {
+	font-size: 12px;
+	color: #fca5a5;
+}
+.tp-form-layer-thanks {
+	margin: 0;
+	font-size: 13.5px;
+	font-weight: 600;
+}
+
+/* ---- dynamic watermark (pro) ---- */
+.tp-watermark {
+	position: absolute;
+	top: 12%;
+	right: 8%;
+	z-index: 4;
+	color: #fff;
+	font-size: 12px;
+	letter-spacing: 0.03em;
+	text-shadow: 0 1px 3px rgba( 0, 0, 0, 0.8 );
+	pointer-events: none;
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+	white-space: nowrap;
+}
+.tp-watermark.is-drifting {
+	animation: tp-wm-drift 46s linear infinite;
+}
+@keyframes tp-wm-drift {
+	0% { top: 12%; right: 8%; }
+	25% { top: 70%; right: 62%; }
+	50% { top: 24%; right: 70%; }
+	75% { top: 76%; right: 12%; }
+	100% { top: 12%; right: 8%; }
 }
 
 /* ---- overlays ---- */
@@ -1063,4 +1467,15 @@
 	-o-object-fit: contain;
 	   object-fit: contain;
 }
+
+/* Timed content region (pro): swaps below the player with the timeline. */
+.tp-timed-content {
+	margin-top: 12px;
+	padding: 14px 16px;
+	border: 1px solid var(--tp-line, #e5e7eb);
+	border-radius: var(--tp-radius, 8px);
+	background: var(--tp-timed-bg, rgba(0, 0, 0, 0.02));
+	animation: tp-timed-in 0.25s ease;
+}
+@keyframes tp-timed-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 

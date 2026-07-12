@@ -24,10 +24,14 @@ class Pro {
 		'premium_sources', // bunny / mux / hls / signed
 		'playlists',       // grid + sidebar
 		'premium_skins',   // floating / ambient + reusable presets
+		'layers',          // interactive layers: hotspots / banners / forms / shortcodes
+		'protection',      // dynamic watermark + private video / expiring links
+		'instant_pages',   // standalone public video pages
+		'lms',             // Academy LMS progression sync
 	];
 
 	/** Premium source types reserved for pro. */
-	const PREMIUM_SOURCES = [ 'bunny', 'mux', 'hls' ];
+	const PREMIUM_SOURCES = [ 'bunny', 'bunnyStorage', 'mux', 'hls' ];
 
 	/** Skins available only with pro. */
 	const PREMIUM_SKINS = [ 'floating', 'ambient' ];

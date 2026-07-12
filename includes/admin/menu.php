@@ -14,9 +14,10 @@ class Menu {
 	}
 
 	public function register_menu() {
+		$brand = \TruePlayer\Helper::brand_name();
 		add_menu_page(
-			__( 'TruePlayer', 'trueplayer' ),
-			__( 'TruePlayer', 'trueplayer' ),
+			$brand,
+			$brand,
 			'manage_options',
 			TRUEPLAYER_PLUGIN_SLUG,
 			[ $this, 'render_app' ],
@@ -35,7 +36,7 @@ class Menu {
 			$slug . '-settings'  => __( 'Settings', 'trueplayer' ),
 		];
 		foreach ( $subs as $page_slug => $label ) {
-			add_submenu_page( $slug, $label . ' – ' . __( 'TruePlayer', 'trueplayer' ), $label, 'manage_options', $page_slug, [ $this, 'render_app' ] );
+			add_submenu_page( $slug, $label . ' – ' . $brand, $label, 'manage_options', $page_slug, [ $this, 'render_app' ] );
 		}
 	}
 
