@@ -1,6 +1,6 @@
 import { useState } from '@wordpress/element';
-import { Card, Field, Input, Select, Toggle, Button, Badge } from '../../components/UI';
-import { pickMedia } from '../../utils/media';
+import { Card, Field, Input, Select, Toggle, Button, Badge, ColorInput } from '../../components/UI';
+import MediaPicker from '../../components/MediaPicker';
 
 const newOverlay = ( type = 'cta' ) => ( {
 	id: 'ov_' + Math.random().toString( 36 ).slice( 2, 8 ),
@@ -25,7 +25,8 @@ export default function OverlaysTab( { config, patch } ) {
 	const remove = ( i ) => patch( { overlays: overlays.filter( ( _, idx ) => idx !== i ) } );
 	const setBar = ( partial ) => patch( { actionBar: { ...actionBar, ...partial } } );
 	const [ openId, setOpenId ] = useState( null );
-	const addAndOpen = ( type ) => { const o = newOverlay( type ); patch( { overlays: [ ...overlays, o ] } ); setOpenId( o.id ); };
+	const [ menu, setMenu ] = useState( false );
+	const addAndOpen = ( type ) => { const o = newOverlay( type ); patch( { overlays: [ ...overlays, o ] } ); setOpenId( o.id ); setMenu( false ); };
 
 	return (
 		<div className="space-y-6">
@@ -47,25 +48,16 @@ export default function OverlaysTab( { config, patch } ) {
 								</Select>
 							</Field>
 							<Field label="Background" hint="Defaults to the accent color.">
-								<div className="flex gap-2 items-center">
-									<input type="color" value={ actionBar.background || '#4f46e5' } onChange={ ( e ) => setBar( { background: e.target.value } ) } className="h-9 w-12 rounded border border-line" />
-									<Input value={ actionBar.background || '' } onChange={ ( e ) => setBar( { background: e.target.value } ) } placeholder="(accent)" />
-								</div>
+								<ColorInput value={ actionBar.background || '' } onChange={ ( v ) => setBar( { background: v } ) } placeholder="(accent)" />
 							</Field>
 						</div>
 					</>
 				) }
 			</Card>
 
-			<div className="flex items-center justify-between gap-4">
-				<div>
-					<h3 className="font-semibold text-gray-900">Overlays</h3>
-					<p className="text-sm text-gray-500">CTA cards pause for attention; text overlays label the picture during a window.</p>
-				</div>
-				<div className="flex gap-2">
-					<Button variant="ghost" onClick={ () => addAndOpen( 'cta' ) }>+ CTA card</Button>
-					<Button variant="ghost" onClick={ () => addAndOpen( 'text' ) }>+ Text overlay</Button>
-				</div>
+			<div>
+				<h3 className="font-semibold text-gray-900">Overlays</h3>
+				<p className="text-sm text-gray-500">CTA cards pause for attention; text overlays label the picture during a window.</p>
 			</div>
 
 			{ overlays.length === 0 && (
@@ -114,13 +106,10 @@ export default function OverlaysTab( { config, patch } ) {
 											<Field label="Text"><Input value={ o.text || '' } onChange={ ( e ) => setOne( i, { text: e.target.value } ) } placeholder="Optional supporting line" /></Field>
 											<div className="grid md:grid-cols-2 gap-x-6">
 												<Field label="Background color">
-													<div className="flex gap-2 items-center">
-														<input type="color" value={ o.background || '#000000' } onChange={ ( e ) => setOne( i, { background: e.target.value } ) } className="h-9 w-12 rounded border border-line" />
-														<Input value={ o.background || '' } onChange={ ( e ) => setOne( i, { background: e.target.value } ) } />
-													</div>
+													<ColorInput value={ o.background || '' } onChange={ ( v ) => setOne( i, { background: v } ) } />
 												</Field>
 												<Field label={ `Background opacity (${ o.bgOpacity ?? 60 }%)` }>
-													<input type="range" min="0" max="100" step="5" value={ o.bgOpacity ?? 60 } onChange={ ( e ) => setOne( i, { bgOpacity: parseInt( e.target.value, 10 ) } ) } className="w-full" />
+													<input type="range" min="0" max="100" step="5" value={ o.bgOpacity ?? 60 } onChange={ ( e ) => setOne( i, { bgOpacity: parseInt( e.target.value, 10 ) } ) } className="w-full accent-brand-500 cursor-pointer" />
 												</Field>
 											</div>
 										</>
@@ -146,10 +135,7 @@ export default function OverlaysTab( { config, patch } ) {
 												<Field label="Button URL"><Input value={ o.buttonUrl } onChange={ ( e ) => setOne( i, { buttonUrl: e.target.value } ) } placeholder="https://…" /></Field>
 											</div>
 											<Field label="Image (optional)">
-												<div className="flex gap-2">
-													<Input value={ o.image } onChange={ ( e ) => setOne( i, { image: e.target.value } ) } placeholder="https://…/image.png" />
-													<Button variant="ghost" onClick={ () => pickMedia( 'image', ( url ) => setOne( i, { image: url } ) ) }>Media library</Button>
-												</div>
+												<MediaPicker value={ o.image } onChange={ ( url ) => setOne( i, { image: url } ) } accept="image" label="Upload an image" />
 											</Field>
 											{ o.trigger === 'time' && (
 												<Toggle checked={ o.pause } onChange={ ( v ) => setOne( i, { pause: v } ) } label="Pause the video while showing" />
@@ -165,6 +151,25 @@ export default function OverlaysTab( { config, patch } ) {
 						</Card>
 					);
 				} ) }
+			</div>
+
+			<div className="relative inline-block">
+				<Button variant="secondary" onClick={ () => setMenu( ( m ) => ! m ) }>+ Add overlay ▾</Button>
+				{ menu && (
+					<>
+						<div className="fixed inset-0 z-10" onClick={ () => setMenu( false ) } />
+						<div className="absolute left-0 bottom-full mb-1 w-56 bg-white border border-line rounded-card shadow-pop z-20 py-1">
+							<button type="button" onClick={ () => addAndOpen( 'cta' ) } className="w-full text-left px-3 py-2 hover:bg-gray-100">
+								<div className="text-sm font-medium text-ink">CTA card</div>
+								<div className="text-xs text-muted">Pauses the video to promote an offer.</div>
+							</button>
+							<button type="button" onClick={ () => addAndOpen( 'text' ) } className="w-full text-left px-3 py-2 hover:bg-gray-100">
+								<div className="text-sm font-medium text-ink">Text overlay</div>
+								<div className="text-xs text-muted">Labels the picture during a time window.</div>
+							</button>
+						</div>
+					</>
+				) }
 			</div>
 		</div>
 	);

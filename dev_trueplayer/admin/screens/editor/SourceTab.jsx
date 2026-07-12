@@ -1,5 +1,5 @@
-import { Card, Field, Input, Select, Toggle, Button } from '../../components/UI';
-import { pickMedia } from '../../utils/media';
+import { Card, Field, Input, Select, Toggle } from '../../components/UI';
+import MediaPicker from '../../components/MediaPicker';
 import { isPro } from '../../pro';
 
 const TYPES = [
@@ -31,10 +31,7 @@ export default function SourceTab( { config, patch } ) {
 
 			{ source.type === 'self' && (
 				<Field label="Video file" hint="Pick an uploaded video from the media library.">
-					<div className="flex gap-2">
-						<Input value={ source.src || '' } onChange={ ( e ) => set( { src: e.target.value } ) } placeholder="https://…/video.mp4" />
-						<Button variant="ghost" onClick={ () => pickMedia( 'video', ( url ) => set( { src: url } ) ) }>Media library</Button>
-					</div>
+					<MediaPicker value={ source.src || '' } onChange={ ( url ) => set( { src: url } ) } accept="video" label="Upload a video" />
 				</Field>
 			) }
 
@@ -68,10 +65,7 @@ export default function SourceTab( { config, patch } ) {
 			) }
 
 			<Field label="Poster image" hint="Shown before playback (optional).">
-				<div className="flex gap-2">
-					<Input value={ source.poster || '' } onChange={ ( e ) => set( { poster: e.target.value } ) } placeholder="https://…/poster.jpg" />
-					<Button variant="ghost" onClick={ () => pickMedia( 'image', ( url ) => set( { poster: url } ) ) }>Media library</Button>
-				</div>
+				<MediaPicker value={ source.poster || '' } onChange={ ( url ) => set( { poster: url } ) } accept="image" label="Upload an image" />
 			</Field>
 
 			<Toggle

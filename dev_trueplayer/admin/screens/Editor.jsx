@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Select, Modal, SubSidebar } from '../components/UI';
+import { Button, Select, Modal, SubSidebar, Card, Field } from '../components/UI';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
@@ -157,19 +157,6 @@ export default function Editor( { id, onBack } ) {
 					{ /* Toolbar actions live in the topbar (portaled). */ }
 					{ toolbarSlot && createPortal(
 						<>
-							{ presets.length > 0 && (
-								<label className="flex items-center gap-2 text-[13px] text-gray-500">
-									Preset
-									<Select
-										className="w-40 h-9"
-										value={ config.presetId || '' }
-										onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
-									>
-										<option value="">None</option>
-										{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
-									</Select>
-								</label>
-							) }
 							{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
 							{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
 							<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>Embed</Button>
@@ -214,7 +201,24 @@ export default function Editor( { id, onBack } ) {
 							) : (
 								<>
 									{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'player' && (
+										<div className="space-y-6">
+											{ presets.length > 0 && (
+												<Card className="p-6 max-w-md">
+													<Field label="Preset" hint="Apply a saved player preset as the starting point — you can still tweak anything below.">
+														<Select
+															value={ config.presetId || '' }
+															onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
+														>
+															<option value="">None</option>
+															{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+														</Select>
+													</Field>
+												</Card>
+											) }
+											<PlayerOptionsTab config={ config } patch={ patchConfig } />
+										</div>
+									) }
 									{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
 									{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } /> }
 									{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }

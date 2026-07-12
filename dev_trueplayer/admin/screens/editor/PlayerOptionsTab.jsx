@@ -1,5 +1,5 @@
 import { useState } from '@wordpress/element';
-import { Card, Field, Input, Select, Toggle, Textarea, SubSidebar } from '../../components/UI';
+import { Card, Field, Input, Select, Toggle, Textarea, SubSidebar, ColorInput } from '../../components/UI';
 import { isPro, PRO_SKINS } from '../../pro';
 
 const PLAYER_SUBS = [
@@ -97,16 +97,10 @@ export default function PlayerOptionsTab( { config, patch } ) {
 						</Select>
 					</Field>
 					<Field label="Accent color" hint="Scrubber, buttons, highlights.">
-						<div className="flex gap-2 items-center">
-							<input type="color" value={ appearance.accent } onChange={ ( e ) => setSection( 'appearance', { accent: e.target.value } ) } className="h-9 w-12 rounded border border-line" />
-							<Input value={ appearance.accent } onChange={ ( e ) => setSection( 'appearance', { accent: e.target.value } ) } />
-						</div>
+						<ColorInput value={ appearance.accent } onChange={ ( v ) => setSection( 'appearance', { accent: v } ) } />
 					</Field>
 					<Field label="Button hover color" hint="Optional; default is a light overlay.">
-						<div className="flex gap-2 items-center">
-							<input type="color" value={ appearance.hoverColor || '#ffffff' } onChange={ ( e ) => setSection( 'appearance', { hoverColor: e.target.value } ) } className="h-9 w-12 rounded border border-line" />
-							<Input value={ appearance.hoverColor } onChange={ ( e ) => setSection( 'appearance', { hoverColor: e.target.value } ) } placeholder="(none)" />
-						</div>
+						<ColorInput value={ appearance.hoverColor } onChange={ ( v ) => setSection( 'appearance', { hoverColor: v } ) } placeholder="(none)" />
 					</Field>
 					<Field label="Play button style">
 						<Select value={ appearance.playButtonStyle } onChange={ ( e ) => setSection( 'appearance', { playButtonStyle: e.target.value } ) }>
@@ -123,7 +117,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 						</Select>
 					</Field>
 					<Field label={ `Corner roundness (${ appearance.roundness }px)` }>
-						<input type="range" min="0" max="28" value={ appearance.roundness } onChange={ ( e ) => setSection( 'appearance', { roundness: parseInt( e.target.value, 10 ) } ) } className="w-full" />
+						<input type="range" min="0" max="28" value={ appearance.roundness } onChange={ ( e ) => setSection( 'appearance', { roundness: parseInt( e.target.value, 10 ) } ) } className="w-full accent-brand-500 cursor-pointer" />
 					</Field>
 				</div>
 				<Toggle checked={ appearance.bigPlay } onChange={ ( v ) => setSection( 'appearance', { bigPlay: v } ) } label="Show large center play button" />
@@ -136,22 +130,16 @@ export default function PlayerOptionsTab( { config, patch } ) {
 				<p className="text-sm text-gray-500 mb-4">How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own.</p>
 				<div className="grid md:grid-cols-2 gap-x-6">
 					<Field label={ `Font size (${ appearance.captionSize }%)` }>
-						<input type="range" min="50" max="200" step="10" value={ appearance.captionSize } onChange={ ( e ) => setSection( 'appearance', { captionSize: parseInt( e.target.value, 10 ) } ) } className="w-full" />
+						<input type="range" min="50" max="200" step="10" value={ appearance.captionSize } onChange={ ( e ) => setSection( 'appearance', { captionSize: parseInt( e.target.value, 10 ) } ) } className="w-full accent-brand-500 cursor-pointer" />
 					</Field>
 					<Field label="Text color">
-						<div className="flex gap-2 items-center">
-							<input type="color" value={ appearance.captionColor } onChange={ ( e ) => setSection( 'appearance', { captionColor: e.target.value } ) } className="h-9 w-12 rounded border border-line" />
-							<Input value={ appearance.captionColor } onChange={ ( e ) => setSection( 'appearance', { captionColor: e.target.value } ) } />
-						</div>
+						<ColorInput value={ appearance.captionColor } onChange={ ( v ) => setSection( 'appearance', { captionColor: v } ) } />
 					</Field>
 					<Field label="Background color">
-						<div className="flex gap-2 items-center">
-							<input type="color" value={ appearance.captionBackground } onChange={ ( e ) => setSection( 'appearance', { captionBackground: e.target.value } ) } className="h-9 w-12 rounded border border-line" />
-							<Input value={ appearance.captionBackground } onChange={ ( e ) => setSection( 'appearance', { captionBackground: e.target.value } ) } />
-						</div>
+						<ColorInput value={ appearance.captionBackground } onChange={ ( v ) => setSection( 'appearance', { captionBackground: v } ) } />
 					</Field>
 					<Field label={ `Background opacity (${ appearance.captionOpacity }%)` }>
-						<input type="range" min="0" max="100" step="5" value={ appearance.captionOpacity } onChange={ ( e ) => setSection( 'appearance', { captionOpacity: parseInt( e.target.value, 10 ) } ) } className="w-full" />
+						<input type="range" min="0" max="100" step="5" value={ appearance.captionOpacity } onChange={ ( e ) => setSection( 'appearance', { captionOpacity: parseInt( e.target.value, 10 ) } ) } className="w-full accent-brand-500 cursor-pointer" />
 					</Field>
 				</div>
 			</Card>

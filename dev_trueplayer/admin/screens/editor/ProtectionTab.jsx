@@ -59,7 +59,7 @@ export default function ProtectionTab( { config, patch } ) {
 						</Field>
 						<div className="grid md:grid-cols-2 gap-x-6">
 							<Field label={ `Opacity (${ Math.round( ( wm.opacity ?? 0.35 ) * 100 ) }%)` }>
-								<input type="range" min="10" max="100" step="5" value={ Math.round( ( wm.opacity ?? 0.35 ) * 100 ) } onChange={ ( e ) => setWm( { opacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full" />
+								<input type="range" min="10" max="100" step="5" value={ Math.round( ( wm.opacity ?? 0.35 ) * 100 ) } onChange={ ( e ) => setWm( { opacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full accent-brand-500 cursor-pointer" />
 							</Field>
 							<div className="pt-1">
 								<Toggle checked={ wm.drift !== false } onChange={ ( v ) => setWm( { drift: v } ) } label="Slowly drift around the picture" />

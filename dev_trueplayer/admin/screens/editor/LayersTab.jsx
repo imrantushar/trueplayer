@@ -1,6 +1,6 @@
 import { useState } from '@wordpress/element';
 import { Card, Field, Input, Select, Button, Textarea } from '../../components/UI';
-import { pickMedia } from '../../utils/media';
+import MediaPicker from '../../components/MediaPicker';
 
 const uid = () => 'ly_' + Math.random().toString( 36 ).slice( 2, 8 );
 
@@ -171,10 +171,7 @@ export default function LayersTab( { config, patch } ) {
 					{ l.type === 'banner' && (
 						<>
 							<Field label="Image">
-								<div className="flex gap-2">
-									<Input value={ l.image || '' } onChange={ ( e ) => setOne( i, { image: e.target.value } ) } placeholder="https://…/banner.png" />
-									<Button variant="ghost" onClick={ () => pickMedia( 'image', ( url ) => setOne( i, { image: url } ) ) }>Media library</Button>
-								</div>
+								<MediaPicker value={ l.image || '' } onChange={ ( url ) => setOne( i, { image: url } ) } accept="image" label="Upload an image" />
 							</Field>
 							<Field label="Link URL (optional)"><Input value={ l.url || '' } onChange={ ( e ) => setOne( i, { url: e.target.value } ) } placeholder="https://…" /></Field>
 						</>

@@ -166,11 +166,26 @@ export function Modal( { title, onClose, children, footer, className = '' } ) {
 }
 
 /** GemCRM section heading: 16px / 600 / 24px with an underline rule. */
-export function SectionTitle( { title, description } ) {
+export function SectionTitle( { title, description, children } ) {
 	return (
 		<div className="mb-6 pb-4 border-b border-line">
-			<h3 className="text-base font-semibold leading-6 text-ink">{ title }</h3>
+			<h3 className="text-base font-semibold leading-6 text-ink">{ title || children }</h3>
 			{ description && <p className="text-[13px] text-muted mt-1">{ description }</p> }
+		</div>
+	);
+}
+
+/** Aligned color swatch + hex input. `onChange` receives the value string. */
+export function ColorInput( { value, onChange, placeholder = '' } ) {
+	return (
+		<div className="flex gap-2 items-center">
+			<input
+				type="color"
+				value={ value || '#000000' }
+				onChange={ ( e ) => onChange( e.target.value ) }
+				className="h-10 w-11 shrink-0 rounded border border-line p-1 bg-white cursor-pointer"
+			/>
+			<Input value={ value || '' } onChange={ ( e ) => onChange( e.target.value ) } placeholder={ placeholder } />
 		</div>
 	);
 }

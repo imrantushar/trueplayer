@@ -157,7 +157,7 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 									</Select>
 								</Field>
 								<Field label={ `Opacity (${ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) }%)` }>
-									<input type="range" min="10" max="100" step="5" value={ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) } onChange={ ( e ) => setBranding( { logoOpacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full" />
+									<input type="range" min="10" max="100" step="5" value={ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) } onChange={ ( e ) => setBranding( { logoOpacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full accent-brand-500 cursor-pointer" />
 								</Field>
 							</div>
 							<Field label="Click-through link" hint="Optional — makes the logo clickable.">
