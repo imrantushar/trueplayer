@@ -14,6 +14,27 @@ function resolveBunny( source ) {
 }
 
 /**
+ * Mux → HLS. Mux serves an HLS playlist at stream.mux.com/{PLAYBACK_ID}.m3u8;
+ * a full .m3u8 (e.g. a signed URL) can be supplied directly instead.
+ */
+function resolveMux( source ) {
+	if ( source.src ) {
+		return { ...source, type: 'hls' };
+	}
+	const id = ( source.playbackId || source.videoId || '' ).trim();
+	return { ...source, type: 'hls', src: `https://stream.mux.com/${ id }.m3u8` };
+}
+
+/**
+ * Bunny Storage → a direct file (mp4/webm) or playlist from a pull zone. An
+ * .m3u8 plays through hls.js; anything else is a plain progressive file.
+ */
+function resolveBunnyStorage( source ) {
+	const src = ( source.src || '' ).trim();
+	return { ...source, type: /\.m3u8(\?|$)/i.test( src ) ? 'hls' : 'url', src };
+}
+
+/**
  * Provider factory. HTML5 (self-hosted/HLS/Bunny/audio/url) ships in the core
  * bundle; YouTube and Vimeo SDKs are code-split and only loaded when that
  * source type is actually used.
@@ -21,6 +42,12 @@ function resolveBunny( source ) {
 export async function createProvider( container, source, opts = {} ) {
 	if ( source.type === 'bunny' ) {
 		return createHtml5Provider( container, resolveBunny( source ), opts );
+	}
+	if ( source.type === 'mux' ) {
+		return createHtml5Provider( container, resolveMux( source ), opts );
+	}
+	if ( source.type === 'bunnyStorage' ) {
+		return createHtml5Provider( container, resolveBunnyStorage( source ), opts );
 	}
 	switch ( source.type ) {
 		case 'youtube': {

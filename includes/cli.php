@@ -53,6 +53,29 @@ class CLI {
 				'config' => [ 'source' => [ 'type' => 'bunny', 'pullZone' => 'vz-example.b-cdn.net', 'videoId' => 'REPLACE-ME' ] ],
 			],
 			[
+				'title'  => 'Demo — Showcase (skin, overlays, action bar, layers)',
+				'config' => [
+					'source'      => [ 'type' => 'url', 'src' => 'https://vjs.zencdn.net/v/oceans.mp4', 'poster' => 'https://vjs.zencdn.net/v/oceans.png' ],
+					'description' => 'A <strong>dynamic description</strong> rendered under the player — links, resources, anything.',
+					'customize'   => [
+						'appearance' => [ 'skin' => 'floating', 'aspectRatio' => '16:9', 'captionSize' => 120, 'captionOpacity' => 60 ],
+						'behavior'   => [ 'hoverPreview' => true, 'autoplayMode' => 'off' ],
+					],
+					'branding'    => [ 'logo' => 'https://vjs.zencdn.net/v/oceans.png', 'logoPosition' => 'bottom-left', 'logoOpacity' => 0.7, 'logoUrl' => 'https://kodezen.com' ],
+					'overlays'    => [
+						[ 'id' => 'tx1', 'type' => 'text', 'start' => 2, 'end' => 8, 'position' => 'top-left', 'title' => 'Chapter 1', 'text' => 'The open ocean', 'bgOpacity' => 55 ],
+						[ 'id' => 'cta1', 'trigger' => 'end', 'title' => 'Enjoyed it?', 'text' => 'See the full series.', 'buttonLabel' => 'Browse', 'buttonUrl' => 'https://example.com' ],
+					],
+					'actionBar'   => [ 'enabled' => true, 'text' => 'Limited offer — full course 30% off', 'buttonLabel' => 'Get it', 'buttonUrl' => 'https://example.com', 'position' => 'bottom' ],
+					'layers'      => [
+						[ 'id' => 'ly1', 'type' => 'hotspot', 'start' => 3, 'end' => 20, 'x' => 60, 'y' => 30, 'w' => 18, 'h' => 22, 'tooltip' => 'What is this?', 'url' => 'https://example.com' ],
+						[ 'id' => 'ly2', 'type' => 'form', 'start' => 25, 'end' => 40, 'position' => 'bottom-center', 'title' => 'Get the bonus pack', 'buttonLabel' => 'Send it' ],
+					],
+					'protection'  => [ 'dynamicWatermark' => [ 'enabled' => true, 'fields' => [ 'email' ], 'opacity' => 0.35, 'drift' => true ] ],
+					'instantPage' => true,
+				],
+			],
+			[
 				'title'  => 'Demo — Watch-verify + quiz (no-skip)',
 				'config' => [
 					'source'    => [ 'type' => 'url', 'src' => 'https://vjs.zencdn.net/v/oceans.mp4' ],

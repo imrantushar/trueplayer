@@ -46,11 +46,30 @@ export async function createVimeoProvider( container, source, opts = {} ) {
 	return {
 		kind: 'vimeo',
 		element: host,
-		capabilities: { pip: true, quality: false, rate: true, tracks: false },
+		// Whether a given embed actually supports it is only knowable async
+		// (player.getPictureInPicture() round-trips to the iframe), so this is
+		// a browser-level check; per-video support still governs whether
+		// requestPiP() itself resolves.
+		capabilities: { pip: !! document.pictureInPictureEnabled, quality: false, rate: true, tracks: false },
 		on: emitter.on,
 		play: () => player.play(),
 		pause: () => player.pause(),
-		seek: ( t ) => player.setCurrentTime( t ),
+		// `current` only otherwise moves on the 'timeupdate' event, which Vimeo
+		// fires during playback but not reliably right after a seek made while
+		// paused (dragging the scrubber without hitting play). Without this,
+		// getCurrentTime() kept returning the pre-drag value, so the Scrubber's
+		// "wait for playback to catch up" reconciliation never saw it catch up
+		// and the thumb snapped back after its timeout — set it optimistically
+		// so a paused seek is reflected immediately, then reconcile with the
+		// real (resolved) position once the postMessage round-trip completes.
+		seek: ( t ) => {
+			current = t;
+			emitter.emit( 'timeupdate' );
+			return player.setCurrentTime( t ).then( ( seconds ) => {
+				current = seconds;
+				emitter.emit( 'timeupdate' );
+			} ).catch( () => {} );
+		},
 		setVolume: ( v ) => player.setVolume( v ),
 		setMuted: ( m ) => player.setMuted( m ),
 		setRate: ( r ) => player.setPlaybackRate( r ),
@@ -66,6 +85,8 @@ export async function createVimeoProvider( container, source, opts = {} ) {
 		getTextTracks: () => [],
 		setTextTrack: () => {},
 		requestPiP: () => player.requestPictureInPicture(),
+		exitPiP: () => player.exitPictureInPicture(),
+		isPiPActive: () => player.getPictureInPicture().catch( () => false ),
 		destroy: () => {
 			try {
 				player.destroy();
