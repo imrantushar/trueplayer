@@ -11,6 +11,7 @@ const SUBTABS = [
 	{ key: 'general', label: 'General' },
 	{ key: 'enforcement', label: 'Enforcement' },
 	{ key: 'compliance', label: 'Compliance & privacy' },
+	{ key: 'analytics', label: 'Analytics' },
 	{ key: 'sources', label: 'Sources & CDN' },
 	{ key: 'integrations', label: 'Integrations' },
 	{ key: 'whitelabel', label: 'White-label' },
@@ -223,6 +224,23 @@ export default function Settings() {
 				)
 			) }
 
+			{ tab === 'analytics' && (
+				isPro() ? (
+					<Card className="p-6 max-w-xl">
+						<h3 className="font-semibold text-gray-900 mb-1">Analytics collection</h3>
+						<p className="text-sm text-muted mb-4">Retention, replay heatmap &amp; daily rollups. Turning this off keeps watch-verification working but stops aggregate data collection.</p>
+						<Toggle
+							checked={ settings.analytics?.enabled !== false }
+							onChange={ ( v ) => setSettings( ( s ) => ( { ...s, analytics: { ...( s.analytics || {} ), enabled: v } } ) ) }
+							label="Collect video analytics"
+						/>
+						<p className="text-xs text-muted mt-2">Data retention (auto-purge) is under <strong>Compliance &amp; privacy</strong>.</p>
+					</Card>
+				) : (
+					<UpsellPanel title="Video analytics" features={ [ 'Audience retention & replay heatmap', 'Completion funnel & per-viewer drill-down', 'Toggle collection site-wide' ] } />
+				)
+			) }
+
 			{ tab === 'sources' && (
 				<div className="max-w-xl space-y-6">
 					<Card className="p-6">
@@ -256,21 +274,38 @@ export default function Settings() {
 
 			{ tab === 'integrations' && (
 				isPro() ? (
-					<Card className="p-6 max-w-xl">
-						<h3 className="font-semibold text-gray-900 mb-1">Mailchimp</h3>
-						<p className="text-sm text-gray-500 mb-4">Send in-player opt-ins to Mailchimp audiences. Paste your API key (Account → Extras → API keys).</p>
-						<Field label="Mailchimp API key" hint="Looks like abc123…-us21. Stored on your site only.">
-							<Input
-								type="password"
-								value={ settings.integrations?.mailchimp?.api_key || '' }
-								onChange={ ( e ) => setSettings( ( s ) => ( { ...s, integrations: { ...( s.integrations || {} ), mailchimp: { ...( s.integrations?.mailchimp || {} ), api_key: e.target.value } } } ) ) }
-								placeholder="xxxxxxxxxxxxxxxx-us21"
+					<div className="max-w-xl space-y-6">
+						<Card className="p-6">
+							<h3 className="font-semibold text-gray-900 mb-1">Mailchimp</h3>
+							<p className="text-sm text-muted mb-4">Send in-player opt-ins to Mailchimp audiences. Paste your API key (Account → Extras → API keys).</p>
+							<Field label="Mailchimp API key" hint="Looks like abc123…-us21. Stored on your site only.">
+								<Input
+									type="password"
+									value={ settings.integrations?.mailchimp?.api_key || '' }
+									onChange={ ( e ) => setSettings( ( s ) => ( { ...s, integrations: { ...( s.integrations || {} ), mailchimp: { ...( s.integrations?.mailchimp || {} ), api_key: e.target.value } } } ) ) }
+									placeholder="xxxxxxxxxxxxxxxx-us21"
+								/>
+							</Field>
+							<p className="text-xs text-muted">Once saved, Mailchimp audiences appear in each video’s Subscribe tab.</p>
+						</Card>
+
+						<Card className="p-6">
+							<h3 className="font-semibold text-gray-900 mb-1">Google Analytics</h3>
+							<p className="text-sm text-muted mb-4">Send player events (video_start, video_complete) to GA4. Uses your existing site tag, or loads one from a measurement ID.</p>
+							<Toggle
+								checked={ !! settings.integrations?.ga?.enabled }
+								onChange={ ( v ) => setSettings( ( s ) => ( { ...s, integrations: { ...( s.integrations || {} ), ga: { ...( s.integrations?.ga || {} ), enabled: v } } } ) ) }
+								label="Send player events to Google Analytics"
 							/>
-						</Field>
-						<p className="text-xs text-gray-400">Once saved, Mailchimp audiences appear in each video’s Subscribe tab.</p>
-					</Card>
+							{ settings.integrations?.ga?.enabled && (
+								<Field label="Measurement ID" hint="Optional — leave blank to use the site's existing GA tag.">
+									<Input value={ settings.integrations?.ga?.measurementId || '' } onChange={ ( e ) => setSettings( ( s ) => ( { ...s, integrations: { ...( s.integrations || {} ), ga: { ...( s.integrations?.ga || {} ), measurementId: e.target.value.trim() } } } ) ) } placeholder="G-XXXXXXXXXX" />
+								</Field>
+							) }
+						</Card>
+					</div>
 				) : (
-					<UpsellPanel title="CRM &amp; email integrations" features={ [ 'Mailchimp audiences', 'GemCRM / FluentCRM', 'In-player opt-in capture' ] } />
+					<UpsellPanel title="CRM &amp; email integrations" features={ [ 'Mailchimp audiences', 'Google Analytics events', 'GemCRM / FluentCRM opt-in capture' ] } />
 				)
 			) }
 

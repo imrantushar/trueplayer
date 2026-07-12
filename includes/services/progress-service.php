@@ -282,17 +282,24 @@ class ProgressService {
 			]
 		);
 
-		// Aggregate engagement: reached (retention) + plays (replay heatmap).
-		self::bump_engagement( $video_id, $new_buckets, $play_tally );
+		// Analytics collection can be turned off site-wide (Settings → Analytics)
+		// — coverage tracking for gating still runs, but the aggregate
+		// engagement/retention/daily tables are left untouched.
+		$analytics = Helper::get_settings_section( 'analytics' );
+		$collect   = ! array_key_exists( 'enabled', $analytics ) || ! empty( $analytics['enabled'] );
+		if ( $collect ) {
+			// Aggregate engagement: reached (retention) + plays (replay heatmap).
+			self::bump_engagement( $video_id, $new_buckets, $play_tally );
 
-		// Daily rollup: views (session starts), completions, watch seconds.
-		self::bump_daily(
-			$video_id,
-			$today,
-			$session_start ? 1 : 0,
-			( $new_completed && ! $prev_completed ) ? 1 : 0,
-			$played_seconds
-		);
+			// Daily rollup: views (session starts), completions, watch seconds.
+			self::bump_daily(
+				$video_id,
+				$today,
+				$session_start ? 1 : 0,
+				( $new_completed && ! $prev_completed ) ? 1 : 0,
+				$played_seconds
+			);
+		}
 
 		// Events.
 		self::maybe_emit_milestones( $video_id, $subject, $prev_percent, $percent );
