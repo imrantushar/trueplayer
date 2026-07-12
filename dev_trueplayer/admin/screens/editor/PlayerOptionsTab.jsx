@@ -39,7 +39,7 @@ const CONTROL_LABELS = {
 
 const DEFAULTS = {
 	controls: { play: true, rewind: true, forward: true, progress: true, currentTime: true, duration: true, mute: true, volume: true, captions: true, settings: true, speed: true, pip: true, fullscreen: true, download: false },
-	behavior: { autoplay: false, autoplayMode: '', muted: false, loop: false, resetOnEnd: false, savePosition: true, hideControls: true, sticky: false, stickyPosition: 'bottom-right', preload: 'metadata', noSkip: false, disableSeek: false, hoverPreview: false },
+	behavior: { autoplay: false, autoplayMode: '', muted: false, loop: false, resetOnEnd: false, savePosition: true, hideControls: true, sticky: false, stickyPosition: 'bottom-right', preload: 'metadata', loadStrategy: 'facade', noSkip: false, disableSeek: false, hoverPreview: false },
 	appearance: { skin: 'default', accent: '#4f46e5', hoverColor: '', bigPlay: true, playButtonStyle: 'circle', roundness: 10, controlBarStyle: 'gradient', aspectRatio: '16:9', captionSize: 100, captionColor: '#ffffff', captionBackground: '#000000', captionOpacity: 75 },
 	speeds: [ 0.5, 0.75, 1, 1.25, 1.5, 2 ],
 	skipSeconds: 10,
@@ -200,6 +200,13 @@ export default function PlayerOptionsTab( { config, patch } ) {
 							<option value="metadata">Metadata only</option>
 							<option value="auto">Auto (full)</option>
 							<option value="none">None</option>
+						</Select>
+					</Field>
+					<Field label="Load strategy" hint="When the player boots — keeps below-the-fold pages fast.">
+						<Select value={ behavior.loadStrategy || 'facade' } onChange={ ( e ) => setSection( 'behavior', { loadStrategy: e.target.value } ) }>
+							<option value="facade">On click (poster until played)</option>
+							<option value="onvisible">When scrolled into view</option>
+							<option value="eager">Immediately on page load</option>
 						</Select>
 					</Field>
 				</div>

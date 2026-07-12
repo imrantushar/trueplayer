@@ -31,7 +31,7 @@ class Pro {
 	];
 
 	/** Premium source types reserved for pro. */
-	const PREMIUM_SOURCES = [ 'bunny', 'mux', 'hls' ];
+	const PREMIUM_SOURCES = [ 'bunny', 'bunnyStorage', 'mux', 'hls' ];
 
 	/** Skins available only with pro. */
 	const PREMIUM_SKINS = [ 'floating', 'ambient' ];

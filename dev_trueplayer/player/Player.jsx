@@ -11,6 +11,7 @@ import Quiz from './components/Quiz';
 import Optin from './components/Optin';
 import Overlay from './components/Overlay';
 import Layers from './components/Layers';
+import TimedContent from './components/TimedContent';
 import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
 
 const containerPipSupported = supportsContainerPiP();
@@ -817,6 +818,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					layers={ layers }
 					current={ ui.current }
 					videoId={ videoId }
+					preview={ preview }
 					onOptin={ ( { email } ) => ( preview ? Promise.resolve() : rest.post( 'optin', { video: videoId, email } ) ) }
 				/>
 			) }
@@ -980,6 +982,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	return (
 		<>
 			{ content }
+			{ /* Timed content region (pro): a block below the player that swaps
+			     with the video timeline. Stays in flow under the stage. */ }
+			{ gatingOn && <TimedContent config={ config } current={ ui.current } /> }
 			{ /* The stage (video/iframe + controls) itself lives in the PiP
 			     window once open — a portal, not a copy, so it's the exact same
 			     live provider/DOM node, not a re-mounted one. */ }

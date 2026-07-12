@@ -1,4 +1,5 @@
-import { useState } from '@wordpress/element';
+import { useState, useEffect, useRef } from '@wordpress/element';
+import { passesConditions } from '../rules';
 
 /**
  * Interactive layers (pro) — timed, positioned elements over the picture:
@@ -103,11 +104,53 @@ function FormLayer( { layer, videoId, onSubmit } ) {
 	);
 }
 
-export default function Layers( { layers, current, videoId, onOptin } ) {
-	const due = ( layers || [] ).filter( ( l ) => active( l, current ) );
+export default function Layers( { layers, current, videoId, onOptin, viewer, preview } ) {
+	// Per-viewer facts for conditional rules (loggedIn / CRM / etc.). Fetched
+	// once; falls back to the localized login flag so URL/login rules still work.
+	const [ facts, setFacts ] = useState(
+		viewer || { loggedIn: !! ( window.TruePlayerGlobal && window.TruePlayerGlobal.is_login ), isCrmContact: false, crmTags: [], crmLists: [] }
+	);
+	// Layer interaction state (seen / completed / email submitted) for rules.
+	const stateRef = useRef( { seen: {}, completed: {}, emailSubmitted: false } );
+	const hasConditions = ( layers || [] ).some( ( l ) => l.conditions && l.conditions.rules && l.conditions.rules.length );
+
+	useEffect( () => {
+		if ( viewer || preview || ! hasConditions ) {
+			return;
+		}
+		const g = window.TruePlayerGlobal || {};
+		fetch( `${ g.rest_url }${ g.namespace }rules/context`, { headers: { 'X-WP-Nonce': g.nonce } } )
+			.then( ( r ) => ( r.ok ? r.json() : null ) )
+			.then( ( data ) => data && setFacts( ( f ) => ({ ...f, ...data }) ) )
+			.catch( () => {} );
+	}, [ hasConditions, viewer, preview ] );
+
+	const ctx = { viewer: facts, url: new URLSearchParams( window.location.search ), layerState: stateRef.current };
+
+	const due = ( layers || [] ).filter( ( l ) => {
+		if ( ! active( l, current ) ) {
+			return false;
+		}
+		return passesConditions( l.conditions, ctx );
+	} );
+
+	// Record that these layers have been seen (for layer_seen rules on others).
+	due.forEach( ( l ) => {
+		stateRef.current.seen[ l.id ] = true;
+	} );
+
 	if ( ! due.length ) {
 		return null;
 	}
+
+	const handleOptin = async ( payload ) => {
+		stateRef.current.emailSubmitted = true;
+		if ( payload && payload.layerId ) {
+			stateRef.current.completed[ payload.layerId ] = true;
+		}
+		return onOptin ? onOptin( payload ) : undefined;
+	};
+
 	return (
 		<div className="tp-layers">
 			{ due.map( ( l ) => {
@@ -119,7 +162,7 @@ export default function Layers( { layers, current, videoId, onOptin } ) {
 					case 'shortcode':
 						return <ShortcodeLayer key={ l.id } layer={ l } />;
 					case 'form':
-						return <FormLayer key={ l.id } layer={ l } videoId={ videoId } onSubmit={ onOptin } />;
+						return <FormLayer key={ l.id } layer={ l } videoId={ videoId } onSubmit={ handleOptin } />;
 					default:
 						return null;
 				}

@@ -17,12 +17,30 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class PostType {
 
+	const VIDEO_TAXONOMY = 'tp_video_tag';
+
 	public static function init() {
 		$self = new self();
 		add_action( 'init', [ $self, 'register_post_types' ] );
 	}
 
 	public function register_post_types() {
+		// Media tagging — organizes a growing library. Flat (non-hierarchical),
+		// admin-managed through the React Library screen, exposed to REST.
+		register_taxonomy(
+			self::VIDEO_TAXONOMY,
+			TRUEPLAYER_VIDEO_POST_TYPE,
+			[
+				'label'             => __( 'Video Tags', 'trueplayer' ),
+				'public'            => false,
+				'hierarchical'      => false,
+				'show_ui'           => false,
+				'show_in_rest'      => true,
+				'rest_base'         => 'video-tags',
+				'show_admin_column' => false,
+			]
+		);
+
 		register_post_type(
 			TRUEPLAYER_VIDEO_POST_TYPE,
 			[
@@ -33,6 +51,7 @@ class PostType {
 				'show_in_rest'        => true,
 				'rest_base'           => 'videos',
 				'supports'            => [ 'title', 'author', 'custom-fields' ],
+				'taxonomies'          => [ self::VIDEO_TAXONOMY ],
 				'capability_type'     => 'post',
 				'map_meta_cap'        => true,
 				'exclude_from_search' => true,

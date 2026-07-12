@@ -31,6 +31,7 @@ export const CUSTOMIZE_DEFAULTS = {
 		sticky: false, // float on scroll-out
 		stickyPosition: 'bottom-right',
 		preload: 'metadata', // auto | metadata | none
+		loadStrategy: 'facade', // facade (click-to-load) | eager (boot on load) | onvisible (boot in view)
 		noSkip: false, // block seeking past the furthest point watched (rewind ok)
 		disableSeek: false, // lock the scrubber entirely — no click or drag, forward or back
 		hoverPreview: false, // muted inline preview when hovering the poster facade (direct-file sources)

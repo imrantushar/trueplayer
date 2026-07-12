@@ -8,6 +8,8 @@ const TYPES = [
 	{ value: 'vimeo', label: 'Vimeo' },
 	{ value: 'url', label: 'External URL (mp4/webm)' },
 	{ value: 'bunny', label: 'Bunny.net Stream', pro: true },
+	{ value: 'bunnyStorage', label: 'Bunny.net Storage (file)', pro: true },
+	{ value: 'mux', label: 'Mux', pro: true },
 	{ value: 'hls', label: 'HLS stream (.m3u8)', pro: true },
 ];
 
@@ -47,8 +49,20 @@ export default function SourceTab( { config, patch } ) {
 				</>
 			) }
 
-			{ [ 'hls', 'youtube', 'vimeo', 'url' ].includes( source.type ) && (
-				<Field label={ source.type === 'youtube' || source.type === 'vimeo' ? 'Video URL or ID' : 'Media URL' }>
+			{ source.type === 'mux' && (
+				<Field label="Mux playback ID" hint="From your Mux asset. Or paste a full signed .m3u8 URL below.">
+					<Input value={ source.playbackId || '' } onChange={ ( e ) => set( { playbackId: e.target.value.trim() } ) } placeholder="e.g. a4nOgmxGWg6gULfcBbAa00…" />
+				</Field>
+			) }
+
+			{ source.type === 'bunnyStorage' && (
+				<Field label="File URL" hint="A direct mp4/webm or .m3u8 URL from your Bunny Storage pull zone.">
+					<Input value={ source.src || '' } onChange={ ( e ) => set( { src: e.target.value.trim() } ) } placeholder="https://your-zone.b-cdn.net/path/video.mp4" />
+				</Field>
+			) }
+
+			{ [ 'hls', 'youtube', 'vimeo', 'url', 'mux' ].includes( source.type ) && ! ( source.type === 'mux' && ! source.src ) && (
+				<Field label={ source.type === 'youtube' || source.type === 'vimeo' ? 'Video URL or ID' : ( source.type === 'mux' ? 'Signed playlist URL (optional)' : 'Media URL' ) }>
 					<Input value={ source.src || '' } onChange={ ( e ) => set( { src: e.target.value } ) } placeholder={ source.type === 'youtube' ? 'https://youtube.com/watch?v=…' : 'https://…' } />
 				</Field>
 			) }

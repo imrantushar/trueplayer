@@ -16,6 +16,72 @@ const POSITIONS = [
 	[ 'bottom-left', 'Bottom left' ], [ 'bottom-center', 'Bottom center' ], [ 'bottom-right', 'Bottom right' ],
 ];
 
+const RULE_FIELDS = [
+	[ 'logged_in', 'Viewer is logged in' ],
+	[ 'crm_contact', 'Is a CRM contact' ],
+	[ 'crm_tag', 'Has CRM tag' ],
+	[ 'crm_list', 'In CRM list' ],
+	[ 'email_submitted', 'Has submitted email' ],
+	[ 'url_param', 'URL parameter' ],
+	[ 'layer_seen', 'Has seen layer (id)' ],
+	[ 'layer_completed', 'Completed layer (id)' ],
+];
+const BOOL_FIELDS = [ 'logged_in', 'crm_contact', 'email_submitted' ];
+
+// Compact per-layer conditional-rules builder (pro). Shows the layer only to
+// viewers matching the rules — mirrors TruePlayer\Services\Rules.
+function ConditionsEditor( { value, onChange } ) {
+	const group = value && value.rules ? value : { match: 'all', rules: [] };
+	const set = ( partial ) => onChange( { ...group, ...partial } );
+	const setRule = ( idx, partial ) =>
+		set( { rules: group.rules.map( ( r, i ) => ( i === idx ? { ...r, ...partial } : r ) ) } );
+	const addRule = () => set( { rules: [ ...group.rules, { field: 'logged_in', operator: 'is', value: 'yes' } ] } );
+	const removeRule = ( idx ) => set( { rules: group.rules.filter( ( _, i ) => i !== idx ) } );
+
+	return (
+		<div className="mt-4 border-t border-line pt-4">
+			<div className="flex items-center justify-between mb-2">
+				<span className="text-xs font-semibold text-ink uppercase tracking-wide">Display rules</span>
+				{ group.rules.length > 1 && (
+					<Select value={ group.match } onChange={ ( e ) => set( { match: e.target.value } ) } className="w-auto text-xs">
+						<option value="all">Match all</option>
+						<option value="any">Match any</option>
+					</Select>
+				) }
+			</div>
+			{ ! group.rules.length && <p className="text-xs text-gray-400 mb-2">Always shown. Add a rule to target specific viewers.</p> }
+			{ group.rules.map( ( r, idx ) => {
+				const isBool = BOOL_FIELDS.includes( r.field );
+				return (
+					<div key={ idx } className="flex flex-wrap gap-2 mb-2 items-center">
+						<Select value={ r.field } onChange={ ( e ) => setRule( idx, { field: e.target.value } ) } className="w-auto">
+							{ RULE_FIELDS.map( ( [ v, label ] ) => <option key={ v } value={ v }>{ label }</option> ) }
+						</Select>
+						<Select value={ r.operator } onChange={ ( e ) => setRule( idx, { operator: e.target.value } ) } className="w-auto">
+							<option value="is">is</option>
+							<option value="is_not">is not</option>
+							{ ! isBool && <option value="contains">contains</option> }
+						</Select>
+						{ r.field === 'url_param' && (
+							<Input value={ r.key || '' } onChange={ ( e ) => setRule( idx, { key: e.target.value } ) } placeholder="param key" className="w-28" />
+						) }
+						{ isBool ? (
+							<Select value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } className="w-auto">
+								<option value="yes">yes</option>
+								<option value="no">no</option>
+							</Select>
+						) : (
+							<Input value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } placeholder="value" className="w-32" />
+						) }
+						<Button variant="ghost" size="sm" onClick={ () => removeRule( idx ) }>×</Button>
+					</div>
+				);
+			} ) }
+			<Button variant="ghost" size="sm" onClick={ addRule }>+ Add rule</Button>
+		</div>
+	);
+}
+
 const newLayer = ( type ) => {
 	const base = { id: uid(), type, start: 0, end: '' };
 	switch ( type ) {
@@ -122,6 +188,8 @@ export default function LayersTab( { config, patch } ) {
 							<Field label="Button label"><Input value={ l.buttonLabel || '' } onChange={ ( e ) => setOne( i, { buttonLabel: e.target.value } ) } placeholder="Subscribe" /></Field>
 						</div>
 					) }
+
+					<ConditionsEditor value={ l.conditions } onChange={ ( c ) => setOne( i, { conditions: c } ) } />
 				</Card>
 			) ) }
 		</div>

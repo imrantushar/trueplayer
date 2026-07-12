@@ -48,6 +48,37 @@ export default function AppearanceTab( { config, patch } ) {
 		patch( { source: { ...source, subtitles: next } } );
 	};
 
+	// Multi-track subtitle editing.
+	const setTracks = ( next ) => patch( { source: { ...source, subtitles: next } } );
+	const setTrack = ( i, partial ) => setTracks( subtitles.map( ( t, idx ) => ( idx === i ? { ...t, ...partial } : t ) ) );
+	const addTrack = () => setTracks( [ ...subtitles, { label: 'English', srclang: 'en', src: '', default: subtitles.length === 0 } ] );
+	const removeTrack = ( i ) => setTracks( subtitles.filter( ( _, idx ) => idx !== i ) );
+	const makeDefault = ( i ) => setTracks( subtitles.map( ( t, idx ) => ( { ...t, default: idx === i } ) ) );
+
+	const [ ytImporting, setYtImporting ] = useState( false );
+	const importYoutube = async () => {
+		setYtImporting( true );
+		setNote( '' );
+		try {
+			const g = window.TruePlayerGlobal || {};
+			const res = await fetch( `${ g.rest_url }${ g.namespace }subtitles/youtube-import`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': g.nonce },
+				body: JSON.stringify( { src: source.src || '', lang: 'en' } ),
+			} );
+			const data = await res.json();
+			if ( data && data.url ) {
+				setTracks( [ ...subtitles, { label: data.label || 'English (YouTube)', srclang: data.srclang || 'en', src: data.url, default: subtitles.length === 0 } ] );
+				setNote( 'Imported captions from YouTube.' );
+			} else {
+				setNote( data && data.message ? data.message : 'No captions available for this video.' );
+			}
+		} catch ( e ) {
+			setNote( 'Import failed.' );
+		}
+		setYtImporting( false );
+	};
+
 	const sortChapters = ( list ) => list.slice().sort( ( a, b ) => a.at - b.at );
 	const setChapter = ( i, partial ) => patch( { chapters: chapters.map( ( c, idx ) => ( idx === i ? { ...c, ...partial } : c ) ) } );
 	const addChapter = () => patch( { chapters: [ ...chapters, { at: 0, label: '' } ] } );
@@ -121,14 +152,41 @@ export default function AppearanceTab( { config, patch } ) {
 				</Card>
 
 				<Card className="p-6">
-					<h3 className="font-semibold text-gray-900 mb-4">Captions / transcript</h3>
-					<Field label="Subtitle file (WebVTT)" hint="Powers the on-screen captions and the in-player transcript panel.">
-						<div className="flex gap-2">
-							<Input value={ captionUrl } onChange={ ( e ) => setCaptions( e.target.value ) } placeholder="https://…/captions.vtt" />
-							<Button variant="ghost" onClick={ () => pickMedia( '', ( url ) => setCaptions( url ) ) }>Media library</Button>
+					<div className="flex items-center justify-between mb-4">
+						<h3 className="font-semibold text-gray-900">Captions &amp; subtitles</h3>
+						{ source.type === 'youtube' && (
+							<Button variant="ghost" size="sm" onClick={ importYoutube } disabled={ ytImporting }>
+								{ ytImporting ? 'Importing…' : 'Import from YouTube' }
+							</Button>
+						) }
+					</div>
+
+					{ ! subtitles.length && <p className="text-sm text-gray-500 mb-3">Add one or more WebVTT tracks — powers on-screen captions and the transcript panel.</p> }
+
+					{ subtitles.map( ( t, i ) => (
+						<div key={ i } className="border border-line rounded-card p-4 mb-3">
+							<div className="grid md:grid-cols-3 gap-x-4">
+								<Field label="Label"><Input value={ t.label || '' } onChange={ ( e ) => setTrack( i, { label: e.target.value } ) } placeholder="English" /></Field>
+								<Field label="Language code"><Input value={ t.srclang || '' } onChange={ ( e ) => setTrack( i, { srclang: e.target.value } ) } placeholder="en" /></Field>
+								<Field label="Default">
+									<label className="flex items-center gap-2 h-10 text-sm">
+										<input type="radio" name="tp-default-track" checked={ !! t.default } onChange={ () => makeDefault( i ) } /> Show by default
+									</label>
+								</Field>
+							</div>
+							<Field label="WebVTT file">
+								<div className="flex gap-2">
+									<Input value={ t.src || '' } onChange={ ( e ) => setTrack( i, { src: e.target.value } ) } placeholder="https://…/captions.vtt" />
+									<Button variant="ghost" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Media library</Button>
+								</div>
+							</Field>
+							<div className="text-right"><Button variant="danger" size="sm" onClick={ () => removeTrack( i ) }>Remove track</Button></div>
 						</div>
-					</Field>
-					<p className="text-xs text-gray-400">Works with self-hosted, HLS and Bunny videos. YouTube/Vimeo embeds use their own captions.</p>
+					) ) }
+
+					<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
+					{ note && <p className="text-xs text-brand-600 mt-2">{ note }</p> }
+					<p className="text-xs text-gray-400 mt-2">Works with self-hosted, HLS and Bunny videos. YouTube/Vimeo embeds also use their own captions.</p>
 				</Card>
 			</div>
 

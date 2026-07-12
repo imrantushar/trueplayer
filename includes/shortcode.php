@@ -80,18 +80,36 @@ class Shortcode {
 		$ap_mode  = $behavior['autoplayMode'] ?? '';
 		$autoplay = $ap_mode ? 'off' !== $ap_mode : ! empty( $behavior['autoplay'] );
 
+		// Load strategy — when the real player boots:
+		//   facade    (default): a lightweight poster; nothing loads until click.
+		//   eager     : boot the player on page load (no facade, no auto-play).
+		//   onvisible : boot when scrolled into view (facade until then).
+		// Autoplay forces eager (there is nothing to wait for).
+		$strategy = in_array( $behavior['loadStrategy'] ?? '', [ 'facade', 'eager', 'onvisible' ], true )
+			? $behavior['loadStrategy']
+			: 'facade';
+		if ( $autoplay ) {
+			$strategy = 'eager';
+		}
+		$use_facade = 'eager' !== $strategy;
+
 		// Dynamic description rendered under the player.
 		$description = '';
 		if ( ! empty( $config['description'] ) && is_string( $config['description'] ) ) {
 			$description = sprintf( '<div class="tp-description">%s</div>', wp_kses_post( wpautop( $config['description'] ) ) );
 		}
 
+		$attrs = sprintf( ' data-tp-load="%s"', esc_attr( $strategy ) );
+		if ( $autoplay ) {
+			$attrs .= ' data-tp-autoplay="1"';
+		}
+
 		return self::video_schema( $video_id, $config ) . self::custom_css( $video_id, $config ) . sprintf(
 			'<div class="trueplayer-mount tp-v%1$d" data-trueplayer data-video-id="%1$d"%4$s><script type="application/json" class="trueplayer-config">%2$s</script>%3$s</div>%5$s',
 			$video_id,
 			$json, // already JSON-encoded; rendered inside a JSON script tag.
-			$autoplay ? '' : self::render_facade( $config ),
-			$autoplay ? ' data-tp-autoplay="1"' : '',
+			$use_facade ? self::render_facade( $config ) : '',
+			$attrs,
 			$description
 		);
 	}
@@ -106,6 +124,7 @@ class Shortcode {
 		$config = Helper::enforce_pro_limits( $config );
 		if ( Pro::active() ) {
 			$config = self::prepare_layers( $config );
+			$config = self::prepare_timed_content( $config );
 			$config = self::prepare_watermark( $config );
 			$config = PrivateVideo::prepare_source( $config, $video_id );
 		}
@@ -128,6 +147,24 @@ class Shortcode {
 			}
 		}
 		unset( $layer );
+		return $config;
+	}
+
+	/**
+	 * Pre-render timed-content segments server-side: shortcodes resolved, HTML
+	 * sanitized, exposed as `html` so the client renders trusted markup and
+	 * never runs shortcodes itself. The raw `content` is dropped from output.
+	 */
+	private static function prepare_timed_content( array $config ): array {
+		if ( empty( $config['timedContent']['items'] ) || ! is_array( $config['timedContent']['items'] ) ) {
+			return $config;
+		}
+		foreach ( $config['timedContent']['items'] as &$item ) {
+			$content      = (string) ( $item['content'] ?? '' );
+			$item['html'] = '' !== $content ? do_shortcode( wp_kses_post( $content ) ) : '';
+			unset( $item['content'] );
+		}
+		unset( $item );
 		return $config;
 	}
 

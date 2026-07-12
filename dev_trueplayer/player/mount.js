@@ -142,9 +142,29 @@ export function mountPlayers() {
 
 		const facade = node.querySelector( '.tp-facade' );
 		const autoplay = node.dataset.tpAutoplay === '1';
+		const strategy = node.dataset.tpLoad || ( facade ? 'facade' : 'eager' );
+		const type = data.config && data.config.source && data.config.source.type;
+
+		// on-visible: boot (without playing) once the player scrolls into view,
+		// so below-the-fold videos don't load their media on first paint.
+		if ( facade && ! autoplay && strategy === 'onvisible' && 'IntersectionObserver' in window ) {
+			warm( type );
+			const io = new IntersectionObserver(
+				( entries, obs ) => {
+					entries.forEach( ( entry ) => {
+						if ( entry.isIntersecting && ! node.dataset.tpBooted ) {
+							obs.disconnect();
+							bootPlayer( node, data, videoId, false );
+						}
+					} );
+				},
+				{ rootMargin: '200px' }
+			);
+			io.observe( node );
+			return;
+		}
 
 		if ( facade && ! autoplay ) {
-			const type = data.config && data.config.source && data.config.source.type;
 			let warmed = false;
 			const doWarm = () => {
 				if ( ! warmed ) {

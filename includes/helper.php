@@ -106,8 +106,16 @@ class Helper {
 			$config['customize']['appearance']['skin'] = 'default';
 		}
 		// Pro-only config never reaches the free frontend.
-		unset( $config['layers'], $config['protection'] );
+		unset( $config['layers'], $config['protection'], $config['timedContent'] );
 		return $config;
+	}
+
+	/**
+	 * The product name shown in the admin and any attribution. White-label (pro)
+	 * hooks `trueplayer/brand_name` to override it.
+	 */
+	public static function brand_name(): string {
+		return (string) apply_filters( 'trueplayer/brand_name', 'TruePlayer' );
 	}
 
 	/** Recursive array merge where $over wins; list (numeric) arrays are replaced. */
