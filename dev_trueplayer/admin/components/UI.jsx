@@ -115,14 +115,14 @@ export function SectionTitle( { title, description } ) {
 
 export function Toggle( { checked, onChange, label, disabled = false } ) {
 	return (
-		<label className={ `flex items-center gap-3 mb-3.5 select-none ${ disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer' }` }>
+		<label className={ `flex items-start gap-3 mb-3.5 select-none ${ disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer' }` }>
 			<span
 				onClick={ () => ! disabled && onChange( ! checked ) }
-				className={ `relative inline-block w-[38px] h-[22px] rounded-full transition-colors ${ checked ? 'bg-brand-500' : 'bg-gray-300' }` }
+				className={ `relative inline-block shrink-0 mt-px w-[38px] h-[22px] rounded-full transition-colors ${ checked ? 'bg-brand-500' : 'bg-gray-300' }` }
 			>
 				<span className={ `absolute top-[3px] left-[3px] w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${ checked ? 'translate-x-4' : '' }` } />
 			</span>
-			{ label && <span className="text-[13px] text-ink">{ label }</span> }
+			{ label && <span className="text-[13px] text-ink leading-5">{ label }</span> }
 		</label>
 	);
 }

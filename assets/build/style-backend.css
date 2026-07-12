@@ -275,6 +275,9 @@
 .mt-4 {
 		margin-top: 1rem;
 }
+.mt-px {
+		margin-top: 1px;
+}
 .block {
 		display: block;
 }
