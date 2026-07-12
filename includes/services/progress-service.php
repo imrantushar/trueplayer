@@ -163,6 +163,13 @@ class ProgressService {
 			return self::state( $video_id, $subject );
 		}
 
+		// Guest tracking can be disabled site-wide (privacy) — then guests play
+		// freely but nothing is stored for them.
+		$enf = Helper::get_settings_section( 'enforcement' );
+		if ( 'guest' === $subject->type && array_key_exists( 'trackGuests', $enf ) && ! $enf['trackGuests'] ) {
+			return self::state( $video_id, $subject );
+		}
+
 		$duration   = max( 0, (int) $duration );
 		$media_time = max( 0, (int) $media_time );
 		$row        = self::get_row( $video_id, $subject );
@@ -327,18 +334,22 @@ class ProgressService {
 	public static function gating_config( $video_id ) {
 		$config = Helper::get_video_config( $video_id );
 		$gating = isset( $config['gating'] ) && is_array( $config['gating'] ) ? $config['gating'] : [];
+
+		// Site-wide enforcement policy provides the defaults; a video's own
+		// gating config overrides any of them.
+		$enf = Helper::get_settings_section( 'enforcement' );
 		$gating = wp_parse_args(
 			$gating,
 			[
-				'completionThreshold' => 90,
-				'antiSkip'            => true,
-				'maxAttempts'         => 3,
+				'completionThreshold' => isset( $enf['completionThreshold'] ) ? (int) $enf['completionThreshold'] : 90,
+				'antiSkip'            => array_key_exists( 'antiSkip', $enf ) ? (bool) $enf['antiSkip'] : true,
+				'maxAttempts'         => isset( $enf['maxAttempts'] ) ? (int) $enf['maxAttempts'] : 3,
 				'onFail'              => 'lock_retry_after_rewatch',
 				'checkpoints'         => [],
 				'finalQuiz'           => null,
-				'requireLoginForGate' => false,
-				'strict'              => false, // must-watch: 100% coverage, no skipping
-				'availableFrom'       => '',    // drip: ISO/date string; empty = always available
+				'requireLoginForGate' => array_key_exists( 'requireLogin', $enf ) ? (bool) $enf['requireLogin'] : false,
+				'strict'              => array_key_exists( 'strict', $enf ) ? (bool) $enf['strict'] : false, // must-watch: 100% coverage, no skipping
+				'availableFrom'       => '', // drip: ISO/date string; empty = always available
 			]
 		);
 

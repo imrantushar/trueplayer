@@ -14,7 +14,7 @@
 	:where( .tp-admin ) ::after {
 		border-width: 0;
 		border-style: solid;
-		border-color: #dedede;
+		border-color: #e5e7eb;
 	}
 	:where( .tp-admin button ) {
 		background-color: transparent;
@@ -27,14 +27,34 @@
 	}
 }
 
-/* StoreEngine-inspired admin shell: Poppins, crisp cards, calm surface. */
+/* GemCRM-inspired admin shell: native system font, border-only surfaces. */
 .tp-admin {
-	font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-	--tp-primary: #008dff;
-	--tp-ink: #2c3135;
-	--tp-line: #dedede;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	--tp-primary: #006BFF;
+	--tp-primary-light: #E3E7FF;
+	--tp-ink: #1f2937;
+	--tp-label: #374151;
+	--tp-line: #e5e7eb;
+	--tp-divider: #f3f4f6;
+	--tp-body: #F6F7F8;
+	--tp-placeholder: #A2ADB9;
+	--tp-muted: #6b7280;
+	--tp-success: #00AD6B;
+	--tp-error: #F15B50;
+	--tp-warning: #FDB022;
+	--tp-shadow: none;
 	color: var(--tp-ink);
 	font-size: 14px;
+	line-height: 20px;
+}
+
+/* Calm page surface behind the app (GemCRM body background). */
+.tp-admin,
+body.toplevel_page_trueplayer #wpbody-content,
+body[class*="page_trueplayer"] #wpbody-content {
+	background: var(--tp-body);
 }
 
 .tp-admin *,

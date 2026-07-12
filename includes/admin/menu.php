@@ -31,7 +31,6 @@ class Menu {
 		$subs = [
 			$slug                => __( 'Dashboard', 'trueplayer' ),
 			$slug . '-videos'    => __( 'Videos', 'trueplayer' ),
-			$slug . '-playlists' => __( 'Playlists', 'trueplayer' ),
 			$slug . '-presets'   => __( 'Presets', 'trueplayer' ),
 			$slug . '-settings'  => __( 'Settings', 'trueplayer' ),
 		];

@@ -157,7 +157,7 @@ export default function Editor( { id, onBack } ) {
 
 					<div className="mb-6">
 						<input
-							className="w-full text-2xl font-bold text-gray-900 bg-transparent outline-none border-b border-transparent focus:border-line"
+							className="w-full max-w-md text-2xl font-bold text-gray-900 bg-transparent outline-none border-b border-transparent focus:border-line"
 							value={ video.title }
 							onChange={ ( e ) => setTitle( e.target.value ) }
 						/>

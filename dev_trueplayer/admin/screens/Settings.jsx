@@ -8,12 +8,18 @@ import PlayerOptionsTab from './editor/PlayerOptionsTab';
 
 const SUBTABS = [
 	{ key: 'defaults', label: 'Player defaults' },
+	{ key: 'enforcement', label: 'Enforcement' },
+	{ key: 'compliance', label: 'Compliance & privacy' },
 	{ key: 'integrations', label: 'Integrations' },
 	{ key: 'whitelabel', label: 'White-label' },
 	{ key: 'webhooks', label: 'Global webhooks' },
 	{ key: 'logs', label: 'Webhook logs' },
 	{ key: 'license', label: 'License' },
 ];
+
+// Global defaults so a control is never uncontrolled before first save.
+const ENFORCEMENT_DEFAULTS = { completionThreshold: 90, antiSkip: true, strict: false, maxAttempts: 3, requireLogin: false, trackGuests: true };
+const COMPLIANCE_DEFAULTS = { certIssuer: '', certLogo: '', certSignature: '', certFooter: '', retentionEnabled: false, retentionDays: 365 };
 
 function WebhookLogs() {
 	const [ rows, setRows ] = useState( null );
@@ -79,19 +85,24 @@ export default function Settings() {
 				</div>
 			</div>
 
-			<div className="flex gap-1 border-b border-line mb-6">
-				{ SUBTABS.map( ( t ) => (
-					<button
-						key={ t.key }
-						onClick={ () => setTab( t.key ) }
-						className={ `px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
-							tab === t.key ? 'border-brand-500 text-brand-700' : 'border-transparent text-gray-500 hover:text-gray-800'
-						}` }
-					>
-						{ t.label }
-					</button>
-				) ) }
-			</div>
+			<div className="flex gap-6 items-start">
+				<aside className="w-52 shrink-0">
+					<nav className="space-y-1 sticky top-6">
+						{ SUBTABS.map( ( t ) => (
+							<button
+								key={ t.key }
+								onClick={ () => setTab( t.key ) }
+								className={ `flex w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${
+									tab === t.key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'
+								}` }
+							>
+								{ t.label }
+							</button>
+						) ) }
+					</nav>
+				</aside>
+
+				<div className="flex-1 min-w-0">
 
 			{ tab === 'defaults' && (
 				<>
@@ -103,6 +114,89 @@ export default function Settings() {
 						patch={ ( partial ) => setSettings( ( s ) => ( { ...s, ...partial } ) ) }
 					/>
 				</>
+			) }
+
+			{ tab === 'enforcement' && (
+				isPro() ? (
+					<Card className="p-6 max-w-xl">
+						<h3 className="font-semibold text-gray-900 mb-1">Enforcement defaults</h3>
+						<p className="text-sm text-muted mb-4">The watch-verification &amp; gating policy applied to new videos. Any video can override these in its own <strong>Questions &amp; gating</strong> tab.</p>
+						{ ( () => {
+							const enf = { ...ENFORCEMENT_DEFAULTS, ...( settings.enforcement || {} ) };
+							const setEnf = ( partial ) => setSettings( ( s ) => ( { ...s, enforcement: { ...ENFORCEMENT_DEFAULTS, ...( s.enforcement || {} ), ...partial } } ) );
+							return (
+								<>
+									<div className="grid grid-cols-2 gap-4">
+										<Field label="Completion threshold (%)" hint="Coverage required to count as 'watched'.">
+											<Input type="number" min="1" max="100" value={ enf.completionThreshold } onChange={ ( e ) => setEnf( { completionThreshold: parseInt( e.target.value, 10 ) || 0 } ) } />
+										</Field>
+										<Field label="Max quiz attempts" hint="Before the video locks.">
+											<Input type="number" min="1" value={ enf.maxAttempts } onChange={ ( e ) => setEnf( { maxAttempts: parseInt( e.target.value, 10 ) || 1 } ) } />
+										</Field>
+									</div>
+									<Toggle checked={ enf.antiSkip } onChange={ ( v ) => setEnf( { antiSkip: v } ) } label="Anti-skip (block seeking past unwatched parts)" />
+									<Toggle checked={ enf.strict } onChange={ ( v ) => setEnf( { strict: v } ) } label="Must-watch (strict): force 100% coverage + anti-skip" />
+									<Toggle checked={ enf.requireLogin } onChange={ ( v ) => setEnf( { requireLogin: v } ) } label="Require login to watch (reliable per-person tracking)" />
+									<Toggle checked={ enf.trackGuests } onChange={ ( v ) => setEnf( { trackGuests: v } ) } label="Track logged-out guests (cookie-based, best-effort)" />
+								</>
+							);
+						} )() }
+					</Card>
+				) : (
+					<UpsellPanel title="Enforcement policy" features={ [ 'Site-wide watch-verification defaults', 'Anti-skip & must-watch (strict) mode', 'Quiz lock-on-fail & login gating' ] } />
+				)
+			) }
+
+			{ tab === 'compliance' && (
+				isPro() ? (
+					<div className="max-w-xl space-y-6">
+						<Card className="p-6">
+							<h3 className="font-semibold text-gray-900 mb-1">Certificate branding</h3>
+							<p className="text-sm text-muted mb-4">Shown on completion certificates &amp; the public verification page.</p>
+							{ ( () => {
+								const c = { ...COMPLIANCE_DEFAULTS, ...( settings.compliance || {} ) };
+								const setC = ( partial ) => setSettings( ( s ) => ( { ...s, compliance: { ...COMPLIANCE_DEFAULTS, ...( s.compliance || {} ), ...partial } } ) );
+								return (
+									<>
+										<Field label="Issuer name" hint="Defaults to your site name.">
+											<Input value={ c.certIssuer } onChange={ ( e ) => setC( { certIssuer: e.target.value } ) } placeholder={ ( window.TruePlayerGlobal && window.TruePlayerGlobal.site_name ) || 'Your organization' } />
+										</Field>
+										<Field label="Logo URL">
+											<Input value={ c.certLogo } onChange={ ( e ) => setC( { certLogo: e.target.value } ) } placeholder="https://…/logo.png" />
+										</Field>
+										<Field label="Signature line" hint="e.g. a name / title printed under the certificate.">
+											<Input value={ c.certSignature } onChange={ ( e ) => setC( { certSignature: e.target.value } ) } placeholder="Jane Doe, Head of Training" />
+										</Field>
+										<Field label="Footer note">
+											<Input value={ c.certFooter } onChange={ ( e ) => setC( { certFooter: e.target.value } ) } placeholder="This certificate can be verified online." />
+										</Field>
+									</>
+								);
+							} )() }
+						</Card>
+
+						<Card className="p-6">
+							<h3 className="font-semibold text-gray-900 mb-1">Data retention</h3>
+							<p className="text-sm text-muted mb-4">Automatically purge watch &amp; quiz records older than a set age — for privacy &amp; GDPR compliance.</p>
+							{ ( () => {
+								const c = { ...COMPLIANCE_DEFAULTS, ...( settings.compliance || {} ) };
+								const setC = ( partial ) => setSettings( ( s ) => ( { ...s, compliance: { ...COMPLIANCE_DEFAULTS, ...( s.compliance || {} ), ...partial } } ) );
+								return (
+									<>
+										<Toggle checked={ c.retentionEnabled } onChange={ ( v ) => setC( { retentionEnabled: v } ) } label="Auto-purge old records" />
+										{ c.retentionEnabled && (
+											<Field label="Keep records for (days)" hint="Progress + quiz attempts past this age are deleted daily.">
+												<Input type="number" min="7" value={ c.retentionDays } onChange={ ( e ) => setC( { retentionDays: parseInt( e.target.value, 10 ) || 0 } ) } />
+											</Field>
+										) }
+									</>
+								);
+							} )() }
+						</Card>
+					</div>
+				) : (
+					<UpsellPanel title="Compliance &amp; privacy" features={ [ 'White-labelled completion certificates', 'Public verification page', 'Data-retention auto-purge (GDPR)' ] } />
+				)
 			) }
 
 			{ tab === 'integrations' && (
@@ -185,6 +279,8 @@ export default function Settings() {
 					) }
 				</Card>
 			) }
+				</div>
+			</div>
 		</div>
 	);
 }

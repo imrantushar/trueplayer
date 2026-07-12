@@ -71,13 +71,8 @@ class Assets {
 
 		$deps = $this->load_asset_deps( 'backend' );
 
-		// StoreEngine-style typography.
-		wp_enqueue_style(
-			'trueplayer-font-poppins',
-			'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap',
-			[],
-			null
-		);
+		// GemCRM uses the native system font stack (no blocking webfont request);
+		// the family is set on `.tp-admin` in admin/style.css.
 
 		wp_enqueue_style(
 			self::BACKEND_STYLE_HANDLE,

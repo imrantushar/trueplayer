@@ -133,7 +133,7 @@ export default function Analytics( { id, onBack } ) {
 	};
 	const deviceData = {
 		labels: data.devices.map( ( d ) => d.device ),
-		datasets: [ { data: data.devices.map( ( d ) => d.n ), backgroundColor: [ '#008dff', '#66bcff', '#99d3ff', '#cce9ff' ] } ],
+		datasets: [ { data: data.devices.map( ( d ) => d.n ), backgroundColor: [ '#006BFF', '#5b83ff', '#94adff', '#c3d0ff' ] } ],
 	};
 
 	const pctAxis = { x: { ticks: { maxTicksLimit: 6, callback: ( v ) => pctLabels[ v ] } }, y: { beginAtZero: true } };

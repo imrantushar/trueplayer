@@ -1,8 +1,9 @@
-import { useEffect, useState } from '@wordpress/element';
+import { useState } from '@wordpress/element';
 import { api } from '../api';
-import { Card, Button, Input, Select, Toggle, Badge, Field, Thumb, sourceMeta } from '../components/UI';
+import { Card, Button, Input, Select, Toggle, Badge, Field, sourceMeta } from '../components/UI';
 
-function Editor( { playlist, videos, onBack, onSaved } ) {
+// The playlist editor, reused by the combined Videos screen (Library).
+export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
 	const [ title, setTitle ] = useState( playlist.title );
 	const [ config, setConfig ] = useState( { layout: 'sidebar', videos: [], autoplayNext: true, showTitles: true, ...( playlist.config || {} ) } );
 	const [ saving, setSaving ] = useState( false );
@@ -57,7 +58,8 @@ function Editor( { playlist, videos, onBack, onSaved } ) {
 		<div>
 			<div className="flex items-center gap-3 mb-6">
 				<Button variant="ghost" onClick={ onBack }>← Back</Button>
-				<input className="flex-1 text-2xl font-bold text-ink bg-transparent outline-none border-b border-transparent focus:border-line" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } />
+				<input className="w-full max-w-md text-2xl font-bold text-ink bg-transparent outline-none border-b border-transparent focus:border-line" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } />
+				<div className="flex-1" />
 				{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
 				<Button onClick={ save } disabled={ saving }>{ saving ? 'Saving…' : 'Save' }</Button>
 			</div>
@@ -141,82 +143,5 @@ function Editor( { playlist, videos, onBack, onSaved } ) {
 	);
 }
 
-export default function Playlists() {
-	const [ playlists, setPlaylists ] = useState( null );
-	const [ videos, setVideos ] = useState( [] );
-	const [ title, setTitle ] = useState( '' );
-	const [ editing, setEditing ] = useState( null );
-
-	const load = () => api.listPlaylists().then( setPlaylists );
-	useEffect( () => { load(); api.listVideos().then( setVideos ); }, [] );
-
-	const create = async () => {
-		const p = await api.createPlaylist( title || 'Untitled playlist' );
-		setTitle( '' );
-		await load();
-		setEditing( p );
-	};
-	const remove = async ( id ) => {
-		// eslint-disable-next-line no-alert
-		if ( ! window.confirm( 'Delete this playlist?' ) ) {
-			return;
-		}
-		await api.deletePlaylist( id );
-		load();
-	};
-
-	if ( editing ) {
-		return <Editor playlist={ editing } videos={ videos } onBack={ () => { setEditing( null ); load(); } } onSaved={ load } />;
-	}
-
-	const byId = Object.fromEntries( videos.map( ( v ) => [ v.id, v ] ) );
-
-	return (
-		<div>
-			<div className="mb-6">
-				<h1 className="text-2xl font-bold text-ink">Playlists</h1>
-				<p className="text-sm text-gray-500">Group videos into a grid or sidebar playlist.</p>
-			</div>
-
-			<Card className="p-4 mb-6 flex gap-3 items-center">
-				<Input placeholder="New playlist title…" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } />
-				<Button onClick={ create }>+ Create playlist</Button>
-			</Card>
-
-			{ playlists === null && <p className="text-gray-400">Loading…</p> }
-			{ playlists && playlists.length === 0 && (
-				<Card className="p-12 text-center border-dashed">
-					<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center">
-						<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M4 6h11v2H4V6zm0 5h11v2H4v-2zm0 5h7v2H4v-2zm13-5l5 3-5 3v-6z" /></svg>
-					</div>
-					<p className="font-semibold text-gray-900">No playlists yet</p>
-					<p className="text-sm text-gray-500">Group videos into a course sequence or a grid above.</p>
-				</Card>
-			) }
-
-			<div className="space-y-3">
-				{ ( playlists || [] ).map( ( p ) => {
-					const ids = p.config?.videos || [];
-					const first = ids.map( ( id ) => byId[ id ] ).find( Boolean );
-					const src = first?.config?.source || {};
-					return (
-						<Card key={ p.id } className="p-3 flex items-center gap-4 hover:border-brand-200 transition-colors">
-							<Thumb poster={ src.poster } type={ src.mediaType === 'audio' ? 'audio' : src.type } />
-							<div className="flex-1 min-w-0">
-								<div className="font-semibold text-ink truncate">{ p.title }</div>
-								<div className="flex items-center flex-wrap gap-2 mt-1.5">
-									<Badge tone="brand">{ p.config?.layout || 'sidebar' }</Badge>
-									<Badge>{ ids.length } video{ ids.length === 1 ? '' : 's' }</Badge>
-									{ p.config?.autoplayNext && <Badge tone="green">autoplay</Badge> }
-									<code className="text-xs text-gray-500">{ p.shortcode }</code>
-								</div>
-							</div>
-							<Button variant="ghost" onClick={ () => setEditing( p ) }>Edit</Button>
-							<Button variant="danger" onClick={ () => remove( p.id ) }>Delete</Button>
-						</Card>
-					);
-				} ) }
-			</div>
-		</div>
-	);
-}
+// The playlist list + create now live inside the combined Videos screen
+// (Library). This module exports only PlaylistEditor.

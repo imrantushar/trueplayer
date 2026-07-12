@@ -8,33 +8,45 @@ module.exports = {
 	},
 	theme: {
 		extend: {
-			// StoreEngine-inspired design tokens.
+			// GemCRM design tokens — ground truth: gemcrm/assets/scss/Common/_global.scss.
 			colors: {
 				brand: {
-					50: '#e6f4ff',
-					100: '#cce9ff',
-					200: '#99d3ff',
-					300: '#66bcff',
-					400: '#33a6ff',
-					500: '#008dff', // primary
-					600: '#0077e0',
-					700: '#005fb3',
-					800: '#004886',
-					900: '#00396b',
+					50: '#eef3ff',
+					100: '#E3E7FF', // primary-light (soft surface / active nav bg)
+					200: '#c3d0ff',
+					300: '#94adff',
+					400: '#5b83ff',
+					500: '#006BFF', // primary
+					600: '#005ce0',
+					700: '#004ab8',
+					800: '#003a90',
+					900: '#002d70',
 				},
-				ink: '#2c3135', // body/heading text
-				line: '#dedede', // borders
-				subtle: '#eae8fa', // light lavender surface
+				ink: '#1f2937', // font-color / heading
+				label: '#374151', // setting labels / nav titles
+				line: '#e5e7eb', // border-color (single source)
+				divider: '#f3f4f6', // row dividers
+				body: '#F6F7F8', // page background
+				subtle: '#F6F7F8', // secondary surface (same as body)
+				placeholder: '#A2ADB9',
+				muted: '#6b7280', // descriptions / subtitles / muted text
+				// Status
+				success: { DEFAULT: '#00AD6B', light: 'rgba(0,173,107,0.10)' },
+				danger: { DEFAULT: '#F15B50', light: '#FDE8E7' },
+				warning: { DEFAULT: '#FDB022', light: 'rgba(253,176,34,0.12)' },
 			},
 			fontFamily: {
-				sans: [ 'Poppins', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif' ],
+				// GemCRM uses the native system stack (no blocking webfont request).
+				sans: [ '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji' ],
 			},
 			boxShadow: {
-				card: '0 0.5px 2px 0 rgba(16, 24, 40, 0.15)',
-				pop: '0 8px 28px rgba(16, 24, 40, 0.12)',
+				// GemCRM currently runs the border-only look (--gemcrm-shadow: none).
+				card: 'none',
+				pop: '0 8px 28px rgba(16,24,40,0.12)', // overlays/modals only
 			},
 			borderRadius: {
-				card: '8px',
+				DEFAULT: '4px', // inputs, buttons, cells
+				card: '8px', // cards / panels
 			},
 		},
 	},

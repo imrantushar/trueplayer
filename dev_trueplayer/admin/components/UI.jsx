@@ -1,20 +1,27 @@
-/** Shared Tailwind UI primitives — StoreEngine-inspired design language. */
+/** Shared Tailwind UI primitives — GemCRM design language (see gemcrm/ui_rule.md). */
 import { useState } from '@wordpress/element';
 
 export function Button( { children, variant = 'primary', size = 'md', className = '', ...rest } ) {
+	// GemCRM button presets: primary (solid blue), secondary/ghost (outline),
+	// light/subtle (soft blue), clear (text), danger (soft red).
 	const styles = {
-		primary: 'bg-brand-500 hover:bg-brand-600 text-white shadow-card',
-		ghost: 'bg-white hover:bg-gray-50 text-ink border border-line',
-		subtle: 'bg-brand-50 hover:bg-brand-100 text-brand-700',
-		danger: 'bg-white hover:bg-red-50 text-red-600 border border-red-200',
+		primary: 'bg-brand-500 hover:opacity-90 text-white border border-brand-500',
+		ghost: 'bg-white hover:bg-brand-50 text-ink border border-line',
+		secondary: 'bg-transparent hover:bg-brand-50 text-ink border border-line',
+		subtle: 'bg-brand-100 hover:opacity-90 text-brand-500 border border-transparent',
+		clear: 'bg-transparent hover:bg-brand-50 text-brand-500 border border-transparent',
+		danger: 'bg-danger-light hover:opacity-90 text-danger border border-transparent',
 	};
+	// Compact, medium-weight sizing (md is the comfortable default).
 	const sizes = {
-		sm: 'px-2.5 py-1.5 text-xs',
+		xs: 'px-2.5 py-1 text-xs',
+		sm: 'px-3 py-1.5 text-[13px]',
 		md: 'px-4 py-2 text-sm',
+		lg: 'px-5 py-2.5 text-sm',
 	};
 	return (
 		<button
-			className={ `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none ${ styles[ variant ] } ${ sizes[ size ] } ${ className }` }
+			className={ `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded font-medium leading-5 transition-[opacity,background-color,color] disabled:opacity-50 disabled:pointer-events-none ${ styles[ variant ] || styles.primary } ${ sizes[ size ] || sizes.md } ${ className }` }
 			{ ...rest }
 		>
 			{ children }
@@ -33,19 +40,19 @@ export function Field( { label, hint, children, className = '' } ) {
 }
 
 const controlBase =
-	'w-full h-10 rounded-md border border-line px-3 text-sm text-ink bg-white transition-shadow placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none';
+	'w-full h-10 rounded border border-line px-3 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none';
 
 export function Input( { className = '', ...props } ) {
 	return <input { ...props } className={ `${ controlBase } ${ className }` } />;
 }
 
 export function Textarea( { className = '', ...props } ) {
-	return <textarea { ...props } className={ `w-full rounded-md border border-line px-3 py-2 text-sm text-ink bg-white transition-shadow placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none ${ className }` } />;
+	return <textarea { ...props } className={ `w-full rounded border border-line px-3 py-2 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none ${ className }` } />;
 }
 
 export function Select( { className = '', children, ...props } ) {
 	return (
-		<select { ...props } className={ `${ controlBase } pr-8 appearance-none bg-no-repeat ${ className }` } style={ { backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236b7280\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")', backgroundPosition: 'right 10px center' } }>
+		<select { ...props } className={ `${ controlBase } pr-8 appearance-none bg-no-repeat ${ className }` } style={ { backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23738496\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")', backgroundPosition: 'right 10px center' } }>
 			{ children }
 		</select>
 	);
@@ -55,11 +62,28 @@ export function Card( { children, className = '' } ) {
 	return <div className={ `bg-white rounded-card border border-line shadow-card ${ className }` }>{ children }</div>;
 }
 
+/** Centered modal dialog. Click the backdrop or ✕ to close. */
+export function Modal( { title, onClose, children, footer, className = '' } ) {
+	return (
+		<div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6" onClick={ onClose }>
+			<div className={ `bg-white rounded-card shadow-pop w-full max-w-md ${ className }` } onClick={ ( e ) => e.stopPropagation() }>
+				<div className="flex items-center justify-between px-6 py-4 border-b border-line">
+					<h3 className="text-base font-semibold text-ink">{ title }</h3>
+					<button onClick={ onClose } className="text-muted hover:text-ink text-lg leading-none" aria-label="Close">×</button>
+				</div>
+				<div className="p-6">{ children }</div>
+				{ footer && <div className="px-6 py-4 border-t border-line flex justify-end gap-2">{ footer }</div> }
+			</div>
+		</div>
+	);
+}
+
+/** GemCRM section heading: 16px / 600 / 24px with an underline rule. */
 export function SectionTitle( { title, description } ) {
 	return (
-		<div className="mb-5">
-			<h3 className="text-[15px] font-semibold text-ink">{ title }</h3>
-			{ description && <p className="text-[13px] text-gray-500 mt-0.5">{ description }</p> }
+		<div className="mb-6 pb-4 border-b border-line">
+			<h3 className="text-base font-semibold leading-6 text-ink">{ title }</h3>
+			{ description && <p className="text-[13px] text-muted mt-1">{ description }</p> }
 		</div>
 	);
 }
@@ -79,14 +103,15 @@ export function Toggle( { checked, onChange, label, disabled = false } ) {
 }
 
 export function Badge( { children, tone = 'gray' } ) {
+	// GemCRM status pills: soft tinted background + saturated text, 999px radius.
 	const tones = {
-		gray: 'bg-gray-100 text-gray-600',
-		brand: 'bg-brand-50 text-brand-700',
-		green: 'bg-green-100 text-green-700',
-		amber: 'bg-amber-100 text-amber-700',
-		red: 'bg-red-100 text-red-700',
+		gray: 'bg-gray-100 text-muted',
+		brand: 'bg-brand-100 text-brand-500',
+		green: 'bg-success-light text-success',
+		amber: 'bg-warning-light text-warning',
+		red: 'bg-danger-light text-danger',
 	};
-	return <span className={ `inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${ tones[ tone ] }` }>{ children }</span>;
+	return <span className={ `inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${ tones[ tone ] || tones.gray }` }>{ children }</span>;
 }
 
 /** Per-source-type display metadata (label + badge tone) for a video's source. */

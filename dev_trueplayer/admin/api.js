@@ -3,7 +3,7 @@ import { rest } from '@Utils/rest';
 export const api = {
 	listVideos: () => rest.get( 'videos' ),
 	getVideo: ( id ) => rest.get( `videos/${ id }` ),
-	createVideo: ( title ) => rest.post( 'videos', { title, config: {} } ),
+	createVideo: ( title, config = {} ) => rest.post( 'videos', { title, config } ),
 	updateVideo: ( id, data ) => rest.put( `videos/${ id }`, data ),
 	deleteVideo: ( id ) => rest.del( `videos/${ id }` ),
 	getSettings: () => rest.get( 'settings' ),

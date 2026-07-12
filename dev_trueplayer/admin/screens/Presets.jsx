@@ -1,14 +1,29 @@
-import { useEffect, useState } from '@wordpress/element';
+import { useEffect, useState, useMemo } from '@wordpress/element';
 import { api } from '../api';
-import { Card, Button, Input } from '../components/UI';
+import { Card, Button, Input, Select, Field, Modal } from '../components/UI';
 import { Icon } from '../components/icons';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
+import PreviewPanel from './editor/PreviewPanel';
+
+// A built-in sample so a preset can be previewed even before any video exists.
+const SAMPLE_SOURCE = { type: 'url', src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', poster: '' };
 
 function Editor( { preset, onBack, onSaved } ) {
 	const [ title, setTitle ] = useState( preset.title );
 	const [ config, setConfig ] = useState( preset.config || {} );
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
+
+	// Preview subject: preview the preset's styling on a real video's source.
+	const [ videos, setVideos ] = useState( [] );
+	const [ previewId, setPreviewId ] = useState( 0 );
+	useEffect( () => {
+		api.listVideos().then( ( list ) => {
+			const withSrc = ( list || [] ).filter( ( v ) => v.config?.source?.src );
+			setVideos( withSrc );
+			setPreviewId( withSrc[ 0 ]?.id || 0 );
+		} );
+	}, [] );
 
 	// PlayerOptionsTab edits config.customize / config.branding — the exact shape
 	// a preset stores, so we reuse it directly.
@@ -26,16 +41,43 @@ function Editor( { preset, onBack, onSaved } ) {
 		}
 	};
 
+	// The preset's look (config) applied over a real source, for the live player.
+	const previewVideo = videos.find( ( v ) => v.id === previewId );
+	const previewConfig = useMemo(
+		() => ( { ...config, source: previewVideo?.config?.source || SAMPLE_SOURCE, chapters: previewVideo?.config?.chapters || [] } ),
+		[ config, previewVideo ]
+	);
+
 	return (
 		<div>
 			<div className="flex items-center gap-3 mb-6">
 				<Button variant="ghost" onClick={ onBack }>← Back</Button>
-				<input className="flex-1 text-2xl font-bold text-ink bg-transparent outline-none border-b border-transparent focus:border-line" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } />
+				<input className="w-full max-w-md text-2xl font-bold text-ink bg-transparent outline-none border-b border-transparent focus:border-line" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } />
+				<div className="flex-1" />
 				{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
 				<Button onClick={ save } disabled={ saving }>{ saving ? 'Saving…' : 'Save' }</Button>
 			</div>
-			<p className="text-sm text-gray-500 mb-4">These styles &amp; behaviours apply to any video that uses this preset. Individual videos can still override anything.</p>
-			<PlayerOptionsTab config={ config } patch={ patch } />
+			<p className="text-sm text-muted mb-4">These styles &amp; behaviours apply to any video that uses this preset. Individual videos can still override anything.</p>
+
+			<div className="flex flex-col xl:flex-row gap-6 items-start">
+				<div className="flex-1 min-w-0">
+					<PlayerOptionsTab config={ config } patch={ patch } />
+				</div>
+
+				<div className="w-full xl:w-[400px] shrink-0 xl:sticky xl:top-6">
+					<Card className="p-4">
+						{ videos.length > 0 && (
+							<div className="flex items-center gap-2 mb-3">
+								<span className="text-xs text-muted whitespace-nowrap">Preview with</span>
+								<Select value={ previewId } onChange={ ( e ) => setPreviewId( parseInt( e.target.value, 10 ) ) } className="h-9 text-[13px]">
+									{ videos.map( ( v ) => <option key={ v.id } value={ v.id }>{ v.title }</option> ) }
+								</Select>
+							</div>
+						) }
+						<PreviewPanel id={ previewId || 0 } config={ previewConfig } />
+					</Card>
+				</div>
+			</div>
 		</div>
 	);
 }
@@ -43,16 +85,24 @@ function Editor( { preset, onBack, onSaved } ) {
 export default function Presets() {
 	const [ presets, setPresets ] = useState( null );
 	const [ title, setTitle ] = useState( '' );
+	const [ adding, setAdding ] = useState( false );
+	const [ busy, setBusy ] = useState( false );
 	const [ editing, setEditing ] = useState( null );
 
 	const load = () => api.listPresets().then( setPresets );
 	useEffect( () => { load(); }, [] );
 
 	const create = async () => {
-		const p = await api.createPreset( title || 'Untitled preset' );
-		setTitle( '' );
-		await load();
-		setEditing( p );
+		setBusy( true );
+		try {
+			const p = await api.createPreset( title || 'Untitled preset' );
+			setTitle( '' );
+			setAdding( false );
+			await load();
+			setEditing( p );
+		} finally {
+			setBusy( false );
+		}
 	};
 	const remove = async ( id ) => {
 		// eslint-disable-next-line no-alert
@@ -69,15 +119,30 @@ export default function Presets() {
 
 	return (
 		<div>
-			<div className="mb-6">
-				<h1 className="text-2xl font-bold text-ink">Player presets</h1>
-				<p className="text-sm text-gray-500">Reusable styles &amp; behaviour you can apply to any video — brand once, use everywhere.</p>
+			<div className="flex items-center justify-between mb-6">
+				<div>
+					<h1 className="text-2xl font-bold text-ink">Player presets</h1>
+					<p className="text-sm text-muted">Reusable styles &amp; behaviour — brand once, use everywhere.</p>
+				</div>
+				<Button onClick={ () => { setTitle( '' ); setAdding( true ); } }><Icon name="plus" className="w-4 h-4" /> Add preset</Button>
 			</div>
 
-			<Card className="p-4 mb-6 flex gap-3 items-center">
-				<Input placeholder="New preset name…" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } />
-				<Button onClick={ create }>+ Create preset</Button>
-			</Card>
+			{ adding && (
+				<Modal
+					title="Add preset"
+					onClose={ () => setAdding( false ) }
+					footer={
+						<>
+							<Button variant="ghost" onClick={ () => setAdding( false ) }>Cancel</Button>
+							<Button onClick={ create } disabled={ busy }>{ busy ? 'Creating…' : 'Create & edit' }</Button>
+						</>
+					}
+				>
+					<Field label="Preset name">
+						<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } placeholder="e.g. Brand — dark" />
+					</Field>
+				</Modal>
+			) }
 
 			{ presets === null && <p className="text-gray-400">Loading…</p> }
 			{ presets && presets.length === 0 && (
@@ -90,7 +155,7 @@ export default function Presets() {
 
 			<div className="space-y-3">
 				{ ( presets || [] ).map( ( p ) => {
-					const accent = p.config?.customize?.appearance?.accent || '#008dff';
+					const accent = p.config?.customize?.appearance?.accent || '#006BFF';
 					return (
 						<Card key={ p.id } className="p-4 flex items-center gap-4 hover:border-brand-200 transition-colors">
 							<span className="w-10 h-10 rounded-lg border border-line shrink-0" style={ { background: accent } } />

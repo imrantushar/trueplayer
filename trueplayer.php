@@ -93,6 +93,7 @@ final class TruePlayer {
 		TruePlayer\Webhook\Dispatcher::init();
 		TruePlayer\Integrations::init();
 		TruePlayer\WhiteLabel::init();
+		TruePlayer\Services\Retention::init();
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			\WP_CLI::add_command( 'trueplayer', 'TruePlayer\\CLI' );

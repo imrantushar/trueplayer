@@ -46,6 +46,19 @@ class Helper {
 		return gmdate( 'Y-m-d\TH:i:s\Z' );
 	}
 
+	/** The global TruePlayer settings option, decoded (empty array if unset). */
+	public static function get_settings(): array {
+		$raw = get_option( TRUEPLAYER_SETTINGS_NAME, '{}' );
+		$val = is_string( $raw ) ? json_decode( $raw, true ) : ( is_array( $raw ) ? $raw : [] );
+		return is_array( $val ) ? $val : [];
+	}
+
+	/** A named section of the global settings (e.g. 'enforcement', 'compliance'). */
+	public static function get_settings_section( string $section ): array {
+		$settings = self::get_settings();
+		return isset( $settings[ $section ] ) && is_array( $settings[ $section ] ) ? $settings[ $section ] : [];
+	}
+
 	/**
 	 * Decode a video's `_trueplayer_config` JSON meta into an array.
 	 */
