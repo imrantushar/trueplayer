@@ -5,6 +5,42 @@ import { Icon } from '../components/icons';
 import { EndpointList } from '../components/EndpointList';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
+import { PRESET_TEMPLATES, ASPECT_RATIOS } from '../data/preset-templates';
+
+// A mini player preview rendered in the template's style.
+function TemplateCard( { template, selected, disabled, accent, onSelect } ) {
+	const a = template.appearance;
+	const barStyle = { gradient: 'bg-gradient-to-t from-black/70 to-transparent', solid: 'bg-black/70', minimal: 'bg-transparent' }[ a.controlBarStyle ] || 'bg-black/70';
+	const playRadius = { circle: '9999px', soft: '8px', square: '3px' }[ a.playButtonStyle ] || '9999px';
+	return (
+		<button
+			type="button"
+			onClick={ () => ! disabled && onSelect( template ) }
+			className={ `text-left transition ${ disabled ? 'opacity-50 cursor-not-allowed' : '' }` }
+		>
+			<div
+				className={ `relative aspect-video overflow-hidden border-2 ${ selected ? 'border-brand-500' : 'border-line' }` }
+				style={ { borderRadius: 8, background: '#111318' } }
+			>
+				<span className="absolute inset-0 flex items-center justify-center">
+					<span className="flex items-center justify-center w-8 h-8" style={ { background: accent, borderRadius: playRadius } }>
+						<svg viewBox="0 0 24 24" width="13" height="13" fill="#fff"><path d="M8 5v14l11-7z" /></svg>
+					</span>
+				</span>
+				<span className={ `absolute left-0 right-0 bottom-0 h-6 ${ barStyle }` }>
+					<span className="absolute left-2 right-2 bottom-2 h-1 rounded-full bg-white/30">
+						<span className="absolute left-0 top-0 h-1 rounded-full" style={ { width: '45%', background: accent } } />
+					</span>
+				</span>
+				{ template.pro && <span className="absolute top-1.5 right-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white/90 text-brand-500">PRO</span> }
+			</div>
+			<div className="flex items-center gap-1.5 mt-2">
+				{ selected && <Icon name="check" className="w-4 h-4 text-brand-500" /> }
+				<span className={ `text-sm font-medium ${ selected ? 'text-brand-500' : 'text-ink' }` }>{ template.label }</span>
+			</div>
+		</button>
+	);
+}
 
 const NAV_GROUPS = [
 	{ label: 'Player', items: [
@@ -62,11 +98,9 @@ export default function Settings() {
 	const [ tab, setTab ] = useState( 'general' );
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
-	const [ presets, setPresets ] = useState( [] );
 
 	useEffect( () => {
 		api.getSettings().then( ( s ) => setSettings( s || {} ) );
-		api.listPresets().then( ( p ) => setPresets( p || [] ) );
 	}, [] );
 
 	const save = async () => {
@@ -123,18 +157,39 @@ export default function Settings() {
 				<div className="flex-1 min-w-0">
 
 			{ tab === 'general' && (
-				<div className="max-w-xl space-y-6">
+				<div className="max-w-3xl space-y-6">
 					<Card className="p-6">
-						<h3 className="font-semibold text-gray-900 mb-1">Default preset</h3>
-						<p className="text-sm text-muted mb-4">Applied to any video that doesn't pick its own preset.</p>
-						<Field label="Default preset">
-							<Select value={ settings.general?.defaultPreset || '' } onChange={ ( e ) => setSettings( ( s ) => ( { ...s, general: { ...( s.general || {} ), defaultPreset: e.target.value ? parseInt( e.target.value, 10 ) : 0 } } ) ) }>
-								<option value="">— none —</option>
-								{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+						<h3 className="font-semibold text-gray-900 mb-1">Default player template</h3>
+						<p className="text-sm text-muted mb-4">The look applied to every video by default. A video's own preset or settings still override it.</p>
+						<div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+							{ PRESET_TEMPLATES.map( ( t ) => (
+								<TemplateCard
+									key={ t.key }
+									template={ t }
+									accent={ settings.customize?.appearance?.accent || '#006BFF' }
+									selected={ ( settings.general?.defaultTemplate || 'default' ) === t.key }
+									disabled={ t.pro && ! isPro() }
+									onSelect={ ( tpl ) => setSettings( ( s ) => ( {
+										...s,
+										general: { ...( s.general || {} ), defaultTemplate: tpl.key },
+										customize: { ...( s.customize || {} ), appearance: { ...( s.customize?.appearance || {} ), ...tpl.appearance } },
+									} ) ) }
+								/>
+							) ) }
+						</div>
+					</Card>
+
+					<Card className="p-6 max-w-xl">
+						<h3 className="font-semibold text-gray-900 mb-1">Default aspect ratio</h3>
+						<p className="text-sm text-muted mb-4">The frame shape new videos use unless overridden per video.</p>
+						<Field label="Aspect ratio">
+							<Select value={ settings.customize?.appearance?.aspectRatio || '16:9' } onChange={ ( e ) => setSettings( ( s ) => ( { ...s, customize: { ...( s.customize || {} ), appearance: { ...( s.customize?.appearance || {} ), aspectRatio: e.target.value } } } ) ) }>
+								{ ASPECT_RATIOS.map( ( r ) => <option key={ r.value } value={ r.value }>{ r.label }</option> ) }
 							</Select>
 						</Field>
 					</Card>
-					<Card className="p-6">
+
+					<Card className="p-6 max-w-xl">
 						<h3 className="font-semibold text-gray-900 mb-1">Custom CSS</h3>
 						<p className="text-sm text-muted mb-4">Injected on every page a TruePlayer player renders. Target <code>.tp-*</code> classes.</p>
 						<Textarea rows={ 6 } className="font-mono text-xs" value={ settings.customize?.css || '' } onChange={ ( e ) => setSettings( ( s ) => ( { ...s, customize: { ...( s.customize || {} ), css: e.target.value } } ) ) } placeholder=".tp-controls { --tp-accent: #4F46E5; }" />

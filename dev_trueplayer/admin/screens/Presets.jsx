@@ -3,6 +3,7 @@ import { api } from '../api';
 import { Card, Button, Input, Select, Field, Modal } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
+import { PRESET_TEMPLATES, templateConfig } from '../data/preset-templates';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import PreviewPanel from './editor/PreviewPanel';
 
@@ -83,19 +84,6 @@ function Editor( { preset, onBack, onSaved } ) {
 	);
 }
 
-// Predefined starting points (FluentPlayer-style). Users pick one, then tweak
-// and save. Each seeds the preset's appearance; 'blank' starts from defaults.
-const PRESET_TEMPLATES = [
-	{ key: 'blank', label: 'Blank (defaults)', config: {} },
-	{ key: 'default', label: 'Default', config: { customize: { appearance: { skin: 'default', controlBarStyle: 'gradient', playButtonStyle: 'circle', roundness: 10 } } } },
-	{ key: 'modern', label: 'Modern', config: { customize: { appearance: { skin: 'modern', controlBarStyle: 'solid', playButtonStyle: 'soft', roundness: 14 } } } },
-	{ key: 'simple', label: 'Simple', config: { customize: { appearance: { skin: 'simple', controlBarStyle: 'solid', playButtonStyle: 'square', roundness: 6 } } } },
-	{ key: 'minimal', label: 'Minimal', config: { customize: { appearance: { skin: 'minimal', controlBarStyle: 'minimal', playButtonStyle: 'square', roundness: 0 } } } },
-	{ key: 'standard', label: 'Standard', config: { customize: { appearance: { skin: 'standard', controlBarStyle: 'gradient', playButtonStyle: 'circle', roundness: 8 } } } },
-	{ key: 'floating', label: 'Floating (Pro)', pro: true, config: { customize: { appearance: { skin: 'floating', controlBarStyle: 'solid', playButtonStyle: 'soft', roundness: 16 } } } },
-	{ key: 'ambient', label: 'Ambient (Pro)', pro: true, config: { customize: { appearance: { skin: 'ambient', controlBarStyle: 'gradient', playButtonStyle: 'circle', roundness: 8 } } } },
-];
-
 export default function Presets() {
 	const [ presets, setPresets ] = useState( null );
 	const [ title, setTitle ] = useState( '' );
@@ -110,8 +98,8 @@ export default function Presets() {
 	const create = async () => {
 		setBusy( true );
 		try {
-			const tpl = PRESET_TEMPLATES.find( ( t ) => t.key === template ) || PRESET_TEMPLATES[ 0 ];
-			const p = await api.createPreset( title || tpl.label, JSON.parse( JSON.stringify( tpl.config ) ) );
+			const label = PRESET_TEMPLATES.find( ( t ) => t.key === template )?.label || 'Untitled preset';
+			const p = await api.createPreset( title || label, template === 'blank' ? {} : templateConfig( template ) );
 			setTitle( '' );
 			setAdding( false );
 			await load();
@@ -159,6 +147,7 @@ export default function Presets() {
 					</Field>
 					<Field label="Start from" hint="A predefined look to begin with — you can change everything after.">
 						<Select value={ template } onChange={ ( e ) => setTemplate( e.target.value ) }>
+							<option value="blank">Blank (defaults)</option>
 							{ PRESET_TEMPLATES.map( ( t ) => (
 								<option key={ t.key } value={ t.key } disabled={ t.pro && ! isPro() }>
 									{ t.label }{ t.pro && ! isPro() ? ' — needs Pro' : '' }
