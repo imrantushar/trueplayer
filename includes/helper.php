@@ -92,6 +92,32 @@ class Helper {
 		return $config;
 	}
 
+	/**
+	 * Clamp pro-only config to free-safe values when pro isn't active. Runs at
+	 * frontend render, after apply_preset, so a preset can't smuggle premium
+	 * options past the gate either.
+	 */
+	public static function enforce_pro_limits( array $config ): array {
+		if ( Pro::active() ) {
+			return $config;
+		}
+		$skin = $config['customize']['appearance']['skin'] ?? '';
+		if ( $skin && Pro::is_premium_skin( $skin ) ) {
+			$config['customize']['appearance']['skin'] = 'default';
+		}
+		// Pro-only config never reaches the free frontend.
+		unset( $config['layers'], $config['protection'], $config['timedContent'] );
+		return $config;
+	}
+
+	/**
+	 * The product name shown in the admin and any attribution. White-label (pro)
+	 * hooks `trueplayer/brand_name` to override it.
+	 */
+	public static function brand_name(): string {
+		return (string) apply_filters( 'trueplayer/brand_name', 'TruePlayer' );
+	}
+
 	/** Recursive array merge where $over wins; list (numeric) arrays are replaced. */
 	private static function deep_merge( array $base, array $over ): array {
 		foreach ( $over as $k => $v ) {

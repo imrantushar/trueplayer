@@ -64,11 +64,11 @@ export function SectionTitle( { title, description } ) {
 	);
 }
 
-export function Toggle( { checked, onChange, label } ) {
+export function Toggle( { checked, onChange, label, disabled = false } ) {
 	return (
-		<label className="flex items-center gap-3 cursor-pointer mb-3.5 select-none">
+		<label className={ `flex items-center gap-3 mb-3.5 select-none ${ disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer' }` }>
 			<span
-				onClick={ () => onChange( ! checked ) }
+				onClick={ () => ! disabled && onChange( ! checked ) }
 				className={ `relative inline-block w-[38px] h-[22px] rounded-full transition-colors ${ checked ? 'bg-brand-500' : 'bg-gray-300' }` }
 			>
 				<span className={ `absolute top-[3px] left-[3px] w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${ checked ? 'translate-x-4' : '' }` } />

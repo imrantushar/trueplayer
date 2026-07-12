@@ -71,6 +71,59 @@ function bootPlayer( node, data, videoId, autoStart ) {
 }
 
 /**
+ * Muted, looped inline preview while hovering the poster facade — Presto-style
+ * "muted autoplay preview". Direct-file sources only (no iframe/hls machinery);
+ * starts after a short intent delay and is torn down on pointer-leave.
+ */
+function attachHoverPreview( facade, config ) {
+	const source = ( config && config.source ) || {};
+	const behavior = ( config && config.customize && config.customize.behavior ) || {};
+	const src = source.src || '';
+	const previewable =
+		behavior.hoverPreview &&
+		[ 'self', 'url' ].includes( source.type ) &&
+		source.mediaType !== 'audio' &&
+		src && ! /\.m3u8($|\?)/i.test( src );
+	if ( ! previewable ) {
+		return;
+	}
+
+	let timer = null;
+	let vid = null;
+	const stop = () => {
+		clearTimeout( timer );
+		timer = null;
+		if ( vid ) {
+			vid.pause();
+			vid.remove();
+			vid = null;
+		}
+	};
+	facade.addEventListener( 'pointerenter', () => {
+		if ( facade.closest( '[data-tp-booted]' ) || timer || vid ) {
+			return;
+		}
+		timer = setTimeout( () => {
+			vid = document.createElement( 'video' );
+			vid.className = 'tp-facade-poster tp-hover-preview';
+			vid.src = src;
+			vid.muted = true;
+			vid.loop = true;
+			vid.playsInline = true;
+			vid.preload = 'auto';
+			facade.insertBefore( vid, facade.querySelector( '.tp-facade-btn' ) );
+			const p = vid.play();
+			if ( p && typeof p.catch === 'function' ) {
+				p.catch( () => {} );
+			}
+		}, 300 );
+	} );
+	facade.addEventListener( 'pointerleave', stop );
+	// The click boot removes the facade wholesale; just clear our timer.
+	facade.addEventListener( 'click', stop, { once: true } );
+}
+
+/**
  * Discovers [data-trueplayer] mount nodes. To keep pages fast, a node that
  * rendered a poster facade stays inert — no video element, no YouTube/Vimeo
  * iframe, no hls.js, no gate request — until the visitor clicks to play. Nodes
@@ -89,9 +142,29 @@ export function mountPlayers() {
 
 		const facade = node.querySelector( '.tp-facade' );
 		const autoplay = node.dataset.tpAutoplay === '1';
+		const strategy = node.dataset.tpLoad || ( facade ? 'facade' : 'eager' );
+		const type = data.config && data.config.source && data.config.source.type;
+
+		// on-visible: boot (without playing) once the player scrolls into view,
+		// so below-the-fold videos don't load their media on first paint.
+		if ( facade && ! autoplay && strategy === 'onvisible' && 'IntersectionObserver' in window ) {
+			warm( type );
+			const io = new IntersectionObserver(
+				( entries, obs ) => {
+					entries.forEach( ( entry ) => {
+						if ( entry.isIntersecting && ! node.dataset.tpBooted ) {
+							obs.disconnect();
+							bootPlayer( node, data, videoId, false );
+						}
+					} );
+				},
+				{ rootMargin: '200px' }
+			);
+			io.observe( node );
+			return;
+		}
 
 		if ( facade && ! autoplay ) {
-			const type = data.config && data.config.source && data.config.source.type;
 			let warmed = false;
 			const doWarm = () => {
 				if ( ! warmed ) {
@@ -110,6 +183,7 @@ export function mountPlayers() {
 				bootPlayer( node, data, videoId, true );
 			};
 			facade.addEventListener( 'click', boot, { once: true } );
+			attachHoverPreview( facade, data.config );
 			return;
 		}
 

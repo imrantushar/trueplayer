@@ -1,4 +1,4 @@
-import { useState, useMemo } from '@wordpress/element';
+import { useState, useMemo, useRef, useEffect } from '@wordpress/element';
 import { formatTime } from '@Utils/format';
 
 const Icon = ( { d } ) => (
@@ -51,22 +51,80 @@ function waveBars( seed, n ) {
 	return out;
 }
 
-function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, waveform, waveSeed } ) {
+function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, waveform, waveSeed, disabled } ) {
 	const [ hover, setHover ] = useState( null );
+	// While dragging, the thumb/fill follow the pointer immediately instead of
+	// waiting on the provider's (occasionally laggy) timeupdate — this is what
+	// makes the scrubber feel grab-able instead of only click-to-seek. The
+	// preview stays up after release too, until `current` actually catches up
+	// to it — otherwise the thumb flashes back to the old spot while the seek
+	// is still in flight (visible on network sources / unbuffered ranges).
+	const [ drag, setDrag ] = useState( null ); // ratio 0..1, or null when not previewing
+	const draggingRef = useRef( false ); // true only while the pointer is actually down
+	const trackRef = useRef( null );
 	const bars = useMemo( () => ( waveform ? waveBars( waveSeed, 56 ) : [] ), [ waveform, waveSeed ] );
-	const pct = duration ? ( current / duration ) * 100 : 0;
+
+	// Clamp once, in ratio space, so the preview we render and the position we
+	// actually seek to always agree (a mismatch here is what left the preview
+	// stuck when noSkip capped the seek short of the dragged ratio).
+	const clampRatio = ( ratio ) => ( duration && seekable < duration ? Math.min( ratio, seekable / duration ) : ratio );
+
+	const moveTo = ( clientX ) => {
+		const rect = trackRef.current.getBoundingClientRect();
+		const raw = rect.width ? Math.min( 1, Math.max( 0, ( clientX - rect.left ) / rect.width ) ) : 0;
+		const ratio = clampRatio( raw );
+		setDrag( ratio );
+		onSeek( ratio * duration );
+	};
+
+	// Track the pointer on `window` for the duration of the drag rather than
+	// relying on setPointerCapture's target reassignment — that can behave
+	// inconsistently depending on what else is on the page (overlays, the
+	// admin preview panel, etc.), which was leaving the thumb stuck in place.
+	const onWindowMove = ( e ) => {
+		if ( ! draggingRef.current ) {
+			return;
+		}
+		moveTo( e.clientX );
+	};
+	const onWindowUp = () => {
+		draggingRef.current = false;
+		window.removeEventListener( 'pointermove', onWindowMove );
+		window.removeEventListener( 'pointerup', onWindowUp );
+		window.removeEventListener( 'pointercancel', onWindowUp );
+	};
+
+	const onPointerDown = ( e ) => {
+		if ( disabled || ! duration ) {
+			return;
+		}
+		draggingRef.current = true;
+		moveTo( e.clientX );
+		window.addEventListener( 'pointermove', onWindowMove );
+		window.addEventListener( 'pointerup', onWindowUp );
+		window.addEventListener( 'pointercancel', onWindowUp );
+	};
+
+	useEffect( () => onWindowUp, [] ); // eslint-disable-line react-hooks/exhaustive-deps -- unmount safety net only
+
+	// Clear the preview once playback has genuinely reached it (or after a
+	// timeout fallback, so a stalled/failed seek can't strand the thumb).
+	useEffect( () => {
+		if ( drag === null || draggingRef.current ) {
+			return undefined;
+		}
+		if ( Math.abs( current - drag * duration ) < 0.35 ) {
+			setDrag( null );
+			return undefined;
+		}
+		const t = setTimeout( () => setDrag( null ), 1200 );
+		return () => clearTimeout( t );
+	}, [ current, drag, duration ] );
+
+	const effectiveCurrent = drag !== null ? drag * duration : current;
+	const pct = duration ? ( effectiveCurrent / duration ) * 100 : 0;
 	const bpct = duration ? ( buffered / duration ) * 100 : 0;
 	const spct = duration && seekable < duration ? ( seekable / duration ) * 100 : 100;
-
-	const handle = ( e ) => {
-		const rect = e.currentTarget.getBoundingClientRect();
-		const ratio = Math.min( 1, Math.max( 0, ( e.clientX - rect.left ) / rect.width ) );
-		let t = ratio * duration;
-		if ( seekable < duration ) {
-			t = Math.min( t, seekable );
-		}
-		onSeek( t );
-	};
 
 	const segs = buildSegments( chapters, duration );
 	const fill = ( value, start, end ) => {
@@ -75,7 +133,16 @@ function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, wa
 	};
 
 	return (
-		<div className="tp-scrubber" onClick={ handle } role="slider" aria-valuenow={ Math.floor( current ) } aria-valuemax={ Math.floor( duration ) } tabIndex={ 0 }>
+		<div
+			ref={ trackRef }
+			className={ `tp-scrubber${ disabled ? ' is-disabled' : '' }` }
+			onPointerDown={ onPointerDown }
+			role="slider"
+			aria-valuenow={ Math.floor( current ) }
+			aria-valuemax={ Math.floor( duration ) }
+			aria-disabled={ disabled || undefined }
+			tabIndex={ disabled ? -1 : 0 }
+		>
 			{ hover && <div className="tp-chapter-tip" style={ { left: `${ hover.left }%` } }>{ hover.label }</div> }
 			{ segs.length > 1 ? (
 				<div className="tp-scrubber-segs">
@@ -91,7 +158,7 @@ function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, wa
 								onMouseLeave={ () => setHover( null ) }
 							>
 								<div className="tp-seg-buffered" style={ { width: `${ fill( buffered, s.start, s.end ) }%` } } />
-								<div className="tp-seg-played" style={ { width: `${ fill( current, s.start, s.end ) }%` } } />
+								<div className="tp-seg-played" style={ { width: `${ fill( effectiveCurrent, s.start, s.end ) }%` } } />
 							</div>
 						);
 					} ) }
@@ -103,7 +170,7 @@ function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, wa
 					{ bars.map( ( h, i ) => (
 						<span
 							key={ i }
-							className={ `tp-wave-bar ${ ( i + 0.5 ) / bars.length <= ( duration ? current / duration : 0 ) ? 'is-played' : '' }` }
+							className={ `tp-wave-bar ${ ( i + 0.5 ) / bars.length <= ( duration ? effectiveCurrent / duration : 0 ) ? 'is-played' : '' }` }
 							style={ { height: `${ Math.round( h * 100 ) }%` } }
 						/>
 					) ) }
@@ -180,7 +247,7 @@ function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, 
 export default function Controls( props ) {
 	const {
 		playing, current, duration, buffered, muted, volume, rate, quality, track, seekable,
-		chapters, provider, capabilities, controls = {}, speeds, skipSeconds = 10,
+		chapters, provider, capabilities, controls = {}, speeds, skipSeconds = 10, scrubDisabled, hidePiP,
 		onPlayPause, onSeek, onVolume, onMute, onRate, onQuality, onTrack, onPiP, onFullscreen, onSkip, onDownload,
 		onInfo, hasInfo, infoOpen, audio, title, waveSeed,
 	} = props;
@@ -196,7 +263,7 @@ export default function Controls( props ) {
 		<div className="tp-controls">
 			{ audio && title && <div className="tp-audio-title" title={ title }>{ title }</div> }
 			{ show( 'progress' ) && (
-				<Scrubber current={ current } duration={ duration } buffered={ buffered } chapters={ chapters } seekable={ seekable } onSeek={ onSeek } waveform={ audio } waveSeed={ waveSeed } />
+				<Scrubber current={ current } duration={ duration } buffered={ buffered } chapters={ chapters } seekable={ seekable } onSeek={ onSeek } waveform={ audio } waveSeed={ waveSeed } disabled={ scrubDisabled } />
 			) }
 			<div className="tp-controls-row">
 				{ show( 'play' ) && (
@@ -244,7 +311,7 @@ export default function Controls( props ) {
 				{ show( 'settings' ) && settingsHasContent && (
 					<Menu provider={ provider } rate={ rate } setRate={ onRate } quality={ quality } setQuality={ onQuality } track={ track } setTrack={ onTrack } speeds={ speeds } showSpeed={ show( 'speed' ) } />
 				) }
-				{ show( 'pip' ) && capabilities?.pip && (
+				{ show( 'pip' ) && capabilities?.pip && ! hidePiP && (
 					<button className="tp-btn" aria-label="Picture in picture" onClick={ onPiP }>
 						<Icon d={ P.pip } />
 					</button>

@@ -1,20 +1,56 @@
-import { useEffect, useRef, useState, useCallback } from '@wordpress/element';
+import { useEffect, useRef, useState, useCallback, createPortal } from '@wordpress/element';
 import { createProvider } from './providers';
 import { CoverageTracker } from './coverage';
-import { resolveCustomize } from './customize';
+import { resolveCustomize, autoplayMode } from './customize';
 import { gaEvent } from './ga';
 import { rest } from '@Utils/rest';
+import { supportsContainerPiP, cloneStylesInto } from './pip';
 import Controls from './components/Controls';
 import InfoPanel from './components/InfoPanel';
 import Quiz from './components/Quiz';
 import Optin from './components/Optin';
 import Overlay from './components/Overlay';
+import Layers from './components/Layers';
+import TimedContent from './components/TimedContent';
 import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
+
+const containerPipSupported = supportsContainerPiP();
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
+/** Best-effort filename for the download button — from the title, else the URL. */
+function downloadFilename( url, title ) {
+	let base = 'video';
+	let ext = '';
+	try {
+		const path = new URL( url, window.location.href ).pathname.split( '/' ).pop() || '';
+		if ( path.includes( '.' ) ) {
+			ext = path.slice( path.lastIndexOf( '.' ) );
+			base = path.slice( 0, path.lastIndexOf( '.' ) );
+		} else if ( path ) {
+			base = path;
+		}
+	} catch ( e ) {
+		// keep defaults
+	}
+	const name = ( title || '' ).replace( /[\\/:*?"<>|]+/g, '' ).trim();
+	return ( name || base || 'video' ) + ext;
+}
+
+function hexToRgba( hex, alpha ) {
+	const m = /^#?([0-9a-f]{6})$/i.exec( hex || '' );
+	if ( ! m ) {
+		return `rgba(0,0,0,${ alpha })`;
+	}
+	const n = parseInt( m[ 1 ], 16 );
+	return `rgba(${ ( n >> 16 ) & 255 },${ ( n >> 8 ) & 255 },${ n & 255 },${ alpha })`;
+}
+
 export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, autoStart = false } ) {
 	const stageRef = useRef( null );
+	const stickySentinelRef = useRef( null );
+	const stickyDismissedRef = useRef( false ); // explicit close, until back at the top
+	const pipWinRef = useRef( null );
 	const containerRef = useRef( null );
 	const providerRef = useRef( null );
 	const coverageRef = useRef( null );
@@ -22,11 +58,31 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const furthestRef = useRef( 0 ); // furthest naturally-watched second (for no-skip)
 
 	const gating = { ...DEFAULT_GATING, ...( config.gating || {} ) };
+	// Anti-skip is an opt-in restriction the admin sets per video (Questions &
+	// gating tab). DEFAULT_GATING.antiSkip is only a form default for that tab
+	// — a video whose config has never been saved with gating at all must not
+	// silently inherit it just because Pro happens to be active, or every
+	// video's forward-seeking gets capped at "furthest watched" with no admin
+	// choice behind it (this is what looked like "can't drag forward").
+	if ( ! config.gating ) {
+		gating.antiSkip = false;
+	}
 	const source = config.source || {};
 	const branding = config.branding || {};
 	const optin = config.optin || {};
 	const optinDoneRef = useRef( false );
-	const overlays = Array.isArray( config.overlays ) ? config.overlays : [];
+	const allOverlays = Array.isArray( config.overlays ) ? config.overlays : [];
+	// CTA cards use the fire-once modal engine; text overlays are non-blocking
+	// timed windows rendered over the picture.
+	const overlays = allOverlays.filter( ( o ) => ( o.type || 'cta' ) !== 'text' );
+	const textOverlays = allOverlays.filter( ( o ) => o.type === 'text' );
+	const actionBar = config.actionBar || {};
+	// Pro: interactive layers + protection (server strips both when free).
+	const layers = Array.isArray( config.layers ) ? config.layers : [];
+	const watermark = { ...( ( config.protection && config.protection.dynamicWatermark ) || {} ) };
+	if ( preview && watermark.enabled && ! watermark.text ) {
+		watermark.text = 'viewer@example.com'; // live text is resolved server-side
+	}
 	const firedOverlays = useRef( new Set() );
 	const overlayActiveRef = useRef( false );
 	const gaStartedRef = useRef( false );
@@ -41,6 +97,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const appearance = cz.appearance;
 	const behavior = cz.behavior;
 
+	// 'off' | 'muted' | 'sound' — the boolean `autoplay` (legacy) means muted.
+	const apMode = autoplayMode( behavior );
+	const autoplayOn = apMode !== 'off';
+
 	// "In this video" drawer: chapters (any provider) + transcript (from the
 	// caption track on the html5-backed providers; embeds have no cue access).
 	const chapterList = config.chapters || [];
@@ -52,7 +112,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ started, setStarted ] = useState( false );
 	const [ ui, setUi ] = useState( {
 		playing: false, current: 0, duration: 0, buffered: 0,
-		muted: !! ( behavior.muted || behavior.autoplay ), volume: 1, rate: 1, quality: 'auto', track: 'off',
+		muted: !! ( behavior.muted || ( autoplayOn && apMode !== 'sound' ) ), volume: 1, rate: 1, quality: 'auto', track: 'off',
 	} );
 	const [ gate, setGate ] = useState( null );
 	const [ activeQuiz, setActiveQuiz ] = useState( null );
@@ -60,8 +120,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ frontier, setFrontier ] = useState( 0 );
 	const [ idle, setIdle ] = useState( false );
 	const [ sticky, setSticky ] = useState( false );
+	const [ pipWin, setPipWin ] = useState( null );
 	const [ activeOptin, setActiveOptin ] = useState( false );
 	const [ activeOverlay, setActiveOverlay ] = useState( null );
+	const [ activeTextIds, setActiveTextIds ] = useState( [] );
 	const [ infoOpen, setInfoOpen ] = useState( false );
 
 	const getCues = useCallback( () => ( providerRef.current?.getCues ? providerRef.current.getCues() : [] ), [] );
@@ -123,7 +185,15 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 			let provider;
 			try {
-				provider = await createProvider( containerRef.current, source, { behavior, autoStart } );
+				// Providers read `autoplay`/`muted` booleans; translate the mode.
+				// `autoplaySound` lets html5 skip the forced mute (we retry muted
+				// below if the browser's autoplay policy rejects it).
+				const providerBehavior = {
+					...behavior,
+					autoplay: autoplayOn,
+					autoplaySound: apMode === 'sound',
+				};
+				provider = await createProvider( containerRef.current, source, { behavior: providerBehavior, autoStart } );
 			} catch ( e ) {
 				setError( 'Unable to load the player.' );
 				return;
@@ -181,12 +251,21 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				if ( optin.enabled && optin.position === 'pre' && ! optinDoneRef.current ) {
 					setActiveOptin( true );
 				} else if ( autoStart && ! gateState.locked ) {
-					// Booted from a click-to-load poster: begin playing at once. If
-					// the browser blocks it (autoplay policy), the big-play button
-					// stays visible as the fallback — so swallow the rejection.
+					// Booted from a click-to-load poster or autoplay: begin playing
+					// at once. Autoplay-with-sound gets one unmuted attempt; when the
+					// browser's autoplay policy rejects it, retry muted (and if even
+					// that fails, the big-play button stays as the fallback).
 					const r = provider.play();
 					if ( r && typeof r.catch === 'function' ) {
-						r.catch( () => {} );
+						r.catch( () => {
+							if ( apMode === 'sound' ) {
+								provider.setMuted( true );
+								const retry = provider.play();
+								if ( retry && typeof retry.catch === 'function' ) {
+									retry.catch( () => {} );
+								}
+							}
+						} );
 					}
 				}
 				sync();
@@ -212,6 +291,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					}
 					maybeOverlay( t );
 				}
+				syncTextOverlays( t );
 				sync();
 			} );
 			provider.on( 'durationchange', sync );
@@ -256,16 +336,33 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	}, [] );
 
 	// Sticky-on-scroll: pin the player to a corner when scrolled out of view
-	// while playing.
+	// while playing. Watches a fixed sentinel that stays put in the document
+	// flow — NOT the stage itself, which flips to `position: fixed` once sticky
+	// engages. Observing the stage directly caused a feedback loop (it leaves
+	// its flow slot → the observer immediately reports it "visible" again in
+	// its new fixed spot → sticky turns back off → it un-fixes and reports
+	// "hidden" again → repeat), which is what showed up as flicker on scroll.
 	useEffect( () => {
-		if ( ! behavior.sticky || ! stageRef.current ) {
+		if ( ! behavior.sticky || ! stickySentinelRef.current ) {
 			return undefined;
 		}
 		const io = new IntersectionObserver(
-			( entries ) => setSticky( ! entries[ 0 ].isIntersecting && ui.playing ),
+			( entries ) => {
+				if ( entries[ 0 ].isIntersecting ) {
+					// Back at the top, main player in view — clear any earlier
+					// dismissal so scrolling away again can re-dock it.
+					stickyDismissedRef.current = false;
+					setSticky( false );
+				} else if ( ui.playing && ! stickyDismissedRef.current ) {
+					setSticky( true );
+				}
+				// Otherwise (still out of view but paused, or explicitly dismissed):
+				// leave `sticky` exactly as it is — pausing/seeking while docked
+				// must not un-dock it, and a dismissal must not re-engage on its own.
+			},
 			{ threshold: 0.1 }
 		);
-		io.observe( stageRef.current );
+		io.observe( stickySentinelRef.current );
 		return () => io.disconnect();
 	}, [ behavior.sticky, ui.playing ] );
 
@@ -318,6 +415,18 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			setActiveOverlay( due );
 		}
 	};
+	// Text overlays: timed show/hide windows — unlike CTAs they re-show whenever
+	// the playhead re-enters their window (rewinds included).
+	const syncTextOverlays = ( t ) => {
+		if ( ! textOverlays.length ) {
+			return;
+		}
+		const ids = textOverlays
+			.filter( ( o ) => t >= ( parseFloat( o.start ) || 0 ) && ( ! o.end || t < parseFloat( o.end ) ) )
+			.map( ( o ) => o.id );
+		setActiveTextIds( ( prev ) => ( prev.length === ids.length && prev.every( ( id, i ) => id === ids[ i ] ) ? prev : ids ) );
+	};
+
 	const closeOverlay = () => {
 		overlayActiveRef.current = false;
 		setActiveOverlay( null );
@@ -436,14 +545,98 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const setRate = ( r ) => providerRef.current.setRate( r );
 	const setQuality = ( q ) => { providerRef.current.setQuality( q ); setUi( ( s ) => ( { ...s, quality: q } ) ); };
 	const setTrack = ( id ) => { providerRef.current.setTextTrack( id === 'off' ? -1 : id ); setUi( ( s ) => ( { ...s, track: id } ) ); };
-	const pip = () => providerRef.current.requestPiP().catch( () => {} );
-	const download = () => {
+	const closePiP = () => {
+		if ( pipWinRef.current ) {
+			pipWinRef.current.close(); // triggers the 'pagehide' listener below
+		}
+	};
+
+	// Container PiP (see pip.js): floats the *whole stage* — video/iframe and
+	// our controls — into a real OS window. It's what makes PiP possible at
+	// all for YouTube (whose iframe a native per-<video> PiP call can't reach)
+	// and more reliable for Vimeo (independent of whether that specific embed
+	// has Vimeo's own PiP enabled).
+	const openContainerPiP = async () => {
+		try {
+			const win = await window.documentPictureInPicture.requestWindow( { width: 420, height: 236 } );
+			cloneStylesInto( win.document );
+			win.document.body.style.margin = '0';
+			win.document.body.style.background = '#000';
+			win.addEventListener( 'pagehide', () => {
+				pipWinRef.current = null;
+				setPipWin( null );
+			}, { once: true } );
+			pipWinRef.current = win;
+			setPipWin( win );
+			return true;
+		} catch ( e ) {
+			return false;
+		}
+	};
+
+	const pip = async () => {
+		if ( pipWinRef.current ) {
+			closePiP();
+			return;
+		}
+		if ( containerPipSupported && await openContainerPiP() ) {
+			return;
+		}
+		// Fallback: native per-<video>/per-embed PiP (html5, Vimeo only — the
+		// button is hidden entirely for sources with neither this nor the
+		// fallback available, e.g. YouTube on a non-Chromium browser).
+		const p = providerRef.current;
+		if ( ! p || ! p.requestPiP ) {
+			return;
+		}
+		try {
+			// Toggle: clicking again while already in PiP (e.g. re-entered via
+			// the OS controls) previously just re-requested it, which the
+			// browser silently ignores/rejects — nothing visibly happened.
+			const active = p.isPiPActive ? await p.isPiPActive() : false;
+			await ( active ? p.exitPiP() : p.requestPiP() );
+		} catch ( e ) {
+			// unsupported for this source/browser — swallow
+		}
+	};
+
+	// Close the floating window if the player unmounts entirely (a video
+	// change alone doesn't unmount this component, so PiP intentionally
+	// persists across e.g. a playlist auto-advancing to the next item).
+	useEffect( () => {
+		return () => {
+			if ( pipWinRef.current ) {
+				pipWinRef.current.close();
+			}
+		};
+	}, [] );
+	const download = async () => {
 		const url = providerRef.current?.sourceUrl || source.src;
-		if ( url ) {
+		if ( ! url ) {
+			return;
+		}
+		// The `download` attribute is silently ignored by browsers for
+		// cross-origin URLs — the anchor then just navigates the tab to the raw
+		// file (a bare native video "panel" with no way back to the page). Fetch
+		// it as a blob instead, which `download` always honors regardless of the
+		// original resource's origin, so the page itself is never left.
+		try {
+			const res = await fetch( url );
+			if ( ! res.ok ) {
+				throw new Error( 'download fetch failed' );
+			}
+			const blobUrl = URL.createObjectURL( await res.blob() );
 			const a = document.createElement( 'a' );
-			a.href = url;
-			a.download = '';
+			a.href = blobUrl;
+			a.download = downloadFilename( url, title );
+			document.body.appendChild( a );
 			a.click();
+			a.remove();
+			setTimeout( () => URL.revokeObjectURL( blobUrl ), 4000 );
+		} catch ( e ) {
+			// Truly unreachable via fetch (no CORS headers, network error, …) —
+			// open in a new tab rather than navigating away with no way back.
+			window.open( url, '_blank', 'noopener' );
 		}
 	};
 	const fullscreen = () => {
@@ -514,21 +707,46 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	if ( appearance.hoverColor ) {
 		stageStyle[ '--tp-hover' ] = appearance.hoverColor;
 	}
+	// Caption cue styling (html5-backed providers; embeds render their own).
+	stageStyle[ '--tp-cap-scale' ] = ( appearance.captionSize || 100 ) / 100;
+	stageStyle[ '--tp-cap-color' ] = appearance.captionColor || '#ffffff';
+	stageStyle[ '--tp-cap-bg' ] = hexToRgba( appearance.captionBackground || '#000000', ( appearance.captionOpacity ?? 75 ) / 100 );
+	// Aspect ratio (audio keeps its compact bar; sticky keeps the ratio too so
+	// the mini player matches the video's shape).
+	if ( source.mediaType !== 'audio' && appearance.aspectRatio && appearance.aspectRatio !== '16:9' ) {
+		stageStyle.aspectRatio = appearance.aspectRatio === 'auto' ? 'auto' : appearance.aspectRatio.replace( ':', ' / ' );
+	}
 
+	const skin = appearance.skin || 'default';
 	const stageClass = [
 		'tp-stage',
+		`tp-skin-${ skin }`,
 		idle && ui.playing ? 'is-idle' : '',
 		source.mediaType === 'audio' ? 'is-audio' : '',
 		`tp-bar-${ appearance.controlBarStyle }`,
 		`tp-play-${ appearance.playButtonStyle }`,
-		sticky ? `tp-sticky tp-sticky-${ behavior.stickyPosition }` : '',
+		// A real OS PiP window replaces the in-page floating corner — the two
+		// floating mechanisms together would fight over `position: fixed`.
+		( sticky && ! pipWin ) ? `tp-sticky tp-sticky-${ behavior.stickyPosition }` : '',
 	].filter( Boolean ).join( ' ' );
 
-	return (
+	// Container PiP works regardless of provider (it just floats the whole
+	// stage), so it can make the button available even where the provider has
+	// no native fallback of its own (YouTube).
+	const pipAvailable = containerPipSupported || !! providerRef.current?.capabilities?.pip;
+
+	const stage = (
 		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
 		<div ref={ stageRef } className={ stageClass } style={ stageStyle } tabIndex={ 0 } onKeyDown={ onKeyDown }>
-			{ sticky && (
-				<button className="tp-sticky-close" aria-label="Close" onClick={ () => setSticky( false ) }>×</button>
+			{ sticky && ! pipWin && (
+				<button
+					className="tp-sticky-close"
+					aria-label="Close"
+					onClick={ () => {
+						stickyDismissedRef.current = true;
+						setSticky( false );
+					} }
+				>×</button>
 			) }
 			<div ref={ containerRef } className="tp-media-container" onClick={ () => ready && ! activeQuiz && playPause() } />
 
@@ -559,7 +777,77 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				<div className="tp-poster" style={ { backgroundImage: `url("${ source.poster }")` } } />
 			) }
 
-			{ branding.logo && <img className="tp-logo" src={ branding.logo } alt="" /> }
+			{ branding.logo && (
+				branding.logoUrl ? (
+					<a
+						className={ `tp-logo tp-logo-${ branding.logoPosition || 'top-right' } is-link` }
+						style={ { opacity: branding.logoOpacity ?? 0.9 } }
+						href={ branding.logoUrl }
+						target="_blank"
+						rel="noreferrer"
+					>
+						<img src={ branding.logo } alt="" />
+					</a>
+				) : (
+					<img
+						className={ `tp-logo tp-logo-${ branding.logoPosition || 'top-right' }` }
+						style={ { opacity: branding.logoOpacity ?? 0.9 } }
+						src={ branding.logo }
+						alt=""
+					/>
+				)
+			) }
+
+			{ /* Non-blocking timed text overlays (title/info cards over the picture). */ }
+			{ textOverlays
+				.filter( ( o ) => activeTextIds.includes( o.id ) )
+				.map( ( o ) => (
+					<div
+						key={ o.id }
+						className={ `tp-text-overlay tp-pos-${ o.position || 'top-left' }` }
+						style={ { background: hexToRgba( o.background || '#000000', ( o.bgOpacity ?? 60 ) / 100 ) } }
+					>
+						{ o.title && <strong className="tp-text-overlay-title">{ o.title }</strong> }
+						{ o.text && <span className="tp-text-overlay-text">{ o.text }</span> }
+					</div>
+				) ) }
+
+			{ /* Interactive layers (pro). */ }
+			{ layers.length > 0 && ! activeQuiz && ! activeOptin && ! locked && (
+				<Layers
+					layers={ layers }
+					current={ ui.current }
+					videoId={ videoId }
+					preview={ preview }
+					onOptin={ ( { email } ) => ( preview ? Promise.resolve() : rest.post( 'optin', { video: videoId, email } ) ) }
+				/>
+			) }
+
+			{ /* Dynamic watermark (pro): identity burned over the picture. */ }
+			{ watermark.enabled && watermark.text && (
+				<div
+					className={ `tp-watermark${ watermark.drift !== false ? ' is-drifting' : '' }` }
+					style={ { opacity: watermark.opacity ?? 0.35 } }
+					aria-hidden="true"
+				>
+					{ watermark.text }
+				</div>
+			) }
+
+			{ /* Persistent action bar. */ }
+			{ actionBar.enabled && ( actionBar.text || actionBar.buttonLabel ) && (
+				<div
+					className={ `tp-actionbar tp-actionbar-${ actionBar.position === 'top' ? 'top' : 'bottom' }` }
+					style={ actionBar.background ? { background: actionBar.background } : undefined }
+				>
+					{ actionBar.text && <span className="tp-actionbar-text">{ actionBar.text }</span> }
+					{ actionBar.buttonLabel && (
+						<a className="tp-actionbar-btn" href={ actionBar.buttonUrl || '#' } target="_blank" rel="noreferrer noopener">
+							{ actionBar.buttonLabel }
+						</a>
+					) }
+				</div>
+			) }
 
 			{ ! ready && ! error && <Spinner /> }
 			{ error && <Message>{ error }</Message> }
@@ -607,10 +895,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					seekable={ seekable }
 					chapters={ config.chapters || [] }
 					provider={ providerRef.current }
-					capabilities={ providerRef.current?.capabilities }
+					capabilities={ { ...providerRef.current?.capabilities, pip: pipAvailable } }
 					controls={ cz.controls }
 					speeds={ cz.speeds }
 					skipSeconds={ cz.skipSeconds }
+					scrubDisabled={ !! behavior.disableSeek }
+					hidePiP={ sticky && ! pipWin }
 					onPlayPause={ playPause }
 					onSeek={ seek }
 					onSkip={ skip }
@@ -642,5 +932,63 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				/>
 			) }
 		</div>
+	);
+
+	// Once `sticky` engages, the stage leaves the document flow (`position:
+	// fixed`), so this slot reserves its normal footprint — matching the
+	// aspect ratio it would otherwise render at — to avoid a layout jump, and
+	// hosts the sentinel the observer above watches. Container PiP moves the
+	// stage out entirely (into another window), so it reserves the same way.
+	const slotStyle = ( sticky || pipWin )
+		? ( source.mediaType === 'audio' ? { minHeight: '72px' } : { aspectRatio: stageStyle.aspectRatio || '16 / 9' } )
+		: undefined;
+	const stageInSlot = (
+		<div className="tp-stage-slot" style={ slotStyle }>
+			<span ref={ stickySentinelRef } className="tp-stage-sentinel" aria-hidden="true" />
+			{ pipWin ? (
+				<div className="tp-pip-placeholder">
+					<p>Playing in a floating window</p>
+					<button type="button" className="tp-pip-return" onClick={ closePiP }>Bring back</button>
+				</div>
+			) : stage }
+		</div>
+	);
+
+	// Ambient skin: a blurred, oversized copy of the poster glows behind the
+	// stage (the stage clips its own children, so the glow needs a wrapper).
+	// The wrapper renders unconditionally for the skin — toggling it (e.g. on
+	// sticky) would remount the stage and destroy the provider's media element.
+	let content;
+	if ( skin === 'ambient' && source.mediaType !== 'audio' ) {
+		// Both children stay mounted (hidden via style) — removing the glow
+		// would shift the stage's reconciliation slot and recreate its DOM.
+		content = (
+			<div className="tp-ambient-wrap">
+				<div
+					className="tp-ambient-glow"
+					style={ {
+						backgroundImage: source.poster ? `url("${ source.poster }")` : undefined,
+						display: source.poster && ! sticky ? undefined : 'none',
+					} }
+					aria-hidden="true"
+				/>
+				{ stageInSlot }
+			</div>
+		);
+	} else {
+		content = stageInSlot;
+	}
+
+	return (
+		<>
+			{ content }
+			{ /* Timed content region (pro): a block below the player that swaps
+			     with the video timeline. Stays in flow under the stage. */ }
+			{ gatingOn && <TimedContent config={ config } current={ ui.current } /> }
+			{ /* The stage (video/iframe + controls) itself lives in the PiP
+			     window once open — a portal, not a copy, so it's the exact same
+			     live provider/DOM node, not a re-mounted one. */ }
+			{ pipWin && createPortal( stage, pipWin.document.body ) }
+		</>
 	);
 }

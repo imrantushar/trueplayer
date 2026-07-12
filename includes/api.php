@@ -27,6 +27,11 @@ class Api {
 		( new API\OptinController() )->register_routes();
 		( new API\IntegrationsController() )->register_routes();
 		( new API\AnalyticsController() )->register_routes();
+		( new API\StreamController() )->register_routes();
+		( new API\LmsController() )->register_routes();
+		( new API\ImportController() )->register_routes();
+		( new API\RulesController() )->register_routes();
+		( new API\SubtitlesController() )->register_routes();
 		do_action( 'trueplayer/api/register_routes' );
 	}
 }

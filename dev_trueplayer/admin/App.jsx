@@ -7,6 +7,7 @@ import Playlists from './screens/Playlists';
 import Presets from './screens/Presets';
 import Dashboard from './screens/Dashboard';
 import { Icon } from './components/icons';
+import Header from './components/Header';
 import { isPro } from './pro';
 import { parseRoute, routeUrl, PAGE_OF, currentPage } from './nav';
 
@@ -55,17 +56,7 @@ export default function App() {
 
 	return (
 		<div className="tp-admin flex flex-col min-h-[calc(100vh-32px)] bg-gray-50 text-ink -ml-5 -mr-5">
-			{ /* Topbar */ }
-			<header className="bg-white border-b border-line h-14 flex items-center px-5 gap-3 shrink-0">
-				<span className="inline-flex w-8 h-8 rounded-lg bg-brand-500 text-white items-center justify-center shrink-0">
-					<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-				</span>
-				<span className="font-bold text-[15px] tracking-tight">TruePlayer</span>
-				<span className="w-px h-5 bg-line mx-1" />
-				<span className="text-sm font-medium text-gray-500">{ TITLES[ route.name ] || '' }</span>
-				{ /* Screens (e.g. the editor) portal their toolbar actions here. */ }
-				<div id="tp-topbar-slot" className="ml-auto flex items-center gap-2.5" />
-			</header>
+			<Header title={ TITLES[ route.name ] } />
 
 			<div className="flex flex-1 min-h-0">
 				{ route.name === 'editor' ? (
@@ -75,7 +66,7 @@ export default function App() {
 				) : (
 					<>
 						{ /* Main nav sidebar */ }
-						<aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col">
+						<aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col"> 
 							<nav className="flex-1 p-3 space-y-1">
 								{ NAV.map( ( n ) => (
 									<button

@@ -24,6 +24,7 @@ export const api = {
 	createPlaylist: ( title ) => rest.post( 'playlists', { title, config: { layout: 'sidebar', videos: [] } } ),
 	updatePlaylist: ( id, data ) => rest.put( `playlists/${ id }`, data ),
 	deletePlaylist: ( id ) => rest.del( `playlists/${ id }` ),
+	getLmsOptions: () => rest.get( 'lms/options' ),
 };
 
 export const EVENT_TYPES = [

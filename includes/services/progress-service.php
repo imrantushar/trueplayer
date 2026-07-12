@@ -327,7 +327,7 @@ class ProgressService {
 	public static function gating_config( $video_id ) {
 		$config = Helper::get_video_config( $video_id );
 		$gating = isset( $config['gating'] ) && is_array( $config['gating'] ) ? $config['gating'] : [];
-		return wp_parse_args(
+		$gating = wp_parse_args(
 			$gating,
 			[
 				'completionThreshold' => 90,
@@ -337,8 +337,29 @@ class ProgressService {
 				'checkpoints'         => [],
 				'finalQuiz'           => null,
 				'requireLoginForGate' => false,
+				'strict'              => false, // must-watch: 100% coverage, no skipping
+				'availableFrom'       => '',    // drip: ISO/date string; empty = always available
 			]
 		);
+
+		// Must-watch-strict forces full coverage and anti-skip regardless of the
+		// per-video values — a single switch for compliance-grade enforcement.
+		if ( ! empty( $gating['strict'] ) ) {
+			$gating['completionThreshold'] = 100;
+			$gating['antiSkip']            = true;
+		}
+		return $gating;
+	}
+
+	/**
+	 * Drip: the timestamp before which a video is not yet available, or 0 when
+	 * it is always available. Filterable so LMS drip (days-after-enrollment) can
+	 * compute a per-user release time.
+	 */
+	public static function available_from( $video_id, $subject = null ) {
+		$gating = self::gating_config( $video_id );
+		$ts     = ! empty( $gating['availableFrom'] ) ? (int) strtotime( (string) $gating['availableFrom'] ) : 0;
+		return (int) apply_filters( 'trueplayer/drip/available_from', $ts, $video_id, $subject );
 	}
 
 	private static function maybe_emit_milestones( $video_id, Subject $subject, $prev, $now ) {
