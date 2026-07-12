@@ -473,6 +473,9 @@
 .max-w-\[220px\] {
 		max-width: 220px;
 }
+.max-w-\[40vw\] {
+		max-width: 40vw;
+}
 .max-w-lg {
 		max-width: 32rem;
 }

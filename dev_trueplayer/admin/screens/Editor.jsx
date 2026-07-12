@@ -72,6 +72,7 @@ export default function Editor( { id, onBack } ) {
 	const [ saved, setSaved ] = useState( false );
 	const [ presets, setPresets ] = useState( [] );
 	const [ toolbarSlot, setToolbarSlot ] = useState( null );
+	const [ titleSlot, setTitleSlot ] = useState( null );
 	const [ embedOpen, setEmbedOpen ] = useState( false );
 	const [ duration, setDuration ] = useState( 0 );
 
@@ -79,6 +80,7 @@ export default function Editor( { id, onBack } ) {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
 		api.listPresets().then( setPresets ).catch( () => {} );
 		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
+		setTitleSlot( document.getElementById( 'tp-topbar-title-slot' ) );
 	}, [ id ] );
 
 	const patchConfig = useCallback( ( partial ) => {
@@ -183,6 +185,18 @@ export default function Editor( { id, onBack } ) {
 						toolbarSlot
 					) }
 
+					{ /* Editable media title, portaled into the topbar. */ }
+					{ titleSlot && createPortal(
+						<input
+							className="text-sm font-semibold text-ink bg-transparent outline-none border-b border-transparent focus:border-brand-500 w-56 max-w-[40vw]"
+							value={ video.title }
+							onChange={ ( e ) => setTitle( e.target.value ) }
+							placeholder="Untitled media"
+							aria-label="Media title"
+						/>,
+						titleSlot
+					) }
+
 					{ embedOpen && (
 						<Modal title="Embed this media" onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
 							<EmbedTab video={ video } config={ config } patch={ patchConfig } />
@@ -190,11 +204,7 @@ export default function Editor( { id, onBack } ) {
 					) }
 
 					<div className="mb-6">
-						<input
-							className="w-full max-w-md text-2xl font-bold text-gray-900 bg-transparent outline-none border-b border-transparent focus:border-line"
-							value={ video.title }
-							onChange={ ( e ) => setTitle( e.target.value ) }
-						/>
+						<h1 className="text-2xl font-bold text-gray-900">{ TABS.find( ( t ) => t.key === tab )?.label }</h1>
 					</div>
 
 					<div className="flex flex-col xl:flex-row gap-6 items-start">

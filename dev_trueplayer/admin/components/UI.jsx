@@ -131,7 +131,7 @@ export function Card( { children, className = '' } ) {
 export function SubSidebar( { items, value, onChange, className = '' } ) {
 	return (
 		<aside className={ `w-44 shrink-0 ${ className }` }>
-			<nav className="space-y-1 sticky top-4">
+			<nav className="space-y-1 sticky top-4 bg-white border border-line rounded-card p-2">
 				{ items.map( ( [ key, label, pro ] ) => (
 					<button
 						key={ key }

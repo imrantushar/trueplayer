@@ -44,7 +44,7 @@ export default function App() {
 	// navigation lives in the WordPress admin submenu.
 	return (
 		<div className="tp-admin flex flex-col min-h-[calc(100vh-32px)] bg-body text-ink -ml-5 -mr-5">
-			<Header title={ TITLES[ route.name ] } />
+			<Header title={ route.name === 'editor' ? '' : TITLES[ route.name ] } />
 
 			<div className="flex flex-1 min-h-0">
 				{ route.name === 'editor' ? (
