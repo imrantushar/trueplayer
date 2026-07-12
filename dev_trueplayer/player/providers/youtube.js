@@ -57,6 +57,9 @@ export async function createYouTubeProvider( container, source, opts = {} ) {
 	// the Player has subscribed to it, leaving it stuck on the spinner.
 	const player = new YT.Player( host, {
 		videoId: parseId( source ),
+		// Privacy-enhanced mode (Settings → Sources & CDN): serve from
+		// youtube-nocookie.com so no cookies are set until playback.
+		host: ( window.TruePlayerGlobal && window.TruePlayerGlobal.youtube_nocookie ) ? 'https://www.youtube-nocookie.com' : undefined,
 		playerVars: {
 			controls: 0,
 			modestbranding: 1,

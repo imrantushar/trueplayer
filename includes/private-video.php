@@ -14,9 +14,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class PrivateVideo {
 
-	/** How long a signed link stays valid (seconds). */
+	/** How long a signed link stays valid (seconds). Settings → Sources & CDN. */
 	public static function ttl(): int {
-		return (int) apply_filters( 'trueplayer/private_video/ttl', 6 * HOUR_IN_SECONDS );
+		$sources = \TruePlayer\Helper::get_settings_section( 'sources' );
+		$hours   = isset( $sources['signedUrlTtlHours'] ) ? (int) $sources['signedUrlTtlHours'] : 0;
+		$default = $hours > 0 ? $hours * HOUR_IN_SECONDS : 6 * HOUR_IN_SECONDS;
+		return (int) apply_filters( 'trueplayer/private_video/ttl', $default );
 	}
 
 	/** HMAC over the video id + expiry, keyed to this site. */

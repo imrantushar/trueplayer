@@ -141,9 +141,12 @@ class Assets {
 	}
 
 	private function get_frontend_scripts_data(): array {
+		$data              = $this->get_common_scripts_data();
+		$sources           = \TruePlayer\Helper::get_settings_section( 'sources' );
+		$data['youtube_nocookie'] = ! empty( $sources['youtubeNoCookie'] );
 		return apply_filters(
 			'trueplayer/assets/frontend_scripts_data',
-			$this->get_common_scripts_data()
+			$data
 		);
 	}
 

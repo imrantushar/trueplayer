@@ -90,6 +90,12 @@ class Helper {
 	 */
 	public static function apply_preset( array $config ): array {
 		$preset_id = isset( $config['presetId'] ) ? (int) $config['presetId'] : 0;
+
+		// Fall back to the site-wide default preset (Settings → General).
+		if ( ! $preset_id ) {
+			$general   = self::get_settings_section( 'general' );
+			$preset_id = isset( $general['defaultPreset'] ) ? (int) $general['defaultPreset'] : 0;
+		}
 		if ( ! $preset_id || get_post_type( $preset_id ) !== TRUEPLAYER_PRESET_POST_TYPE ) {
 			return $config;
 		}

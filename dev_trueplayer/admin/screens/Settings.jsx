@@ -1,6 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
-import { Card, Button, Badge, Field, Input, Toggle } from '../components/UI';
+import { Card, Button, Badge, Field, Input, Select, Textarea, Toggle } from '../components/UI';
 import { EndpointList } from '../components/EndpointList';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
@@ -8,8 +8,10 @@ import PlayerOptionsTab from './editor/PlayerOptionsTab';
 
 const SUBTABS = [
 	{ key: 'defaults', label: 'Player defaults' },
+	{ key: 'general', label: 'General' },
 	{ key: 'enforcement', label: 'Enforcement' },
 	{ key: 'compliance', label: 'Compliance & privacy' },
+	{ key: 'sources', label: 'Sources & CDN' },
 	{ key: 'integrations', label: 'Integrations' },
 	{ key: 'whitelabel', label: 'White-label' },
 	{ key: 'webhooks', label: 'Global webhooks' },
@@ -52,9 +54,11 @@ export default function Settings() {
 	const [ tab, setTab ] = useState( 'defaults' );
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
+	const [ presets, setPresets ] = useState( [] );
 
 	useEffect( () => {
 		api.getSettings().then( ( s ) => setSettings( s || {} ) );
+		api.listPresets().then( ( p ) => setPresets( p || [] ) );
 	}, [] );
 
 	const save = async () => {
@@ -114,6 +118,26 @@ export default function Settings() {
 						patch={ ( partial ) => setSettings( ( s ) => ( { ...s, ...partial } ) ) }
 					/>
 				</>
+			) }
+
+			{ tab === 'general' && (
+				<div className="max-w-xl space-y-6">
+					<Card className="p-6">
+						<h3 className="font-semibold text-gray-900 mb-1">Default preset</h3>
+						<p className="text-sm text-muted mb-4">Applied to any video that doesn't pick its own preset.</p>
+						<Field label="Default preset">
+							<Select value={ settings.general?.defaultPreset || '' } onChange={ ( e ) => setSettings( ( s ) => ( { ...s, general: { ...( s.general || {} ), defaultPreset: e.target.value ? parseInt( e.target.value, 10 ) : 0 } } ) ) }>
+								<option value="">— none —</option>
+								{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+							</Select>
+						</Field>
+					</Card>
+					<Card className="p-6">
+						<h3 className="font-semibold text-gray-900 mb-1">Custom CSS</h3>
+						<p className="text-sm text-muted mb-4">Injected on every page a TruePlayer player renders. Target <code>.tp-*</code> classes.</p>
+						<Textarea rows={ 6 } className="font-mono text-xs" value={ settings.customize?.css || '' } onChange={ ( e ) => setSettings( ( s ) => ( { ...s, customize: { ...( s.customize || {} ), css: e.target.value } } ) ) } placeholder=".tp-controls { --tp-accent: #4F46E5; }" />
+					</Card>
+				</div>
 			) }
 
 			{ tab === 'enforcement' && (
@@ -197,6 +221,37 @@ export default function Settings() {
 				) : (
 					<UpsellPanel title="Compliance &amp; privacy" features={ [ 'White-labelled completion certificates', 'Public verification page', 'Data-retention auto-purge (GDPR)' ] } />
 				)
+			) }
+
+			{ tab === 'sources' && (
+				<div className="max-w-xl space-y-6">
+					<Card className="p-6">
+						<h3 className="font-semibold text-gray-900 mb-1">YouTube</h3>
+						<p className="text-sm text-muted mb-4">Privacy-enhanced mode plays via youtube-nocookie.com — no cookies until a visitor presses play.</p>
+						<Toggle checked={ !! settings.sources?.youtubeNoCookie } onChange={ ( v ) => setSettings( ( s ) => ( { ...s, sources: { ...( s.sources || {} ), youtubeNoCookie: v } } ) ) } label="Enable privacy-enhanced mode (no-cookie)" />
+					</Card>
+
+					{ isPro() ? (
+						<>
+							<Card className="p-6">
+								<h3 className="font-semibold text-gray-900 mb-1">Bunny.net token authentication</h3>
+								<p className="text-sm text-muted mb-4">For <strong>private</strong> Bunny videos: enable Token Authentication on your pull zone, then paste its key. TruePlayer signs expiring playback URLs.</p>
+								<Field label="Token Authentication Key">
+									<Input type="password" value={ settings.bunny?.tokenKey || '' } onChange={ ( e ) => setSettings( ( s ) => ( { ...s, bunny: { ...( s.bunny || {} ), tokenKey: e.target.value } } ) ) } placeholder="••••••••-••••-••••" />
+								</Field>
+							</Card>
+							<Card className="p-6">
+								<h3 className="font-semibold text-gray-900 mb-1">Signed link expiry</h3>
+								<p className="text-sm text-muted mb-4">How long a signed / private playback URL stays valid before it must be re-issued.</p>
+								<Field label="Expiry (hours)" hint="Applies to private self-hosted files and Bunny token links.">
+									<Input type="number" min="1" value={ settings.sources?.signedUrlTtlHours || 6 } onChange={ ( e ) => setSettings( ( s ) => ( { ...s, sources: { ...( s.sources || {} ), signedUrlTtlHours: parseInt( e.target.value, 10 ) || 0 } } ) ) } />
+								</Field>
+							</Card>
+						</>
+					) : (
+						<UpsellPanel title="Private &amp; premium sources" features={ [ 'Bunny.net token authentication', 'Signed, expiring playback URLs', 'Mux & HLS streaming' ] } />
+					) }
+				</div>
 			) }
 
 			{ tab === 'integrations' && (
