@@ -1,5 +1,6 @@
 /** Shared Tailwind UI primitives — GemCRM design language (see gemcrm/ui_rule.md). */
-import { useState } from '@wordpress/element';
+import { useState, Children } from '@wordpress/element';
+import ReactSelect from 'react-select';
 
 export function Button( { children, variant = 'primary', size = 'md', className = '', ...rest } ) {
 	// GemCRM button presets: primary (solid blue), secondary/ghost (outline),
@@ -50,11 +51,72 @@ export function Textarea( { className = '', ...props } ) {
 	return <textarea { ...props } className={ `w-full rounded border border-line px-3 py-2 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none ${ className }` } />;
 }
 
-export function Select( { className = '', children, ...props } ) {
+/** Flatten a React children tree to its text (for react-select option labels). */
+function nodeText( node ) {
+	if ( node == null || node === false || node === true ) {
+		return '';
+	}
+	if ( typeof node === 'string' || typeof node === 'number' ) {
+		return String( node );
+	}
+	if ( Array.isArray( node ) ) {
+		return node.map( nodeText ).join( '' );
+	}
+	if ( node.props && node.props.children != null ) {
+		return nodeText( node.props.children );
+	}
+	return '';
+}
+
+const RS_STYLES = {
+	control: ( base, s ) => ( {
+		...base, minHeight: 40, borderRadius: 4, fontSize: 14, backgroundColor: '#fff',
+		borderColor: s.isFocused ? '#006BFF' : '#e5e7eb',
+		boxShadow: s.isFocused ? '0 0 0 2px #E3E7FF' : 'none',
+		'&:hover': { borderColor: s.isFocused ? '#006BFF' : '#cbd1d7' },
+	} ),
+	valueContainer: ( base ) => ( { ...base, padding: '0 4px 0 10px' } ),
+	placeholder: ( base ) => ( { ...base, color: '#A2ADB9' } ),
+	singleValue: ( base ) => ( { ...base, color: '#1f2937' } ),
+	indicatorSeparator: () => ( { display: 'none' } ),
+	dropdownIndicator: ( base ) => ( { ...base, color: '#738496', padding: 6 } ),
+	menu: ( base ) => ( { ...base, borderRadius: 6, overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 8px 28px rgba(16,24,40,0.12)' } ),
+	menuPortal: ( base ) => ( { ...base, zIndex: 100000 } ),
+	option: ( base, s ) => ( {
+		...base, fontSize: 14, cursor: 'pointer',
+		backgroundColor: s.isSelected ? '#006BFF' : s.isFocused ? '#E3E7FF' : '#fff',
+		color: s.isSelected ? '#fff' : s.isDisabled ? '#9ca3af' : '#1f2937',
+		':active': { backgroundColor: s.isSelected ? '#006BFF' : '#E3E7FF' },
+	} ),
+};
+
+/**
+ * react-select, kept API-compatible with the old native `<Select>`: accepts
+ * `<option>` children, a string `value`, and an event-shaped `onChange`
+ * ({ target: { value } }) so every call site works unchanged.
+ */
+export function Select( { className = '', children, value, onChange, disabled = false, ...rest } ) {
+	const options = [];
+	Children.toArray( children ).forEach( ( c ) => {
+		if ( c && c.type === 'option' ) {
+			options.push( { value: c.props.value, label: nodeText( c.props.children ), isDisabled: !! c.props.disabled } );
+		}
+	} );
+	const selected = options.find( ( o ) => String( o.value ) === String( value ?? '' ) ) || null;
 	return (
-		<select { ...props } className={ `${ controlBase } pr-8 appearance-none bg-no-repeat ${ className }` } style={ { backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23738496\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")', backgroundPosition: 'right 10px center' } }>
-			{ children }
-		</select>
+		<ReactSelect
+			className={ className }
+			classNamePrefix="tp-rs"
+			options={ options }
+			value={ selected }
+			isDisabled={ disabled }
+			isSearchable={ options.length > 6 }
+			menuPortalTarget={ typeof document !== 'undefined' ? document.body : null }
+			menuPlacement="auto"
+			styles={ RS_STYLES }
+			onChange={ ( opt ) => onChange && onChange( { target: { value: opt ? opt.value : '' } } ) }
+			{ ...rest }
+		/>
 	);
 }
 

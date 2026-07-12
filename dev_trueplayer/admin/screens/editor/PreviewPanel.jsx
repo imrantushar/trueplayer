@@ -14,7 +14,7 @@ import Player from '@Player/Player';
  * recomputes its customization from props each render) — no video reload while
  * you tweak styles.
  */
-export default function PreviewPanel( { id, config } ) {
+export default function PreviewPanel( { id, config, onDuration } ) {
 	const [ bump, setBump ] = useState( 0 );
 	const src = config.source && config.source.src;
 	const key = `${ config.source?.type || '' }:${ config.source?.src || '' }:${ bump }`;
@@ -32,7 +32,7 @@ export default function PreviewPanel( { id, config } ) {
 				</div>
 			) : (
 				<div className="trueplayer-mount">
-					<Player key={ key } videoId={ id } config={ config } preview />
+					<Player key={ key } videoId={ id } config={ config } preview onDuration={ onDuration } />
 				</div>
 			) }
 

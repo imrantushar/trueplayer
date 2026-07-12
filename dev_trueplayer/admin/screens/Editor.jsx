@@ -73,6 +73,7 @@ export default function Editor( { id, onBack } ) {
 	const [ presets, setPresets ] = useState( [] );
 	const [ toolbarSlot, setToolbarSlot ] = useState( null );
 	const [ embedOpen, setEmbedOpen ] = useState( false );
+	const [ duration, setDuration ] = useState( 0 );
 
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
@@ -204,7 +205,7 @@ export default function Editor( { id, onBack } ) {
 								<>
 									{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
 									{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } /> }
+									{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
 									{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } /> }
 									{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
 								</>
@@ -213,7 +214,7 @@ export default function Editor( { id, onBack } ) {
 
 						<div className="w-full xl:w-[380px] shrink-0">
 							<div className="xl:sticky xl:top-4">
-								<PreviewPanel id={ id } config={ config } />
+								<PreviewPanel id={ id } config={ config } onDuration={ setDuration } />
 							</div>
 						</div>
 					</div>

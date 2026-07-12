@@ -3,31 +3,38 @@ import { Card, Field, Input, Button, Select, Textarea } from '../../components/U
 import { pickMedia } from '../../utils/media';
 import { parseChapters, secToClock, clockToSec } from '../../utils/chapters';
 
-/** mm:ss text input that commits a seconds value on blur / Enter. */
-function TimeInput( { seconds, onCommit } ) {
+/** mm:ss input with ± steppers, clamped to [0, max]. Commits seconds on blur/Enter. */
+function TimeInput( { seconds, onCommit, max = 0 } ) {
 	const [ v, setV ] = useState( secToClock( seconds ) );
 	useEffect( () => { setV( secToClock( seconds ) ); }, [ seconds ] );
+	const clamp = ( s ) => Math.max( 0, max > 0 ? Math.min( s, Math.floor( max ) ) : s );
 	const commit = () => {
 		const s = clockToSec( v );
 		if ( s === null ) {
 			setV( secToClock( seconds ) ); // revert bad input
 		} else {
-			onCommit( s );
+			onCommit( clamp( s ) );
 		}
 	};
+	const nudge = ( d ) => onCommit( clamp( ( clockToSec( v ) ?? seconds ) + d ) );
+	const step = 'w-7 h-10 flex items-center justify-center text-muted hover:text-brand-500 hover:bg-gray-100 border border-line disabled:opacity-40 disabled:pointer-events-none';
 	return (
-		<Input
-			className="w-24 text-center tabular-nums"
-			value={ v }
-			onChange={ ( e ) => setV( e.target.value ) }
-			onBlur={ commit }
-			onKeyDown={ ( e ) => e.key === 'Enter' && commit() }
-			placeholder="0:00"
-		/>
+		<div className="flex items-stretch shrink-0">
+			<button type="button" className={ `${ step } rounded-l border-r-0` } onClick={ () => nudge( -1 ) } aria-label="−1 second">−</button>
+			<Input
+				className="w-16 text-center tabular-nums rounded-none"
+				value={ v }
+				onChange={ ( e ) => setV( e.target.value ) }
+				onBlur={ commit }
+				onKeyDown={ ( e ) => e.key === 'Enter' && commit() }
+				placeholder="0:00"
+			/>
+			<button type="button" className={ `${ step } rounded-r border-l-0` } disabled={ max > 0 && ( clockToSec( v ) ?? 0 ) >= Math.floor( max ) } onClick={ () => nudge( 1 ) } aria-label="+1 second">+</button>
+		</div>
 	);
 }
 
-export default function AppearanceTab( { config, patch } ) {
+export default function AppearanceTab( { config, patch, duration = 0 } ) {
 	const branding = config.branding || {};
 	const chapters = config.chapters || [];
 	const source = config.source || {};
@@ -219,7 +226,7 @@ export default function AppearanceTab( { config, patch } ) {
 						<Button variant="ghost" onClick={ addChapter }>+ Add</Button>
 					</div>
 				</div>
-				<p className="text-sm text-gray-400 mb-4">Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss.</p>
+				<p className="text-sm text-gray-400 mb-4">Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss{ duration > 0 ? ` · max ${ secToClock( duration ) }` : '' }.</p>
 
 				{ importOpen && (
 					<div className="mb-4 p-4 bg-gray-50 rounded-md border border-line">
@@ -250,7 +257,7 @@ export default function AppearanceTab( { config, patch } ) {
 				<div className="space-y-2">
 					{ chapters.map( ( c, i ) => (
 						<div key={ i } className="flex gap-2 items-center">
-							<TimeInput seconds={ c.at } onCommit={ ( s ) => setChapter( i, { at: s } ) } />
+							<TimeInput seconds={ c.at } onCommit={ ( s ) => setChapter( i, { at: s } ) } max={ duration } />
 							<Input value={ c.label } onChange={ ( e ) => setChapter( i, { label: e.target.value } ) } placeholder="Chapter title" />
 							<Button variant="danger" onClick={ () => removeChapter( i ) }>×</Button>
 						</div>

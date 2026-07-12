@@ -46,7 +46,7 @@ function hexToRgba( hex, alpha ) {
 	return `rgba(${ ( n >> 16 ) & 255 },${ ( n >> 8 ) & 255 },${ n & 255 },${ alpha })`;
 }
 
-export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, autoStart = false } ) {
+export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false } ) {
 	const stageRef = useRef( null );
 	const stickySentinelRef = useRef( null );
 	const stickyDismissedRef = useRef( false ); // explicit close, until back at the top
@@ -114,6 +114,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		playing: false, current: 0, duration: 0, buffered: 0,
 		muted: !! ( behavior.muted || ( autoplayOn && apMode !== 'sound' ) ), volume: 1, rate: 1, quality: 'auto', track: 'off',
 	} );
+	// Report the media duration up (used by the editor to clamp chapter/overlay times).
+	useEffect( () => {
+		if ( onDurationProp && ui.duration > 0 ) {
+			onDurationProp( ui.duration );
+		}
+	}, [ ui.duration, onDurationProp ] );
+
 	const [ gate, setGate ] = useState( null );
 	const [ activeQuiz, setActiveQuiz ] = useState( null );
 	const [ locked, setLocked ] = useState( false );
