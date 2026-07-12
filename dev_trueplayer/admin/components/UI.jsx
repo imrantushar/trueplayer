@@ -62,6 +62,31 @@ export function Card( { children, className = '' } ) {
 	return <div className={ `bg-white rounded-card border border-line shadow-card ${ className }` }>{ children }</div>;
 }
 
+/**
+ * Vertical sub-navigation column for a tab with many groups. `items` is a list
+ * of [key, label] pairs; pairs may include a third `pro` flag for a badge.
+ */
+export function SubSidebar( { items, value, onChange, className = '' } ) {
+	return (
+		<aside className={ `w-44 shrink-0 ${ className }` }>
+			<nav className="space-y-1 sticky top-4">
+				{ items.map( ( [ key, label, pro ] ) => (
+					<button
+						key={ key }
+						onClick={ () => onChange( key ) }
+						className={ `flex items-center justify-between w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${
+							value === key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'
+						}` }
+					>
+						<span className="truncate">{ label }</span>
+						{ pro && <span className="text-[10px] font-semibold text-brand-500">PRO</span> }
+					</button>
+				) ) }
+			</nav>
+		</aside>
+	);
+}
+
 /** Centered modal dialog. Click the backdrop or ✕ to close. */
 export function Modal( { title, onClose, children, footer, className = '' } ) {
 	return (

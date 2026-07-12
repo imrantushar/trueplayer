@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Select, Modal } from '../components/UI';
+import { Button, Select, Modal, SubSidebar } from '../components/UI';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
@@ -27,39 +27,24 @@ const PRO_TAB_INFO = {
 	access: { title: 'Access & gating', features: [ 'Watch-verification (prove they watched, anti-skip)', 'Checkpoint & final quizzes, lock on failure', 'Private video with signed, expiring links' ] },
 };
 
-// Small pill sub-nav shared by the merged tabs.
-function SubNav( { subs, value, onChange } ) {
-	return (
-		<div className="inline-flex flex-wrap p-0.5 mb-6 rounded bg-gray-100">
-			{ subs.map( ( [ key, label ] ) => (
-				<button
-					key={ key }
-					onClick={ () => onChange( key ) }
-					className={ `px-3.5 py-1.5 rounded text-sm font-medium transition-colors ${ value === key ? 'bg-white text-brand-500 shadow-sm' : 'text-muted hover:text-ink' }` }
-				>
-					{ label }
-				</button>
-			) ) }
-		</div>
-	);
-}
-
 // Interactions = everything shown on/around the video. Overlays are free;
 // layers / timed content / email capture are pro (gated inline).
 function InteractionsTab( { config, patch, pro } ) {
 	const [ sub, setSub ] = useState( 'overlays' );
 	const gate = ( node, info ) => ( pro ? node : <UpsellPanel title={ info.title } features={ info.features } /> );
 	return (
-		<div>
-			<SubNav
+		<div className="flex gap-6 items-start">
+			<SubSidebar
 				value={ sub }
 				onChange={ setSub }
-				subs={ [ [ 'overlays', 'Call to action' ], [ 'layers', 'Layers' ], [ 'timed', 'Timed content' ], [ 'subscribe', 'Email capture' ] ] }
+				items={ [ [ 'overlays', 'Call to action' ], [ 'layers', 'Layers', ! pro ], [ 'timed', 'Timed content', ! pro ], [ 'subscribe', 'Email capture', ! pro ] ] }
 			/>
-			{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } /> }
-			{ sub === 'layers' && gate( <LayersTab config={ config } patch={ patch } />, { title: 'Interactive layers', features: [ 'Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Conditional display rules' ] } ) }
-			{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, { title: 'Timed content', features: [ 'A content region below the player that changes with the video', 'Time-synced forms, buttons & text' ] } ) }
-			{ sub === 'subscribe' && gate( <SubscribeTab config={ config } patch={ patch } />, { title: 'Email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] } ) }
+			<div className="flex-1 min-w-0">
+				{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } /> }
+				{ sub === 'layers' && gate( <LayersTab config={ config } patch={ patch } />, { title: 'Interactive layers', features: [ 'Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Conditional display rules' ] } ) }
+				{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, { title: 'Timed content', features: [ 'A content region below the player that changes with the video', 'Time-synced forms, buttons & text' ] } ) }
+				{ sub === 'subscribe' && gate( <SubscribeTab config={ config } patch={ patch } />, { title: 'Email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] } ) }
+			</div>
 		</div>
 	);
 }
@@ -69,10 +54,12 @@ function InteractionsTab( { config, patch, pro } ) {
 function AccessTab( { config, patch } ) {
 	const [ sub, setSub ] = useState( 'gating' );
 	return (
-		<div>
-			<SubNav value={ sub } onChange={ setSub } subs={ [ [ 'gating', 'Verification & quiz' ], [ 'protection', 'Protection' ] ] } />
-			{ sub === 'gating' && <GatingTab config={ config } patch={ patch } /> }
-			{ sub === 'protection' && <ProtectionTab config={ config } patch={ patch } /> }
+		<div className="flex gap-6 items-start">
+			<SubSidebar value={ sub } onChange={ setSub } items={ [ [ 'gating', 'Verification & quiz' ], [ 'protection', 'Protection' ] ] } />
+			<div className="flex-1 min-w-0">
+				{ sub === 'gating' && <GatingTab config={ config } patch={ patch } /> }
+				{ sub === 'protection' && <ProtectionTab config={ config } patch={ patch } /> }
+			</div>
 		</div>
 	);
 }
@@ -163,7 +150,7 @@ export default function Editor( { id, onBack } ) {
 
 			{ /* Content */ }
 			<main className="flex-1 min-w-0">
-				<div className="max-w-5xl mx-auto px-8 py-8">
+				<div className="max-w-6xl mx-auto px-8 py-8">
 					{ /* Toolbar actions live in the topbar (portaled). */ }
 					{ toolbarSlot && createPortal(
 						<>

@@ -1,5 +1,15 @@
-import { Card, Field, Input, Select, Toggle, Textarea } from '../../components/UI';
+import { useState } from '@wordpress/element';
+import { Card, Field, Input, Select, Toggle, Textarea, SubSidebar } from '../../components/UI';
 import { isPro, PRO_SKINS } from '../../pro';
+
+const PLAYER_SUBS = [
+	[ 'appearance', 'Appearance' ],
+	[ 'captions', 'Captions' ],
+	[ 'controls', 'Controls' ],
+	[ 'behavior', 'Behaviour' ],
+	[ 'playback', 'Playback' ],
+	[ 'css', 'Custom CSS' ],
+];
 
 const SKINS = [
 	{ value: 'default', label: 'Default' },
@@ -62,9 +72,13 @@ export default function PlayerOptionsTab( { config, patch } ) {
 	const behavior = cz.behavior;
 	const controls = cz.controls;
 
+	const [ sub, setSub ] = useState( 'appearance' );
+
 	return (
-		<div className="space-y-6">
-			{ /* Appearance */ }
+		<div className="flex gap-6 items-start">
+			<SubSidebar items={ PLAYER_SUBS } value={ sub } onChange={ setSub } />
+			<div className="flex-1 min-w-0 space-y-6">
+			{ sub === 'appearance' && (
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-4">Appearance</h3>
 				<div className="grid md:grid-cols-2 gap-x-6">
@@ -114,8 +128,9 @@ export default function PlayerOptionsTab( { config, patch } ) {
 				</div>
 				<Toggle checked={ appearance.bigPlay } onChange={ ( v ) => setSection( 'appearance', { bigPlay: v } ) } label="Show large center play button" />
 			</Card>
+			) }
 
-			{ /* Subtitle style */ }
+			{ sub === 'captions' && (
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Subtitle style</h3>
 				<p className="text-sm text-gray-500 mb-4">How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own.</p>
@@ -141,7 +156,9 @@ export default function PlayerOptionsTab( { config, patch } ) {
 				</div>
 			</Card>
 
-			{ /* Controls */ }
+			) }
+
+			{ sub === 'controls' && (
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Controls</h3>
 				<p className="text-sm text-gray-500 mb-4">Show or hide each control in the bar.</p>
@@ -152,7 +169,9 @@ export default function PlayerOptionsTab( { config, patch } ) {
 				</div>
 			</Card>
 
-			{ /* Behavior */ }
+			) }
+
+			{ sub === 'behavior' && (
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-4">Behavior</h3>
 				<div className="grid md:grid-cols-2 gap-x-6">
@@ -212,7 +231,9 @@ export default function PlayerOptionsTab( { config, patch } ) {
 				</div>
 			</Card>
 
-			{ /* Playback */ }
+			) }
+
+			{ sub === 'playback' && (
 			<Card className="p-6 max-w-2xl">
 				<h3 className="font-semibold text-gray-900 mb-4">Playback</h3>
 				<Field label="Playback speeds" hint="Comma-separated, e.g. 0.5, 1, 1.5, 2">
@@ -229,7 +250,9 @@ export default function PlayerOptionsTab( { config, patch } ) {
 				</Field>
 			</Card>
 
-			{ /* Custom CSS */ }
+			) }
+
+			{ sub === 'css' && (
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Custom CSS</h3>
 				<p className="text-sm text-gray-500 mb-4">
@@ -243,6 +266,8 @@ export default function PlayerOptionsTab( { config, patch } ) {
 					placeholder={ '.tp-stage { box-shadow: 0 10px 40px rgba(0,0,0,.2); }' }
 				/>
 			</Card>
+			) }
+			</div>
 		</div>
 	);
 }
