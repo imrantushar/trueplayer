@@ -120,12 +120,24 @@ export default function AppearanceTab( { config, patch } ) {
 			<div className="grid md:grid-cols-2 gap-6">
 				<Card className="p-6">
 					<h3 className="font-semibold text-gray-900 mb-4">Logo / watermark</h3>
-					<Field label="Logo image" hint="Shown during playback. Colors live under Player options.">
-						<div className="flex gap-2">
-							<Input value={ branding.logo || '' } onChange={ ( e ) => setBranding( { logo: e.target.value } ) } placeholder="https://…/logo.png" />
-							<Button variant="ghost" onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }>Media library</Button>
+					{ branding.logo ? (
+						<div className="flex items-center gap-3 mb-4">
+							<div className="p-2 bg-gray-900 rounded-card shrink-0">
+								<img src={ branding.logo } alt="" className="max-h-10 max-w-[120px] block" style={ { opacity: branding.logoOpacity ?? 0.9 } } />
+							</div>
+							<Button variant="ghost" size="sm" onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }>Replace</Button>
+							<Button variant="ghost" size="sm" onClick={ () => setBranding( { logo: '' } ) }>Remove</Button>
 						</div>
-					</Field>
+					) : (
+						<button
+							type="button"
+							onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }
+							className="w-full border border-dashed border-line rounded-card py-8 text-center text-sm text-muted hover:border-brand-400 hover:text-brand-500 transition-colors"
+						>
+							<span className="block text-2xl leading-none mb-1">+</span>
+							Upload a logo
+						</button>
+					) }
 					{ branding.logo && (
 						<>
 							<div className="grid grid-cols-2 gap-x-4">
@@ -141,18 +153,15 @@ export default function AppearanceTab( { config, patch } ) {
 									<input type="range" min="10" max="100" step="5" value={ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) } onChange={ ( e ) => setBranding( { logoOpacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full" />
 								</Field>
 							</div>
-							<Field label="Click-through link" hint="Optional — makes the logo clickable (opens in a new tab).">
+							<Field label="Click-through link" hint="Optional — makes the logo clickable.">
 								<Input value={ branding.logoUrl || '' } onChange={ ( e ) => setBranding( { logoUrl: e.target.value } ) } placeholder="https://your-site.com" />
 							</Field>
-							<div className="mt-3 p-3 bg-gray-900 rounded-md inline-flex">
-								<img src={ branding.logo } alt="" className="max-h-10 max-w-[140px]" style={ { opacity: branding.logoOpacity ?? 0.9 } } />
-							</div>
 						</>
 					) }
 				</Card>
 
 				<Card className="p-6">
-					<div className="flex items-center justify-between mb-4">
+					<div className="flex items-center justify-between mb-1">
 						<h3 className="font-semibold text-gray-900">Captions &amp; subtitles</h3>
 						{ source.type === 'youtube' && (
 							<Button variant="ghost" size="sm" onClick={ importYoutube } disabled={ ytImporting }>
@@ -160,33 +169,34 @@ export default function AppearanceTab( { config, patch } ) {
 							</Button>
 						) }
 					</div>
-
-					{ ! subtitles.length && <p className="text-sm text-gray-500 mb-3">Add one or more WebVTT tracks — powers on-screen captions and the transcript panel.</p> }
+					<p className="text-sm text-muted mb-4">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
 
 					{ subtitles.map( ( t, i ) => (
 						<div key={ i } className="border border-line rounded-card p-4 mb-3">
-							<div className="grid md:grid-cols-3 gap-x-4">
-								<Field label="Label"><Input value={ t.label || '' } onChange={ ( e ) => setTrack( i, { label: e.target.value } ) } placeholder="English" /></Field>
-								<Field label="Language code"><Input value={ t.srclang || '' } onChange={ ( e ) => setTrack( i, { srclang: e.target.value } ) } placeholder="en" /></Field>
-								<Field label="Default">
-									<label className="flex items-center gap-2 h-10 text-sm">
-										<input type="radio" name="tp-default-track" checked={ !! t.default } onChange={ () => makeDefault( i ) } /> Show by default
-									</label>
-								</Field>
+							<div className="flex gap-2 mb-3">
+								{ ! t.src ? (
+									<Button variant="secondary" size="sm" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Upload .vtt file</Button>
+								) : (
+									<div className="flex items-center gap-2 text-sm text-muted min-w-0">
+										<span className="truncate max-w-[220px]">{ t.src.split( '/' ).pop() }</span>
+										<button className="text-brand-500 shrink-0" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Change</button>
+									</div>
+								) }
+								<div className="flex-1" />
+								<Button variant="ghost" size="sm" onClick={ () => removeTrack( i ) }>Remove</Button>
 							</div>
-							<Field label="WebVTT file">
-								<div className="flex gap-2">
-									<Input value={ t.src || '' } onChange={ ( e ) => setTrack( i, { src: e.target.value } ) } placeholder="https://…/captions.vtt" />
-									<Button variant="ghost" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Media library</Button>
-								</div>
-							</Field>
-							<div className="text-right"><Button variant="danger" size="sm" onClick={ () => removeTrack( i ) }>Remove track</Button></div>
+							<div className="grid grid-cols-3 gap-x-3 items-end">
+								<Field label="Label" className="mb-0"><Input value={ t.label || '' } onChange={ ( e ) => setTrack( i, { label: e.target.value } ) } placeholder="English" /></Field>
+								<Field label="Lang" className="mb-0"><Input value={ t.srclang || '' } onChange={ ( e ) => setTrack( i, { srclang: e.target.value } ) } placeholder="en" /></Field>
+								<label className="flex items-center gap-2 h-10 text-[13px] text-ink">
+									<input type="radio" name="tp-default-track" checked={ !! t.default } onChange={ () => makeDefault( i ) } /> Default
+								</label>
+							</div>
 						</div>
 					) ) }
 
 					<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
 					{ note && <p className="text-xs text-brand-600 mt-2">{ note }</p> }
-					<p className="text-xs text-gray-400 mt-2">Works with self-hosted, HLS and Bunny videos. YouTube/Vimeo embeds also use their own captions.</p>
 				</Card>
 			</div>
 
