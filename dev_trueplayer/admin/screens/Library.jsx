@@ -1,6 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Card, Input, Select, Field, Badge, Modal, Thumb, sourceMeta } from '../components/UI';
+import { Button, Card, Input, Select, Field, Badge, Modal, Pagination, Thumb, sourceMeta } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
 import { PlaylistEditor } from './Playlists';
@@ -15,11 +15,15 @@ const VIDEO_TYPES = [
 	{ value: 'hls', label: 'HLS stream (.m3u8)', pro: true },
 ];
 
+const PER_PAGE = 10;
+
 export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) {
 	const [ tab, setTab ] = useState( initialTab === 'playlists' ? 'playlists' : 'videos' );
 	const [ videos, setVideos ] = useState( null );
 	const [ playlists, setPlaylists ] = useState( null );
 	const [ editingPlaylist, setEditingPlaylist ] = useState( null );
+	const [ videoPage, setVideoPage ] = useState( 1 );
+	const [ playlistPage, setPlaylistPage ] = useState( 1 );
 
 	// Add modal (shared): kind = video | playlist.
 	const [ modal, setModal ] = useState( null ); // null | 'video' | 'playlist'
@@ -89,6 +93,15 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 	const byId = Object.fromEntries( ( videos || [] ).map( ( v ) => [ v.id, v ] ) );
 	const addLabel = tab === 'videos' ? 'Add media' : 'Add playlist';
 
+	// Client-side pagination (all items are already loaded for the pickers).
+	const videoPages = videos ? Math.max( 1, Math.ceil( videos.length / PER_PAGE ) ) : 1;
+	const vPage = Math.min( videoPage, videoPages );
+	const pagedVideos = videos ? videos.slice( ( vPage - 1 ) * PER_PAGE, vPage * PER_PAGE ) : null;
+
+	const playlistPages = playlists ? Math.max( 1, Math.ceil( playlists.length / PER_PAGE ) ) : 1;
+	const pPage = Math.min( playlistPage, playlistPages );
+	const pagedPlaylists = playlists ? playlists.slice( ( pPage - 1 ) * PER_PAGE, pPage * PER_PAGE ) : null;
+
 	return (
 		<div>
 			<div className="flex items-center justify-between mb-6">
@@ -143,25 +156,31 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 			) }
 
 			{ tab === 'videos' && (
-				<VideoList
-					videos={ videos }
-					copied={ copied }
-					copy={ copy }
-					onEdit={ onEdit }
-					onViewers={ onViewers }
-					onRemove={ removeVideo }
-					onAdd={ () => openModal( 'video' ) }
-				/>
+				<>
+					<VideoList
+						videos={ pagedVideos }
+						copied={ copied }
+						copy={ copy }
+						onEdit={ onEdit }
+						onViewers={ onViewers }
+						onRemove={ removeVideo }
+						onAdd={ () => openModal( 'video' ) }
+					/>
+					<Pagination page={ vPage } pages={ videoPages } onPage={ setVideoPage } />
+				</>
 			) }
 
 			{ tab === 'playlists' && (
-				<PlaylistList
-					playlists={ playlists }
-					byId={ byId }
-					onEdit={ setEditingPlaylist }
-					onRemove={ removePlaylist }
-					onAdd={ () => openModal( 'playlist' ) }
-				/>
+				<>
+					<PlaylistList
+						playlists={ pagedPlaylists }
+						byId={ byId }
+						onEdit={ setEditingPlaylist }
+						onRemove={ removePlaylist }
+						onAdd={ () => openModal( 'playlist' ) }
+					/>
+					<Pagination page={ pPage } pages={ playlistPages } onPage={ setPlaylistPage } />
+				</>
 			) }
 		</div>
 	);

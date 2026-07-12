@@ -127,6 +127,33 @@ export function Toggle( { checked, onChange, label, disabled = false } ) {
 	);
 }
 
+/** Compact numbered pagination. Hidden when there's only one page. */
+export function Pagination( { page, pages, onPage } ) {
+	if ( pages <= 1 ) {
+		return null;
+	}
+	// Windowed page list with ellipses: 1 … (p-1) p (p+1) … last.
+	const nums = [];
+	for ( let i = 1; i <= pages; i++ ) {
+		if ( i === 1 || i === pages || Math.abs( i - page ) <= 1 ) {
+			nums.push( i );
+		} else if ( nums[ nums.length - 1 ] !== '…' ) {
+			nums.push( '…' );
+		}
+	}
+	const btn = 'min-w-[34px] h-[34px] px-2 rounded text-sm font-medium border border-line disabled:opacity-40 disabled:pointer-events-none';
+	return (
+		<div className="flex items-center justify-center gap-1 mt-6">
+			<button className={ btn } disabled={ page <= 1 } onClick={ () => onPage( page - 1 ) } aria-label="Previous page">‹</button>
+			{ nums.map( ( n, i ) => n === '…'
+				? <span key={ `e${ i }` } className="px-1 text-muted">…</span>
+				: <button key={ n } onClick={ () => onPage( n ) } className={ `${ btn } ${ n === page ? 'bg-brand-500 text-white border-brand-500' : 'bg-white text-ink hover:bg-gray-50' }` }>{ n }</button>
+			) }
+			<button className={ btn } disabled={ page >= pages } onClick={ () => onPage( page + 1 ) } aria-label="Next page">›</button>
+		</div>
+	);
+}
+
 export function Badge( { children, tone = 'gray' } ) {
 	// GemCRM status pills: soft tinted background + saturated text, 999px radius.
 	const tones = {

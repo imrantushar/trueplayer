@@ -278,6 +278,9 @@
 .mt-4 {
 		margin-top: 1rem;
 }
+.mt-6 {
+		margin-top: 1.5rem;
+}
 .mt-px {
 		margin-top: 1px;
 }
@@ -352,6 +355,9 @@
 }
 .h-\[22px\] {
 		height: 22px;
+}
+.h-\[34px\] {
+		height: 34px;
 }
 .h-full {
 		height: 100%;
@@ -433,6 +439,9 @@
 }
 .min-w-0 {
 		min-width: 0px;
+}
+.min-w-\[34px\] {
+		min-width: 34px;
 }
 .max-w-2xl {
 		max-width: 42rem;
@@ -791,6 +800,9 @@
 }
 .p-0\.5 {
 		padding: 0.125rem;
+}
+.p-1 {
+		padding: 0.25rem;
 }
 .p-10 {
 		padding: 2.5rem;
@@ -1325,6 +1337,10 @@ body[class*="page_trueplayer"] #wpbody-content {
 
 .disabled\:pointer-events-none:disabled {
 		pointer-events: none;
+}
+
+.disabled\:opacity-40:disabled {
+		opacity: 0.4;
 }
 
 .disabled\:opacity-50:disabled {

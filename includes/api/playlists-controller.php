@@ -46,7 +46,7 @@ class PlaylistsController extends WP_REST_Controller {
 	}
 
 	public function index() {
-		$posts = get_posts( [ 'post_type' => Playlist::POST_TYPE, 'post_status' => [ 'publish', 'draft' ], 'posts_per_page' => 200, 'orderby' => 'date', 'order' => 'DESC' ] );
+		$posts = get_posts( [ 'post_type' => Playlist::POST_TYPE, 'post_status' => [ 'publish', 'draft' ], 'posts_per_page' => 500, 'orderby' => 'date', 'order' => 'DESC' ] );
 		return rest_ensure_response( array_map( [ $this, 'to_item' ], $posts ) );
 	}
 

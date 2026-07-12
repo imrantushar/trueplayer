@@ -77,7 +77,7 @@ class VideosController extends WP_REST_Controller {
 		$args = [
 			'post_type'      => TRUEPLAYER_VIDEO_POST_TYPE,
 			'post_status'    => [ 'publish', 'draft' ],
-			'posts_per_page' => 200,
+			'posts_per_page' => 500,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
 		];
