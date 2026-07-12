@@ -30,7 +30,7 @@ class Menu {
 		$slug = TRUEPLAYER_PLUGIN_SLUG;
 		$subs = [
 			$slug                => __( 'Dashboard', 'trueplayer' ),
-			$slug . '-videos'    => __( 'Videos', 'trueplayer' ),
+			$slug . '-videos'    => __( 'Media', 'trueplayer' ),
 			$slug . '-presets'   => __( 'Presets', 'trueplayer' ),
 			$slug . '-settings'  => __( 'Settings', 'trueplayer' ),
 		];

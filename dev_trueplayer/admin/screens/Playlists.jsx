@@ -82,7 +82,7 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
 				</Card>
 
 				<Card className="p-6">
-					<h3 className="font-semibold text-ink mb-1">Videos in this playlist</h3>
+					<h3 className="font-semibold text-ink mb-1">Media in this playlist</h3>
 					<p className="text-sm text-gray-500 mb-3">{ selected.length } selected · drag to reorder.</p>
 					<div className="space-y-2 mb-4">
 						{ selected.map( ( id, i ) => {
@@ -109,14 +109,14 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
 								</div>
 							);
 						} ) }
-						{ selected.length === 0 && <p className="text-sm text-gray-400">No videos yet — add one below.</p> }
+						{ selected.length === 0 && <p className="text-sm text-gray-400">No media yet — add one below.</p> }
 					</div>
 
 					{ ! adding ? (
-						<Button variant="subtle" onClick={ () => { setAdding( true ); setQuery( '' ); } }>+ Add video</Button>
+						<Button variant="subtle" onClick={ () => { setAdding( true ); setQuery( '' ); } }>+ Add media</Button>
 					) : (
 						<div className="border border-line rounded-md p-2">
-							<Input autoFocus placeholder="Search videos to add…" value={ query } onChange={ ( e ) => setQuery( e.target.value ) } />
+							<Input autoFocus placeholder="Search media to add…" value={ query } onChange={ ( e ) => setQuery( e.target.value ) } />
 							<div className="space-y-1 max-h-56 overflow-y-auto mt-2">
 								{ results.map( ( v ) => {
 									const meta = sourceMeta( v.config?.source || {} );
@@ -129,7 +129,7 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
 									);
 								} ) }
 								{ results.length === 0 && (
-									<p className="text-sm text-gray-400 px-2 py-3">{ available.length === 0 ? 'All videos are already in this playlist.' : 'No videos match your search.' }</p>
+									<p className="text-sm text-gray-400 px-2 py-3">{ available.length === 0 ? 'All media is already in this playlist.' : 'No media matches your search.' }</p>
 								) }
 							</div>
 							<div className="flex justify-end mt-2 pt-2 border-t border-line">

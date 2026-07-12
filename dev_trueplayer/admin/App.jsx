@@ -10,10 +10,10 @@ import { parseRoute, routeUrl, PAGE_OF, currentPage } from './nav';
 
 const TITLES = {
 	dashboard: 'Dashboard',
-	library: 'Videos',
-	editor: 'Edit video',
+	library: 'Media',
+	editor: 'Edit media',
 	analytics: 'Analytics',
-	playlists: 'Playlists',
+	playlists: 'Media playlists',
 	presets: 'Presets',
 	settings: 'Settings',
 };

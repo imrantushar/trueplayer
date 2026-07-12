@@ -55,11 +55,11 @@ export default function Dashboard( { onNavigate } ) {
 			<div className="flex items-center justify-between gap-4 flex-wrap">
 				<div>
 					<h1 className="text-2xl font-bold text-ink">Dashboard</h1>
-					<p className="text-sm text-gray-500">Your watch-verified video library at a glance.</p>
+					<p className="text-sm text-gray-500">Your watch-verified media library at a glance.</p>
 				</div>
 				<div className="flex gap-2">
 					<Button variant="ghost" onClick={ () => onNavigate( 'playlists' ) }>New playlist</Button>
-					<Button onClick={ () => onNavigate( 'library' ) }><Icon name="plus" className="w-4 h-4" /> New video</Button>
+					<Button onClick={ () => onNavigate( 'library' ) }><Icon name="plus" className="w-4 h-4" /> New media</Button>
 				</div>
 			</div>
 
@@ -73,15 +73,15 @@ export default function Dashboard( { onNavigate } ) {
 			<div className="grid lg:grid-cols-3 gap-6 items-start">
 				<Card className="lg:col-span-2 p-6">
 					<div className="flex items-center justify-between mb-4">
-						<h3 className="font-semibold text-ink">Recent videos</h3>
+						<h3 className="font-semibold text-ink">Recent media</h3>
 						<button className="text-sm text-brand-600 font-medium hover:text-brand-700" onClick={ () => onNavigate( 'library' ) }>View all →</button>
 					</div>
 					{ videos === null && <p className="text-gray-400 text-sm">Loading…</p> }
 					{ videos && recent.length === 0 && (
 						<div className="text-center py-10 border border-dashed border-line rounded-lg">
 							<div className="mx-auto mb-3 w-11 h-11 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="video" className="w-5 h-5" /></div>
-							<p className="text-sm text-gray-500 mb-3">No videos yet — add your first one.</p>
-							<Button onClick={ () => onNavigate( 'library' ) }>Create a video</Button>
+							<p className="text-sm text-gray-500 mb-3">No media yet — add your first one.</p>
+							<Button onClick={ () => onNavigate( 'library' ) }>Create media</Button>
 						</div>
 					) }
 					<div className="space-y-2">

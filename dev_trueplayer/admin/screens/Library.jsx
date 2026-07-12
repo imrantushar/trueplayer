@@ -87,14 +87,14 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 	}
 
 	const byId = Object.fromEntries( ( videos || [] ).map( ( v ) => [ v.id, v ] ) );
-	const addLabel = tab === 'videos' ? 'Add video' : 'Add playlist';
+	const addLabel = tab === 'videos' ? 'Add media' : 'Add playlist';
 
 	return (
 		<div>
 			<div className="flex items-center justify-between mb-6">
 				<div>
-					<h1 className="text-2xl font-bold text-gray-900">Videos</h1>
-					<p className="text-sm text-muted">Watch-verified players &amp; playlists.</p>
+					<h1 className="text-2xl font-bold text-gray-900">Media</h1>
+					<p className="text-sm text-muted">Watch-verified video &amp; audio players and playlists.</p>
 				</div>
 				<Button onClick={ () => openModal( tab === 'videos' ? 'video' : 'playlist' ) }>
 					<Icon name="plus" className="w-4 h-4" /> { addLabel }
@@ -103,7 +103,7 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 
 			{ /* Filter: videos vs playlists */ }
 			<div className="inline-flex p-0.5 mb-6 rounded bg-gray-100">
-				{ [ [ 'videos', 'Videos' ], [ 'playlists', 'Playlists' ] ].map( ( [ key, label ] ) => (
+				{ [ [ 'videos', 'Media' ], [ 'playlists', 'Playlists' ] ].map( ( [ key, label ] ) => (
 					<button
 						key={ key }
 						onClick={ () => setTab( key ) }
@@ -116,7 +116,7 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 
 			{ modal && (
 				<Modal
-					title={ modal === 'video' ? 'Add video' : 'Add playlist' }
+					title={ modal === 'video' ? 'Add media' : 'Add playlist' }
 					onClose={ () => setModal( null ) }
 					footer={
 						<>
@@ -125,11 +125,11 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 						</>
 					}
 				>
-					<Field label={ modal === 'video' ? 'Video title' : 'Playlist title' }>
+					<Field label={ modal === 'video' ? 'Media title' : 'Playlist title' }>
 						<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } placeholder={ modal === 'video' ? 'e.g. Lesson 1' : 'e.g. Onboarding course' } />
 					</Field>
 					{ modal === 'video' && (
-						<Field label="Video type" hint={ isPro() ? 'Change the source details in the editor.' : 'Bunny / Mux / HLS need TruePlayer Pro.' }>
+						<Field label="Media type" hint={ isPro() ? 'Change the source details in the editor.' : 'Bunny / Mux / HLS need TruePlayer Pro.' }>
 							<Select value={ type } onChange={ ( e ) => setType( e.target.value ) }>
 								{ VIDEO_TYPES.map( ( t ) => (
 									<option key={ t.value } value={ t.value } disabled={ t.pro && ! isPro() }>
@@ -195,9 +195,9 @@ function VideoList( { videos, copied, copy, onEdit, onViewers, onRemove, onAdd }
 		return (
 			<Card className="p-12 text-center border-dashed">
 				<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="video" className="w-6 h-6" /></div>
-				<p className="font-semibold text-gray-900">No videos yet</p>
+				<p className="font-semibold text-gray-900">No media yet</p>
 				<p className="text-sm text-muted mb-4">Create your first watch-verified player.</p>
-				<Button onClick={ onAdd }><Icon name="plus" className="w-4 h-4" /> Add video</Button>
+				<Button onClick={ onAdd }><Icon name="plus" className="w-4 h-4" /> Add media</Button>
 			</Card>
 		);
 	}
