@@ -1,23 +1,32 @@
 import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
 import { Card, Button, Badge, Field, Input, Select, Textarea, Toggle } from '../components/UI';
+import { Icon } from '../components/icons';
 import { EndpointList } from '../components/EndpointList';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 
-const SUBTABS = [
-	{ key: 'defaults', label: 'Player defaults' },
-	{ key: 'general', label: 'General' },
-	{ key: 'enforcement', label: 'Enforcement' },
-	{ key: 'compliance', label: 'Compliance & privacy' },
-	{ key: 'analytics', label: 'Analytics' },
-	{ key: 'sources', label: 'Sources & CDN' },
-	{ key: 'integrations', label: 'Integrations' },
-	{ key: 'whitelabel', label: 'White-label' },
-	{ key: 'webhooks', label: 'Global webhooks' },
-	{ key: 'logs', label: 'Webhook logs' },
-	{ key: 'license', label: 'License' },
+const NAV_GROUPS = [
+	{ label: 'Player', items: [
+		{ key: 'defaults', label: 'Player defaults', icon: 'sliders' },
+		{ key: 'general', label: 'General', icon: 'settings' },
+		{ key: 'sources', label: 'Sources & CDN', icon: 'cloud' },
+	] },
+	{ label: 'Trust & data', items: [
+		{ key: 'enforcement', label: 'Enforcement', icon: 'shield' },
+		{ key: 'compliance', label: 'Compliance & privacy', icon: 'lock' },
+		{ key: 'analytics', label: 'Analytics', icon: 'analytics' },
+	] },
+	{ label: 'Connect', items: [
+		{ key: 'integrations', label: 'Integrations', icon: 'plug' },
+		{ key: 'webhooks', label: 'Global webhooks', icon: 'webhook' },
+		{ key: 'logs', label: 'Webhook logs', icon: 'clock' },
+	] },
+	{ label: 'Account', items: [
+		{ key: 'whitelabel', label: 'White-label', icon: 'tag' },
+		{ key: 'license', label: 'License', icon: 'key' },
+	] },
 ];
 
 // Global defaults so a control is never uncontrolled before first save.
@@ -91,18 +100,24 @@ export default function Settings() {
 			</div>
 
 			<div className="flex gap-6 items-start">
-				<aside className="w-52 shrink-0">
-					<nav className="space-y-1 sticky top-6">
-						{ SUBTABS.map( ( t ) => (
-							<button
-								key={ t.key }
-								onClick={ () => setTab( t.key ) }
-								className={ `flex w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${
-									tab === t.key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'
-								}` }
-							>
-								{ t.label }
-							</button>
+				<aside className="w-60 shrink-0">
+					<nav className="sticky top-6 bg-white border border-line rounded-card p-2">
+						{ NAV_GROUPS.map( ( group, gi ) => (
+							<div key={ group.label } className={ gi > 0 ? 'mt-1' : '' }>
+								<div className="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{ group.label }</div>
+								{ group.items.map( ( t ) => (
+									<button
+										key={ t.key }
+										onClick={ () => setTab( t.key ) }
+										className={ `flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${
+											tab === t.key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'
+										}` }
+									>
+										<Icon name={ t.icon } className="w-[17px] h-[17px] shrink-0" />
+										<span className="truncate">{ t.label }</span>
+									</button>
+								) ) }
+							</div>
 						) ) }
 					</nav>
 				</aside>

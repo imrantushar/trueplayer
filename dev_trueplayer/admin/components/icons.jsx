@@ -15,6 +15,14 @@ const P = {
 	eye: <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></>,
 	edit: <><path d="M4 20h4L18.5 9.5a2.12 2.12 0 00-3-3L5 17v3z" /><path d="M13.5 6.5l3 3" /></>,
 	trash: <><path d="M4 7h16" /><path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2" /><path d="M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13" /><path d="M10 11v6M14 11v6" /></>,
+	sliders: <><path d="M4 8h10M18 8h2M4 16h6M14 16h6" /><circle cx="16" cy="8" r="2" /><circle cx="12" cy="16" r="2" /></>,
+	shield: <><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" /></>,
+	lock: <><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 018 0v3" /></>,
+	cloud: <><path d="M7 18a4 4 0 01-.5-7.97A5.5 5.5 0 0117.9 9.5 3.5 3.5 0 0117 18H7z" /></>,
+	plug: <><path d="M9 3v5M15 3v5" /><path d="M7 8h10v3a5 5 0 01-10 0V8z" /><path d="M12 16v5" /></>,
+	webhook: <><circle cx="12" cy="7" r="3" /><path d="M12 10l-3.5 6" /><circle cx="7" cy="18" r="2.5" /><path d="M9.5 18H16" /><circle cx="17" cy="15" r="2.5" /></>,
+	tag: <><path d="M4 12V5a1 1 0 011-1h7l8 8-8 8-8-8z" /><circle cx="8.5" cy="8.5" r="1.2" /></>,
+	key: <><circle cx="8" cy="12" r="4" /><path d="M11 12h9M17 12v3M20 12v2" /></>,
 	chevronRight: <path d="M9 6l6 6-6 6" />,
 };
 
