@@ -175,6 +175,9 @@
 .left-\[3px\] {
 		right: 3px;
 }
+.right-0 {
+		left: 0px;
+}
 .top-8 {
 		top: 2rem;
 }
@@ -183,6 +186,12 @@
 }
 .top-\[3px\] {
 		top: 3px;
+}
+.top-full {
+		top: 100%;
+}
+.z-20 {
+		z-index: 20;
 }
 .z-30 {
 		z-index: 30;
@@ -311,6 +320,9 @@
 .h-9 {
 		height: 2.25rem;
 }
+.h-\[18px\] {
+		height: 18px;
+}
 .h-\[22px\] {
 		height: 22px;
 }
@@ -365,6 +377,9 @@
 .w-40 {
 		width: 10rem;
 }
+.w-44 {
+		width: 11rem;
+}
 .w-5 {
 		width: 1.25rem;
 }
@@ -376,6 +391,9 @@
 }
 .w-8 {
 		width: 2rem;
+}
+.w-\[18px\] {
+		width: 18px;
 }
 .w-\[38px\] {
 		width: 38px;
@@ -1086,6 +1104,11 @@
 .hover\:text-gray-600:hover {
 		--tw-text-opacity: 1;
 		color: rgb(75 85 99 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-gray-700:hover {
+		--tw-text-opacity: 1;
+		color: rgb(55 65 81 / var(--tw-text-opacity, 1));
 }
 
 .hover\:text-gray-800:hover {

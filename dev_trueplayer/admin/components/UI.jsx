@@ -1,6 +1,7 @@
 /** Shared Tailwind UI primitives — StoreEngine-inspired design language. */
-import { useState, Children, isValidElement } from '@wordpress/element';
+import { useState, useRef, useEffect, Children, isValidElement } from '@wordpress/element';
 import ReactSelect from 'react-select';
+import { Icon } from './icons';
 
 export function Button( { children, variant = 'primary', size = 'md', className = '', type = 'button', ...rest } ) {
 	const styles = {
@@ -21,6 +22,58 @@ export function Button( { children, variant = 'primary', size = 'md', className 
 		>
 			{ children }
 		</button>
+	);
+}
+
+/** Row-actions dropdown — kebab trigger + icon/label menu. items: [ { label, icon, onClick, danger? } ]; danger items render in red (e.g. Delete). */
+export function OptionMenu( { items } ) {
+	const [ open, setOpen ] = useState( false );
+	const ref = useRef( null );
+
+	useEffect( () => {
+		if ( ! open ) {
+			return;
+		}
+		const close = ( e ) => {
+			if ( ! ref.current || ! ref.current.contains( e.target ) ) {
+				setOpen( false );
+			}
+		};
+		const onKey = ( e ) => e.key === 'Escape' && setOpen( false );
+		document.addEventListener( 'mousedown', close );
+		document.addEventListener( 'keydown', onKey );
+		return () => {
+			document.removeEventListener( 'mousedown', close );
+			document.removeEventListener( 'keydown', onKey );
+		};
+	}, [ open ] );
+
+	return (
+		<div className="relative shrink-0" ref={ ref }>
+			<button
+				type="button"
+				onClick={ () => setOpen( ( o ) => ! o ) }
+				aria-label="More actions"
+				className="w-8 h-8 inline-flex items-center justify-center rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+			>
+				<Icon name="moreVertical" className="w-[18px] h-[18px]" />
+			</button>
+			{ open && (
+				<div className="absolute right-0 top-full mt-1 w-44 py-1 rounded-md border border-line bg-white shadow-pop z-20">
+					{ items.map( ( it, i ) => (
+						<button
+							key={ i }
+							type="button"
+							onClick={ () => { setOpen( false ); it.onClick(); } }
+							className={ `flex items-center gap-2.5 w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${ it.danger ? 'text-red-600' : 'text-ink' }` }
+						>
+							{ it.icon && <Icon name={ it.icon } className="w-4 h-4 shrink-0" /> }
+							{ it.label }
+						</button>
+					) ) }
+				</div>
+			) }
+		</div>
 	);
 }
 

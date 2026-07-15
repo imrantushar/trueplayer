@@ -1,6 +1,6 @@
 import { useEffect, useState, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Card, Button, Input } from '../components/UI';
+import { Card, Button, Input, OptionMenu } from '../components/UI';
 import { Icon } from '../components/icons';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 
@@ -113,8 +113,10 @@ export default function Presets( { onEditState } ) {
 								<div className="font-semibold text-ink truncate">{ p.title }</div>
 								<div className="text-xs text-gray-500">Player preset</div>
 							</div>
-							<Button variant="ghost" onClick={ () => setEditing( p ) }>Edit</Button>
-							<Button variant="danger" onClick={ () => remove( p.id ) }>Delete</Button>
+							<OptionMenu items={ [
+								{ label: 'Edit', icon: 'edit', onClick: () => setEditing( p ) },
+								{ label: 'Delete', icon: 'trash', danger: true, onClick: () => remove( p.id ) },
+							] } />
 						</Card>
 					);
 				} ) }

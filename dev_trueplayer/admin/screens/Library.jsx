@@ -1,6 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Card, Input, Badge, Thumb, sourceMeta } from '../components/UI';
+import { Button, Card, Input, Badge, Thumb, sourceMeta, OptionMenu } from '../components/UI';
 
 export default function Library( { onEdit, onViewers } ) {
 	const [ videos, setVideos ] = useState( null );
@@ -97,9 +97,11 @@ export default function Library( { onEdit, onViewers } ) {
 									</code>
 								</div>
 							</div>
-							<Button variant="ghost" onClick={ () => onViewers( v.id ) }>Analytics</Button>
-							<Button variant="ghost" onClick={ () => onEdit( v.id ) }>Edit</Button>
-							<Button variant="danger" onClick={ () => remove( v.id ) }>Delete</Button>
+							<OptionMenu items={ [
+								{ label: 'Analytics', icon: 'analytics', onClick: () => onViewers( v.id ) },
+								{ label: 'Edit', icon: 'edit', onClick: () => onEdit( v.id ) },
+								{ label: 'Delete', icon: 'trash', danger: true, onClick: () => remove( v.id ) },
+							] } />
 						</Card>
 					);
 				} ) }

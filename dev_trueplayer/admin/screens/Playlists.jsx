@@ -1,6 +1,6 @@
 import { useEffect, useState, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Card, Button, Input, Select, Toggle, Badge, Field, Thumb, sourceMeta } from '../components/UI';
+import { Card, Button, Input, Select, Toggle, Badge, Field, Thumb, sourceMeta, OptionMenu } from '../components/UI';
 
 function Editor( { playlist, videos, onBack, onSaved, onEditState } ) {
 	const [ title, setTitle ] = useState( playlist.title );
@@ -226,8 +226,10 @@ export default function Playlists( { onEditState } ) {
 									<code className="text-xs text-gray-500">{ p.shortcode }</code>
 								</div>
 							</div>
-							<Button variant="ghost" onClick={ () => setEditing( p ) }>Edit</Button>
-							<Button variant="danger" onClick={ () => remove( p.id ) }>Delete</Button>
+							<OptionMenu items={ [
+								{ label: 'Edit', icon: 'edit', onClick: () => setEditing( p ) },
+								{ label: 'Delete', icon: 'trash', danger: true, onClick: () => remove( p.id ) },
+							] } />
 						</Card>
 					);
 				} ) }
