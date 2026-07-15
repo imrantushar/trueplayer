@@ -1,3 +1,7 @@
 /node_modules/
 .DS_Store
 *.log
+
+# Cross-platform build kit output (tool itself in build-tools/ is tracked)
+/.build-cache/
+/dist/

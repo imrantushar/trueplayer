@@ -1,0 +1,19 @@
+{
+  "slug": "trueplayer",
+  "textdomain": "trueplayer",
+  "mainFile": "trueplayer.php",
+  "languages": "languages",
+  "zipName": "{slug}.{version}.zip",
+  "outputDir": "..",
+
+  "steps": { "js": true, "composer": false, "strauss": false, "pot": true, "zip": true },
+
+  "js": { "install": "auto", "installCommand": "npm ci --legacy-peer-deps", "buildScript": "build" },
+
+  "pot": {
+    "exclude": ["node_modules", "assets/build", "dev_trueplayer", "openspec", "tests", "test-results", ".git", "languages"]
+  },
+
+  "autoDownloadTools": true,
+  "toolVersions": { "wpCli": "2.12.0" }
+}
