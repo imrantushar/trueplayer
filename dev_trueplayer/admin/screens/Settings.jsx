@@ -39,12 +39,10 @@ export default function Settings() {
 	}
 
 	return (
-		<div>
+		<>
 			<div className="flex items-center justify-between mb-6">
-				<div>
-					<h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-					<p className="text-sm text-gray-500">Site-wide defaults. Any single video can override these in its own editor.</p>
-				</div>
+				<h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+
 				<div className="flex items-center gap-3">
 					{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
 					<Button onClick={ save } disabled={ saving }>{ saving ? 'Saving…' : 'Save' }</Button>
@@ -129,6 +127,6 @@ export default function Settings() {
 					) }
 				</Card>
 			) }
-		</div>
+		</>
 	);
 }

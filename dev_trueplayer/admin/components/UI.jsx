@@ -1,5 +1,6 @@
 /** Shared Tailwind UI primitives — StoreEngine-inspired design language. */
-import { useState } from '@wordpress/element';
+import { useState, Children, isValidElement } from '@wordpress/element';
+import ReactSelect from 'react-select';
 
 export function Button( { children, variant = 'primary', size = 'md', className = '', ...rest } ) {
 	const styles = {
@@ -43,11 +44,60 @@ export function Textarea( { className = '', ...props } ) {
 	return <textarea { ...props } className={ `w-full rounded-md border border-line px-3 py-2 text-sm text-ink bg-white transition-shadow placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none ${ className }` } />;
 }
 
-export function Select( { className = '', children, ...props } ) {
+/** Reads <option> children (including ones produced by .map()) into react-select's { value, label } shape. */
+function optionsFromChildren( children ) {
+	const options = [];
+	Children.forEach( children, ( child ) => {
+		if ( ! isValidElement( child ) ) {
+			return;
+		}
+		if ( child.type === 'option' ) {
+			options.push( { value: child.props.value, label: child.props.children, isDisabled: !! child.props.disabled } );
+		} else if ( child.props && child.props.children ) {
+			options.push( ...optionsFromChildren( child.props.children ) );
+		}
+	} );
+	return options;
+}
+
+/** className is user-facing sizing (w-40, h-9, text-xs…) — applied to the visible control box, not react-select's layout wrapper. */
+const selectClassNames = ( className ) => ( {
+	control: ( state ) =>
+		`min-h-10 rounded-md border px-2 text-sm bg-white transition-shadow ${ className } ${
+			state.isDisabled ? 'opacity-50 bg-gray-50' : ''
+		} ${ state.isFocused ? 'border-brand-500 ring-2 ring-brand-100' : 'border-line' }`,
+	valueContainer: () => 'gap-1 py-0.5',
+	placeholder: () => 'text-gray-400',
+	singleValue: () => 'text-ink',
+	input: () => 'text-ink',
+	indicatorSeparator: () => 'hidden',
+	dropdownIndicator: () => 'text-gray-500 px-1',
+	menu: () => 'mt-1 rounded-md border border-line bg-white shadow-card overflow-hidden z-50',
+	menuList: () => 'py-1 max-h-60',
+	option: ( state ) =>
+		`px-3 py-2 text-sm cursor-pointer ${ state.isDisabled ? 'opacity-40 cursor-not-allowed' : '' } ${
+			state.isSelected ? 'bg-brand-500 text-white' : state.isFocused ? 'bg-brand-50 text-ink' : 'text-ink'
+		}`,
+} );
+
+/** Drop-in for a native <select> — takes <option> children and a scalar value/onChange( e ) pair. */
+export function Select( { className = '', children, value, onChange, disabled, ...props } ) {
+	const options = optionsFromChildren( children );
+	const selected = options.find( ( o ) => String( o.value ) === String( value ) ) || null;
+
 	return (
-		<select { ...props } className={ `${ controlBase } pr-8 appearance-none bg-no-repeat ${ className }` } style={ { backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236b7280\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")', backgroundPosition: 'right 10px center' } }>
-			{ children }
-		</select>
+		<ReactSelect
+			unstyled
+			classNamePrefix="tp-select"
+			className={ className.includes( 'w-' ) ? '' : 'w-full' }
+			classNames={ selectClassNames( className ) }
+			options={ options }
+			value={ selected }
+			isOptionDisabled={ ( o ) => !! o.isDisabled }
+			isDisabled={ !! disabled }
+			onChange={ ( option ) => onChange && onChange( { target: { value: option ? option.value : '' } } ) }
+			{ ...props }
+		/>
 	);
 }
 

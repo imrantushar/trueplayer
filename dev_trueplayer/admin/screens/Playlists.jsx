@@ -172,11 +172,8 @@ export default function Playlists() {
 	const byId = Object.fromEntries( videos.map( ( v ) => [ v.id, v ] ) );
 
 	return (
-		<div>
-			<div className="mb-6">
-				<h1 className="text-2xl font-bold text-ink">Playlists</h1>
-				<p className="text-sm text-gray-500">Group videos into a grid or sidebar playlist.</p>
-			</div>
+		<>
+			<h1 className="text-2xl font-bold text-ink">Playlists</h1>
 
 			<Card className="p-4 mb-6 flex gap-3 items-center">
 				<Input placeholder="New playlist title…" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } />
@@ -217,6 +214,6 @@ export default function Playlists() {
 					);
 				} ) }
 			</div>
-		</div>
+		</>
 	);
 }

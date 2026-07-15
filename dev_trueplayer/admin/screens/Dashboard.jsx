@@ -53,10 +53,7 @@ export default function Dashboard( { onNavigate } ) {
 	return (
 		<div className="space-y-8">
 			<div className="flex items-center justify-between gap-4 flex-wrap">
-				<div>
-					<h1 className="text-2xl font-bold text-ink">Dashboard</h1>
-					<p className="text-sm text-gray-500">Your watch-verified video library at a glance.</p>
-				</div>
+				<h1 className="text-2xl font-bold text-ink">Dashboard</h1>
 				<div className="flex gap-2">
 					<Button variant="ghost" onClick={ () => onNavigate( 'playlists' ) }>New playlist</Button>
 					<Button onClick={ () => onNavigate( 'library' ) }><Icon name="plus" className="w-4 h-4" /> New video</Button>

@@ -178,9 +178,6 @@
 .z-50 {
 		z-index: 50;
 }
-.m-3 {
-		margin: 0.75rem;
-}
 .mx-auto {
 		margin-right: auto;
 		margin-left: auto;
@@ -302,9 +299,6 @@
 .h-9 {
 		height: 2.25rem;
 }
-.h-\[18px\] {
-		height: 18px;
-}
 .h-\[22px\] {
 		height: 22px;
 }
@@ -317,8 +311,14 @@
 .max-h-56 {
 		max-height: 14rem;
 }
+.max-h-60 {
+		max-height: 15rem;
+}
 .min-h-0 {
 		min-height: 0px;
+}
+.min-h-10 {
+		min-height: 2.5rem;
 }
 .min-h-\[calc\(100vh-32px\)\] {
 		min-height: calc(100vh - 32px);
@@ -364,9 +364,6 @@
 }
 .w-8 {
 		width: 2rem;
-}
-.w-\[18px\] {
-		width: 18px;
 }
 .w-\[38px\] {
 		width: 38px;
@@ -423,11 +420,6 @@
 		-webkit-user-select: none;
 		   -moz-user-select: none;
 		        user-select: none;
-}
-.appearance-none {
-		-webkit-appearance: none;
-		   -moz-appearance: none;
-		        appearance: none;
 }
 .grid-cols-2 {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -662,27 +654,16 @@
 		--tw-gradient-to: rgb(230 244 255 / 0) var(--tw-gradient-to-position);
 		--tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
-.from-brand-500 {
-		--tw-gradient-from: #008dff var(--tw-gradient-from-position);
-		--tw-gradient-to: rgb(0 141 255 / 0) var(--tw-gradient-to-position);
-		--tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
 .from-gray-50 {
 		--tw-gradient-from: #f9fafb var(--tw-gradient-from-position);
 		--tw-gradient-to: rgb(249 250 251 / 0) var(--tw-gradient-to-position);
 		--tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-.to-brand-700 {
-		--tw-gradient-to: #005fb3 var(--tw-gradient-to-position);
 }
 .to-gray-200 {
 		--tw-gradient-to: #e5e7eb var(--tw-gradient-to-position);
 }
 .to-white {
 		--tw-gradient-to: #fff var(--tw-gradient-to-position);
-}
-.bg-no-repeat {
-		background-repeat: no-repeat;
 }
 .object-cover {
 		-o-object-fit: cover;
@@ -777,9 +758,6 @@
 }
 .pl-4 {
 		padding-right: 1rem;
-}
-.pr-8 {
-		padding-left: 2rem;
 }
 .pt-1 {
 		padding-top: 0.25rem;
@@ -936,8 +914,8 @@
 		--tw-text-opacity: 1;
 		color: rgb(255 255 255 / var(--tw-text-opacity, 1));
 }
-.text-white\/80 {
-		color: rgb(255 255 255 / 0.8);
+.opacity-40 {
+		opacity: 0.4;
 }
 .opacity-50 {
 		opacity: 0.5;
@@ -1055,11 +1033,6 @@
 .hover\:bg-brand-100:hover {
 		--tw-bg-opacity: 1;
 		background-color: rgb(204 233 255 / var(--tw-bg-opacity, 1));
-}
-
-.hover\:bg-brand-50:hover {
-		--tw-bg-opacity: 1;
-		background-color: rgb(230 244 255 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:bg-brand-600:hover {

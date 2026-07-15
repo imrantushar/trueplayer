@@ -68,11 +68,8 @@ export default function Presets() {
 	}
 
 	return (
-		<div>
-			<div className="mb-6">
-				<h1 className="text-2xl font-bold text-ink">Player presets</h1>
-				<p className="text-sm text-gray-500">Reusable styles &amp; behaviour you can apply to any video — brand once, use everywhere.</p>
-			</div>
+		<>
+			<h1 className="text-2xl font-bold text-ink">Player presets</h1>
 
 			<Card className="p-4 mb-6 flex gap-3 items-center">
 				<Input placeholder="New preset name…" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } />
@@ -104,6 +101,6 @@ export default function Presets() {
 					);
 				} ) }
 			</div>
-		</div>
+		</>
 	);
 }

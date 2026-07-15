@@ -41,14 +41,9 @@ export default function Library( { onEdit, onViewers } ) {
 	};
 
 	return (
-		<div>
-			<div className="flex items-center justify-between mb-6">
-				<div>
-					<h1 className="text-2xl font-bold text-gray-900">Videos</h1>
-					<p className="text-sm text-gray-500">Watch-verified, quiz-gated players.</p>
-				</div>
-			</div>
-
+		<>
+			<h1 className="text-2xl font-bold text-gray-900">Videos</h1>
+			
 			<Card className="p-4 mb-6 flex gap-3 items-center">
 				<Input placeholder="New video title…" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } />
 				<Button onClick={ create } disabled={ creating }>{ creating ? 'Creating…' : '+ New video' }</Button>
@@ -109,6 +104,6 @@ export default function Library( { onEdit, onViewers } ) {
 					);
 				} ) }
 			</div>
-		</div>
+		</>
 	);
 }
