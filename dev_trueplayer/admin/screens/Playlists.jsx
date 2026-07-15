@@ -1,18 +1,43 @@
-import { useState } from '@wordpress/element';
+import { useState, useEffect, useRef, createPortal } from '@wordpress/element';
 import { api } from '../api';
 import { Card, Button, Input, Select, Toggle, Badge, Field, sourceMeta } from '../components/UI';
 
 // The playlist editor, reused by the combined Videos screen (Library).
-export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
+export function PlaylistEditor( { playlist, videos, onBack, onSaved, onEditState } ) {
 	const [ title, setTitle ] = useState( playlist.title );
 	const [ config, setConfig ] = useState( { layout: 'sidebar', videos: [], autoplayNext: true, showTitles: true, ...( playlist.config || {} ) } );
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
+	const [ dirty, setDirty ] = useState( false );
+	const [ toolbarSlot, setToolbarSlot ] = useState( null );
+	const mounted = useRef( false );
 
 	const [ adding, setAdding ] = useState( false );
 	const [ query, setQuery ] = useState( '' );
 	const [ dragIndex, setDragIndex ] = useState( null );
 	const [ overIndex, setOverIndex ] = useState( null );
+
+	useEffect( () => {
+		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
+	}, [] );
+
+	// title/config are seeded once from `playlist` — any change after mount is
+	// a real edit.
+	useEffect( () => {
+		if ( ! mounted.current ) {
+			mounted.current = true;
+			return;
+		}
+		setDirty( true );
+	}, [ title, config ] );
+
+	// Report title/dirty/back state up to the app shell — it drives the
+	// breadcrumb ("Media playlists > this playlist", title editable right in
+	// the trail, parent crumb clicking back) and the unsaved-changes guard.
+	useEffect( () => {
+		onEditState && onEditState( { title, dirty, onBack, onTitleChange: setTitle } );
+	}, [ title, dirty ] );
+	useEffect( () => () => onEditState && onEditState( null ), [] );
 
 	const set = ( partial ) => setConfig( ( c ) => ( { ...c, ...partial } ) );
 	const selected = config.videos || [];
@@ -46,6 +71,7 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
 		setSaving( true );
 		try {
 			await api.updatePlaylist( playlist.id, { title, config } );
+			setDirty( false );
 			setSaved( true );
 			setTimeout( () => setSaved( false ), 2000 );
 			onSaved();
@@ -56,14 +82,14 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
 
 	return (
 		<div>
-			<div className="flex items-center gap-3 mb-6">
-				<Button variant="ghost" onClick={ onBack }>← Back</Button>
-				<input className="w-full max-w-md text-2xl font-bold text-ink bg-transparent outline-none border-b border-transparent focus:border-line" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } />
-				<div className="flex-1" />
-				{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-				<Button onClick={ save } disabled={ saving }>{ saving ? 'Saving…' : 'Save' }</Button>
-			</div>
-
+			{ /* Save lives in the topbar (portaled) — same pattern as the video editor. */ }
+			{ toolbarSlot && createPortal(
+				<>
+					{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
+					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+				</>,
+				toolbarSlot
+			) }
 			<div className="grid md:grid-cols-2 gap-6">
 				<Card className="p-6">
 					<h3 className="font-semibold text-ink mb-4">Playlist settings</h3>

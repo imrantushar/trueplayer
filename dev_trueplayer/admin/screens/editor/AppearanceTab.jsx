@@ -124,88 +124,86 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 
 	return (
 		<div className="space-y-6">
-			<div className="grid md:grid-cols-2 gap-6">
-				<Card className="p-6">
-					<h3 className="font-semibold text-gray-900 mb-4">Logo / watermark</h3>
-					{ branding.logo ? (
-						<div className="flex items-center gap-3 mb-4">
-							<div className="p-2 bg-gray-900 rounded-card shrink-0">
-								<img src={ branding.logo } alt="" className="max-h-10 max-w-[120px] block" style={ { opacity: branding.logoOpacity ?? 0.9 } } />
-							</div>
-							<Button variant="ghost" size="sm" onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }>Replace</Button>
-							<Button variant="ghost" size="sm" onClick={ () => setBranding( { logo: '' } ) }>Remove</Button>
+			<Card className="p-6">
+				<h3 className="font-semibold text-gray-900 mb-4">Logo / watermark</h3>
+				{ branding.logo ? (
+					<div className="flex items-center gap-3 mb-4">
+						<div className="p-2 bg-gray-900 rounded-card shrink-0">
+							<img src={ branding.logo } alt="" className="max-h-10 max-w-[120px] block" style={ { opacity: branding.logoOpacity ?? 0.9 } } />
 						</div>
-					) : (
-						<button
-							type="button"
-							onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }
-							className="w-full border border-dashed border-line rounded-card py-8 text-center text-sm text-muted hover:border-brand-400 hover:text-brand-500 transition-colors"
-						>
-							<span className="block text-2xl leading-none mb-1">+</span>
-							Upload a logo
-						</button>
-					) }
-					{ branding.logo && (
-						<>
-							<div className="grid grid-cols-2 gap-x-4">
-								<Field label="Position">
-									<Select value={ branding.logoPosition || 'top-right' } onChange={ ( e ) => setBranding( { logoPosition: e.target.value } ) }>
-										<option value="top-right">Top right</option>
-										<option value="top-left">Top left</option>
-										<option value="bottom-right">Bottom right</option>
-										<option value="bottom-left">Bottom left</option>
-									</Select>
-								</Field>
-								<Field label={ `Opacity (${ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) }%)` }>
-									<input type="range" min="10" max="100" step="5" value={ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) } onChange={ ( e ) => setBranding( { logoOpacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full accent-brand-500 cursor-pointer" />
-								</Field>
-							</div>
-							<Field label="Click-through link" hint="Optional — makes the logo clickable.">
-								<Input value={ branding.logoUrl || '' } onChange={ ( e ) => setBranding( { logoUrl: e.target.value } ) } placeholder="https://your-site.com" />
-							</Field>
-						</>
-					) }
-				</Card>
-
-				<Card className="p-6">
-					<div className="flex items-center justify-between mb-1">
-						<h3 className="font-semibold text-gray-900">Captions &amp; subtitles</h3>
-						{ source.type === 'youtube' && (
-							<Button variant="ghost" size="sm" onClick={ importYoutube } disabled={ ytImporting }>
-								{ ytImporting ? 'Importing…' : 'Import from YouTube' }
-							</Button>
-						) }
+						<Button variant="ghost" size="sm" onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }>Replace</Button>
+						<Button variant="ghost" size="sm" onClick={ () => setBranding( { logo: '' } ) }>Remove</Button>
 					</div>
-					<p className="text-sm text-muted mb-4">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
-
-					{ subtitles.map( ( t, i ) => (
-						<div key={ i } className="border border-line rounded-card p-4 mb-3">
-							<div className="flex gap-2 mb-3">
-								{ ! t.src ? (
-									<Button variant="secondary" size="sm" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Upload .vtt file</Button>
-								) : (
-									<div className="flex items-center gap-2 text-sm text-muted min-w-0">
-										<span className="truncate max-w-[220px]">{ t.src.split( '/' ).pop() }</span>
-										<button className="text-brand-500 shrink-0" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Change</button>
-									</div>
-								) }
-								<div className="flex-1" />
-								<Button variant="ghost" size="sm" onClick={ () => removeTrack( i ) }>Remove</Button>
-							</div>
-							<div className="grid grid-cols-3 gap-x-3 items-end">
-								<Field label="Label" className="mb-0"><Input value={ t.label || '' } onChange={ ( e ) => setTrack( i, { label: e.target.value } ) } placeholder="English" /></Field>
-								<Field label="Lang" className="mb-0"><Input value={ t.srclang || '' } onChange={ ( e ) => setTrack( i, { srclang: e.target.value } ) } placeholder="en" /></Field>
-								<label className="flex items-center gap-2 h-10 text-[13px] text-ink">
-									<input type="radio" name="tp-default-track" checked={ !! t.default } onChange={ () => makeDefault( i ) } /> Default
-								</label>
-							</div>
+				) : (
+					<button
+						type="button"
+						onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }
+						className="w-full border border-dashed border-line rounded-card py-8 text-center text-sm text-muted hover:border-brand-400 hover:text-brand-500 transition-colors"
+					>
+						<span className="block text-2xl leading-none mb-1">+</span>
+						Upload a logo
+					</button>
+				) }
+				{ branding.logo && (
+					<>
+						<div className="grid grid-cols-2 gap-x-4">
+							<Field label="Position">
+								<Select value={ branding.logoPosition || 'top-right' } onChange={ ( e ) => setBranding( { logoPosition: e.target.value } ) }>
+									<option value="top-right">Top right</option>
+									<option value="top-left">Top left</option>
+									<option value="bottom-right">Bottom right</option>
+									<option value="bottom-left">Bottom left</option>
+								</Select>
+							</Field>
+							<Field label={ `Opacity (${ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) }%)` }>
+								<input type="range" min="10" max="100" step="5" value={ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) } onChange={ ( e ) => setBranding( { logoOpacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full accent-brand-500 cursor-pointer" />
+							</Field>
 						</div>
-					) ) }
+						<Field label="Click-through link" hint="Optional — makes the logo clickable.">
+							<Input value={ branding.logoUrl || '' } onChange={ ( e ) => setBranding( { logoUrl: e.target.value } ) } placeholder="https://your-site.com" />
+						</Field>
+					</>
+				) }
+			</Card>
 
-					<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
-					{ note && <p className="text-xs text-brand-600 mt-2">{ note }</p> }
-				</Card>
-			</div>
+			<Card className="p-6">
+				<div className="flex items-center justify-between mb-1">
+					<h3 className="font-semibold text-gray-900">Captions &amp; subtitles</h3>
+					{ source.type === 'youtube' && (
+						<Button variant="ghost" size="sm" onClick={ importYoutube } disabled={ ytImporting }>
+							{ ytImporting ? 'Importing…' : 'Import from YouTube' }
+						</Button>
+					) }
+				</div>
+				<p className="text-sm text-muted mb-4">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
+
+				{ subtitles.map( ( t, i ) => (
+					<div key={ i } className="border border-line rounded-card p-4 mb-3">
+						<div className="flex gap-2 mb-3">
+							{ ! t.src ? (
+								<Button variant="secondary" size="sm" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Upload .vtt file</Button>
+							) : (
+								<div className="flex items-center gap-2 text-sm text-muted min-w-0">
+									<span className="truncate max-w-[220px]">{ t.src.split( '/' ).pop() }</span>
+									<button className="text-brand-500 shrink-0" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Change</button>
+								</div>
+							) }
+							<div className="flex-1" />
+							<Button variant="ghost" size="sm" onClick={ () => removeTrack( i ) }>Remove</Button>
+						</div>
+						<div className="grid grid-cols-3 gap-x-3 items-end">
+							<Field label="Label" className="mb-0"><Input value={ t.label || '' } onChange={ ( e ) => setTrack( i, { label: e.target.value } ) } placeholder="English" /></Field>
+							<Field label="Lang" className="mb-0"><Input value={ t.srclang || '' } onChange={ ( e ) => setTrack( i, { srclang: e.target.value } ) } placeholder="en" /></Field>
+							<label className="flex items-center gap-2 h-10 text-[13px] text-ink">
+								<input type="radio" name="tp-default-track" checked={ !! t.default } onChange={ () => makeDefault( i ) } /> Default
+							</label>
+						</div>
+					</div>
+				) ) }
+
+				<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
+				{ note && <p className="text-xs text-brand-600 mt-2">{ note }</p> }
+			</Card>
 
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Description below player</h3>

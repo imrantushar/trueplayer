@@ -1,6 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Card, Input, Select, Field, Badge, Modal, Pagination, Thumb, sourceMeta } from '../components/UI';
+import { Button, Card, Input, Select, Field, Badge, Modal, Pagination, Thumb, sourceMeta, OptionMenu } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
 import { PlaylistEditor } from './Playlists';
@@ -17,7 +17,7 @@ const VIDEO_TYPES = [
 
 const PER_PAGE = 10;
 
-export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) {
+export default function Library( { onEdit, onViewers, initialTab = 'videos', onEditState } ) {
 	const [ tab, setTab ] = useState( initialTab === 'playlists' ? 'playlists' : 'videos' );
 	const [ videos, setVideos ] = useState( null );
 	const [ playlists, setPlaylists ] = useState( null );
@@ -86,6 +86,7 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 				videos={ videos || [] }
 				onBack={ () => { setEditingPlaylist( null ); loadPlaylists(); } }
 				onSaved={ loadPlaylists }
+				onEditState={ onEditState }
 			/>
 		);
 	}
@@ -186,17 +187,6 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 	);
 }
 
-function RowActions( { children } ) {
-	return <div className="flex items-center gap-1">{ children }</div>;
-}
-function IconBtn( { name, title, onClick, danger } ) {
-	return (
-		<button onClick={ onClick } title={ title } aria-label={ title } className={ `p-2 rounded text-muted hover:bg-gray-100 ${ danger ? 'hover:text-danger hover:bg-danger-light' : 'hover:text-brand-500' }` }>
-			<Icon name={ name } className="w-[18px] h-[18px]" />
-		</button>
-	);
-}
-
 function VideoList( { videos, copied, copy, onEdit, onViewers, onRemove, onAdd } ) {
 	if ( videos === null ) {
 		return (
@@ -242,11 +232,11 @@ function VideoList( { videos, copied, copy, onEdit, onViewers, onRemove, onAdd }
 								</code>
 							</div>
 						</div>
-						<RowActions>
-							<IconBtn name="analytics" title="Analytics" onClick={ () => onViewers( v.id ) } />
-							<IconBtn name="edit" title="Edit video" onClick={ () => onEdit( v.id ) } />
-							<IconBtn name="trash" title="Delete" danger onClick={ () => onRemove( v.id ) } />
-						</RowActions>
+						<OptionMenu items={ [
+							{ label: 'Analytics', icon: 'analytics', onClick: () => onViewers( v.id ) },
+							{ label: 'Edit', icon: 'edit', onClick: () => onEdit( v.id ) },
+							{ label: 'Delete', icon: 'trash', danger: true, onClick: () => onRemove( v.id ) },
+						] } />
 					</Card>
 				);
 			} ) }
@@ -264,7 +254,7 @@ function PlaylistList( { playlists, byId, onEdit, onRemove, onAdd } ) {
 				<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="playlist" className="w-6 h-6" /></div>
 				<p className="font-semibold text-gray-900">No playlists yet</p>
 				<p className="text-sm text-muted mb-4">Group videos into a grid or sidebar playlist.</p>
-				<Button onClick={ onAdd }><Icon name="plus" className="w-4 h-4" /> Add playlist</Button>
+				<Button onClick={ onAdd } className='mt-6'><Icon name="plus" className="w-4 h-4" /> Add playlist</Button>
 			</Card>
 		);
 	}
@@ -286,10 +276,10 @@ function PlaylistList( { playlists, byId, onEdit, onRemove, onAdd } ) {
 								<code className="text-xs text-muted">{ p.shortcode }</code>
 							</div>
 						</div>
-						<RowActions>
-							<IconBtn name="edit" title="Edit playlist" onClick={ () => onEdit( p ) } />
-							<IconBtn name="trash" title="Delete" danger onClick={ () => onRemove( p.id ) } />
-						</RowActions>
+						<OptionMenu items={ [
+							{ label: 'Edit', icon: 'edit', onClick: () => onEdit( p ) },
+							{ label: 'Delete', icon: 'trash', danger: true, onClick: () => onRemove( p.id ) },
+						] } />
 					</Card>
 				);
 			} ) }

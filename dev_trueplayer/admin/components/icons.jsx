@@ -24,6 +24,7 @@ const P = {
 	tag: <><path d="M4 12V5a1 1 0 011-1h7l8 8-8 8-8-8z" /><circle cx="8.5" cy="8.5" r="1.2" /></>,
 	key: <><circle cx="8" cy="12" r="4" /><path d="M11 12h9M17 12v3M20 12v2" /></>,
 	chevronRight: <path d="M9 6l6 6-6 6" />,
+	moreVertical: <><circle cx="12" cy="5" r="1.3" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" /><circle cx="12" cy="19" r="1.3" fill="currentColor" stroke="none" /></>,
 };
 
 export function Icon( { name, className = 'w-5 h-5', strokeWidth = 1.8 } ) {

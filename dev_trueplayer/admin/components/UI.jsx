@@ -1,6 +1,7 @@
 /** Shared Tailwind UI primitives — GemCRM design language (see gemcrm/ui_rule.md). */
-import { useState, Children } from '@wordpress/element';
+import { useState, useRef, useEffect, Children } from '@wordpress/element';
 import ReactSelect from 'react-select';
+import { Icon } from './icons';
 
 export function Button( { children, variant = 'primary', size = 'md', className = '', ...rest } ) {
 	// GemCRM button presets: primary (solid blue), secondary/ghost (outline),
@@ -124,28 +125,82 @@ export function Card( { children, className = '' } ) {
 	return <div className={ `bg-white rounded-card border border-line shadow-card ${ className }` }>{ children }</div>;
 }
 
+/** Row-actions dropdown — kebab trigger + icon/label menu. items: [ { label, icon, onClick, danger? } ]; danger items (e.g. Delete) render in red. */
+export function OptionMenu( { items } ) {
+	const [ open, setOpen ] = useState( false );
+	const ref = useRef( null );
+
+	useEffect( () => {
+		if ( ! open ) {
+			return;
+		}
+		const close = ( e ) => {
+			if ( ! ref.current || ! ref.current.contains( e.target ) ) {
+				setOpen( false );
+			}
+		};
+		const onKey = ( e ) => e.key === 'Escape' && setOpen( false );
+		document.addEventListener( 'mousedown', close );
+		document.addEventListener( 'keydown', onKey );
+		return () => {
+			document.removeEventListener( 'mousedown', close );
+			document.removeEventListener( 'keydown', onKey );
+		};
+	}, [ open ] );
+
+	return (
+		<div className="relative shrink-0" ref={ ref }>
+			<button
+				type="button"
+				onClick={ () => setOpen( ( o ) => ! o ) }
+				aria-label="More actions"
+				className="w-8 h-8 inline-flex items-center justify-center rounded text-muted hover:text-ink hover:bg-gray-100 transition-colors"
+			>
+				<Icon name="moreVertical" className="w-[18px] h-[18px]" />
+			</button>
+			{ open && (
+				<div className="absolute right-0 top-full mt-1 w-44 py-1 rounded border border-line bg-white shadow-pop z-20">
+					{ items.map( ( it, i ) => (
+						<button
+							key={ i }
+							type="button"
+							onClick={ () => { setOpen( false ); it.onClick(); } }
+							className={ `flex items-center gap-2.5 w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${ it.danger ? 'text-danger' : 'text-ink' }` }
+						>
+							{ it.icon && <Icon name={ it.icon } className="w-4 h-4 shrink-0" /> }
+							{ it.label }
+						</button>
+					) ) }
+				</div>
+			) }
+		</div>
+	);
+}
+
 /**
  * Vertical sub-navigation column for a tab with many groups. `items` is a list
  * of [key, label] pairs; pairs may include a third `pro` flag for a badge.
  */
 export function SubSidebar( { items, value, onChange, className = '' } ) {
+	// Sticky lives directly on <nav> (not nested in a shrink-wrapped <aside>) —
+	// a nested sticky child has no room to stick, since its containing block is
+	// the short wrapper, not the tall row. Header (top-8) + its h-14 bar are
+	// ~88px; top-[104px] clears both with a small gap.
 	return (
-		<aside className={ `w-44 shrink-0 ${ className }` }>
-			<nav className="space-y-1 sticky top-4 bg-white border border-line rounded-card p-2">
-				{ items.map( ( [ key, label, pro ] ) => (
-					<button
-						key={ key }
-						onClick={ () => onChange( key ) }
-						className={ `flex items-center justify-between w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${
-							value === key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'
-						}` }
-					>
-						<span className="truncate">{ label }</span>
-						{ pro && <span className="text-[10px] font-semibold text-brand-500">PRO</span> }
-					</button>
-				) ) }
-			</nav>
-		</aside>
+		<nav className={ `w-44 shrink-0 space-y-1 sticky top-[104px] bg-white border border-line rounded-card p-2 ${ className }` }>
+			{ items.map( ( [ key, label, pro ] ) => (
+				<button
+					key={ key }
+					onClick={ () => onChange( key ) }
+					className={ `flex items-center justify-between w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${
+						value === key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'
+					}` }
+				>
+					<span className="truncate">{ label }</span>
+					{ pro && <span className="text-[10px] font-semibold text-brand-500">PRO</span> }
+				</button>
+			) ) }
+		</nav>
 	);
 }
 
@@ -156,7 +211,7 @@ export function Modal( { title, onClose, children, footer, className = '' } ) {
 			<div className={ `bg-white rounded-card shadow-pop w-full max-w-md ${ className }` } onClick={ ( e ) => e.stopPropagation() }>
 				<div className="flex items-center justify-between px-6 py-4 border-b border-line">
 					<h3 className="text-base font-semibold text-ink">{ title }</h3>
-					<button onClick={ onClose } className="text-muted hover:text-ink text-lg leading-none" aria-label="Close">×</button>
+					<button onClick={ onClose } className="text-muted hover:text-ink text-lg leading-none" aria-label="Close">&times;</button>
 				</div>
 				<div className="p-6">{ children }</div>
 				{ footer && <div className="px-6 py-4 border-t border-line flex justify-end gap-2">{ footer }</div> }

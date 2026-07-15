@@ -81,7 +81,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 			{ sub === 'appearance' && (
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-4">Appearance</h3>
-				<div className="grid md:grid-cols-2 gap-x-6">
+				<div className="grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line">
 					<Field label="Skin" hint={ isPro() ? 'Overall player theme.' : 'Floating & Ambient need TruePlayer Pro.' }>
 						<Select value={ appearance.skin } onChange={ ( e ) => setSection( 'appearance', { skin: e.target.value } ) }>
 							{ SKINS.map( ( s ) => (
@@ -128,7 +128,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Subtitle style</h3>
 				<p className="text-sm text-gray-500 mb-4">How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own.</p>
-				<div className="grid md:grid-cols-2 gap-x-6">
+				<div className="grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line">
 					<Field label={ `Font size (${ appearance.captionSize }%)` }>
 						<input type="range" min="50" max="200" step="10" value={ appearance.captionSize } onChange={ ( e ) => setSection( 'appearance', { captionSize: parseInt( e.target.value, 10 ) } ) } className="w-full accent-brand-500 cursor-pointer" />
 					</Field>
@@ -150,7 +150,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Controls</h3>
 				<p className="text-sm text-gray-500 mb-4">Show or hide each control in the bar.</p>
-				<div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-1">
+				<div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-1 mt-4 pt-5 border-t border-solid border-line">
 					{ Object.keys( CONTROL_LABELS ).map( ( key ) => (
 						<Toggle key={ key } checked={ controls[ key ] } onChange={ ( v ) => setSection( 'controls', { [ key ]: v } ) } label={ CONTROL_LABELS[ key ] } />
 					) ) }
@@ -162,7 +162,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 			{ sub === 'behavior' && (
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-4">Behavior</h3>
-				<div className="grid md:grid-cols-2 gap-x-6">
+				<div className="grid gap-x-6 mt-4 pt-5 border-t border-solid border-line">
 					<div>
 						<Field label="Autoplay" hint="“With sound” falls back to muted when the browser blocks it.">
 							<Select
@@ -182,6 +182,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 						<Toggle checked={ behavior.loop } onChange={ ( v ) => setSection( 'behavior', { loop: v } ) } label="Loop" />
 						<Toggle checked={ behavior.resetOnEnd } onChange={ ( v ) => setSection( 'behavior', { resetOnEnd: v } ) } label="Reset to start when finished" />
 					</div>
+
 					<div>
 						<Toggle checked={ behavior.savePosition } onChange={ ( v ) => setSection( 'behavior', { savePosition: v } ) } label="Save & resume playback position" />
 						<Toggle checked={ behavior.hideControls } onChange={ ( v ) => setSection( 'behavior', { hideControls: v } ) } label="Auto-hide controls while playing" />
@@ -224,18 +225,20 @@ export default function PlayerOptionsTab( { config, patch } ) {
 			{ sub === 'playback' && (
 			<Card className="p-6 max-w-2xl">
 				<h3 className="font-semibold text-gray-900 mb-4">Playback</h3>
-				<Field label="Playback speeds" hint="Comma-separated, e.g. 0.5, 1, 1.5, 2">
-					<Input
-						value={ cz.speeds.join( ', ' ) }
-						onChange={ ( e ) => {
-							const speeds = e.target.value.split( ',' ).map( ( s ) => parseFloat( s.trim() ) ).filter( ( n ) => ! isNaN( n ) && n > 0 );
-							setRoot( { speeds: speeds.length ? speeds : DEFAULTS.speeds } );
-						} }
-					/>
-				</Field>
-				<Field label="Skip interval (seconds)" hint="Rewind / fast-forward + arrow keys.">
-					<Input type="number" min="1" max="60" className="w-28" value={ cz.skipSeconds } onChange={ ( e ) => setRoot( { skipSeconds: parseInt( e.target.value, 10 ) || 10 } ) } />
-				</Field>
+				<div className='mt-4 pt-5 border-t border-solid border-line'>
+					<Field label="Playback speeds" hint="Comma-separated, e.g. 0.5, 1, 1.5, 2">
+						<Input
+							value={ cz.speeds.join( ', ' ) }
+							onChange={ ( e ) => {
+								const speeds = e.target.value.split( ',' ).map( ( s ) => parseFloat( s.trim() ) ).filter( ( n ) => ! isNaN( n ) && n > 0 );
+								setRoot( { speeds: speeds.length ? speeds : DEFAULTS.speeds } );
+							} }
+						/>
+					</Field>
+					<Field label="Skip interval (seconds)" hint="Rewind / fast-forward + arrow keys.">
+						<Input type="number" min="1" max="60" className="w-28" value={ cz.skipSeconds } onChange={ ( e ) => setRoot( { skipSeconds: parseInt( e.target.value, 10 ) || 10 } ) } />
+					</Field>
+				</div>
 			</Card>
 
 			) }
@@ -246,13 +249,15 @@ export default function PlayerOptionsTab( { config, patch } ) {
 				<p className="text-sm text-gray-500 mb-4">
 					Printed with this player on the frontend. Scope rules with <code className="text-xs bg-gray-100 px-1 rounded">.trueplayer-mount</code> (all players) or <code className="text-xs bg-gray-100 px-1 rounded">.tp-stage</code>.
 				</p>
-				<Textarea
-					rows={ 6 }
-					className="font-mono text-xs"
-					value={ config.customize?.css || '' }
-					onChange={ ( e ) => setRoot( { css: e.target.value } ) }
-					placeholder={ '.tp-stage { box-shadow: 0 10px 40px rgba(0,0,0,.2); }' }
-				/>
+				<div className='mt-4 pt-5 border-t border-solid border-line'>
+					<Textarea
+						rows={ 6 }
+						className="font-mono text-xs"
+						value={ config.customize?.css || '' }
+						onChange={ ( e ) => setRoot( { css: e.target.value } ) }
+						placeholder={ '.tp-stage { box-shadow: 0 10px 40px rgba(0,0,0,.2); }' }
+					/>
+				</div>
 			</Card>
 			) }
 			</div>

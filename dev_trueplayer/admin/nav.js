@@ -15,10 +15,6 @@ export const PAGE_OF = {
 	settings: SLUG + '-settings',
 };
 
-export function currentPage() {
-	return new URLSearchParams( window.location.search ).get( 'page' ) || SLUG;
-}
-
 /** Resolve the active screen + params from the URL. */
 export function parseRoute() {
 	const q = new URLSearchParams( window.location.search );

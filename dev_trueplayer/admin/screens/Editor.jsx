@@ -64,7 +64,7 @@ function AccessTab( { config, patch } ) {
 	);
 }
 
-export default function Editor( { id, onBack } ) {
+export default function Editor( { id, onEditState } ) {
 	const [ video, setVideo ] = useState( null );
 	const [ tab, setTab ] = useState( 'source' );
 	const [ dirty, setDirty ] = useState( false );
@@ -72,7 +72,6 @@ export default function Editor( { id, onBack } ) {
 	const [ saved, setSaved ] = useState( false );
 	const [ presets, setPresets ] = useState( [] );
 	const [ toolbarSlot, setToolbarSlot ] = useState( null );
-	const [ titleSlot, setTitleSlot ] = useState( null );
 	const [ embedOpen, setEmbedOpen ] = useState( false );
 	const [ duration, setDuration ] = useState( 0 );
 
@@ -80,7 +79,6 @@ export default function Editor( { id, onBack } ) {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
 		api.listPresets().then( setPresets ).catch( () => {} );
 		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
-		setTitleSlot( document.getElementById( 'tp-topbar-title-slot' ) );
 	}, [ id ] );
 
 	const patchConfig = useCallback( ( partial ) => {
@@ -93,6 +91,14 @@ export default function Editor( { id, onBack } ) {
 		setVideo( ( v ) => ( { ...v, title } ) );
 		setDirty( true );
 	};
+
+	// Report title/dirty state up to the app shell — it drives the breadcrumb
+	// (the title is edited right in the crumb trail) and the unsaved-changes
+	// guard when leaving.
+	useEffect( () => {
+		onEditState && onEditState( { title: video?.title, dirty, onTitleChange: setTitle } );
+	}, [ video?.title, dirty ] );
+	useEffect( () => () => onEditState && onEditState( null ), [] );
 
 	const tabIndex = TABS.findIndex( ( t ) => t.key === tab );
 	const isLastTab = tabIndex === TABS.length - 1;
@@ -126,114 +132,99 @@ export default function Editor( { id, onBack } ) {
 	const isProTab = !! TABS.find( ( t ) => t.key === tab )?.pro;
 
 	return (
-		<>
-			{ /* Contextual sidebar: the video editor's own step menu */ }
-			<aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col">
-				<div className="p-3 border-b border-line">
-					<button onClick={ onBack } className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100">
-						← Back to videos
-					</button>
-				</div>
-				<nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-					{ TABS.map( ( t ) => (
-						<button
-							key={ t.key }
-							onClick={ () => setTab( t.key ) }
-							className={ `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${
-								tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
-							}` }
-						>
-							<span className="text-base leading-none">{ t.icon }</span>
-							<span className="flex-1">{ t.label }</span>
-							{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
-						</button>
-					) ) }
-				</nav>
-			</aside>
+		<main className="flex-1 min-w-0">
+			<div className="max-w-[1250px] mx-auto px-8 py-8">
+				{ /* Toolbar actions live in the topbar (portaled). */ }
+				{ toolbarSlot && createPortal(
+					<>
+						{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
+						{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
+						<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>Embed</Button>
+						{ isLastTab ? (
+							<Button onClick={ () => save( false ) } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+						) : (
+							<>
+								<Button variant="ghost" onClick={ () => save( false ) } disabled={ saving || ! dirty }>Save</Button>
+								<Button onClick={ () => save( true ) } disabled={ saving }>{ saving ? 'Saving…' : 'Save & Continue' }</Button>
+							</>
+						) }
+					</>,
+					toolbarSlot
+				) }
 
-			{ /* Content */ }
-			<main className="flex-1 min-w-0">
-				<div className="max-w-6xl mx-auto px-8 py-8">
-					{ /* Toolbar actions live in the topbar (portaled). */ }
-					{ toolbarSlot && createPortal(
-						<>
-							{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-							{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
-							<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>Embed</Button>
-							{ isLastTab ? (
-								<Button onClick={ () => save( false ) } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
-							) : (
-								<>
-									<Button variant="ghost" onClick={ () => save( false ) } disabled={ saving || ! dirty }>Save</Button>
-									<Button onClick={ () => save( true ) } disabled={ saving }>{ saving ? 'Saving…' : 'Save & Continue' }</Button>
-								</>
-							) }
-						</>,
-						toolbarSlot
-					) }
+				{ embedOpen && (
+					<Modal title="Embed this media" onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
+						<EmbedTab video={ video } config={ config } patch={ patchConfig } />
+					</Modal>
+				) }
 
-					{ /* Editable media title, portaled into the topbar. */ }
-					{ titleSlot && createPortal(
-						<input
-							className="text-sm font-semibold text-ink bg-transparent outline-none border-b border-transparent focus:border-brand-500 w-56 max-w-[40vw]"
-							value={ video.title }
-							onChange={ ( e ) => setTitle( e.target.value ) }
-							placeholder="Untitled media"
-							aria-label="Media title"
-						/>,
-						titleSlot
-					) }
+				<div className="flex flex-col md:flex-row gap-6 items-start">
+					{ /* Contextual sidebar: the video editor's own step menu. Sticky is applied
+					    directly to this element (not a nested <nav>) — it must be the flex row's
+					    direct child for position:sticky to have room to stick against the row's
+					    full height, matched by the tall content column next to it. */ }
+					<aside className="w-full md:w-56 shrink-0 bg-white border-r border-line md:sticky md:top-[104px]">
+						<nav className="p-3 space-y-1">
+							{ TABS.map( ( t ) => (
+								<button
+									key={ t.key }
+									onClick={ () => setTab( t.key ) }
+									className={ `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${
+										tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
+									}` }
+								>
+									<span className="text-base leading-none">{ t.icon }</span>
+									<span className="flex-1">{ t.label }</span>
+									{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
+								</button>
+							) ) }
+						</nav>
+					</aside>
 
-					{ embedOpen && (
-						<Modal title="Embed this media" onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
-							<EmbedTab video={ video } config={ config } patch={ patchConfig } />
-						</Modal>
-					) }
-
-					<div className="mb-6">
-						<h1 className="text-2xl font-bold text-gray-900">{ TABS.find( ( t ) => t.key === tab )?.label }</h1>
-					</div>
-
-					<div className="flex flex-col xl:flex-row gap-6 items-start">
-						<div className="flex-1 min-w-0 w-full">
-							{ isProTab && ! pro ? (
-								<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
-							) : (
-								<>
-									{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'player' && (
-										<div className="space-y-6">
-											{ presets.length > 0 && (
-												<Card className="p-6 max-w-md">
-													<Field label="Preset" hint="Apply a saved player preset as the starting point — you can still tweak anything below.">
-														<Select
-															value={ config.presetId || '' }
-															onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
-														>
-															<option value="">None</option>
-															{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
-														</Select>
-													</Field>
-												</Card>
-											) }
-											<PlayerOptionsTab config={ config } patch={ patchConfig } />
-										</div>
-									) }
-									{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
-									{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } /> }
-									{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
-								</>
-							) }
+					<div className="flex-1 min-w-0 w-full">
+						<div className="mb-6">
+							<h1 className="text-2xl font-bold text-gray-900">{ TABS.find( ( t ) => t.key === tab )?.label }</h1>
 						</div>
 
-						<div className="w-full xl:w-[380px] shrink-0">
-							<div className="xl:sticky xl:top-4">
+						<div className="flex flex-col xl:flex-row gap-6 items-start mt-6">
+							<div className="flex-1 min-w-0 w-full">
+								{ isProTab && ! pro ? (
+									<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
+								) : (
+									<>
+										{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'player' && (
+											<div className="space-y-6">
+												{ presets.length > 0 && (
+													<Card className="p-6 max-w-md">
+														<Field label="Preset" hint="Apply a saved player preset as the starting point — you can still tweak anything below.">
+															<Select
+																value={ config.presetId || '' }
+																onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
+															>
+																<option value="">None</option>
+																{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+															</Select>
+														</Field>
+													</Card>
+												) }
+												<PlayerOptionsTab config={ config } patch={ patchConfig } />
+											</div>
+										) }
+										{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
+										{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } /> }
+										{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
+									</>
+								) }
+							</div>
+
+							<div className="w-full xl:w-[380px] shrink-0 xl:sticky xl:top-[104px]">
 								<PreviewPanel id={ id } config={ config } onDuration={ setDuration } />
 							</div>
 						</div>
 					</div>
 				</div>
-			</main>
-		</>
+			</div>
+		</main>
 	);
 }
