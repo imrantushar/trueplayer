@@ -4646,126 +4646,127 @@ function Editor({
   const config = video.config || {};
   const pro = (0,_pro__WEBPACK_IMPORTED_MODULE_16__.isPro)();
   const isProTab = !!TABS.find(t => t.key === tab)?.pro;
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.Fragment, {
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("aside", {
-      className: "w-56 shrink-0 bg-white border-r border-line flex flex-col",
-      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("nav", {
-        className: "flex-1 p-3 space-y-1 overflow-y-auto",
-        children: TABS.map(t => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("button", {
-          onClick: () => setTab(t.key),
-          className: `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'}`,
-          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
-            className: "text-base leading-none",
-            children: t.icon
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
-            className: "flex-1",
-            children: t.label
-          }), t.pro && !pro && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
-            className: "text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1",
-            children: "PRO"
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("main", {
+    className: "flex-1 min-w-0",
+    children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
+      className: "max-w-[1250px] mx-auto px-8 py-8",
+      children: [toolbarSlot && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createPortal)(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.Fragment, {
+        children: [dirty && !saved && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
+          className: "text-sm text-amber-600",
+          children: "Unsaved"
+        }), presets.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("label", {
+          className: "flex items-center gap-2 text-[13px] text-gray-500",
+          children: ["Preset", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Select, {
+            className: "w-40",
+            value: config.presetId || '',
+            onChange: e => patchConfig({
+              presetId: e.target.value ? parseInt(e.target.value, 10) : undefined
+            }),
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("option", {
+              value: "",
+              children: "None"
+            }), presets.map(p => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("option", {
+              value: p.id,
+              children: p.title
+            }, p.id))]
           })]
-        }, t.key))
-      })
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("main", {
-      className: "flex-1 min-w-0",
-      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
-        className: "max-w-5xl mx-auto px-8 py-8",
-        children: [toolbarSlot && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createPortal)(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.Fragment, {
-          children: [presets.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("label", {
-            className: "flex items-center gap-2 text-[13px] text-gray-500",
-            children: ["Preset", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Select, {
-              className: "w-40 h-9",
-              value: config.presetId || '',
-              onChange: e => patchConfig({
-                presetId: e.target.value ? parseInt(e.target.value, 10) : undefined
-              }),
-              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("option", {
-                value: "",
-                children: "None"
-              }), presets.map(p => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("option", {
-                value: p.id,
-                children: p.title
-              }, p.id))]
-            })]
-          }), saved && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
-            className: "text-sm text-green-600",
-            children: "Saved \u2713"
-          }), dirty && !saved && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
-            className: "text-sm text-amber-600",
-            children: "Unsaved"
-          }), isLastTab ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
+        }), saved && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
+          className: "text-sm text-green-600",
+          children: "Saved \u2713"
+        }), isLastTab ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
+          onClick: () => save(false),
+          disabled: saving || !dirty,
+          children: saving ? 'Saving…' : 'Save'
+        }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.Fragment, {
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
+            variant: "ghost",
             onClick: () => save(false),
             disabled: saving || !dirty,
-            children: saving ? 'Saving…' : 'Save'
-          }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.Fragment, {
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
-              variant: "ghost",
-              onClick: () => save(false),
-              disabled: saving || !dirty,
-              children: "Save"
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
-              onClick: () => save(true),
-              disabled: saving,
-              children: saving ? 'Saving…' : 'Save & Continue'
-            })]
+            children: "Save"
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
+            onClick: () => save(true),
+            disabled: saving,
+            children: saving ? 'Saving…' : 'Save & Continue'
           })]
-        }), toolbarSlot), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
-          className: "flex flex-col xl:flex-row gap-6 items-start",
-          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("div", {
-            className: "flex-1 min-w-0 w-full",
-            children: isProTab && !pro ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_15__["default"], {
-              title: PRO_TAB_INFO[tab].title,
-              features: PRO_TAB_INFO[tab].features
-            }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.Fragment, {
-              children: [tab === 'source' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_SourceTab__WEBPACK_IMPORTED_MODULE_3__["default"], {
-                config: config,
-                patch: patchConfig
-              }), tab === 'player' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_PlayerOptionsTab__WEBPACK_IMPORTED_MODULE_4__["default"], {
-                config: config,
-                patch: patchConfig
-              }), tab === 'appearance' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_AppearanceTab__WEBPACK_IMPORTED_MODULE_5__["default"], {
-                config: config,
-                patch: patchConfig
-              }), tab === 'overlays' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_OverlaysTab__WEBPACK_IMPORTED_MODULE_6__["default"], {
-                config: config,
-                patch: patchConfig
-              }), tab === 'layers' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_LayersTab__WEBPACK_IMPORTED_MODULE_7__["default"], {
-                config: config,
-                patch: patchConfig
-              }), tab === 'timed' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_TimedContentTab__WEBPACK_IMPORTED_MODULE_8__["default"], {
-                config: config,
-                patch: patchConfig
-              }), tab === 'protection' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_ProtectionTab__WEBPACK_IMPORTED_MODULE_9__["default"], {
-                config: config,
-                patch: patchConfig
-              }), tab === 'gating' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_GatingTab__WEBPACK_IMPORTED_MODULE_10__["default"], {
-                config: config,
-                patch: patchConfig
-              }), tab === 'subscribe' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_SubscribeTab__WEBPACK_IMPORTED_MODULE_11__["default"], {
-                config: config,
-                patch: patchConfig
-              }), tab === 'webhooks' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_WebhooksTab__WEBPACK_IMPORTED_MODULE_12__["default"], {
-                config: config,
-                patch: patchConfig
-              }), tab === 'embed' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_EmbedTab__WEBPACK_IMPORTED_MODULE_13__["default"], {
-                video: video,
-                config: config,
-                patch: patchConfig
+        })]
+      }), toolbarSlot), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
+        className: "flex flex-col md:flex-row gap-6 items-start",
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
+          className: "w-full md:w-56 shrink-0 md:sticky md:top-[104px] p-2 space-y-1",
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("nav", {
+            className: "space-y-1",
+            children: TABS.map(t => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("button", {
+              onClick: () => setTab(t.key),
+              className: `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'}`,
+              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
+                className: "text-base leading-none",
+                children: t.icon
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
+                className: "flex-1",
+                children: t.label
+              }), t.pro && !pro && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
+                className: "text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1",
+                children: "PRO"
               })]
-            })
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("div", {
-            className: "w-full xl:w-[380px] shrink-0",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("div", {
-              className: "xl:sticky xl:top-[104px]",
+            }, t.key))
+          })
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("div", {
+          className: "flex-1 min-w-0 w-full",
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
+            className: "flex flex-col xl:flex-row gap-6 items-start",
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("div", {
+              className: "flex-1 min-w-0 w-full",
+              children: isProTab && !pro ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_15__["default"], {
+                title: PRO_TAB_INFO[tab].title,
+                features: PRO_TAB_INFO[tab].features
+              }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.Fragment, {
+                children: [tab === 'source' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_SourceTab__WEBPACK_IMPORTED_MODULE_3__["default"], {
+                  config: config,
+                  patch: patchConfig
+                }), tab === 'player' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_PlayerOptionsTab__WEBPACK_IMPORTED_MODULE_4__["default"], {
+                  config: config,
+                  patch: patchConfig
+                }), tab === 'appearance' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_AppearanceTab__WEBPACK_IMPORTED_MODULE_5__["default"], {
+                  config: config,
+                  patch: patchConfig
+                }), tab === 'overlays' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_OverlaysTab__WEBPACK_IMPORTED_MODULE_6__["default"], {
+                  config: config,
+                  patch: patchConfig
+                }), tab === 'layers' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_LayersTab__WEBPACK_IMPORTED_MODULE_7__["default"], {
+                  config: config,
+                  patch: patchConfig
+                }), tab === 'timed' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_TimedContentTab__WEBPACK_IMPORTED_MODULE_8__["default"], {
+                  config: config,
+                  patch: patchConfig
+                }), tab === 'protection' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_ProtectionTab__WEBPACK_IMPORTED_MODULE_9__["default"], {
+                  config: config,
+                  patch: patchConfig
+                }), tab === 'gating' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_GatingTab__WEBPACK_IMPORTED_MODULE_10__["default"], {
+                  config: config,
+                  patch: patchConfig
+                }), tab === 'subscribe' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_SubscribeTab__WEBPACK_IMPORTED_MODULE_11__["default"], {
+                  config: config,
+                  patch: patchConfig
+                }), tab === 'webhooks' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_WebhooksTab__WEBPACK_IMPORTED_MODULE_12__["default"], {
+                  config: config,
+                  patch: patchConfig
+                }), tab === 'embed' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_EmbedTab__WEBPACK_IMPORTED_MODULE_13__["default"], {
+                  video: video,
+                  config: config,
+                  patch: patchConfig
+                })]
+              })
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("div", {
+              className: "w-full xl:w-[380px] shrink-0 xl:sticky xl:top-[104px]",
               children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_PreviewPanel__WEBPACK_IMPORTED_MODULE_14__["default"], {
                 id: id,
                 config: config
               })
-            })
-          })]
+            })]
+          })
         })]
-      })
-    })]
+      })]
+    })
   });
 }
 

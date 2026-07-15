@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Select } from '../components/UI';
+import { Button, Card, Select } from '../components/UI';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
@@ -104,89 +104,87 @@ export default function Editor( { id, onEditState } ) {
 	const isProTab = !! TABS.find( ( t ) => t.key === tab )?.pro;
 
 	return (
-		<>
-			{ /* Contextual sidebar: the video editor's own step menu */ }
-			<aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col">
-				<nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-					{ TABS.map( ( t ) => (
-						<button
-							key={ t.key }
-							onClick={ () => setTab( t.key ) }
-							className={ `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${
-								tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
-							}` }
-						>
-							<span className="text-base leading-none">{ t.icon }</span>
-							<span className="flex-1">{ t.label }</span>
-							{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
-						</button>
-					) ) }
-				</nav>
-			</aside>
+		<main className="flex-1 min-w-0">
+			<div className="max-w-[1250px] mx-auto px-8 py-8">
+				{ /* Toolbar actions live in the topbar (portaled). */ }
+				{ toolbarSlot && createPortal(
+					<>
+						{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
+						{ presets.length > 0 && (
+							<label className="flex items-center gap-2 text-[13px] text-gray-500">
+								Preset
+								<Select
+									className="w-40"
+									value={ config.presetId || '' }
+									onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
+								>
+									<option value="">None</option>
+									{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+								</Select>
+							</label>
+						) }
+						{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
+						{ isLastTab ? (
+							<Button onClick={ () => save( false ) } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+						) : (
+							<>
+								<Button variant="ghost" onClick={ () => save( false ) } disabled={ saving || ! dirty }>Save</Button>
+								<Button onClick={ () => save( true ) } disabled={ saving }>{ saving ? 'Saving…' : 'Save & Continue' }</Button>
+							</>
+						) }
+					</>,
+					toolbarSlot
+				) }
 
-			{ /* Content */ }
-			<main className="flex-1 min-w-0">
-				<div className="max-w-5xl mx-auto px-8 py-8">
-					{ /* Toolbar actions live in the topbar (portaled). */ }
-					{ toolbarSlot && createPortal(
-						<>
-							{ presets.length > 0 && (
-								<label className="flex items-center gap-2 text-[13px] text-gray-500">
-									Preset
-									<Select
-										className="w-40 h-9"
-										value={ config.presetId || '' }
-										onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
-									>
-										<option value="">None</option>
-										{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
-									</Select>
-								</label>
-							) }
-							{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-							{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
-							{ isLastTab ? (
-								<Button onClick={ () => save( false ) } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
-							) : (
-								<>
-									<Button variant="ghost" onClick={ () => save( false ) } disabled={ saving || ! dirty }>Save</Button>
-									<Button onClick={ () => save( true ) } disabled={ saving }>{ saving ? 'Saving…' : 'Save & Continue' }</Button>
-								</>
-							) }
-						</>,
-						toolbarSlot
-					) }
+				<div className="flex flex-col md:flex-row gap-6 items-start">
+					{ /* Contextual sidebar: the video editor's own step menu — same sticky pattern as the Settings sidebar. */ }
+					<Card className="w-full md:w-56 shrink-0 md:sticky md:top-[104px] p-2 space-y-1">
+						<nav className="space-y-1">
+							{ TABS.map( ( t ) => (
+								<button
+									key={ t.key }
+									onClick={ () => setTab( t.key ) }
+									className={ `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${
+										tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
+									}` }
+								>
+									<span className="text-base leading-none">{ t.icon }</span>
+									<span className="flex-1">{ t.label }</span>
+									{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
+								</button>
+							) ) }
+						</nav>
+					</Card>
 
-					<div className="flex flex-col xl:flex-row gap-6 items-start">
-						<div className="flex-1 min-w-0 w-full">
-							{ isProTab && ! pro ? (
-								<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
-							) : (
-								<>
-									{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'overlays' && <OverlaysTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'layers' && <LayersTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'timed' && <TimedContentTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'protection' && <ProtectionTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'gating' && <GatingTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'subscribe' && <SubscribeTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'webhooks' && <WebhooksTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'embed' && <EmbedTab video={ video } config={ config } patch={ patchConfig } /> }
-								</>
-							) }
-						</div>
+					<div className="flex-1 min-w-0 w-full">
+						<div className="flex flex-col xl:flex-row gap-6 items-start">
+							<div className="flex-1 min-w-0 w-full">
+								{ isProTab && ! pro ? (
+									<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
+								) : (
+									<>
+										{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'overlays' && <OverlaysTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'layers' && <LayersTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'timed' && <TimedContentTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'protection' && <ProtectionTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'gating' && <GatingTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'subscribe' && <SubscribeTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'webhooks' && <WebhooksTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'embed' && <EmbedTab video={ video } config={ config } patch={ patchConfig } /> }
+									</>
+								) }
+							</div>
 
-						<div className="w-full xl:w-[380px] shrink-0">
-							{ /* Sticky header (top-8) + this h-14 bar are ~88px; top-[104px] clears both with a small gap. */ }
-							<div className="xl:sticky xl:top-[104px]">
+							<div className="w-full xl:w-[380px] shrink-0 xl:sticky xl:top-[104px]">
 								<PreviewPanel id={ id } config={ config } />
 							</div>
 						</div>
 					</div>
 				</div>
-			</main>
-		</>
+			</div>
+		</main>
 	);
 }
