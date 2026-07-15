@@ -2435,6 +2435,35 @@ function App() {
     }
   };
   const go = (name, params = {}) => requestNav(() => navigate((0,_nav__WEBPACK_IMPORTED_MODULE_13__.routeUrl)(name, params)));
+
+  // WordPress's own left-hand admin menu links to our pages are plain <a href>
+  // tags outside React, so clicking them is normally a real page load. Hijack
+  // those clicks and route them through go() instead, so the native menu is
+  // just as "no reload" as the in-app breadcrumb/nav.
+  const goRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)(go);
+  goRef.current = go;
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    const menu = document.getElementById('adminmenu');
+    if (!menu) {
+      return;
+    }
+    const onMenuClick = e => {
+      const a = e.target.closest('a');
+      const href = a && a.getAttribute('href');
+      const m = href && href.match(/[?&]page=([a-z0-9_-]+)/i);
+      if (!m) {
+        return; // not one of our pages — let WP navigate normally
+      }
+      const name = Object.keys(_nav__WEBPACK_IMPORTED_MODULE_13__.PAGE_OF).find(key => _nav__WEBPACK_IMPORTED_MODULE_13__.PAGE_OF[key] === m[1]);
+      if (!name) {
+        return;
+      }
+      e.preventDefault();
+      goRef.current(name);
+    };
+    menu.addEventListener('click', onMenuClick);
+    return () => menu.removeEventListener('click', onMenuClick);
+  }, []);
   const crumbsFor = name => {
     const toVideos = {
       label: 'Videos',

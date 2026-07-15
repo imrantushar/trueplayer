@@ -1,4 +1,4 @@
-import { useEffect, useState } from '@wordpress/element';
+import { useEffect, useRef, useState } from '@wordpress/element';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Library from './screens/Library';
 import Editor from './screens/Editor';
@@ -11,7 +11,7 @@ import { Icon } from './components/icons';
 import Header from './components/Header';
 import { ConfirmModal } from './components/UI';
 import { isPro } from './pro';
-import { parseRoute, routeUrl } from './nav';
+import { parseRoute, routeUrl, PAGE_OF } from './nav';
 
 const NAV = [
 	{ key: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
@@ -60,6 +60,35 @@ export default function App() {
 		}
 	};
 	const go = ( name, params = {} ) => requestNav( () => navigate( routeUrl( name, params ) ) );
+
+	// WordPress's own left-hand admin menu links to our pages are plain <a href>
+	// tags outside React, so clicking them is normally a real page load. Hijack
+	// those clicks and route them through go() instead, so the native menu is
+	// just as "no reload" as the in-app breadcrumb/nav.
+	const goRef = useRef( go );
+	goRef.current = go;
+	useEffect( () => {
+		const menu = document.getElementById( 'adminmenu' );
+		if ( ! menu ) {
+			return;
+		}
+		const onMenuClick = ( e ) => {
+			const a = e.target.closest( 'a' );
+			const href = a && a.getAttribute( 'href' );
+			const m = href && href.match( /[?&]page=([a-z0-9_-]+)/i );
+			if ( ! m ) {
+				return; // not one of our pages — let WP navigate normally
+			}
+			const name = Object.keys( PAGE_OF ).find( ( key ) => PAGE_OF[ key ] === m[ 1 ] );
+			if ( ! name ) {
+				return;
+			}
+			e.preventDefault();
+			goRef.current( name );
+		};
+		menu.addEventListener( 'click', onMenuClick );
+		return () => menu.removeEventListener( 'click', onMenuClick );
+	}, [] );
 
 	const crumbsFor = ( name ) => {
 		const toVideos = { label: 'Videos', href: routeUrl( 'library' ), onClick: () => go( 'library' ) };
