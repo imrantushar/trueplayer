@@ -13,11 +13,12 @@ const SUBTABS = [
 	{ key: 'license', label: 'License' },
 ];
 
-export default function Settings() {
+export default function Settings( { onEditState } ) {
 	const [ settings, setSettings ] = useState( null );
 	const [ tab, setTab ] = useState( 'defaults' );
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
+	const [ dirty, setDirty ] = useState( false );
 	const [ toolbarSlot, setToolbarSlot ] = useState( null );
 
 	useEffect( () => {
@@ -25,10 +26,21 @@ export default function Settings() {
 		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
 	}, [] );
 
+	// Report dirty state up to the app shell so it can warn before navigating away
+	// (Settings has no breadcrumb title/back of its own, unlike the entity editors).
+	useEffect( () => { onEditState && onEditState( { dirty } ); }, [ dirty ] );
+	useEffect( () => () => onEditState && onEditState( null ), [] );
+
+	const patch = ( partial ) => {
+		setSettings( ( s ) => ( { ...s, ...partial } ) );
+		setDirty( true );
+	};
+
 	const save = async () => {
 		setSaving( true );
 		try {
 			await api.saveSettings( settings );
+			setDirty( false );
 			setSaved( true );
 			setTimeout( () => setSaved( false ), 2000 );
 		} finally {
@@ -46,7 +58,7 @@ export default function Settings() {
 			{ toolbarSlot && createPortal(
 				<>
 					{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-					<Button onClick={ save } disabled={ saving }>{ saving ? 'Saving…' : 'Save' }</Button>
+					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
 				</>,
 				toolbarSlot
 			) }
@@ -77,7 +89,7 @@ export default function Settings() {
 							</p>
 							<PlayerOptionsTab
 								config={ { customize: settings.customize || {} } }
-								patch={ ( partial ) => setSettings( ( s ) => ( { ...s, ...partial } ) ) }
+								patch={ patch }
 							/>
 						</>
 					) }
@@ -89,7 +101,7 @@ export default function Settings() {
 								<p className="text-sm text-gray-500 mb-4">Fire for every video, in addition to per-video webhooks.</p>
 								<EndpointList
 									endpoints={ settings.webhooks || [] }
-									onChange={ ( webhooks ) => setSettings( ( s ) => ( { ...s, webhooks } ) ) }
+									onChange={ ( webhooks ) => patch( { webhooks } ) }
 								/>
 							</Card>
 						) : (
@@ -109,7 +121,7 @@ export default function Settings() {
 									<Input
 										type="password"
 										value={ settings.bunny?.tokenKey || '' }
-										onChange={ ( e ) => setSettings( ( s ) => ( { ...s, bunny: { ...( s.bunny || {} ), tokenKey: e.target.value } } ) ) }
+										onChange={ ( e ) => patch( { bunny: { ...( settings.bunny || {} ), tokenKey: e.target.value } } ) }
 										placeholder="••••••••-••••-••••"
 									/>
 								</Field>

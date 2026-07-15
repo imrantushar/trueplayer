@@ -1,23 +1,39 @@
-import { useEffect, useState } from '@wordpress/element';
+import { useEffect, useState, createPortal } from '@wordpress/element';
 import { api } from '../api';
 import { Card, Button, Input } from '../components/UI';
 import { Icon } from '../components/icons';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 
-function Editor( { preset, onBack, onSaved } ) {
+function Editor( { preset, onBack, onSaved, onEditState } ) {
 	const [ title, setTitle ] = useState( preset.title );
 	const [ config, setConfig ] = useState( preset.config || {} );
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
+	const [ dirty, setDirty ] = useState( false );
+	const [ toolbarSlot, setToolbarSlot ] = useState( null );
+
+	useEffect( () => {
+		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
+	}, [] );
+
+	const setTitleDirty = ( v ) => { setTitle( v ); setDirty( true ); };
+
+	// Report title/dirty/back state up to the app shell — it drives the breadcrumb
+	// (title next to "Presets") and the unsaved-changes guard when leaving.
+	useEffect( () => {
+		onEditState && onEditState( { title, dirty, onBack, onTitleChange: setTitleDirty } );
+	}, [ title, dirty ] );
+	useEffect( () => () => onEditState && onEditState( null ), [] );
 
 	// PlayerOptionsTab edits config.customize / config.branding — the exact shape
 	// a preset stores, so we reuse it directly.
-	const patch = ( partial ) => { setConfig( ( c ) => ( { ...c, ...partial } ) ); setSaved( false ); };
+	const patch = ( partial ) => { setConfig( ( c ) => ( { ...c, ...partial } ) ); setDirty( true ); };
 
 	const save = async () => {
 		setSaving( true );
 		try {
 			await api.updatePreset( preset.id, { title, config } );
+			setDirty( false );
 			setSaved( true );
 			setTimeout( () => setSaved( false ), 2000 );
 			onSaved();
@@ -28,19 +44,21 @@ function Editor( { preset, onBack, onSaved } ) {
 
 	return (
 		<div>
-			<div className="flex items-center gap-3 mb-6">
-				<Button variant="ghost" onClick={ onBack }>← Back</Button>
-				<input className="flex-1 text-2xl font-bold text-ink bg-transparent outline-none border-b border-transparent focus:border-line" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } />
-				{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-				<Button onClick={ save } disabled={ saving }>{ saving ? 'Saving…' : 'Save' }</Button>
-			</div>
+			{ /* Save lives in the topbar (portaled) — same pattern as the video editor. */ }
+			{ toolbarSlot && createPortal(
+				<>
+					{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
+					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+				</>,
+				toolbarSlot
+			) }
 			<p className="text-sm text-gray-500 mb-4">These styles &amp; behaviours apply to any video that uses this preset. Individual videos can still override anything.</p>
 			<PlayerOptionsTab config={ config } patch={ patch } />
 		</div>
 	);
 }
 
-export default function Presets() {
+export default function Presets( { onEditState } ) {
 	const [ presets, setPresets ] = useState( null );
 	const [ title, setTitle ] = useState( '' );
 	const [ editing, setEditing ] = useState( null );
@@ -64,7 +82,7 @@ export default function Presets() {
 	};
 
 	if ( editing ) {
-		return <Editor preset={ editing } onBack={ () => { setEditing( null ); load(); } } onSaved={ load } />;
+		return <Editor preset={ editing } onBack={ () => { setEditing( null ); load(); } } onSaved={ load } onEditState={ onEditState } />;
 	}
 
 	return (

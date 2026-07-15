@@ -39,7 +39,7 @@ const PRO_TAB_INFO = {
 	webhooks: { title: 'Automation & webhooks', features: [ 'Signed webhooks on every event', 'Zapier / gemcrm / zaplane ready' ] },
 };
 
-export default function Editor( { id, onBack } ) {
+export default function Editor( { id, onEditState } ) {
 	const [ video, setVideo ] = useState( null );
 	const [ tab, setTab ] = useState( 'source' );
 	const [ dirty, setDirty ] = useState( false );
@@ -64,6 +64,13 @@ export default function Editor( { id, onBack } ) {
 		setVideo( ( v ) => ( { ...v, title } ) );
 		setDirty( true );
 	};
+
+	// Report title/dirty state up to the app shell — it drives the breadcrumb
+	// (title next to "Videos") and the unsaved-changes guard when leaving.
+	useEffect( () => {
+		onEditState && onEditState( { title: video?.title, dirty, onTitleChange: setTitle } );
+	}, [ video?.title, dirty ] );
+	useEffect( () => () => onEditState && onEditState( null ), [] );
 
 	const tabIndex = TABS.findIndex( ( t ) => t.key === tab );
 	const isLastTab = tabIndex === TABS.length - 1;
@@ -100,11 +107,6 @@ export default function Editor( { id, onBack } ) {
 		<>
 			{ /* Contextual sidebar: the video editor's own step menu */ }
 			<aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col">
-				<div className="p-3 border-b border-line">
-					<button onClick={ onBack } className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100">
-						← Back to videos
-					</button>
-				</div>
 				<nav className="flex-1 p-3 space-y-1 overflow-y-auto">
 					{ TABS.map( ( t ) => (
 						<button
@@ -155,14 +157,6 @@ export default function Editor( { id, onBack } ) {
 						toolbarSlot
 					) }
 
-					<div className="mb-6">
-						<input
-							className="w-full text-2xl font-bold text-gray-900 bg-transparent outline-none border-b border-transparent focus:border-line"
-							value={ video.title }
-							onChange={ ( e ) => setTitle( e.target.value ) }
-						/>
-					</div>
-
 					<div className="flex flex-col xl:flex-row gap-6 items-start">
 						<div className="flex-1 min-w-0 w-full">
 							{ isProTab && ! pro ? (
@@ -185,7 +179,8 @@ export default function Editor( { id, onBack } ) {
 						</div>
 
 						<div className="w-full xl:w-[380px] shrink-0">
-							<div className="xl:sticky xl:top-4">
+							{ /* Sticky header (top-8) + this h-14 bar are ~88px; top-[104px] clears both with a small gap. */ }
+							<div className="xl:sticky xl:top-[104px]">
 								<PreviewPanel id={ id } config={ config } />
 							</div>
 						</div>

@@ -154,6 +154,9 @@
 .visible {
 		visibility: visible;
 }
+.static {
+		position: static;
+}
 .fixed {
 		position: fixed;
 }
@@ -172,20 +175,20 @@
 .left-\[3px\] {
 		left: 3px;
 }
-.top-\[3px\] {
-		top: 3px;
-}
 .top-8 {
 		top: 2rem;
 }
 .top-\[104px\] {
 		top: 104px;
 }
-.z-50 {
-		z-index: 50;
+.top-\[3px\] {
+		top: 3px;
 }
 .z-30 {
 		z-index: 30;
+}
+.z-50 {
+		z-index: 50;
 }
 .mx-auto {
 		margin-left: auto;
@@ -394,6 +397,12 @@
 }
 .max-w-\[140px\] {
 		max-width: 140px;
+}
+.max-w-\[240px\] {
+		max-width: 240px;
+}
+.max-w-sm {
+		max-width: 24rem;
 }
 .max-w-xl {
 		max-width: 36rem;
@@ -1084,11 +1093,6 @@
 		color: rgb(31 41 55 / var(--tw-text-opacity, 1));
 }
 
-.hover\:text-gray-900:hover {
-		--tw-text-opacity: 1;
-		color: rgb(17 24 39 / var(--tw-text-opacity, 1));
-}
-
 .hover\:text-ink:hover {
 		--tw-text-opacity: 1;
 		color: rgb(44 49 53 / var(--tw-text-opacity, 1));
@@ -1131,9 +1135,6 @@
 		.md\:sticky {
 				position: sticky;
 		}
-		.md\:top-4 {
-				top: 1rem;
-		}
 		.md\:top-\[104px\] {
 				top: 104px;
 		}
@@ -1170,8 +1171,8 @@
 		.xl\:sticky {
 				position: sticky;
 		}
-		.xl\:top-4 {
-				top: 1rem;
+		.xl\:top-\[104px\] {
+				top: 104px;
 		}
 		.xl\:w-\[380px\] {
 				width: 380px;

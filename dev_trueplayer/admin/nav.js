@@ -1,7 +1,8 @@
 /**
- * StoreEngine-style query-param routing. Each section is its own WP submenu
- * page (?page=trueplayer-videos …); sub-views use ?action=edit&id=N. Switching
- * sections is a real navigation; sub-views within a section use pushState.
+ * StoreEngine-style query-param routing. Each section is its own WP submenu page
+ * (?page=trueplayer-videos …); sub-views use ?action=edit&id=N. All five submenu
+ * pages render the same PHP-side markup/assets (see includes/admin/menu.php), so
+ * every transition — same section or not — is client-side via react-router-dom.
  */
 const SLUG = 'trueplayer';
 
@@ -15,13 +16,9 @@ export const PAGE_OF = {
 	settings: SLUG + '-settings',
 };
 
-export function currentPage() {
-	return new URLSearchParams( window.location.search ).get( 'page' ) || SLUG;
-}
-
-/** Resolve the active screen + params from the URL. */
-export function parseRoute() {
-	const q = new URLSearchParams( window.location.search );
+/** Resolve the active screen + params from a location search string (defaults to the current URL). */
+export function parseRoute( search = window.location.search ) {
+	const q = new URLSearchParams( search );
 	const page = q.get( 'page' ) || SLUG;
 	const action = q.get( 'action' ) || '';
 	const id = q.get( 'id' ) ? parseInt( q.get( 'id' ), 10 ) : null;

@@ -2,7 +2,7 @@
 import { useState, Children, isValidElement } from '@wordpress/element';
 import ReactSelect from 'react-select';
 
-export function Button( { children, variant = 'primary', size = 'md', className = '', ...rest } ) {
+export function Button( { children, variant = 'primary', size = 'md', className = '', type = 'button', ...rest } ) {
 	const styles = {
 		primary: 'bg-brand-500 hover:bg-brand-600 text-white shadow-card',
 		ghost: 'bg-white hover:bg-gray-50 text-ink border border-line',
@@ -15,6 +15,7 @@ export function Button( { children, variant = 'primary', size = 'md', className 
 	};
 	return (
 		<button
+			type={ type }
 			className={ `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none ${ styles[ variant ] } ${ sizes[ size ] } ${ className }` }
 			{ ...rest }
 		>
@@ -103,6 +104,22 @@ export function Select( { className = '', children, value, onChange, disabled, .
 
 export function Card( { children, className = '' } ) {
 	return <div className={ `bg-white rounded-card border border-line shadow-card ${ className }` }>{ children }</div>;
+}
+
+/** Centered confirm dialog — e.g. the "unsaved changes" prompt before leaving a dirty screen. */
+export function ConfirmModal( { title, children, confirmLabel = 'Discard changes', cancelLabel = 'Keep editing', onConfirm, onCancel } ) {
+	return (
+		<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-6" onClick={ onCancel }>
+			<div className="bg-white rounded-card shadow-pop max-w-sm w-full p-6" onClick={ ( e ) => e.stopPropagation() }>
+				{ title && <h3 className="text-lg font-semibold text-ink mb-2">{ title }</h3> }
+				<div className="text-sm text-gray-500 mb-6">{ children }</div>
+				<div className="flex justify-end gap-2">
+					<Button variant="ghost" onClick={ onCancel }>{ cancelLabel }</Button>
+					<Button variant="danger" onClick={ onConfirm }>{ confirmLabel }</Button>
+				</div>
+			</div>
+		</div>
+	);
 }
 
 export function SectionTitle( { title, description } ) {
