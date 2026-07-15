@@ -26,7 +26,7 @@ function Stat( { label, value, sub } ) {
 function ChartCard( { title, hint, children, className = '' } ) {
 	return (
 		<Card className={ `p-5 ${ className }` }>
-			<div className="mb-3">
+			<div className="mb-4 pb-4 border-b border-line">
 				<h3 className="text-[15px] font-semibold text-ink">{ title }</h3>
 				{ hint && <p className="text-xs text-gray-400">{ hint }</p> }
 			</div>
@@ -84,7 +84,7 @@ function ViewerDetail( { rowId, onClose, onReset } ) {
 	);
 }
 
-export default function Analytics( { id, onBack } ) {
+export default function Analytics( { id } ) {
 	const [ tab, setTab ] = useState( 'overview' );
 	const [ data, setData ] = useState( null );
 	const [ viewers, setViewers ] = useState( null );
@@ -97,10 +97,7 @@ export default function Analytics( { id, onBack } ) {
 	if ( ! pro ) {
 		return (
 			<div>
-				<div className="flex items-center gap-3 mb-6">
-					<Button variant="ghost" onClick={ onBack }>← Back</Button>
-					<h1 className="text-2xl font-bold text-ink">Analytics</h1>
-				</div>
+				<h1 className="text-2xl font-bold text-ink mb-6">Analytics</h1>
 				<UpsellPanel title="Deep video analytics" features={ [ 'Audience retention curve', 'Replay heatmap — which parts get re-watched', 'Completion funnel & views over time', 'Per-viewer watch drill-down', 'Quiz performance' ] } />
 			</div>
 		);
@@ -138,10 +135,7 @@ export default function Analytics( { id, onBack } ) {
 
 	return (
 		<div>
-			<div className="flex items-center gap-3 mb-6">
-				<Button variant="ghost" onClick={ onBack }>← Back</Button>
-				<h1 className="text-2xl font-bold text-ink">Analytics</h1>
-			</div>
+			<h1 className="text-2xl font-bold text-ink mb-6">Analytics</h1>
 
 			<div className="flex gap-1 border-b border-line mb-6">
 				{ [ 'overview', 'viewers' ].map( ( t ) => (
@@ -195,7 +189,7 @@ export default function Analytics( { id, onBack } ) {
 							</div>
 						</ChartCard>
 						<Card className="p-5">
-							<h3 className="text-[15px] font-semibold text-ink mb-3">New vs returning</h3>
+							<h3 className="text-[15px] font-semibold text-ink mb-4 pb-4 border-b border-line">New vs returning</h3>
 							<div className="flex gap-6">
 								<div><div className="text-2xl font-bold text-brand-600">{ data.newVsReturning.new }</div><div className="text-xs text-gray-500">New</div></div>
 								<div><div className="text-2xl font-bold text-ink">{ data.newVsReturning.returning }</div><div className="text-xs text-gray-500">Returning</div></div>
@@ -203,7 +197,7 @@ export default function Analytics( { id, onBack } ) {
 							<div className="mt-4"><div className="text-2xl font-bold text-brand-600">{ s.engagementScore }</div><div className="text-xs text-gray-500">Engagement score / 100</div></div>
 						</Card>
 						<Card className="p-5">
-							<h3 className="text-[15px] font-semibold text-ink mb-3">Quiz performance</h3>
+							<h3 className="text-[15px] font-semibold text-ink mb-4 pb-4 border-b border-line">Quiz performance</h3>
 							{ data.quiz.length === 0 && <p className="text-sm text-gray-400">No quiz attempts yet.</p> }
 							<div className="space-y-2">
 								{ data.quiz.map( ( q ) => (

@@ -119,7 +119,7 @@ export default function AppearanceTab( { config, patch } ) {
 		<div className="space-y-6">
 			<div className="grid md:grid-cols-2 gap-6">
 				<Card className="p-6">
-					<h3 className="font-semibold text-gray-900 mb-4">Logo / watermark</h3>
+					<h3 className="font-semibold text-gray-900 mb-4 pb-4 border-b border-line">Logo / watermark</h3>
 					<Field label="Logo image" hint="Shown during playback. Colors live under Player options.">
 						<div className="flex gap-2">
 							<Input value={ branding.logo || '' } onChange={ ( e ) => setBranding( { logo: e.target.value } ) } placeholder="https://…/logo.png" />
@@ -152,7 +152,7 @@ export default function AppearanceTab( { config, patch } ) {
 				</Card>
 
 				<Card className="p-6">
-					<div className="flex items-center justify-between mb-4">
+					<div className="flex items-center justify-between mb-4 pb-4 border-b border-line">
 						<h3 className="font-semibold text-gray-900">Captions &amp; subtitles</h3>
 						{ source.type === 'youtube' && (
 							<Button variant="ghost" size="sm" onClick={ importYoutube } disabled={ ytImporting }>
@@ -192,7 +192,7 @@ export default function AppearanceTab( { config, patch } ) {
 
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Description below player</h3>
-				<p className="text-sm text-gray-500 mb-3">Shown directly under the player wherever it's embedded. Basic HTML allowed.</p>
+				<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">Shown directly under the player wherever it's embedded. Basic HTML allowed.</p>
 				<Textarea
 					rows={ 4 }
 					value={ config.description || '' }
@@ -209,7 +209,7 @@ export default function AppearanceTab( { config, patch } ) {
 						<Button variant="ghost" onClick={ addChapter }>+ Add</Button>
 					</div>
 				</div>
-				<p className="text-sm text-gray-400 mb-4">Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss.</p>
+				<p className="text-sm text-gray-400 mb-4 pb-4 border-b border-line">Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss.</p>
 
 				{ importOpen && (
 					<div className="mb-4 p-4 bg-gray-50 rounded-md border border-line">

@@ -18,14 +18,14 @@ export default function EmbedTab( { video, config = {}, patch } ) {
 	return (
 		<Card className="p-6 max-w-2xl space-y-6">
 			<div>
-				<h3 className="font-semibold text-gray-900 mb-2">Shortcode</h3>
+				<h3 className="font-semibold text-gray-900 mb-3 pb-3 border-b border-line">Shortcode</h3>
 				<div className="flex gap-2 items-center">
 					<code className="flex-1 bg-gray-100 rounded px-3 py-2 text-sm">{ shortcode }</code>
 					<Button variant="ghost" onClick={ () => copy( shortcode, 'sc' ) }>{ copied === 'sc' ? 'Copied ✓' : 'Copy' }</Button>
 				</div>
 			</div>
 			<div>
-				<h3 className="font-semibold text-gray-900 mb-2">Block (paste into any post)</h3>
+				<h3 className="font-semibold text-gray-900 mb-3 pb-3 border-b border-line">Block (paste into any post)</h3>
 				<div className="flex gap-2 items-center">
 					<code className="flex-1 bg-gray-100 rounded px-3 py-2 text-sm break-all">{ block }</code>
 					<Button variant="ghost" onClick={ () => copy( block, 'bl' ) }>{ copied === 'bl' ? 'Copied ✓' : 'Copy' }</Button>
@@ -37,7 +37,7 @@ export default function EmbedTab( { video, config = {}, patch } ) {
 					<h3 className="font-semibold text-gray-900">Instant video page</h3>
 					{ ! isPro() && <Badge tone="gray">Pro</Badge> }
 				</div>
-				<p className="text-sm text-gray-500 mb-2">A clean, shareable standalone page for this video — no post needed.</p>
+				<p className="text-sm text-gray-500 mb-3 pb-3 border-b border-line">A clean, shareable standalone page for this video — no post needed.</p>
 				{ isPro() && patch ? (
 					<>
 						<Toggle

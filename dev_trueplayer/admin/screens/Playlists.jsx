@@ -82,7 +82,7 @@ function Editor( { playlist, videos, onBack, onSaved, onEditState } ) {
 
 			<div className="grid md:grid-cols-2 gap-6">
 				<Card className="p-6">
-					<h3 className="font-semibold text-ink mb-4">Playlist settings</h3>
+					<h3 className="font-semibold text-ink mb-4 pb-4 border-b border-line">Playlist settings</h3>
 					<Field label="Layout">
 						<Select value={ config.layout } onChange={ ( e ) => set( { layout: e.target.value } ) }>
 							<option value="sidebar">Sidebar (player + list)</option>
@@ -99,7 +99,7 @@ function Editor( { playlist, videos, onBack, onSaved, onEditState } ) {
 
 				<Card className="p-6">
 					<h3 className="font-semibold text-ink mb-1">Videos in this playlist</h3>
-					<p className="text-sm text-gray-500 mb-3">{ selected.length } selected · drag to reorder.</p>
+					<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">{ selected.length } selected · drag to reorder.</p>
 					<div className="space-y-2 mb-4">
 						{ selected.map( ( id, i ) => {
 							const meta = sourceMeta( byId[ id ]?.config?.source || {} );

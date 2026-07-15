@@ -106,7 +106,7 @@ export default function LayersTab( { config, patch } ) {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between gap-4">
+			<div className="flex items-center justify-between gap-4 pb-4 border-b border-line">
 				<div>
 					<h3 className="font-semibold text-gray-900">Interactive layers</h3>
 					<p className="text-sm text-gray-500">Timed elements over the video — hotspots, banners, shortcodes and email forms.</p>

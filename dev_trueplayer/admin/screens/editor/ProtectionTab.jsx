@@ -24,7 +24,7 @@ export default function ProtectionTab( { config, patch } ) {
 					<h3 className="font-semibold text-gray-900">Private video / expiring links</h3>
 					{ source.private && <Badge tone="amber">on</Badge> }
 				</div>
-				<p className="text-sm text-gray-500 mb-3">
+				<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">
 					The real media URL never appears in the page. Self-hosted files stream through a signed link that expires;
 					Bunny videos get CDN token authentication (set your Token Auth key under Settings → Bunny.net).
 				</p>
@@ -44,7 +44,7 @@ export default function ProtectionTab( { config, patch } ) {
 					<h3 className="font-semibold text-gray-900">Dynamic watermark</h3>
 					{ wm.enabled && <Badge tone="amber">on</Badge> }
 				</div>
-				<p className="text-sm text-gray-500 mb-3">
+				<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">
 					Burn the viewer's identity over the picture to deter screen recording. Resolved on the server for the logged-in viewer.
 				</p>
 				<Toggle checked={ !! wm.enabled } onChange={ ( v ) => setWm( { enabled: v } ) } label="Show a dynamic watermark" />

@@ -2522,7 +2522,7 @@ function App() {
     }
   };
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_14__.jsxs)("div", {
-    className: "tp-admin flex flex-col min-h-[calc(100vh-32px)] bg-gray-50 text-ink -ml-5 -mr-5",
+    className: "tp-admin flex flex-col min-h-[calc(100vh-32px)] bg-gray-50 text-ink -ml-5",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_14__.jsx)(_components_Header__WEBPACK_IMPORTED_MODULE_10__["default"], {
       homeHref: (0,_nav__WEBPACK_IMPORTED_MODULE_13__.routeUrl)('dashboard'),
       onHomeClick: () => go('dashboard'),
@@ -2535,7 +2535,7 @@ function App() {
       }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_14__.jsx)("main", {
         className: "flex-1 min-w-0",
         children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_14__.jsxs)("div", {
-          className: "max-w-5xl mx-auto px-8 py-8",
+          className: "max-w-[1250px] mx-auto px-8 py-8",
           children: [route.name === 'dashboard' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_14__.jsx)(_screens_Dashboard__WEBPACK_IMPORTED_MODULE_8__["default"], {
             onNavigate: go
           }), route.name === 'library' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_14__.jsx)(_screens_Library__WEBPACK_IMPORTED_MODULE_2__["default"], {
@@ -2546,8 +2546,7 @@ function App() {
               id
             })
           }), route.name === 'analytics' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_14__.jsx)(_screens_Analytics__WEBPACK_IMPORTED_MODULE_5__["default"], {
-            id: route.id,
-            onBack: () => go('library')
+            id: route.id
           }), route.name === 'playlists' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_14__.jsx)(_screens_Playlists__WEBPACK_IMPORTED_MODULE_6__["default"], {
             onEditState: setEditState
           }), route.name === 'presets' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_14__.jsx)(_screens_Presets__WEBPACK_IMPORTED_MODULE_7__["default"], {
@@ -2829,7 +2828,7 @@ function Header({
     onHomeClick && onHomeClick();
   };
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("header", {
-    className: "sticky top-8 z-30 bg-white border border-line shadow-card h-14 flex items-center px-5 gap-2 shrink-0",
+    className: "sticky top-8 z-30 bg-white border border-line shadow-card flex items-center px-6 py-5 gap-2 shrink-0",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(react_router_dom__WEBPACK_IMPORTED_MODULE_0__.Link, {
       to: homeHref,
       onClick: home,
@@ -3143,7 +3142,7 @@ function SectionTitle({
   description
 }) {
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-    className: "mb-5",
+    className: "mb-4 pb-4 border-b border-line",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
       className: "text-[15px] font-semibold text-ink",
       children: title
@@ -3297,7 +3296,7 @@ function UpsellPanel({
       className: "text-lg font-semibold text-ink mt-3 mb-1",
       children: title
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("p", {
-      className: "text-sm text-gray-500 mb-4",
+      className: "text-sm text-gray-500 mb-5 pb-4 border-b border-line",
       children: "This is a Pro feature. Unlock the intelligence layer of TruePlayer."
     }), features.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("ul", {
       className: "text-sm text-gray-600 text-left inline-block mb-5 space-y-1",
@@ -3721,7 +3720,7 @@ function ChartCard({
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_3__.Card, {
     className: `p-5 ${className}`,
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
-      className: "mb-3",
+      className: "mb-4 pb-4 border-b border-line",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
         className: "text-[15px] font-semibold text-ink",
         children: title
@@ -3836,8 +3835,7 @@ function ViewerDetail({
   });
 }
 function Analytics({
-  id,
-  onBack
+  id
 }) {
   const [tab, setTab] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('overview');
   const [data, setData] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
@@ -3856,16 +3854,9 @@ function Analytics({
   }, [tab, id, viewers, pro]);
   if (!pro) {
     return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
-        className: "flex items-center gap-3 mb-6",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_3__.Button, {
-          variant: "ghost",
-          onClick: onBack,
-          children: "\u2190 Back"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h1", {
-          className: "text-2xl font-bold text-ink",
-          children: "Analytics"
-        })]
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h1", {
+        className: "text-2xl font-bold text-ink mb-6",
+        children: "Analytics"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_4__["default"], {
         title: "Deep video analytics",
         features: ['Audience retention curve', 'Replay heatmap — which parts get re-watched', 'Completion funnel & views over time', 'Per-viewer watch drill-down', 'Quiz performance']
@@ -3938,16 +3929,9 @@ function Analytics({
     }
   };
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
-      className: "flex items-center gap-3 mb-6",
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_3__.Button, {
-        variant: "ghost",
-        onClick: onBack,
-        children: "\u2190 Back"
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h1", {
-        className: "text-2xl font-bold text-ink",
-        children: "Analytics"
-      })]
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h1", {
+      className: "text-2xl font-bold text-ink mb-6",
+      children: "Analytics"
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("div", {
       className: "flex gap-1 border-b border-line mb-6",
       children: ['overview', 'viewers'].map(t => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("button", {
@@ -4076,7 +4060,7 @@ function Analytics({
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_3__.Card, {
           className: "p-5",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
-            className: "text-[15px] font-semibold text-ink mb-3",
+            className: "text-[15px] font-semibold text-ink mb-4 pb-4 border-b border-line",
             children: "New vs returning"
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
             className: "flex gap-6",
@@ -4110,7 +4094,7 @@ function Analytics({
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_3__.Card, {
           className: "p-5",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
-            className: "text-[15px] font-semibold text-ink mb-3",
+            className: "text-[15px] font-semibold text-ink mb-4 pb-4 border-b border-line",
             children: "Quiz performance"
           }), data.quiz.length === 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("p", {
             className: "text-sm text-gray-400",
@@ -4353,7 +4337,7 @@ function Dashboard({
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
         className: "lg:col-span-2 p-6",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
-          className: "flex items-center justify-between mb-4",
+          className: "flex items-center justify-between mb-5 pb-4 border-b border-line",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("h3", {
             className: "font-semibold text-ink",
             children: "Recent videos"
@@ -4414,7 +4398,7 @@ function Dashboard({
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
           className: "p-6",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("h3", {
-            className: "font-semibold text-ink mb-3",
+            className: "font-semibold text-ink mb-4 pb-4 border-b border-line",
             children: "Quick start"
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
             className: "space-y-1",
@@ -4435,13 +4419,13 @@ function Dashboard({
         }), !(0,_pro__WEBPACK_IMPORTED_MODULE_4__.isPro)() && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
           className: "p-6 border-brand-100 bg-gradient-to-br from-brand-50 to-white",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
-            className: "flex items-center gap-1.5 font-semibold text-ink",
+            className: "flex items-center gap-1.5 font-semibold text-ink pb-4 mb-3 border-b border-line",
             children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_components_icons__WEBPACK_IMPORTED_MODULE_3__.Icon, {
               name: "spark",
               className: "w-4 h-4 text-brand-500"
             }), " Unlock Pro"]
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("p", {
-            className: "text-[13px] text-gray-600 mt-1.5 mb-3 leading-snug",
+            className: "text-[13px] text-gray-600 mb-3 leading-snug",
             children: "Prove students watched, gate with quizzes, and see deep analytics."
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("a", {
             href: PURCHASE,
@@ -5088,7 +5072,7 @@ function Editor({
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
         className: "p-6",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-          className: "font-semibold text-ink mb-4",
+          className: "font-semibold text-ink mb-4 pb-4 border-b border-line",
           children: "Playlist settings"
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
           label: "Layout",
@@ -5133,7 +5117,7 @@ function Editor({
           className: "font-semibold text-ink mb-1",
           children: "Videos in this playlist"
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("p", {
-          className: "text-sm text-gray-500 mb-3",
+          className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
           children: [selected.length, " selected \xB7 drag to reorder."]
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
           className: "space-y-2 mb-4",
@@ -5712,10 +5696,10 @@ function Settings({
         }), tab === 'webhooks' && ((0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
           className: "p-6",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
-            className: "font-semibold text-gray-900 mb-4",
+            className: "font-semibold text-gray-900 mb-1",
             children: "Global webhooks"
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("p", {
-            className: "text-sm text-gray-500 mb-4",
+            className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
             children: "Fire for every video, in addition to per-video webhooks."
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_EndpointList__WEBPACK_IMPORTED_MODULE_3__.EndpointList, {
             endpoints: settings.webhooks || [],
@@ -5732,7 +5716,7 @@ function Settings({
             className: "font-semibold text-gray-900 mb-1",
             children: "Bunny.net token authentication"
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("p", {
-            className: "text-sm text-gray-500 mb-4",
+            className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
             children: ["Needed for ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("strong", {
               children: "private"
             }), " Bunny videos: enable Token Authentication on your pull zone in the Bunny dashboard, then paste its key here. TruePlayer signs expiring playback URLs with it."]
@@ -5756,7 +5740,7 @@ function Settings({
         })), tab === 'license' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
           className: "p-6 max-w-xl",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
-            className: "flex items-center gap-3 mb-2",
+            className: "flex items-center gap-3 mb-4 pb-4 border-b border-line",
             children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
               className: "font-semibold text-gray-900",
               children: "License"
@@ -5973,7 +5957,7 @@ function AppearanceTab({
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
         className: "p-6",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("h3", {
-          className: "font-semibold text-gray-900 mb-4",
+          className: "font-semibold text-gray-900 mb-4 pb-4 border-b border-line",
           children: "Logo / watermark"
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
           label: "Logo image",
@@ -6057,7 +6041,7 @@ function AppearanceTab({
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
         className: "p-6",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("div", {
-          className: "flex items-center justify-between mb-4",
+          className: "flex items-center justify-between mb-4 pb-4 border-b border-line",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("h3", {
             className: "font-semibold text-gray-900",
             children: "Captions & subtitles"
@@ -6151,7 +6135,7 @@ function AppearanceTab({
         className: "font-semibold text-gray-900 mb-1",
         children: "Description below player"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("p", {
-        className: "text-sm text-gray-500 mb-3",
+        className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
         children: "Shown directly under the player wherever it's embedded. Basic HTML allowed."
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Textarea, {
         rows: 4,
@@ -6184,7 +6168,7 @@ function AppearanceTab({
           })]
         })]
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("p", {
-        className: "text-sm text-gray-400 mb-4",
+        className: "text-sm text-gray-400 mb-4 pb-4 border-b border-line",
         children: "Chapters segment the scrubber and appear in the \u201CIn this video\u201D panel. Times are mm:ss."
       }), importOpen && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("div", {
         className: "mb-4 p-4 bg-gray-50 rounded-md border border-line",
@@ -6286,7 +6270,7 @@ function EmbedTab({
     className: "p-6 max-w-2xl space-y-6",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-        className: "font-semibold text-gray-900 mb-2",
+        className: "font-semibold text-gray-900 mb-3 pb-3 border-b border-line",
         children: "Shortcode"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
         className: "flex gap-2 items-center",
@@ -6301,7 +6285,7 @@ function EmbedTab({
       })]
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-        className: "font-semibold text-gray-900 mb-2",
+        className: "font-semibold text-gray-900 mb-3 pb-3 border-b border-line",
         children: "Block (paste into any post)"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
         className: "flex gap-2 items-center",
@@ -6328,7 +6312,7 @@ function EmbedTab({
           children: "Pro"
         })]
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
-        className: "text-sm text-gray-500 mb-2",
+        className: "text-sm text-gray-500 mb-3 pb-3 border-b border-line",
         children: "A clean, shareable standalone page for this video \u2014 no post needed."
       }), (0,_pro__WEBPACK_IMPORTED_MODULE_2__.isPro)() && patch ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.Fragment, {
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
@@ -6416,7 +6400,7 @@ function LmsSection({
         children: "linked"
       }) : null]
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
-      className: "text-sm text-gray-500 mb-4",
+      className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
       children: "When a logged-in student completes this video, the linked Academy lesson is marked complete automatically."
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
       className: "grid md:grid-cols-2 gap-x-6",
@@ -6650,7 +6634,7 @@ function GatingTab({
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
       className: "p-6 max-w-2xl",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-        className: "font-semibold text-gray-900 mb-4",
+        className: "font-semibold text-gray-900 mb-4 pb-4 border-b border-line",
         children: "Watch verification"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
         className: "grid grid-cols-2 gap-4",
@@ -6703,7 +6687,7 @@ function GatingTab({
         className: "font-semibold text-gray-900 mb-1",
         children: "Scheduled release (drip)"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
-        className: "text-sm text-gray-500 mb-4",
+        className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
         children: "Lock the video until a date. Viewers see a \u201Cavailable on\u2026\u201D message until then."
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
         label: "Available from",
@@ -6719,7 +6703,7 @@ function GatingTab({
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
       className: "p-6",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-        className: "flex items-center justify-between mb-4",
+        className: "flex items-center justify-between mb-5 pb-4 border-b border-line",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
             className: "font-semibold text-gray-900",
@@ -6790,7 +6774,7 @@ function GatingTab({
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
       className: "p-6",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-        className: "flex items-center justify-between mb-4",
+        className: "flex items-center justify-between mb-5 pb-4 border-b border-line",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
           className: "flex items-center gap-3",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
@@ -6806,6 +6790,7 @@ function GatingTab({
           label: "Enable"
         })]
       }), gating.finalQuiz && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+        className: " mt-5 pt-4 border-t border-line",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
           className: "flex gap-2 items-end mb-4",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
@@ -7074,7 +7059,7 @@ function LayersTab({
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
     className: "space-y-6",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
-      className: "flex items-center justify-between gap-4",
+      className: "flex items-center justify-between gap-4 pb-4 border-b border-line",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("h3", {
           className: "font-semibold text-gray-900",
@@ -7369,7 +7354,7 @@ function OverlaysTab({
         className: "font-semibold text-gray-900 mb-1",
         children: "Action bar"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("p", {
-        className: "text-sm text-gray-500 mb-3",
+        className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
         children: "A persistent, clickable bar over the player \u2014 text plus a button."
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_0__.Toggle, {
         checked: !!actionBar.enabled,
@@ -7446,7 +7431,7 @@ function OverlaysTab({
         })]
       })]
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
-      className: "flex items-center justify-between gap-4",
+      className: "flex items-center justify-between gap-4 pb-4 border-b border-line",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("h3", {
           className: "font-semibold text-gray-900",
@@ -7864,7 +7849,7 @@ function PlayerOptionsTab({
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_0__.Card, {
       className: "p-6",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("h3", {
-        className: "font-semibold text-gray-900 mb-4",
+        className: "font-semibold text-gray-900 mb-4 pb-4 border-b border-line",
         children: "Appearance"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
         className: "grid md:grid-cols-2 gap-x-6",
@@ -7996,7 +7981,7 @@ function PlayerOptionsTab({
         className: "font-semibold text-gray-900 mb-1",
         children: "Subtitle style"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("p", {
-        className: "text-sm text-gray-500 mb-4",
+        className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
         children: "How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own."
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
         className: "grid md:grid-cols-2 gap-x-6",
@@ -8070,7 +8055,7 @@ function PlayerOptionsTab({
         className: "font-semibold text-gray-900 mb-1",
         children: "Controls"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("p", {
-        className: "text-sm text-gray-500 mb-4",
+        className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
         children: "Show or hide each control in the bar."
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
         className: "grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-1",
@@ -8085,7 +8070,7 @@ function PlayerOptionsTab({
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_0__.Card, {
       className: "p-6",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("h3", {
-        className: "font-semibold text-gray-900 mb-4",
+        className: "font-semibold text-gray-900 mb-4 pb-4 border-b border-line",
         children: "Behavior"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
         className: "grid md:grid-cols-2 gap-x-6",
@@ -8239,7 +8224,7 @@ function PlayerOptionsTab({
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_0__.Card, {
       className: "p-6 max-w-2xl",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("h3", {
-        className: "font-semibold text-gray-900 mb-4",
+        className: "font-semibold text-gray-900 mb-4 pb-4 border-b border-line",
         children: "Playback"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_0__.Field, {
         label: "Playback speeds",
@@ -8273,7 +8258,7 @@ function PlayerOptionsTab({
         className: "font-semibold text-gray-900 mb-1",
         children: "Custom CSS"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("p", {
-        className: "text-sm text-gray-500 mb-4",
+        className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
         children: ["Printed with this player on the frontend. Scope rules with ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("code", {
           className: "text-xs bg-gray-100 px-1 rounded",
           children: ".trueplayer-mount"
@@ -8418,7 +8403,7 @@ function ProtectionTab({
           children: "on"
         })]
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("p", {
-        className: "text-sm text-gray-500 mb-3",
+        className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
         children: "The real media URL never appears in the page. Self-hosted files stream through a signed link that expires; Bunny videos get CDN token authentication (set your Token Auth key under Settings \u2192 Bunny.net)."
       }), privatable ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_0__.Toggle, {
         checked: !!source.private,
@@ -8445,7 +8430,7 @@ function ProtectionTab({
           children: "on"
         })]
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("p", {
-        className: "text-sm text-gray-500 mb-3",
+        className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
         children: "Burn the viewer's identity over the picture to deter screen recording. Resolved on the server for the logged-in viewer."
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_0__.Toggle, {
         checked: !!wm.enabled,
@@ -8738,7 +8723,7 @@ function SubscribeTab({
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
       className: "p-6 max-w-2xl",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-        className: "flex items-center justify-between mb-4",
+        className: "flex items-center justify-between",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
             className: "font-semibold text-gray-900",
@@ -8754,7 +8739,8 @@ function SubscribeTab({
           }),
           label: "Enable"
         })]
-      }), optin.enabled && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.Fragment, {
+      }), optin.enabled && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+        className: " mt-5 pt-4 border-t border-line",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
           label: "Provider",
           hint: "Where the contact is sent.",
@@ -8941,10 +8927,8 @@ function TimedContentTab({
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_0__.Card, {
       className: "p-6 max-w-2xl",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_0__.SectionTitle, {
-        children: "Timed content"
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("p", {
-        className: "text-sm text-gray-500 mb-4",
-        children: "Show a block of content under the player during a time range \u2014 a form when the demo ends, a coupon at the pitch, notes that track the lesson. Any shortcode works."
+        title: "Timed content",
+        description: "Show a block of content under the player during a time range \u2014 a form when the demo ends, a coupon at the pitch, notes that track the lesson. Any shortcode works."
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_0__.Toggle, {
         checked: !!timed.enabled,
         onChange: v => set({
@@ -9042,7 +9026,7 @@ function WebhooksTab({
       className: "font-semibold text-gray-900 mb-1",
       children: "Per-video webhooks"
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("p", {
-      className: "text-sm text-gray-500 mb-4",
+      className: "text-sm text-gray-500 mb-4 pb-4 border-b border-line",
       children: "Fire signed JSON payloads to external URLs when this video's events happen \u2014 for Zapier, automation, or your own endpoint. Global webhooks (all videos) live under Settings."
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_components_EndpointList__WEBPACK_IMPORTED_MODULE_0__.EndpointList, {
       endpoints: webhooks,

@@ -177,7 +177,7 @@ export function ConfirmModal( { title, children, confirmLabel = 'Discard changes
 
 export function SectionTitle( { title, description } ) {
 	return (
-		<div className="mb-5">
+		<div className="mb-4 pb-4 border-b border-line">
 			<h3 className="text-[15px] font-semibold text-ink">{ title }</h3>
 			{ description && <p className="text-[13px] text-gray-500 mt-0.5">{ description }</p> }
 		</div>

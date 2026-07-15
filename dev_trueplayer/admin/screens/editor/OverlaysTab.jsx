@@ -28,7 +28,7 @@ export default function OverlaysTab( { config, patch } ) {
 			{ /* Action bar */ }
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Action bar</h3>
-				<p className="text-sm text-gray-500 mb-3">A persistent, clickable bar over the player — text plus a button.</p>
+				<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">A persistent, clickable bar over the player — text plus a button.</p>
 				<Toggle checked={ !! actionBar.enabled } onChange={ ( v ) => setBar( { enabled: v } ) } label="Show the action bar" />
 				{ actionBar.enabled && (
 					<>
@@ -53,7 +53,7 @@ export default function OverlaysTab( { config, patch } ) {
 				) }
 			</Card>
 
-			<div className="flex items-center justify-between gap-4">
+			<div className="flex items-center justify-between gap-4 pb-4 border-b border-line">
 				<div>
 					<h3 className="font-semibold text-gray-900">Overlays</h3>
 					<p className="text-sm text-gray-500">CTA cards pause for attention; text overlays label the picture during a time window.</p>

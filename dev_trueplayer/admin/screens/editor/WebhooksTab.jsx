@@ -6,7 +6,7 @@ export default function WebhooksTab( { config, patch } ) {
 	return (
 		<Card className="p-6">
 			<h3 className="font-semibold text-gray-900 mb-1">Per-video webhooks</h3>
-			<p className="text-sm text-gray-500 mb-4">
+			<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">
 				Fire signed JSON payloads to external URLs when this video's events happen — for Zapier, automation, or your own endpoint.
 				Global webhooks (all videos) live under Settings.
 			</p>

@@ -69,7 +69,7 @@ export default function Dashboard( { onNavigate } ) {
 
 			<div className="grid lg:grid-cols-3 gap-6 items-start">
 				<Card className="lg:col-span-2 p-6">
-					<div className="flex items-center justify-between mb-4">
+					<div className="flex items-center justify-between mb-5 pb-4 border-b border-line">
 						<h3 className="font-semibold text-ink">Recent videos</h3>
 						<button className="text-sm text-brand-600 font-medium hover:text-brand-700" onClick={ () => onNavigate( 'library' ) }>View all →</button>
 					</div>
@@ -100,7 +100,7 @@ export default function Dashboard( { onNavigate } ) {
 
 				<div className="space-y-6">
 					<Card className="p-6">
-						<h3 className="font-semibold text-ink mb-3">Quick start</h3>
+						<h3 className="font-semibold text-ink mb-4 pb-4 border-b border-line">Quick start</h3>
 						<div className="space-y-1">
 							<QuickLink icon="video" label="Add a video" onClick={ () => onNavigate( 'library' ) } />
 							<QuickLink icon="playlist" label="Build a playlist" onClick={ () => onNavigate( 'playlists' ) } />
@@ -109,8 +109,8 @@ export default function Dashboard( { onNavigate } ) {
 					</Card>
 					{ ! isPro() && (
 						<Card className="p-6 border-brand-100 bg-gradient-to-br from-brand-50 to-white">
-							<div className="flex items-center gap-1.5 font-semibold text-ink"><Icon name="spark" className="w-4 h-4 text-brand-500" /> Unlock Pro</div>
-							<p className="text-[13px] text-gray-600 mt-1.5 mb-3 leading-snug">Prove students watched, gate with quizzes, and see deep analytics.</p>
+							<div className="flex items-center gap-1.5 font-semibold text-ink pb-4 mb-3 border-b border-line"><Icon name="spark" className="w-4 h-4 text-brand-500" /> Unlock Pro</div>
+							<p className="text-[13px] text-gray-600 mb-3 leading-snug">Prove students watched, gate with quizzes, and see deep analytics.</p>
 							<a href={ PURCHASE } target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 rounded-md px-4 py-2">See Pro features</a>
 						</Card>
 					) }

@@ -209,9 +209,6 @@
 .-ml-5 {
 		margin-right: -1.25rem;
 }
-.-mr-5 {
-		margin-left: -1.25rem;
-}
 .mb-1 {
 		margin-bottom: 0.25rem;
 }
@@ -259,6 +256,9 @@
 }
 .mt-4 {
 		margin-top: 1rem;
+}
+.mt-5 {
+		margin-top: 1.25rem;
 }
 .block {
 		display: block;
@@ -328,6 +328,9 @@
 }
 .h-full {
 		height: 100%;
+}
+.h-16 {
+		height: 4rem;
 }
 .max-h-10 {
 		max-height: 2.5rem;
@@ -412,6 +415,9 @@
 }
 .max-w-5xl {
 		max-width: 64rem;
+}
+.max-w-\[1250px\] {
+		max-width: 1250px;
 }
 .max-w-\[140px\] {
 		max-width: 140px;
@@ -792,6 +798,21 @@
 		padding-top: 2rem;
 		padding-bottom: 2rem;
 }
+.py-20 {
+		padding-top: 5rem;
+		padding-bottom: 5rem;
+}
+.py-5 {
+		padding-top: 1.25rem;
+		padding-bottom: 1.25rem;
+}
+.px-6 {
+		padding-right: 1.5rem;
+		padding-left: 1.5rem;
+}
+.pb-4 {
+		padding-bottom: 1rem;
+}
 .pl-4 {
 		padding-right: 1rem;
 }
@@ -803,6 +824,9 @@
 }
 .pt-4 {
 		padding-top: 1rem;
+}
+.pb-3 {
+		padding-bottom: 0.75rem;
 }
 .text-left {
 		text-align: right;
@@ -1049,6 +1073,10 @@
 .tp-admin h3 {
 	color: var(--tp-ink);
 	font-weight: 600;
+}
+
+h1, h2, h3, h4, h5, h6, p {
+	margin: 0;
 }
 
 .placeholder\:text-gray-400::-moz-placeholder {

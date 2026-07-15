@@ -27,7 +27,7 @@ function LmsSection( { config, patch } ) {
 				<h3 className="font-semibold text-gray-900">Academy LMS progression</h3>
 				{ lms.courseId && lms.lessonId ? <Badge tone="green">linked</Badge> : null }
 			</div>
-			<p className="text-sm text-gray-500 mb-4">
+			<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">
 				When a logged-in student completes this video, the linked Academy lesson is marked complete automatically.
 			</p>
 			<div className="grid md:grid-cols-2 gap-x-6">
@@ -139,7 +139,7 @@ export default function GatingTab( { config, patch } ) {
 	return (
 		<div className="space-y-6">
 			<Card className="p-6 max-w-2xl">
-				<h3 className="font-semibold text-gray-900 mb-4">Watch verification</h3>
+				<h3 className="font-semibold text-gray-900 mb-4 pb-4 border-b border-line">Watch verification</h3>
 				<div className="grid grid-cols-2 gap-4">
 					<Field label="Completion threshold (%)" hint="Coverage required to count as 'watched'.">
 						<Input type="number" min="1" max="100" value={ gating.completionThreshold } onChange={ ( e ) => set( { completionThreshold: parseInt( e.target.value, 10 ) || 0 } ) } />
@@ -155,14 +155,14 @@ export default function GatingTab( { config, patch } ) {
 
 			<Card className="p-6 max-w-2xl">
 				<h3 className="font-semibold text-gray-900 mb-1">Scheduled release (drip)</h3>
-				<p className="text-sm text-gray-500 mb-4">Lock the video until a date. Viewers see a &ldquo;available on…&rdquo; message until then.</p>
+				<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">Lock the video until a date. Viewers see a &ldquo;available on…&rdquo; message until then.</p>
 				<Field label="Available from" hint="Leave empty to make it available immediately.">
 					<Input type="datetime-local" value={ gating.availableFrom || '' } onChange={ ( e ) => set( { availableFrom: e.target.value } ) } />
 				</Field>
 			</Card>
 
 			<Card className="p-6">
-				<div className="flex items-center justify-between mb-4">
+				<div className="flex items-center justify-between mb-5 pb-4 border-b border-line">
 					<div>
 						<h3 className="font-semibold text-gray-900">Checkpoint questions</h3>
 						<p className="text-sm text-gray-500">Pause playback at a timestamp and require a correct answer to continue.</p>
@@ -186,7 +186,7 @@ export default function GatingTab( { config, patch } ) {
 			</Card>
 
 			<Card className="p-6">
-				<div className="flex items-center justify-between mb-4">
+				<div className="flex items-center justify-between mb-5 pb-4 border-b border-line">
 					<div className="flex items-center gap-3">
 						<h3 className="font-semibold text-gray-900">Final quiz (end gate)</h3>
 						{ gating.finalQuiz && <Badge tone="amber">on</Badge> }
@@ -194,7 +194,7 @@ export default function GatingTab( { config, patch } ) {
 					<Toggle checked={ !! gating.finalQuiz } onChange={ toggleFinal } label="Enable" />
 				</div>
 				{ gating.finalQuiz && (
-					<div>
+					<div className=' mt-5 pt-4 border-t border-line'>
 						<div className="flex gap-2 items-end mb-4">
 							<div className="flex-1"><Field label="Title"><Input value={ gating.finalQuiz.title || '' } onChange={ ( e ) => setFinal( { title: e.target.value } ) } /></Field></div>
 							<Field label="Pass %"><Input type="number" className="w-24" value={ gating.finalQuiz.passPercent } onChange={ ( e ) => setFinal( { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>

@@ -66,7 +66,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 		<div className="space-y-6">
 			{ /* Appearance */ }
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 mb-4">Appearance</h3>
+				<h3 className="font-semibold text-gray-900 mb-4 pb-4 border-b border-line">Appearance</h3>
 				<div className="grid md:grid-cols-2 gap-x-6">
 					<Field label="Skin" hint={ isPro() ? 'Overall player theme.' : 'Floating & Ambient need TruePlayer Pro.' }>
 						<Select value={ appearance.skin } onChange={ ( e ) => setSection( 'appearance', { skin: e.target.value } ) }>
@@ -118,7 +118,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 			{ /* Subtitle style */ }
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Subtitle style</h3>
-				<p className="text-sm text-gray-500 mb-4">How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own.</p>
+				<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own.</p>
 				<div className="grid md:grid-cols-2 gap-x-6">
 					<Field label={ `Font size (${ appearance.captionSize }%)` }>
 						<input type="range" min="50" max="200" step="10" value={ appearance.captionSize } onChange={ ( e ) => setSection( 'appearance', { captionSize: parseInt( e.target.value, 10 ) } ) } className="w-full" />
@@ -144,7 +144,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 			{ /* Controls */ }
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Controls</h3>
-				<p className="text-sm text-gray-500 mb-4">Show or hide each control in the bar.</p>
+				<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">Show or hide each control in the bar.</p>
 				<div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-1">
 					{ Object.keys( CONTROL_LABELS ).map( ( key ) => (
 						<Toggle key={ key } checked={ controls[ key ] } onChange={ ( v ) => setSection( 'controls', { [ key ]: v } ) } label={ CONTROL_LABELS[ key ] } />
@@ -154,7 +154,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 
 			{ /* Behavior */ }
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 mb-4">Behavior</h3>
+				<h3 className="font-semibold text-gray-900 mb-4 pb-4 border-b border-line">Behavior</h3>
 				<div className="grid md:grid-cols-2 gap-x-6">
 					<div>
 						<Field label="Autoplay" hint="“With sound” falls back to muted when the browser blocks it.">
@@ -214,7 +214,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 
 			{ /* Playback */ }
 			<Card className="p-6 max-w-2xl">
-				<h3 className="font-semibold text-gray-900 mb-4">Playback</h3>
+				<h3 className="font-semibold text-gray-900 mb-4 pb-4 border-b border-line">Playback</h3>
 				<Field label="Playback speeds" hint="Comma-separated, e.g. 0.5, 1, 1.5, 2">
 					<Input
 						value={ cz.speeds.join( ', ' ) }
@@ -232,7 +232,7 @@ export default function PlayerOptionsTab( { config, patch } ) {
 			{ /* Custom CSS */ }
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Custom CSS</h3>
-				<p className="text-sm text-gray-500 mb-4">
+				<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">
 					Printed with this player on the frontend. Scope rules with <code className="text-xs bg-gray-100 px-1 rounded">.trueplayer-mount</code> (all players) or <code className="text-xs bg-gray-100 px-1 rounded">.tp-stage</code>.
 				</p>
 				<Textarea

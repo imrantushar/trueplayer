@@ -36,7 +36,7 @@ export default function SubscribeTab( { config, patch } ) {
 	return (
 		<div className="space-y-6">
 			<Card className="p-6 max-w-2xl">
-				<div className="flex items-center justify-between mb-4">
+				<div className="flex items-center justify-between">
 					<div>
 						<h3 className="font-semibold text-gray-900">Subscribe / email capture</h3>
 						<p className="text-sm text-gray-500">Ask viewers to subscribe, then let them keep watching. Sends the contact to your CRM.</p>
@@ -45,7 +45,7 @@ export default function SubscribeTab( { config, patch } ) {
 				</div>
 
 				{ optin.enabled && (
-					<>
+					<div className=' mt-5 pt-4 border-t border-line'>
 						<Field label="Provider" hint="Where the contact is sent.">
 							<Select value={ optin.provider } onChange={ ( e ) => set( { provider: e.target.value, lists: [] } ) }>
 								<option value="">— Select —</option>
@@ -97,7 +97,7 @@ export default function SubscribeTab( { config, patch } ) {
 						<Field label="Headline"><Input value={ optin.headline } onChange={ ( e ) => set( { headline: e.target.value } ) } /></Field>
 						<Field label="Description"><Input value={ optin.description } onChange={ ( e ) => set( { description: e.target.value } ) } /></Field>
 						<Field label="Button text"><Input value={ optin.buttonText } onChange={ ( e ) => set( { buttonText: e.target.value } ) } /></Field>
-					</>
+					</div>
 				) }
 			</Card>
 

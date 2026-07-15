@@ -97,8 +97,8 @@ export default function Settings( { onEditState } ) {
 					{ tab === 'webhooks' && (
 						isPro() ? (
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 mb-4">Global webhooks</h3>
-								<p className="text-sm text-gray-500 mb-4">Fire for every video, in addition to per-video webhooks.</p>
+								<h3 className="font-semibold text-gray-900 mb-1">Global webhooks</h3>
+								<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">Fire for every video, in addition to per-video webhooks.</p>
 								<EndpointList
 									endpoints={ settings.webhooks || [] }
 									onChange={ ( webhooks ) => patch( { webhooks } ) }
@@ -113,7 +113,7 @@ export default function Settings( { onEditState } ) {
 						isPro() ? (
 							<Card className="p-6 max-w-xl">
 								<h3 className="font-semibold text-gray-900 mb-1">Bunny.net token authentication</h3>
-								<p className="text-sm text-gray-500 mb-4">
+								<p className="text-sm text-gray-500 mb-4 pb-4 border-b border-line">
 									Needed for <strong>private</strong> Bunny videos: enable Token Authentication on your pull zone in the Bunny
 									dashboard, then paste its key here. TruePlayer signs expiring playback URLs with it.
 								</p>
@@ -133,7 +133,7 @@ export default function Settings( { onEditState } ) {
 
 					{ tab === 'license' && (
 						<Card className="p-6 max-w-xl">
-							<div className="flex items-center gap-3 mb-2">
+							<div className="flex items-center gap-3 mb-4 pb-4 border-b border-line">
 								<h3 className="font-semibold text-gray-900">License</h3>
 								<Badge tone={ isPro() ? 'green' : 'gray' }>{ isPro() ? 'Pro active' : 'Free' }</Badge>
 							</div>

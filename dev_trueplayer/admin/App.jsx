@@ -109,7 +109,7 @@ export default function App() {
 	};
 
 	return (
-		<div className="tp-admin flex flex-col min-h-[calc(100vh-32px)] bg-gray-50 text-ink -ml-5 -mr-5">
+		<div className="tp-admin flex flex-col min-h-[calc(100vh-32px)] bg-gray-50 text-ink -ml-5">
 			<Header
 				homeHref={ routeUrl( 'dashboard' ) }
 				onHomeClick={ () => go( 'dashboard' ) }
@@ -121,10 +121,10 @@ export default function App() {
 					<Editor id={ route.id } onEditState={ setEditState } />
 				) : (
 					<main className="flex-1 min-w-0">
-						<div className="max-w-5xl mx-auto px-8 py-8">
+						<div className="max-w-[1250px] mx-auto px-8 py-8">
 							{ route.name === 'dashboard' && <Dashboard onNavigate={ go } /> }
 							{ route.name === 'library' && <Library onEdit={ ( id ) => go( 'editor', { id } ) } onViewers={ ( id ) => go( 'analytics', { id } ) } /> }
-							{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library' ) } /> }
+							{ route.name === 'analytics' && <Analytics id={ route.id } /> }
 							{ route.name === 'playlists' && <Playlists onEditState={ setEditState } /> }
 							{ route.name === 'presets' && <Presets onEditState={ setEditState } /> }
 							{ route.name === 'settings' && <Settings onEditState={ setEditState } /> }
