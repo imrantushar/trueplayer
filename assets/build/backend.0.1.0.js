@@ -2706,7 +2706,7 @@ function Header({
   title
 }) {
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("header", {
-    className: "bg-white border border-line shadow-card h-14 flex items-center px-5 gap-2 shrink-0",
+    className: "sticky top-8 z-30 bg-white border border-line shadow-card h-14 flex items-center px-5 gap-2 shrink-0",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("span", {
       className: "inline-flex w-8 h-8 rounded-lg bg-brand-500 text-white items-center justify-center shrink-0",
       children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("svg", {
@@ -5313,8 +5313,10 @@ function Settings() {
   const [tab, setTab] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('defaults');
   const [saving, setSaving] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [saved, setSaved] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [toolbarSlot, setToolbarSlot] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     _api__WEBPACK_IMPORTED_MODULE_1__.api.getSettings().then(s => setSettings(s || {}));
+    setToolbarSlot(document.getElementById('tp-topbar-slot'));
   }, []);
   const save = async () => {
     setSaving(true);
@@ -5333,109 +5335,111 @@ function Settings() {
     });
   }
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.Fragment, {
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
-      className: "flex items-center justify-between mb-6",
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h1", {
-        className: "text-2xl font-bold text-gray-900",
-        children: "Settings"
+    children: [toolbarSlot && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createPortal)(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.Fragment, {
+      children: [saved && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("span", {
+        className: "text-sm text-green-600",
+        children: "Saved \u2713"
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
+        onClick: save,
+        disabled: saving,
+        children: saving ? 'Saving…' : 'Save'
+      })]
+    }), toolbarSlot), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h1", {
+      className: "text-2xl font-bold text-gray-900 mb-6",
+      children: "Settings"
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
+      className: "flex flex-col md:flex-row gap-6 items-start",
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
+        className: "w-full md:w-56 shrink-0 md:sticky md:top-[104px] p-2 space-y-1",
+        children: SUBTABS.map(t => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("button", {
+          onClick: () => setTab(t.key),
+          className: `flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'}`,
+          children: t.label
+        }, t.key))
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
-        className: "flex items-center gap-3",
-        children: [saved && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("span", {
-          className: "text-sm text-green-600",
-          children: "Saved \u2713"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
-          onClick: save,
-          disabled: saving,
-          children: saving ? 'Saving…' : 'Save'
+        className: "flex-1 min-w-0",
+        children: [tab === 'defaults' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.Fragment, {
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("p", {
+            className: "text-sm text-gray-500 mb-4",
+            children: ["These apply to every video by default. A video's own ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("strong", {
+              children: "Player options"
+            }), " tab overrides them."]
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_editor_PlayerOptionsTab__WEBPACK_IMPORTED_MODULE_6__["default"], {
+            config: {
+              customize: settings.customize || {}
+            },
+            patch: partial => setSettings(s => ({
+              ...s,
+              ...partial
+            }))
+          })]
+        }), tab === 'webhooks' && ((0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
+          className: "p-6",
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
+            className: "font-semibold text-gray-900 mb-4",
+            children: "Global webhooks"
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("p", {
+            className: "text-sm text-gray-500 mb-4",
+            children: "Fire for every video, in addition to per-video webhooks."
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_EndpointList__WEBPACK_IMPORTED_MODULE_3__.EndpointList, {
+            endpoints: settings.webhooks || [],
+            onChange: webhooks => setSettings(s => ({
+              ...s,
+              webhooks
+            }))
+          })]
+        }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_4__["default"], {
+          title: "Automation & webhooks",
+          features: ['Signed webhooks on every player event', 'Site-wide + per-video endpoints']
+        })), tab === 'bunny' && ((0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
+          className: "p-6 max-w-xl",
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
+            className: "font-semibold text-gray-900 mb-1",
+            children: "Bunny.net token authentication"
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("p", {
+            className: "text-sm text-gray-500 mb-4",
+            children: ["Needed for ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("strong", {
+              children: "private"
+            }), " Bunny videos: enable Token Authentication on your pull zone in the Bunny dashboard, then paste its key here. TruePlayer signs expiring playback URLs with it."]
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
+            label: "Token Authentication Key",
+            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Input, {
+              type: "password",
+              value: settings.bunny?.tokenKey || '',
+              onChange: e => setSettings(s => ({
+                ...s,
+                bunny: {
+                  ...(s.bunny || {}),
+                  tokenKey: e.target.value
+                }
+              })),
+              placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022-\u2022\u2022\u2022\u2022-\u2022\u2022\u2022\u2022"
+            })
+          })]
+        }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_4__["default"], {
+          title: "Private video via Bunny.net",
+          features: ['Token-signed, expiring playback URLs', 'Content protection for Bunny Stream']
+        })), tab === 'license' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
+          className: "p-6 max-w-xl",
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
+            className: "flex items-center gap-3 mb-2",
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
+              className: "font-semibold text-gray-900",
+              children: "License"
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Badge, {
+              tone: (0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? 'green' : 'gray',
+              children: (0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? 'Pro active' : 'Free'
+            })]
+          }), (0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("p", {
+            className: "text-sm text-gray-500",
+            children: "TruePlayer Pro is active and your license is valid. Manage your key from the plugin\u2019s license panel (Plugins \u2192 TruePlayer Pro)."
+          }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("p", {
+            className: "text-sm text-gray-500",
+            children: ["You\u2019re on the free player. Install ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("strong", {
+              children: "TruePlayer Pro"
+            }), " and activate a license to unlock watch-verification, quiz-gating, analytics, automation, premium sources and playlists."]
+          })]
         })]
-      })]
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("div", {
-      className: "flex gap-1 border-b border-line mb-6",
-      children: SUBTABS.map(t => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("button", {
-        onClick: () => setTab(t.key),
-        className: `px-4 py-2 text-sm font-medium border-b-2 -mb-px ${tab === t.key ? 'border-brand-500 text-brand-700' : 'border-transparent text-gray-500 hover:text-gray-800'}`,
-        children: t.label
-      }, t.key))
-    }), tab === 'defaults' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.Fragment, {
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("p", {
-        className: "text-sm text-gray-500 mb-4",
-        children: ["These apply to every video by default. A video's own ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("strong", {
-          children: "Player options"
-        }), " tab overrides them."]
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_editor_PlayerOptionsTab__WEBPACK_IMPORTED_MODULE_6__["default"], {
-        config: {
-          customize: settings.customize || {}
-        },
-        patch: partial => setSettings(s => ({
-          ...s,
-          ...partial
-        }))
-      })]
-    }), tab === 'webhooks' && ((0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
-      className: "p-6",
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
-        className: "font-semibold text-gray-900 mb-4",
-        children: "Global webhooks"
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("p", {
-        className: "text-sm text-gray-500 mb-4",
-        children: "Fire for every video, in addition to per-video webhooks."
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_EndpointList__WEBPACK_IMPORTED_MODULE_3__.EndpointList, {
-        endpoints: settings.webhooks || [],
-        onChange: webhooks => setSettings(s => ({
-          ...s,
-          webhooks
-        }))
-      })]
-    }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_4__["default"], {
-      title: "Automation & webhooks",
-      features: ['Signed webhooks on every player event', 'Site-wide + per-video endpoints']
-    })), tab === 'bunny' && ((0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
-      className: "p-6 max-w-xl",
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
-        className: "font-semibold text-gray-900 mb-1",
-        children: "Bunny.net token authentication"
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("p", {
-        className: "text-sm text-gray-500 mb-4",
-        children: ["Needed for ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("strong", {
-          children: "private"
-        }), " Bunny videos: enable Token Authentication on your pull zone in the Bunny dashboard, then paste its key here. TruePlayer signs expiring playback URLs with it."]
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
-        label: "Token Authentication Key",
-        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Input, {
-          type: "password",
-          value: settings.bunny?.tokenKey || '',
-          onChange: e => setSettings(s => ({
-            ...s,
-            bunny: {
-              ...(s.bunny || {}),
-              tokenKey: e.target.value
-            }
-          })),
-          placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022-\u2022\u2022\u2022\u2022-\u2022\u2022\u2022\u2022"
-        })
-      })]
-    }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_4__["default"], {
-      title: "Private video via Bunny.net",
-      features: ['Token-signed, expiring playback URLs', 'Content protection for Bunny Stream']
-    })), tab === 'license' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
-      className: "p-6 max-w-xl",
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("div", {
-        className: "flex items-center gap-3 mb-2",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("h3", {
-          className: "font-semibold text-gray-900",
-          children: "License"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Badge, {
-          tone: (0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? 'green' : 'gray',
-          children: (0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? 'Pro active' : 'Free'
-        })]
-      }), (0,_pro__WEBPACK_IMPORTED_MODULE_5__.isPro)() ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("p", {
-        className: "text-sm text-gray-500",
-        children: "TruePlayer Pro is active and your license is valid. Manage your key from the plugin\u2019s license panel (Plugins \u2192 TruePlayer Pro)."
-      }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsxs)("p", {
-        className: "text-sm text-gray-500",
-        children: ["You\u2019re on the free player. Install ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_7__.jsx)("strong", {
-          children: "TruePlayer Pro"
-        }), " and activate a license to unlock watch-verification, quiz-gating, analytics, automation, premium sources and playlists."]
       })]
     })]
   });

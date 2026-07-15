@@ -175,8 +175,17 @@
 .top-\[3px\] {
 		top: 3px;
 }
+.top-8 {
+		top: 2rem;
+}
+.top-\[104px\] {
+		top: 104px;
+}
 .z-50 {
 		z-index: 50;
+}
+.z-30 {
+		z-index: 30;
 }
 .mx-auto {
 		margin-right: auto;
@@ -1119,6 +1128,18 @@
 }
 
 @media (min-width: 768px) {
+		.md\:sticky {
+				position: sticky;
+		}
+		.md\:top-4 {
+				top: 1rem;
+		}
+		.md\:top-\[104px\] {
+				top: 104px;
+		}
+		.md\:w-56 {
+				width: 14rem;
+		}
 		.md\:grid-cols-2 {
 				grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
@@ -1127,6 +1148,9 @@
 		}
 		.md\:grid-cols-4 {
 				grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+		.md\:flex-row {
+				flex-direction: row;
 		}
 }
 
