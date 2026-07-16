@@ -5196,10 +5196,9 @@ function Editor({
   const config = video.config || {};
   const pro = (0,_pro__WEBPACK_IMPORTED_MODULE_15__.isPro)();
   const isProTab = !!TABS.find(t => t.key === tab)?.pro;
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("main", {
-    className: "flex-1 min-w-0",
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.Fragment, {
     children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
-      className: "max-w-[1250px] mx-auto px-8 py-8",
+      className: "w-full mx-auto px-8 py-8",
       children: [toolbarSlot && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createPortal)(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.Fragment, {
         children: [saved && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("span", {
           className: "text-sm text-green-600",
@@ -5239,7 +5238,7 @@ function Editor({
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
         className: "flex flex-col md:flex-row gap-6 items-start",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("aside", {
-          className: "w-full md:w-56 shrink-0 bg-white border-r border-line md:sticky md:top-[104px]",
+          className: "w-full md:w-60 shrink-0 bg-white border-r border-line md:sticky md:top-[104px]",
           children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("nav", {
             className: "p-3 space-y-1",
             children: TABS.map(t => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("button", {
@@ -5268,7 +5267,7 @@ function Editor({
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
             className: "flex flex-col xl:flex-row gap-6 items-start mt-6",
             children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("div", {
-              className: "flex-1 min-w-0 w-full",
+              className: "w-full max-w-2xl",
               children: isProTab && !pro ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_14__["default"], {
                 title: PRO_TAB_INFO[tab].title,
                 features: PRO_TAB_INFO[tab].features
@@ -5276,31 +5275,10 @@ function Editor({
                 children: [tab === 'source' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_SourceTab__WEBPACK_IMPORTED_MODULE_3__["default"], {
                   config: config,
                   patch: patchConfig
-                }), tab === 'player' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
-                  className: "space-y-6",
-                  children: [presets.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
-                    className: "p-6 max-w-md",
-                    children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
-                      label: "Preset",
-                      hint: "Apply a saved player preset as the starting point \u2014 you can still tweak anything below.",
-                      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Select, {
-                        value: config.presetId || '',
-                        onChange: e => patchConfig({
-                          presetId: e.target.value ? parseInt(e.target.value, 10) : undefined
-                        }),
-                        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("option", {
-                          value: "",
-                          children: "None"
-                        }), presets.map(p => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("option", {
-                          value: p.id,
-                          children: p.title
-                        }, p.id))]
-                      })
-                    })
-                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_PlayerOptionsTab__WEBPACK_IMPORTED_MODULE_4__["default"], {
-                    config: config,
-                    patch: patchConfig
-                  })]
+                }), tab === 'player' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_PlayerOptionsTab__WEBPACK_IMPORTED_MODULE_4__["default"], {
+                  config: config,
+                  patch: patchConfig,
+                  presets: presets
                 }), tab === 'appearance' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_AppearanceTab__WEBPACK_IMPORTED_MODULE_5__["default"], {
                   config: config,
                   patch: patchConfig,
@@ -5315,7 +5293,7 @@ function Editor({
                 })]
               })
             }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("div", {
-              className: "w-full xl:w-[380px] shrink-0 xl:sticky xl:top-[104px]",
+              className: "shrink-0 xl:sticky xl:top-[104px]",
               children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_PreviewPanel__WEBPACK_IMPORTED_MODULE_13__["default"], {
                 id: id,
                 config: config,
@@ -7688,7 +7666,7 @@ function AppearanceTab({
     }
   };
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("div", {
-    className: "space-y-6",
+    className: "space-y-6 max-w-2xl",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
       className: "p-6",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("h3", {
@@ -8439,7 +8417,7 @@ function GatingTab({
         label: "Require login to watch (reliable per-person tracking)"
       })]
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
-      className: "p-6",
+      className: "p-6 max-w-2xl",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
         className: "flex items-center justify-between mb-4",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
@@ -8510,7 +8488,7 @@ function GatingTab({
         })]
       })]
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
-      className: "p-6",
+      className: "p-6 max-w-2xl",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
         className: "flex items-center justify-between mb-4",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
@@ -9135,7 +9113,7 @@ function OverlaysTab({
     setMenu(false);
   };
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-    className: "space-y-6",
+    className: "space-y-6 max-w-2xl",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
       className: "p-6",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
@@ -9611,7 +9589,8 @@ const DEFAULTS = {
 };
 function PlayerOptionsTab({
   config,
-  patch
+  patch,
+  presets = []
 }) {
   const cz = {
     controls: {
@@ -9650,7 +9629,7 @@ function PlayerOptionsTab({
   const controls = cz.controls;
   const [sub, setSub] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('appearance');
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-    className: "flex gap-6 items-start",
+    className: "flex gap-6 items-start max-w-2xl",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.SubSidebar, {
       items: PLAYER_SUBS,
       value: sub,
@@ -9662,6 +9641,22 @@ function PlayerOptionsTab({
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
           className: "font-semibold text-gray-900 mb-4",
           children: "Appearance"
+        }), presets.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+          label: "Preset",
+          hint: "Apply a saved player preset as the starting point \u2014 you can still tweak anything below.",
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
+            value: config.presetId || '',
+            onChange: e => patch({
+              presetId: e.target.value ? parseInt(e.target.value, 10) : undefined
+            }),
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+              value: "",
+              children: "None"
+            }), presets.map(p => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+              value: p.id,
+              children: p.title
+            }, p.id))]
+          })
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
           className: "grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {

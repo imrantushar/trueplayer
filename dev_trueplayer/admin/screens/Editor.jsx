@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Select, Modal, SubSidebar, Card, Field } from '../components/UI';
+import { Button, Modal, SubSidebar } from '../components/UI';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
@@ -132,8 +132,8 @@ export default function Editor( { id, onEditState } ) {
 	const isProTab = !! TABS.find( ( t ) => t.key === tab )?.pro;
 
 	return (
-		<main className="flex-1 min-w-0">
-			<div className="max-w-[1250px] mx-auto px-8 py-8">
+		<>
+			<div className="w-full mx-auto px-8 py-8">
 				{ /* Toolbar actions live in the topbar (portaled). */ }
 				{ toolbarSlot && createPortal(
 					<>
@@ -160,10 +160,10 @@ export default function Editor( { id, onEditState } ) {
 
 				<div className="flex flex-col md:flex-row gap-6 items-start">
 					{ /* Contextual sidebar: the video editor's own step menu. Sticky is applied
-					    directly to this element (not a nested <nav>) — it must be the flex row's
-					    direct child for position:sticky to have room to stick against the row's
-					    full height, matched by the tall content column next to it. */ }
-					<aside className="w-full md:w-56 shrink-0 bg-white border-r border-line md:sticky md:top-[104px]">
+						directly to this element (not a nested <nav>) — it must be the flex row's
+						direct child for position:sticky to have room to stick against the row's
+						full height, matched by the tall content column next to it. */ }
+					<aside className="w-full md:w-60 shrink-0 bg-white border-r border-line md:sticky md:top-[104px]">
 						<nav className="p-3 space-y-1">
 							{ TABS.map( ( t ) => (
 								<button
@@ -187,30 +187,13 @@ export default function Editor( { id, onEditState } ) {
 						</div>
 
 						<div className="flex flex-col xl:flex-row gap-6 items-start mt-6">
-							<div className="flex-1 min-w-0 w-full">
+							<div className='w-full max-w-2xl'>
 								{ isProTab && ! pro ? (
 									<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
 								) : (
 									<>
 										{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
-										{ tab === 'player' && (
-											<div className="space-y-6">
-												{ presets.length > 0 && (
-													<Card className="p-6 max-w-md">
-														<Field label="Preset" hint="Apply a saved player preset as the starting point — you can still tweak anything below.">
-															<Select
-																value={ config.presetId || '' }
-																onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
-															>
-																<option value="">None</option>
-																{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
-															</Select>
-														</Field>
-													</Card>
-												) }
-												<PlayerOptionsTab config={ config } patch={ patchConfig } />
-											</div>
-										) }
+										{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } /> }
 										{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
 										{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } /> }
 										{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
@@ -218,13 +201,13 @@ export default function Editor( { id, onEditState } ) {
 								) }
 							</div>
 
-							<div className="w-full xl:w-[380px] shrink-0 xl:sticky xl:top-[104px]">
+							<div className="shrink-0 xl:sticky xl:top-[104px]">
 								<PreviewPanel id={ id } config={ config } onDuration={ setDuration } />
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</main>
+		</>
 	);
 }

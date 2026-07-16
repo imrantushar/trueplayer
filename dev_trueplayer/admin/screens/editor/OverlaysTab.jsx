@@ -29,7 +29,7 @@ export default function OverlaysTab( { config, patch } ) {
 	const addAndOpen = ( type ) => { const o = newOverlay( type ); patch( { overlays: [ ...overlays, o ] } ); setOpenId( o.id ); setMenu( false ); };
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-6 max-w-2xl">
 			{ /* Action bar */ }
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-1">Action bar</h3>

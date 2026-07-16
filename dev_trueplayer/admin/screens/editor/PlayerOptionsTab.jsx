@@ -55,7 +55,7 @@ const DEFAULTS = {
 	skipSeconds: 10,
 };
 
-export default function PlayerOptionsTab( { config, patch } ) {
+export default function PlayerOptionsTab( { config, patch, presets = [] } ) {
 	const cz = {
 		controls: { ...DEFAULTS.controls, ...( config.customize?.controls || {} ) },
 		behavior: { ...DEFAULTS.behavior, ...( config.customize?.behavior || {} ) },
@@ -75,12 +75,23 @@ export default function PlayerOptionsTab( { config, patch } ) {
 	const [ sub, setSub ] = useState( 'appearance' );
 
 	return (
-		<div className="flex gap-6 items-start">
+		<div className="flex gap-6 items-start max-w-2xl">
 			<SubSidebar items={ PLAYER_SUBS } value={ sub } onChange={ setSub } />
 			<div className="flex-1 min-w-0 space-y-6">
 			{ sub === 'appearance' && (
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-4">Appearance</h3>
+					{ presets.length > 0 && (
+						<Field label="Preset" hint="Apply a saved player preset as the starting point — you can still tweak anything below.">
+						<Select
+							value={ config.presetId || '' }
+							onChange={ ( e ) => patch( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
+						>
+							<option value="">None</option>
+							{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+						</Select>
+					</Field>
+					) }
 				<div className="grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line">
 					<Field label="Skin" hint={ isPro() ? 'Overall player theme.' : 'Floating & Ambient need TruePlayer Pro.' }>
 						<Select value={ appearance.skin } onChange={ ( e ) => setSection( 'appearance', { skin: e.target.value } ) }>

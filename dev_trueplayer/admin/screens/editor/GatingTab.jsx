@@ -156,7 +156,7 @@ export default function GatingTab( { config, patch } ) {
 				<Toggle checked={ gating.requireLoginForGate } onChange={ ( v ) => set( { requireLoginForGate: v } ) } label="Require login to watch (reliable per-person tracking)" />
 			</Card>
 
-			<Card className="p-6">
+			<Card className="p-6 max-w-2xl">
 				<div className="flex items-center justify-between mb-4">
 					<div>
 						<h3 className="font-semibold text-gray-900">Checkpoint questions</h3>
@@ -180,7 +180,7 @@ export default function GatingTab( { config, patch } ) {
 				</div>
 			</Card>
 
-			<Card className="p-6">
+			<Card className="p-6 max-w-2xl">
 				<div className="flex items-center justify-between mb-4">
 					<div className="flex items-center gap-3">
 						<h3 className="font-semibold text-gray-900">Final quiz (end gate)</h3>

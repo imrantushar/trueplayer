@@ -123,7 +123,7 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 	};
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-6 max-w-2xl">
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-4">Logo / watermark</h3>
 				{ branding.logo ? (
