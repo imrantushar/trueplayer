@@ -240,6 +240,12 @@
 		margin-top: 1.5rem;
 		margin-bottom: 1.5rem;
 }
+.\!mb-1 {
+		margin-bottom: 0.25rem !important;
+}
+.\!mb-4 {
+		margin-bottom: 1rem !important;
+}
 .-mb-px {
 		margin-bottom: -1px;
 }
@@ -260,9 +266,6 @@
 }
 .mb-3 {
 		margin-bottom: 0.75rem;
-}
-.mb-3\.5 {
-		margin-bottom: 0.875rem;
 }
 .mb-4 {
 		margin-bottom: 1rem;
@@ -601,9 +604,6 @@
 .gap-x-6 {
 		-moz-column-gap: 1.5rem;
 		     column-gap: 1.5rem;
-}
-.gap-y-1 {
-		row-gap: 0.25rem;
 }
 .space-y-1 > :not([hidden]) ~ :not([hidden]) {
 		--tw-space-y-reverse: 0;

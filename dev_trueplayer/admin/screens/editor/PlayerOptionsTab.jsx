@@ -80,65 +80,67 @@ export default function PlayerOptionsTab( { config, patch, presets = [] } ) {
 			<div className="flex-1 min-w-0 space-y-6">
 			{ sub === 'appearance' && (
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 mb-4">Appearance</h3>
+				<h3 className="font-semibold text-gray-900">Appearance</h3>
+				<div className='mt-4 pt-5 border-t border-solid border-line'>
 					{ presets.length > 0 && (
 						<Field label="Preset" hint="Apply a saved player preset as the starting point — you can still tweak anything below.">
-						<Select
-							value={ config.presetId || '' }
-							onChange={ ( e ) => patch( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
-						>
-							<option value="">None</option>
-							{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
-						</Select>
-					</Field>
+							<Select
+								value={ config.presetId || '' }
+								onChange={ ( e ) => patch( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
+							>
+								<option value="">None</option>
+								{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+							</Select>
+						</Field>
 					) }
-				<div className="grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line">
-					<Field label="Skin" hint={ isPro() ? 'Overall player theme.' : 'Floating & Ambient need TruePlayer Pro.' }>
-						<Select value={ appearance.skin } onChange={ ( e ) => setSection( 'appearance', { skin: e.target.value } ) }>
-							{ SKINS.map( ( s ) => (
-								<option key={ s.value } value={ s.value } disabled={ ! isPro() && PRO_SKINS.includes( s.value ) }>
-									{ s.label }{ ! isPro() && PRO_SKINS.includes( s.value ) ? ' 🔒 Pro' : '' }
-								</option>
-							) ) }
-						</Select>
-					</Field>
-					<Field label="Aspect ratio" hint="9:16 for vertical / Shorts-style video.">
-						<Select value={ appearance.aspectRatio } onChange={ ( e ) => setSection( 'appearance', { aspectRatio: e.target.value } ) }>
-							{ ASPECT_RATIOS.map( ( r ) => <option key={ r.value } value={ r.value }>{ r.label }</option> ) }
-						</Select>
-					</Field>
-					<Field label="Accent color" hint="Scrubber, buttons, highlights.">
-						<ColorInput value={ appearance.accent } onChange={ ( v ) => setSection( 'appearance', { accent: v } ) } />
-					</Field>
-					<Field label="Button hover color" hint="Optional; default is a light overlay.">
-						<ColorInput value={ appearance.hoverColor } onChange={ ( v ) => setSection( 'appearance', { hoverColor: v } ) } placeholder="(none)" />
-					</Field>
-					<Field label="Play button style">
-						<Select value={ appearance.playButtonStyle } onChange={ ( e ) => setSection( 'appearance', { playButtonStyle: e.target.value } ) }>
-							<option value="circle">Circle</option>
-							<option value="soft">Soft (rounded)</option>
-							<option value="square">Square</option>
-						</Select>
-					</Field>
-					<Field label="Control bar style">
-						<Select value={ appearance.controlBarStyle } onChange={ ( e ) => setSection( 'appearance', { controlBarStyle: e.target.value } ) }>
-							<option value="gradient">Gradient</option>
-							<option value="solid">Solid</option>
-							<option value="minimal">Minimal</option>
-						</Select>
-					</Field>
-					<Field label={ `Corner roundness (${ appearance.roundness }px)` }>
-						<input type="range" min="0" max="28" value={ appearance.roundness } onChange={ ( e ) => setSection( 'appearance', { roundness: parseInt( e.target.value, 10 ) } ) } className="w-full accent-brand-500 cursor-pointer" />
-					</Field>
+					<div className="grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line">
+						<Field label="Skin" hint={ isPro() ? 'Overall player theme.' : 'Floating & Ambient need TruePlayer Pro.' }>
+							<Select value={ appearance.skin } onChange={ ( e ) => setSection( 'appearance', { skin: e.target.value } ) }>
+								{ SKINS.map( ( s ) => (
+									<option key={ s.value } value={ s.value } disabled={ ! isPro() && PRO_SKINS.includes( s.value ) }>
+										{ s.label }{ ! isPro() && PRO_SKINS.includes( s.value ) ? ' 🔒 Pro' : '' }
+									</option>
+								) ) }
+							</Select>
+						</Field>
+						<Field label="Aspect ratio" hint="9:16 for vertical / Shorts-style video.">
+							<Select value={ appearance.aspectRatio } onChange={ ( e ) => setSection( 'appearance', { aspectRatio: e.target.value } ) }>
+								{ ASPECT_RATIOS.map( ( r ) => <option key={ r.value } value={ r.value }>{ r.label }</option> ) }
+							</Select>
+						</Field>
+						<Field label="Accent color" hint="Scrubber, buttons, highlights.">
+							<ColorInput value={ appearance.accent } onChange={ ( v ) => setSection( 'appearance', { accent: v } ) } />
+						</Field>
+						<Field label="Button hover color" hint="Optional; default is a light overlay.">
+							<ColorInput value={ appearance.hoverColor } onChange={ ( v ) => setSection( 'appearance', { hoverColor: v } ) } placeholder="(none)" />
+						</Field>
+						<Field label="Play button style">
+							<Select value={ appearance.playButtonStyle } onChange={ ( e ) => setSection( 'appearance', { playButtonStyle: e.target.value } ) }>
+								<option value="circle">Circle</option>
+								<option value="soft">Soft (rounded)</option>
+								<option value="square">Square</option>
+							</Select>
+						</Field>
+						<Field label="Control bar style">
+							<Select value={ appearance.controlBarStyle } onChange={ ( e ) => setSection( 'appearance', { controlBarStyle: e.target.value } ) }>
+								<option value="gradient">Gradient</option>
+								<option value="solid">Solid</option>
+								<option value="minimal">Minimal</option>
+							</Select>
+						</Field>
+						<Field label={ `Corner roundness (${ appearance.roundness }px)` }>
+							<input type="range" min="0" max="28" value={ appearance.roundness } onChange={ ( e ) => setSection( 'appearance', { roundness: parseInt( e.target.value, 10 ) } ) } className="w-full accent-brand-500 cursor-pointer" />
+						</Field>
+					</div>
+					<Toggle checked={ appearance.bigPlay } onChange={ ( v ) => setSection( 'appearance', { bigPlay: v } ) } label="Show large center play button" />
 				</div>
-				<Toggle checked={ appearance.bigPlay } onChange={ ( v ) => setSection( 'appearance', { bigPlay: v } ) } label="Show large center play button" />
 			</Card>
 			) }
 
 			{ sub === 'captions' && (
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 mb-1">Subtitle style</h3>
-				<p className="text-sm text-gray-500 mb-4">How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own.</p>
+				<h3 className="font-semibold text-gray-900 !mb-1">Subtitle style</h3>
+				<p className="text-sm text-gray-500">How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own.</p>
 				<div className="grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line">
 					<Field label={ `Font size (${ appearance.captionSize }%)` }>
 						<input type="range" min="50" max="200" step="10" value={ appearance.captionSize } onChange={ ( e ) => setSection( 'appearance', { captionSize: parseInt( e.target.value, 10 ) } ) } className="w-full accent-brand-500 cursor-pointer" />
@@ -159,9 +161,9 @@ export default function PlayerOptionsTab( { config, patch, presets = [] } ) {
 
 			{ sub === 'controls' && (
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 mb-1">Controls</h3>
-				<p className="text-sm text-gray-500 mb-4">Show or hide each control in the bar.</p>
-				<div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-1 mt-4 pt-5 border-t border-solid border-line">
+				<h3 className="font-semibold text-gray-900 !mb-1">Controls</h3>
+				<p className="text-sm text-gray-500">Show or hide each control in the bar.</p>
+				<div className="grid md:grid-cols-2 gap-6 mt-4 pt-5 border-t border-solid border-line">
 					{ Object.keys( CONTROL_LABELS ).map( ( key ) => (
 						<Toggle key={ key } checked={ controls[ key ] } onChange={ ( v ) => setSection( 'controls', { [ key ]: v } ) } label={ CONTROL_LABELS[ key ] } />
 					) ) }
@@ -174,27 +176,27 @@ export default function PlayerOptionsTab( { config, patch, presets = [] } ) {
 			<Card className="p-6">
 				<h3 className="font-semibold text-gray-900 mb-4">Behavior</h3>
 				<div className="grid gap-x-6 mt-4 pt-5 border-t border-solid border-line">
-					<div>
-						<Field label="Autoplay" hint="“With sound” falls back to muted when the browser blocks it.">
-							<Select
-								value={ behavior.autoplayMode || ( behavior.autoplay ? 'muted' : 'off' ) }
-								onChange={ ( e ) => {
-									const mode = e.target.value;
-									// Keep the legacy boolean in sync for older readers.
-									setSection( 'behavior', { autoplayMode: mode, autoplay: mode !== 'off' } );
-								} }
-							>
-								<option value="off">Off</option>
-								<option value="muted">On, muted</option>
-								<option value="sound">On, with sound</option>
-							</Select>
-						</Field>
+					<Field label="Autoplay" hint="“With sound” falls back to muted when the browser blocks it.">
+						<Select
+							value={ behavior.autoplayMode || ( behavior.autoplay ? 'muted' : 'off' ) }
+							onChange={ ( e ) => {
+								const mode = e.target.value;
+								// Keep the legacy boolean in sync for older readers.
+								setSection( 'behavior', { autoplayMode: mode, autoplay: mode !== 'off' } );
+							} }
+						>
+							<option value="off">Off</option>
+							<option value="muted">On, muted</option>
+							<option value="sound">On, with sound</option>
+						</Select>
+					</Field>
+					<div className='flex flex-col gap-6 mb-6'>
 						<Toggle checked={ behavior.muted } onChange={ ( v ) => setSection( 'behavior', { muted: v } ) } label="Start muted" />
 						<Toggle checked={ behavior.loop } onChange={ ( v ) => setSection( 'behavior', { loop: v } ) } label="Loop" />
 						<Toggle checked={ behavior.resetOnEnd } onChange={ ( v ) => setSection( 'behavior', { resetOnEnd: v } ) } label="Reset to start when finished" />
 					</div>
 
-					<div>
+					<div className='flex flex-col gap-6'>
 						<Toggle checked={ behavior.savePosition } onChange={ ( v ) => setSection( 'behavior', { savePosition: v } ) } label="Save & resume playback position" />
 						<Toggle checked={ behavior.hideControls } onChange={ ( v ) => setSection( 'behavior', { hideControls: v } ) } label="Auto-hide controls while playing" />
 						<Toggle checked={ behavior.sticky } onChange={ ( v ) => setSection( 'behavior', { sticky: v } ) } label="Float player when scrolling away" />
@@ -203,7 +205,7 @@ export default function PlayerOptionsTab( { config, patch, presets = [] } ) {
 						<Toggle checked={ behavior.hoverPreview } onChange={ ( v ) => setSection( 'behavior', { hoverPreview: v } ) } label="Muted preview on hover (self-hosted video)" />
 					</div>
 				</div>
-				<div className="grid md:grid-cols-2 gap-x-6 mt-2">
+				<div className="grid md:grid-cols-2 gap-x-6 mt-6">
 					{ behavior.sticky && (
 						<Field label="Float position">
 							<Select value={ behavior.stickyPosition } onChange={ ( e ) => setSection( 'behavior', { stickyPosition: e.target.value } ) }>
@@ -256,7 +258,7 @@ export default function PlayerOptionsTab( { config, patch, presets = [] } ) {
 
 			{ sub === 'css' && (
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 mb-1">Custom CSS</h3>
+				<h3 className="font-semibold text-gray-900 !mb-1">Custom CSS</h3>
 				<p className="text-sm text-gray-500 mb-4">
 					Printed with this player on the frontend. Scope rules with <code className="text-xs bg-gray-100 px-1 rounded">.trueplayer-mount</code> (all players) or <code className="text-xs bg-gray-100 px-1 rounded">.tp-stage</code>.
 				</p>

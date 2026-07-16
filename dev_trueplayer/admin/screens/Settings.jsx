@@ -76,11 +76,11 @@ const NAV_GROUPS = [
 const ENFORCEMENT_DEFAULTS = { completionThreshold: 90, antiSkip: true, strict: false, maxAttempts: 3, requireLogin: false, trackGuests: true };
 const COMPLIANCE_DEFAULTS = { certIssuer: '', certLogo: '', certSignature: '', certFooter: '', retentionEnabled: false, retentionDays: 365 };
 
-function WebhookLogs() {
+function WebhookLogs({ className }) {
 	const [rows, setRows] = useState(null);
 	useEffect(() => { api.getWebhookLogs(100).then(setRows).catch(() => setRows([])); }, []);
 	return (
-		<Card className="overflow-hidden">
+		<Card className={`overflow-hidden p-6 ${ className }`}>
 			<table className="w-full text-sm">
 				<thead className="bg-gray-50 text-gray-500 text-left">
 					<tr><th className="px-4 py-3 font-medium">When</th><th className="px-4 py-3 font-medium">Event</th><th className="px-4 py-3 font-medium">Endpoint</th><th className="px-4 py-3 font-medium">Result</th></tr>
@@ -195,7 +195,7 @@ export default function Settings({ onEditState }) {
 					{tab === 'general' && (
 						<div className="space-y-6">
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 mb-1">Default player template</h3>
+								<h3 className="font-semibold text-gray-900 !mb-1">Default player template</h3>
 								<p className="text-sm text-muted mb-4">The look applied to every video by default. A video's own preset or settings still override it.</p>
 								<div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4 pt-5 border-t border-solid border-line">
 									{PRESET_TEMPLATES.map((t) => (
@@ -216,7 +216,7 @@ export default function Settings({ onEditState }) {
 							</Card>
 
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 mb-1">Default aspect ratio</h3>
+								<h3 className="font-semibold text-gray-900 !mb-1">Default aspect ratio</h3>
 								<p className="text-sm text-muted mb-4">The frame shape new videos use unless overridden per video.</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
 									<Field label="Aspect ratio">
@@ -228,8 +228,8 @@ export default function Settings({ onEditState }) {
 							</Card>
 
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 mb-1">Custom CSS</h3>
-								<p className="text-sm text-muted mb-4">Injected on every page a TruePlayer player renders. Target <code>.tp-*</code> classes.</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">Custom CSS</h3>
+								<p className="text-sm text-muted">Injected on every page a TruePlayer player renders. Target <code>.tp-*</code> classes.</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
 									<Textarea rows={6} className="font-mono text-xs" value={settings.customize?.css || ''} onChange={(e) => setSettings((s) => ({ ...s, customize: { ...(s.customize || {}), css: e.target.value } }))} placeholder=".tp-controls { --tp-accent: #4F46E5; }" />
 								</div>
@@ -240,7 +240,7 @@ export default function Settings({ onEditState }) {
 					{tab === 'enforcement' && (
 						isPro() ? (
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 mb-1">Enforcement defaults</h3>
+								<h3 className="font-semibold text-gray-900 !mb-1">Enforcement defaults</h3>
 								<p className="text-sm text-muted mb-4">The watch-verification &amp; gating policy applied to new videos. Any video can override these in its own <strong>Questions &amp; gating</strong> tab.</p>
 								{(() => {
 									const enf = { ...ENFORCEMENT_DEFAULTS, ...(settings.enforcement || {}) };
@@ -255,9 +255,9 @@ export default function Settings({ onEditState }) {
 													<Input type="number" min="1" value={enf.maxAttempts} onChange={(e) => setEnf({ maxAttempts: parseInt(e.target.value, 10) || 1 })} />
 												</Field>
 											</div>
-											<Toggle checked={enf.antiSkip} onChange={(v) => setEnf({ antiSkip: v })} label="Anti-skip (block seeking past unwatched parts)" />
-											<Toggle checked={enf.strict} onChange={(v) => setEnf({ strict: v })} label="Must-watch (strict): force 100% coverage + anti-skip" />
-											<Toggle checked={enf.requireLogin} onChange={(v) => setEnf({ requireLogin: v })} label="Require login to watch (reliable per-person tracking)" />
+											<Toggle className="mb-6" checked={enf.antiSkip} onChange={(v) => setEnf({ antiSkip: v })} label="Anti-skip (block seeking past unwatched parts)" />
+											<Toggle className="mb-6" checked={enf.strict} onChange={(v) => setEnf({ strict: v })} label="Must-watch (strict): force 100% coverage + anti-skip" />
+											<Toggle className="mb-6" checked={enf.requireLogin} onChange={(v) => setEnf({ requireLogin: v })} label="Require login to watch (reliable per-person tracking)" />
 											<Toggle checked={enf.trackGuests} onChange={(v) => setEnf({ trackGuests: v })} label="Track logged-out guests (cookie-based, best-effort)" />
 										</>
 									);
@@ -272,7 +272,7 @@ export default function Settings({ onEditState }) {
 						isPro() ? (
 							<div className="space-y-6">
 								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 mb-1">Certificate branding</h3>
+									<h3 className="font-semibold text-gray-900 !mb-1">Certificate branding</h3>
 									<p className="text-sm text-muted mb-4">Shown on completion certificates &amp; the public verification page.</p>
 									{(() => {
 										const c = { ...COMPLIANCE_DEFAULTS, ...(settings.compliance || {}) };
@@ -297,7 +297,7 @@ export default function Settings({ onEditState }) {
 								</Card>
 
 								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 mb-1">Data retention</h3>
+									<h3 className="font-semibold text-gray-900 !mb-1">Data retention</h3>
 									<p className="text-sm text-muted mb-4">Automatically purge watch &amp; quiz records older than a set age — for privacy &amp; GDPR compliance.</p>
 									{(() => {
 										const c = { ...COMPLIANCE_DEFAULTS, ...(settings.compliance || {}) };
@@ -305,11 +305,13 @@ export default function Settings({ onEditState }) {
 										return (
 											<div className='mt-4 pt-5 border-t border-solid border-line'>
 												<Toggle checked={c.retentionEnabled} onChange={(v) => setC({ retentionEnabled: v })} label="Auto-purge old records" />
-												{c.retentionEnabled && (
-													<Field label="Keep records for (days)" hint="Progress + quiz attempts past this age are deleted daily.">
-														<Input type="number" min="7" value={c.retentionDays} onChange={(e) => setC({ retentionDays: parseInt(e.target.value, 10) || 0 })} />
-													</Field>
-												)}
+												<div className="mt-6">
+													{c.retentionEnabled && (
+														<Field label="Keep records for (days)" hint="Progress + quiz attempts past this age are deleted daily.">
+															<Input type="number" min="7" value={c.retentionDays} onChange={(e) => setC({ retentionDays: parseInt(e.target.value, 10) || 0 })} />
+														</Field>
+													)}
+												</div>
 											</div>
 										);
 									})()}
@@ -323,13 +325,14 @@ export default function Settings({ onEditState }) {
 					{tab === 'analytics' && (
 						isPro() ? (
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 mb-1">Analytics collection</h3>
+								<h3 className="font-semibold text-gray-900 !mb-1">Analytics collection</h3>
 								<p className="text-sm text-muted mb-4">Retention, replay heatmap &amp; daily rollups. Turning this off keeps watch-verification working but stops aggregate data collection.</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
 									<Toggle
 										checked={settings.analytics?.enabled !== false}
 										onChange={(v) => setSettings((s) => ({ ...s, analytics: { ...(s.analytics || {}), enabled: v } }))}
 										label="Collect video analytics"
+										className="mb-6"
 									/>
 									<p className="text-xs text-muted mt-2">Data retention (auto-purge) is under <strong>Compliance &amp; privacy</strong>.</p>
 								</div>
@@ -342,7 +345,7 @@ export default function Settings({ onEditState }) {
 					{tab === 'sources' && (
 						<div className="space-y-6">
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 mb-1">YouTube</h3>
+								<h3 className="font-semibold text-gray-900 !mb-1">YouTube</h3>
 								<p className="text-sm text-muted mb-4">Privacy-enhanced mode plays via youtube-nocookie.com — no cookies until a visitor presses play.</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
 									<Toggle checked={!!settings.sources?.youtubeNoCookie} onChange={(v) => setSettings((s) => ({ ...s, sources: { ...(s.sources || {}), youtubeNoCookie: v } }))} label="Enable privacy-enhanced mode (no-cookie)" />
@@ -352,7 +355,7 @@ export default function Settings({ onEditState }) {
 							{isPro() ? (
 								<>
 									<Card className="p-6">
-										<h3 className="font-semibold text-gray-900 mb-1">Bunny.net token authentication</h3>
+										<h3 className="font-semibold text-gray-900 !mb-1">Bunny.net token authentication</h3>
 										<p className="text-sm text-muted mb-4">For <strong>private</strong> Bunny videos: enable Token Authentication on your pull zone, then paste its key. TruePlayer signs expiring playback URLs.</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
 											<Field label="Token Authentication Key">
@@ -361,7 +364,7 @@ export default function Settings({ onEditState }) {
 										</div>
 									</Card>
 									<Card className="p-6">
-										<h3 className="font-semibold text-gray-900 mb-1">Signed link expiry</h3>
+										<h3 className="font-semibold text-gray-900 !mb-1">Signed link expiry</h3>
 										<p className="text-sm text-muted mb-4">How long a signed / private playback URL stays valid before it must be re-issued.</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
 											<Field label="Expiry (hours)" hint="Applies to private self-hosted files and Bunny token links.">
@@ -380,7 +383,7 @@ export default function Settings({ onEditState }) {
 						isPro() ? (
 							<div className="space-y-6">
 								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 mb-1">Mailchimp</h3>
+									<h3 className="font-semibold text-gray-900 !mb-1">Mailchimp</h3>
 									<p className="text-sm text-muted mb-4">Send in-player opt-ins to Mailchimp audiences. Paste your API key (Account → Extras → API keys).</p>
 									<div className='mt-4 pt-5 border-t border-solid border-line'>
 										<Field label="Mailchimp API key" hint="Looks like abc123…-us21. Stored on your site only.">
@@ -396,7 +399,7 @@ export default function Settings({ onEditState }) {
 								</Card>
 
 								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 mb-1">Google Analytics</h3>
+									<h3 className="font-semibold text-gray-900 !mb-1">Google Analytics</h3>
 									<p className="text-sm text-muted mb-4">Send player events (video_start, video_complete) to GA4. Uses your existing site tag, or loads one from a measurement ID.</p>
 									<div className='mt-4 pt-5 border-t border-solid border-line'>
 										<Toggle
@@ -404,11 +407,13 @@ export default function Settings({ onEditState }) {
 											onChange={(v) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), enabled: v } } }))}
 											label="Send player events to Google Analytics"
 										/>
-										{settings.integrations?.ga?.enabled && (
-											<Field label="Measurement ID" hint="Optional — leave blank to use the site's existing GA tag.">
-												<Input value={settings.integrations?.ga?.measurementId || ''} onChange={(e) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), measurementId: e.target.value.trim() } } }))} placeholder="G-XXXXXXXXXX" />
-											</Field>
-										)}
+										<div className="mt-6">
+											{settings.integrations?.ga?.enabled && (
+												<Field label="Measurement ID" hint="Optional — leave blank to use the site's existing GA tag.">
+													<Input value={settings.integrations?.ga?.measurementId || ''} onChange={(e) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), measurementId: e.target.value.trim() } } }))} placeholder="G-XXXXXXXXXX" />
+												</Field>
+											)}
+										</div>
 									</div>
 								</Card>
 							</div>
@@ -426,7 +431,7 @@ export default function Settings({ onEditState }) {
 							return (
 								<div className="space-y-6">
 									<Card className="p-6">
-										<h3 className="font-semibold text-gray-900 mb-1">Brand colors</h3>
+										<h3 className="font-semibold text-gray-900 !mb-1">Brand colors</h3>
 										<p className="text-sm text-muted mb-4">The default accent for the scrubber, buttons &amp; highlights. Any video or preset can override it.</p>
 										<div className="grid grid-cols-2 gap-4 mt-4 pt-5 border-t border-solid border-line">
 											<Field label="Accent color">
@@ -445,7 +450,7 @@ export default function Settings({ onEditState }) {
 									</Card>
 
 									<Card className="p-6">
-										<h3 className="font-semibold text-gray-900 mb-1">Player logo</h3>
+										<h3 className="font-semibold text-gray-900 !mb-1">Player logo</h3>
 										<p className="text-sm text-muted">A watermark logo shown on every player by default.</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
 											<Field label="Logo image">
@@ -478,7 +483,7 @@ export default function Settings({ onEditState }) {
 									</Card>
 
 									<Card className="p-6">
-										<div className="flex items-center gap-2 mb-1">
+										<div className="flex items-center gap-2 !mb-1">
 											<h3 className="font-semibold text-gray-900">White-label</h3>
 											{!isPro() && <Badge tone="gray">Pro</Badge>}
 										</div>
@@ -490,6 +495,7 @@ export default function Settings({ onEditState }) {
 														checked={!!settings.whiteLabel?.enabled}
 														onChange={(v) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), enabled: v } }))}
 														label="Enable white-label"
+														className="mb-6"
 													/>
 													{settings.whiteLabel?.enabled && (
 														<Field label="Brand name" hint="Shown in the admin menu &amp; titles.">
@@ -513,7 +519,7 @@ export default function Settings({ onEditState }) {
 					)}
 
 					{tab === 'logs' && (
-						isPro() ? <WebhookLogs /> : <UpsellPanel title="Webhook delivery logs" features={['Every delivery attempt recorded', 'See failures &amp; status codes']} />
+						isPro() ? <WebhookLogs className="mb-6" /> : <UpsellPanel title="Webhook delivery logs" features={['Every delivery attempt recorded', 'See failures &amp; status codes']} />
 					)}
 
 					{tab === 'logs' && (
@@ -523,8 +529,8 @@ export default function Settings({ onEditState }) {
 					{tab === 'webhooks' && (
 						isPro() ? (
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 mb-4">Global webhooks</h3>
-								<p className="text-sm text-gray-500 mb-4">Fire for every video, in addition to per-video webhooks.</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">Global webhooks</h3>
+								<p className="text-sm text-gray-500">Fire for every video, in addition to per-video webhooks.</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
 									<EndpointList
 										endpoints={settings.webhooks || []}

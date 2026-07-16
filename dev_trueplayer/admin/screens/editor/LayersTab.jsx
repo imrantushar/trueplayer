@@ -110,7 +110,7 @@ export default function LayersTab( { config, patch } ) {
 	return (
 		<div className="space-y-4">
 			<div>
-				<h3 className="font-semibold text-gray-900">Interactive layers</h3>
+				<h3 className="font-semibold text-gray-900 !mb-1">Interactive layers</h3>
 				<p className="text-sm text-gray-500">Timed elements over the video — hotspots, banners, shortcodes and email forms.</p>
 			</div>
 

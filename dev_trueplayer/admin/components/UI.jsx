@@ -245,9 +245,9 @@ export function ColorInput( { value, onChange, placeholder = '' } ) {
 	);
 }
 
-export function Toggle( { checked, onChange, label, disabled = false } ) {
+export function Toggle( { checked, onChange, label, disabled = false, className } ) {
 	return (
-		<label className={ `flex items-start gap-3 mb-3.5 select-none ${ disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer' }` }>
+		<label className={ `flex items-start gap-3 select-none ${ checked ? '' : '' } ${ disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer' } ${ className }` }>
 			<span
 				onClick={ () => ! disabled && onChange( ! checked ) }
 				className={ `relative inline-block shrink-0 mt-px w-[38px] h-[22px] rounded-full transition-colors ${ checked ? 'bg-brand-500' : 'bg-gray-300' }` }

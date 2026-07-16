@@ -21,7 +21,7 @@ export default function TimedContentTab( { config, patch } ) {
 		<div className="space-y-6">
 			<Card className="p-6 max-w-2xl">
 				<SectionTitle>Timed content</SectionTitle>
-				<p className="text-sm text-gray-500 mb-4">
+				<p className="text-sm text-gray-500 !mb-4">
 					Show a block of content under the player during a time range — a form when the demo ends,
 					a coupon at the pitch, notes that track the lesson. Any shortcode works.
 				</p>

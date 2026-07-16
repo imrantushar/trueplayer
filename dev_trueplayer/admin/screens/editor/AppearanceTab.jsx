@@ -125,49 +125,51 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 	return (
 		<div className="space-y-6 max-w-2xl">
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 mb-4">Logo / watermark</h3>
-				{ branding.logo ? (
-					<div className="flex items-center gap-3 mb-4">
-						<div className="p-2 bg-gray-900 rounded-card shrink-0">
-							<img src={ branding.logo } alt="" className="max-h-10 max-w-[120px] block" style={ { opacity: branding.logoOpacity ?? 0.9 } } />
+				<h3 className="font-semibold text-gray-900">Logo / watermark</h3>
+				<div className='mt-4 pt-5 border-t border-solid border-line'>
+					{ branding.logo ? (
+						<div className="flex items-center gap-3 mb-4">
+							<div className="p-2 bg-gray-900 rounded-card shrink-0">
+								<img src={ branding.logo } alt="" className="max-h-10 max-w-[120px] block" style={ { opacity: branding.logoOpacity ?? 0.9 } } />
+							</div>
+							<Button variant="ghost" size="sm" onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }>Replace</Button>
+							<Button variant="ghost" size="sm" onClick={ () => setBranding( { logo: '' } ) }>Remove</Button>
 						</div>
-						<Button variant="ghost" size="sm" onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }>Replace</Button>
-						<Button variant="ghost" size="sm" onClick={ () => setBranding( { logo: '' } ) }>Remove</Button>
-					</div>
-				) : (
-					<button
-						type="button"
-						onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }
-						className="w-full border border-dashed border-line rounded-card py-8 text-center text-sm text-muted hover:border-brand-400 hover:text-brand-500 transition-colors"
-					>
-						<span className="block text-2xl leading-none mb-1">+</span>
-						Upload a logo
-					</button>
-				) }
-				{ branding.logo && (
-					<>
-						<div className="grid grid-cols-2 gap-x-4">
-							<Field label="Position">
-								<Select value={ branding.logoPosition || 'top-right' } onChange={ ( e ) => setBranding( { logoPosition: e.target.value } ) }>
-									<option value="top-right">Top right</option>
-									<option value="top-left">Top left</option>
-									<option value="bottom-right">Bottom right</option>
-									<option value="bottom-left">Bottom left</option>
-								</Select>
+					) : (
+						<button
+							type="button"
+							onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }
+							className="w-full border border-dashed border-line rounded-card py-8 text-center text-sm text-muted hover:border-brand-400 hover:text-brand-500 transition-colors"
+						>
+							<span className="block text-2xl leading-none mb-1">+</span>
+							Upload a logo
+						</button>
+					) }
+					{ branding.logo && (
+						<>
+							<div className="grid grid-cols-2 gap-x-4">
+								<Field label="Position">
+									<Select value={ branding.logoPosition || 'top-right' } onChange={ ( e ) => setBranding( { logoPosition: e.target.value } ) }>
+										<option value="top-right">Top right</option>
+										<option value="top-left">Top left</option>
+										<option value="bottom-right">Bottom right</option>
+										<option value="bottom-left">Bottom left</option>
+									</Select>
+								</Field>
+								<Field label={ `Opacity (${ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) }%)` }>
+									<input type="range" min="10" max="100" step="5" value={ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) } onChange={ ( e ) => setBranding( { logoOpacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full accent-brand-500 cursor-pointer" />
+								</Field>
+							</div>
+							<Field label="Click-through link" hint="Optional — makes the logo clickable.">
+								<Input value={ branding.logoUrl || '' } onChange={ ( e ) => setBranding( { logoUrl: e.target.value } ) } placeholder="https://your-site.com" />
 							</Field>
-							<Field label={ `Opacity (${ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) }%)` }>
-								<input type="range" min="10" max="100" step="5" value={ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) } onChange={ ( e ) => setBranding( { logoOpacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full accent-brand-500 cursor-pointer" />
-							</Field>
-						</div>
-						<Field label="Click-through link" hint="Optional — makes the logo clickable.">
-							<Input value={ branding.logoUrl || '' } onChange={ ( e ) => setBranding( { logoUrl: e.target.value } ) } placeholder="https://your-site.com" />
-						</Field>
-					</>
-				) }
+						</>
+					) }
+				</div>
 			</Card>
 
 			<Card className="p-6">
-				<div className="flex items-center justify-between mb-1">
+				<div className="flex items-center justify-between pb-4 mb-5 border-b border-solid border-line">
 					<h3 className="font-semibold text-gray-900">Captions &amp; subtitles</h3>
 					{ source.type === 'youtube' && (
 						<Button variant="ghost" size="sm" onClick={ importYoutube } disabled={ ytImporting }>
@@ -175,10 +177,18 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 						</Button>
 					) }
 				</div>
-				<p className="text-sm text-muted mb-4">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
+
+				{ subtitles.length === 0 ? (
+					<div className="flex items-center justify-between gap-3">
+						<p className="text-sm text-muted">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
+						<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
+					</div>
+				) : (
+					<p className="text-sm text-muted mb-4">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
+				) }
 
 				{ subtitles.map( ( t, i ) => (
-					<div key={ i } className="border border-line rounded-card p-4 mb-3">
+					<div key={ i } className="border border-line rounded-card p-4 my-6">
 						<div className="flex gap-2 mb-3">
 							{ ! t.src ? (
 								<Button variant="secondary" size="sm" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Upload .vtt file</Button>
@@ -201,33 +211,39 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 					</div>
 				) ) }
 
-				<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
+				{ subtitles.length > 0 && (
+					<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
+				) }
 				{ note && <p className="text-xs text-brand-600 mt-2">{ note }</p> }
 			</Card>
 
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 mb-1">Description below player</h3>
+				<h3 className="font-semibold text-gray-900 !mb-1">Description below player</h3>
 				<p className="text-sm text-gray-500 mb-3">Shown directly under the player wherever it's embedded. Basic HTML allowed.</p>
-				<Textarea
-					rows={ 4 }
-					value={ config.description || '' }
-					onChange={ ( e ) => patch( { description: e.target.value } ) }
-					placeholder="What this video covers, links, resources…"
-				/>
+				<div className='mt-4 pt-5 border-t border-solid border-line'>
+					<Textarea
+						rows={ 4 }
+						value={ config.description || '' }
+						onChange={ ( e ) => patch( { description: e.target.value } ) }
+						placeholder="What this video covers, links, resources…"
+					/>
+				</div>
 			</Card>
 
 			<Card className="p-6">
 				<div className="flex items-center justify-between mb-1">
-					<h3 className="font-semibold text-gray-900">Chapters</h3>
+					<div>
+						<h3 className="font-semibold text-gray-900 !mb-1">Chapters</h3>
+						<p className="text-sm text-gray-400">Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss{ duration > 0 ? ` · max ${ secToClock( duration ) }` : '' }.</p>
+					</div>
 					<div className="flex gap-2">
 						<Button variant="ghost" onClick={ () => { setImportOpen( ( o ) => ! o ); setNote( '' ); } }>Import</Button>
 						<Button variant="ghost" onClick={ addChapter }>+ Add</Button>
 					</div>
 				</div>
-				<p className="text-sm text-gray-400 mb-4">Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss{ duration > 0 ? ` · max ${ secToClock( duration ) }` : '' }.</p>
 
 				{ importOpen && (
-					<div className="mb-4 p-4 bg-gray-50 rounded-md border border-line">
+					<div className="mt-6 p-4 bg-gray-50 rounded-md border border-line">
 						<p className="text-[13px] font-medium text-ink mb-2">Paste timestamps or a WebVTT file</p>
 						<Textarea
 							rows={ 5 }
@@ -252,7 +268,7 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 
 				{ chapters.length === 0 && ! importOpen && <p className="text-sm text-gray-400">No chapters yet — add one or import a list.</p> }
 
-				<div className="space-y-2">
+				<div className="space-y-2 mt-6">
 					{ chapters.map( ( c, i ) => (
 						<div key={ i } className="flex gap-2 items-center">
 							<TimeInput seconds={ c.at } onCommit={ ( s ) => setChapter( i, { at: s } ) } max={ duration } />

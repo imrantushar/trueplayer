@@ -144,7 +144,7 @@ export default function GatingTab( { config, patch } ) {
 		<div className="space-y-6">
 			<Card className="p-6 max-w-2xl">
 				<h3 className="font-semibold text-gray-900 mb-4">Watch verification</h3>
-				<div className="grid grid-cols-2 gap-4">
+				<div className="grid grid-cols-2 gap-4 mt-4 pt-5 border-t border-solid border-line">
 					<Field label="Completion threshold (%)" hint="Coverage required to count as 'watched'.">
 						<Input type="number" min="1" max="100" value={ gating.completionThreshold } onChange={ ( e ) => set( { completionThreshold: parseInt( e.target.value, 10 ) || 0 } ) } />
 					</Field>
@@ -152,7 +152,7 @@ export default function GatingTab( { config, patch } ) {
 						<Input type="number" min="1" value={ gating.maxAttempts } onChange={ ( e ) => set( { maxAttempts: parseInt( e.target.value, 10 ) || 1 } ) } />
 					</Field>
 				</div>
-				<Toggle checked={ gating.antiSkip } onChange={ ( v ) => set( { antiSkip: v } ) } label="Anti-skip (block seeking past unwatched parts)" />
+				<Toggle className="mb-6" checked={ gating.antiSkip } onChange={ ( v ) => set( { antiSkip: v } ) } label="Anti-skip (block seeking past unwatched parts)" />
 				<Toggle checked={ gating.requireLoginForGate } onChange={ ( v ) => set( { requireLoginForGate: v } ) } label="Require login to watch (reliable per-person tracking)" />
 			</Card>
 
@@ -164,7 +164,7 @@ export default function GatingTab( { config, patch } ) {
 					</div>
 					<Button variant="ghost" onClick={ addCheckpoint }>+ Checkpoint</Button>
 				</div>
-				<div className="space-y-6">
+				<div className="space-y-6 mt-4 pt-5 border-t border-solid border-line">
 					{ gating.checkpoints.map( ( cp, i ) => (
 						<div key={ cp.id } className="border-l-4 border-brand-200 pl-4">
 							<div className="flex gap-2 items-end mb-3">
@@ -181,7 +181,7 @@ export default function GatingTab( { config, patch } ) {
 			</Card>
 
 			<Card className="p-6 max-w-2xl">
-				<div className="flex items-center justify-between mb-4">
+				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-3">
 						<h3 className="font-semibold text-gray-900">Final quiz (end gate)</h3>
 						{ gating.finalQuiz && <Badge tone="amber">on</Badge> }
@@ -189,7 +189,7 @@ export default function GatingTab( { config, patch } ) {
 					<Toggle checked={ !! gating.finalQuiz } onChange={ toggleFinal } label="Enable" />
 				</div>
 				{ gating.finalQuiz && (
-					<div>
+					<div className='mt-4 pt-5 border-t border-solid border-line'>
 						<div className="flex gap-2 items-end mb-4">
 							<div className="flex-1"><Field label="Title"><Input value={ gating.finalQuiz.title || '' } onChange={ ( e ) => setFinal( { title: e.target.value } ) } /></Field></div>
 							<Field label="Pass %"><Input type="number" className="w-24" value={ gating.finalQuiz.passPercent } onChange={ ( e ) => setFinal( { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
