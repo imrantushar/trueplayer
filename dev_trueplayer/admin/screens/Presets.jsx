@@ -88,7 +88,7 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 			) }
 			<p className="text-sm text-muted mb-4">These styles &amp; behaviours apply to any video that uses this preset. Individual videos can still override anything.</p>
 
-			<div className="flex flex-col xl:flex-row gap-6 items-start mt-6">
+			<div className="flex flex-col xl:flex-row items-start gap-6 mt-6">
 				<div className="flex-1 min-w-0">
 					<PlayerOptionsTab config={ config } patch={ patch } />
 				</div>

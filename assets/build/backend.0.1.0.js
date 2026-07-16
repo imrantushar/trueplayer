@@ -6182,7 +6182,7 @@ function Editor({
       className: "text-sm text-muted mb-4",
       children: "These styles & behaviours apply to any video that uses this preset. Individual videos can still override anything."
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
-      className: "flex flex-col xl:flex-row gap-6 items-start mt-6",
+      className: "flex flex-col xl:flex-row items-start gap-6 mt-6",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("div", {
         className: "flex-1 min-w-0",
         children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_editor_PlayerOptionsTab__WEBPACK_IMPORTED_MODULE_6__["default"], {
@@ -9670,430 +9670,436 @@ function PlayerOptionsTab({
   const controls = cz.controls;
   const [sub, setSub] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('appearance');
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-    className: "flex gap-6 items-start max-w-2xl",
+    className: "flex gap-6 items-start",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.SubSidebar, {
       items: PLAYER_SUBS,
       value: sub,
       onChange: setSub
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-      className: "flex-1 min-w-0 space-y-6",
-      children: [sub === 'appearance' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
-        className: "p-6",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-          className: "font-semibold text-gray-900",
-          children: "Appearance"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-          className: "mt-4 pt-5 border-t border-solid border-line",
-          children: [presets.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: "Preset",
-            hint: "Apply a saved player preset as the starting point \u2014 you can still tweak anything below.",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
-              value: config.presetId || '',
-              onChange: e => patch({
-                presetId: e.target.value ? parseInt(e.target.value, 10) : undefined
-              }),
-              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "",
-                children: "None"
-              }), presets.map(p => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: p.id,
-                children: p.title
-              }, p.id))]
-            })
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-            className: "grid md:grid-cols-2 gap-x-6",
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-              label: "Skin",
-              hint: (0,_pro__WEBPACK_IMPORTED_MODULE_2__.isPro)() ? 'Overall player theme.' : 'Floating & Ambient need TruePlayer Pro.',
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
-                value: appearance.skin,
-                onChange: e => setSection('appearance', {
-                  skin: e.target.value
-                }),
-                children: SKINS.map(s => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("option", {
-                  value: s.value,
-                  disabled: !(0,_pro__WEBPACK_IMPORTED_MODULE_2__.isPro)() && _pro__WEBPACK_IMPORTED_MODULE_2__.PRO_SKINS.includes(s.value),
-                  children: [s.label, !(0,_pro__WEBPACK_IMPORTED_MODULE_2__.isPro)() && _pro__WEBPACK_IMPORTED_MODULE_2__.PRO_SKINS.includes(s.value) ? ' 🔒 Pro' : '']
-                }, s.value))
-              })
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-              label: "Aspect ratio",
-              hint: "9:16 for vertical / Shorts-style video.",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
-                value: appearance.aspectRatio,
-                onChange: e => setSection('appearance', {
-                  aspectRatio: e.target.value
-                }),
-                children: ASPECT_RATIOS.map(r => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                  value: r.value,
-                  children: r.label
-                }, r.value))
-              })
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-              label: "Accent color",
-              hint: "Scrubber, buttons, highlights.",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.ColorInput, {
-                value: appearance.accent,
-                onChange: v => setSection('appearance', {
-                  accent: v
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+      className: "flex-1 min-w-0 w-full",
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+        className: "flex gap-6 items-start",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+          className: "w-full max-w-2xl space-y-6",
+          children: [sub === 'appearance' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
+            className: "p-6",
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
+              className: "font-semibold text-gray-900",
+              children: "Appearance"
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+              className: "mt-4 pt-5 border-t border-solid border-line",
+              children: [presets.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: "Preset",
+                hint: "Apply a saved player preset as the starting point \u2014 you can still tweak anything below.",
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
+                  value: config.presetId || '',
+                  onChange: e => patch({
+                    presetId: e.target.value ? parseInt(e.target.value, 10) : undefined
+                  }),
+                  children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "",
+                    children: "None"
+                  }), presets.map(p => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: p.id,
+                    children: p.title
+                  }, p.id))]
                 })
-              })
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-              label: "Button hover color",
-              hint: "Optional; default is a light overlay.",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.ColorInput, {
-                value: appearance.hoverColor,
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+                className: "grid md:grid-cols-2 gap-x-6",
+                children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                  label: "Skin",
+                  hint: (0,_pro__WEBPACK_IMPORTED_MODULE_2__.isPro)() ? 'Overall player theme.' : 'Floating & Ambient need TruePlayer Pro.',
+                  children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
+                    value: appearance.skin,
+                    onChange: e => setSection('appearance', {
+                      skin: e.target.value
+                    }),
+                    children: SKINS.map(s => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("option", {
+                      value: s.value,
+                      disabled: !(0,_pro__WEBPACK_IMPORTED_MODULE_2__.isPro)() && _pro__WEBPACK_IMPORTED_MODULE_2__.PRO_SKINS.includes(s.value),
+                      children: [s.label, !(0,_pro__WEBPACK_IMPORTED_MODULE_2__.isPro)() && _pro__WEBPACK_IMPORTED_MODULE_2__.PRO_SKINS.includes(s.value) ? ' 🔒 Pro' : '']
+                    }, s.value))
+                  })
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                  label: "Aspect ratio",
+                  hint: "9:16 for vertical / Shorts-style video.",
+                  children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
+                    value: appearance.aspectRatio,
+                    onChange: e => setSection('appearance', {
+                      aspectRatio: e.target.value
+                    }),
+                    children: ASPECT_RATIOS.map(r => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                      value: r.value,
+                      children: r.label
+                    }, r.value))
+                  })
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                  label: "Accent color",
+                  hint: "Scrubber, buttons, highlights.",
+                  children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.ColorInput, {
+                    value: appearance.accent,
+                    onChange: v => setSection('appearance', {
+                      accent: v
+                    })
+                  })
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                  label: "Button hover color",
+                  hint: "Optional; default is a light overlay.",
+                  children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.ColorInput, {
+                    value: appearance.hoverColor,
+                    onChange: v => setSection('appearance', {
+                      hoverColor: v
+                    }),
+                    placeholder: "(none)"
+                  })
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                  label: "Play button style",
+                  children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
+                    value: appearance.playButtonStyle,
+                    onChange: e => setSection('appearance', {
+                      playButtonStyle: e.target.value
+                    }),
+                    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                      value: "circle",
+                      children: "Circle"
+                    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                      value: "soft",
+                      children: "Soft (rounded)"
+                    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                      value: "square",
+                      children: "Square"
+                    })]
+                  })
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                  label: "Control bar style",
+                  children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
+                    value: appearance.controlBarStyle,
+                    onChange: e => setSection('appearance', {
+                      controlBarStyle: e.target.value
+                    }),
+                    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                      value: "gradient",
+                      children: "Gradient"
+                    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                      value: "solid",
+                      children: "Solid"
+                    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                      value: "minimal",
+                      children: "Minimal"
+                    })]
+                  })
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                  label: `Corner roundness (${appearance.roundness}px)`,
+                  children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("input", {
+                    type: "range",
+                    min: "0",
+                    max: "28",
+                    value: appearance.roundness,
+                    onChange: e => setSection('appearance', {
+                      roundness: parseInt(e.target.value, 10)
+                    }),
+                    className: "w-full accent-brand-500 cursor-pointer"
+                  })
+                })]
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                checked: appearance.bigPlay,
                 onChange: v => setSection('appearance', {
-                  hoverColor: v
+                  bigPlay: v
                 }),
-                placeholder: "(none)"
-              })
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-              label: "Play button style",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
-                value: appearance.playButtonStyle,
-                onChange: e => setSection('appearance', {
-                  playButtonStyle: e.target.value
+                label: "Show large center play button"
+              })]
+            })]
+          }), sub === 'captions' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
+            className: "p-6",
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
+              className: "font-semibold text-gray-900 !mb-1",
+              children: "Subtitle style"
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
+              className: "text-sm text-gray-500",
+              children: "How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own."
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+              className: "grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line",
+              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: `Font size (${appearance.captionSize}%)`,
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("input", {
+                  type: "range",
+                  min: "50",
+                  max: "200",
+                  step: "10",
+                  value: appearance.captionSize,
+                  onChange: e => setSection('appearance', {
+                    captionSize: parseInt(e.target.value, 10)
+                  }),
+                  className: "w-full accent-brand-500 cursor-pointer"
+                })
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: "Text color",
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.ColorInput, {
+                  value: appearance.captionColor,
+                  onChange: v => setSection('appearance', {
+                    captionColor: v
+                  })
+                })
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: "Background color",
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.ColorInput, {
+                  value: appearance.captionBackground,
+                  onChange: v => setSection('appearance', {
+                    captionBackground: v
+                  })
+                })
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: `Background opacity (${appearance.captionOpacity}%)`,
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("input", {
+                  type: "range",
+                  min: "0",
+                  max: "100",
+                  step: "5",
+                  value: appearance.captionOpacity,
+                  onChange: e => setSection('appearance', {
+                    captionOpacity: parseInt(e.target.value, 10)
+                  }),
+                  className: "w-full accent-brand-500 cursor-pointer"
+                })
+              })]
+            })]
+          }), sub === 'controls' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
+            className: "p-6",
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
+              className: "font-semibold text-gray-900 !mb-1",
+              children: "Controls"
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
+              className: "text-sm text-gray-500",
+              children: "Show or hide each control in the bar."
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+              className: "grid md:grid-cols-2 gap-6 mt-4 pt-5 border-t border-solid border-line",
+              children: Object.keys(CONTROL_LABELS).map(key => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                checked: controls[key],
+                onChange: v => setSection('controls', {
+                  [key]: v
                 }),
-                children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                  value: "circle",
-                  children: "Circle"
-                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                  value: "soft",
-                  children: "Soft (rounded)"
-                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                  value: "square",
-                  children: "Square"
+                label: CONTROL_LABELS[key]
+              }, key))
+            })]
+          }), sub === 'behavior' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
+            className: "p-6",
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
+              className: "font-semibold text-gray-900 mb-4",
+              children: "Behavior"
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+              className: "grid gap-x-6 mt-4 pt-5 border-t border-solid border-line",
+              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: "Autoplay",
+                hint: "\u201CWith sound\u201D falls back to muted when the browser blocks it.",
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
+                  value: behavior.autoplayMode || (behavior.autoplay ? 'muted' : 'off'),
+                  onChange: e => {
+                    const mode = e.target.value;
+                    // Keep the legacy boolean in sync for older readers.
+                    setSection('behavior', {
+                      autoplayMode: mode,
+                      autoplay: mode !== 'off'
+                    });
+                  },
+                  children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "off",
+                    children: "Off"
+                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "muted",
+                    children: "On, muted"
+                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "sound",
+                    children: "On, with sound"
+                  })]
+                })
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+                className: "flex flex-col gap-6 mb-6",
+                children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                  checked: behavior.muted,
+                  onChange: v => setSection('behavior', {
+                    muted: v
+                  }),
+                  label: "Start muted"
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                  checked: behavior.loop,
+                  onChange: v => setSection('behavior', {
+                    loop: v
+                  }),
+                  label: "Loop"
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                  checked: behavior.resetOnEnd,
+                  onChange: v => setSection('behavior', {
+                    resetOnEnd: v
+                  }),
+                  label: "Reset to start when finished"
                 })]
-              })
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-              label: "Control bar style",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
-                value: appearance.controlBarStyle,
-                onChange: e => setSection('appearance', {
-                  controlBarStyle: e.target.value
-                }),
-                children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                  value: "gradient",
-                  children: "Gradient"
-                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                  value: "solid",
-                  children: "Solid"
-                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                  value: "minimal",
-                  children: "Minimal"
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+                className: "flex flex-col gap-6",
+                children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                  checked: behavior.savePosition,
+                  onChange: v => setSection('behavior', {
+                    savePosition: v
+                  }),
+                  label: "Save & resume playback position"
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                  checked: behavior.hideControls,
+                  onChange: v => setSection('behavior', {
+                    hideControls: v
+                  }),
+                  label: "Auto-hide controls while playing"
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                  checked: behavior.sticky,
+                  onChange: v => setSection('behavior', {
+                    sticky: v
+                  }),
+                  label: "Float player when scrolling away"
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                  checked: behavior.noSkip,
+                  onChange: v => setSection('behavior', {
+                    noSkip: v
+                  }),
+                  label: "Prevent skipping ahead (no jumping to unwatched parts)",
+                  disabled: behavior.disableSeek
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                  checked: behavior.disableSeek,
+                  onChange: v => setSection('behavior', {
+                    disableSeek: v
+                  }),
+                  label: "Disable the timeline entirely (no click or drag, forward or back)"
+                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                  checked: behavior.hoverPreview,
+                  onChange: v => setSection('behavior', {
+                    hoverPreview: v
+                  }),
+                  label: "Muted preview on hover (self-hosted video)"
                 })]
-              })
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-              label: `Corner roundness (${appearance.roundness}px)`,
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("input", {
-                type: "range",
-                min: "0",
-                max: "28",
-                value: appearance.roundness,
-                onChange: e => setSection('appearance', {
-                  roundness: parseInt(e.target.value, 10)
+              })]
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+              className: "grid md:grid-cols-2 gap-x-6 mt-6",
+              children: [behavior.sticky && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: "Float position",
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
+                  value: behavior.stickyPosition,
+                  onChange: e => setSection('behavior', {
+                    stickyPosition: e.target.value
+                  }),
+                  children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "bottom-right",
+                    children: "Bottom right"
+                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "bottom-left",
+                    children: "Bottom left"
+                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "top-right",
+                    children: "Top right"
+                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "top-left",
+                    children: "Top left"
+                  })]
+                })
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: "Preload",
+                hint: "How much to load before play.",
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
+                  value: behavior.preload,
+                  onChange: e => setSection('behavior', {
+                    preload: e.target.value
+                  }),
+                  children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "metadata",
+                    children: "Metadata only"
+                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "auto",
+                    children: "Auto (full)"
+                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "none",
+                    children: "None"
+                  })]
+                })
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: "Load strategy",
+                hint: "When the player boots \u2014 keeps below-the-fold pages fast.",
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
+                  value: behavior.loadStrategy || 'facade',
+                  onChange: e => setSection('behavior', {
+                    loadStrategy: e.target.value
+                  }),
+                  children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "facade",
+                    children: "On click (poster until played)"
+                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "onvisible",
+                    children: "When scrolled into view"
+                  }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
+                    value: "eager",
+                    children: "Immediately on page load"
+                  })]
+                })
+              })]
+            })]
+          }), sub === 'playback' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
+            className: "p-6 max-w-2xl",
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
+              className: "font-semibold text-gray-900 mb-4",
+              children: "Playback"
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+              className: "mt-4 pt-5 border-t border-solid border-line",
+              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: "Playback speeds",
+                hint: "Comma-separated, e.g. 0.5, 1, 1.5, 2",
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Input, {
+                  value: cz.speeds.join(', '),
+                  onChange: e => {
+                    const speeds = e.target.value.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n) && n > 0);
+                    setRoot({
+                      speeds: speeds.length ? speeds : DEFAULTS.speeds
+                    });
+                  }
+                })
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
+                label: "Skip interval (seconds)",
+                hint: "Rewind / fast-forward + arrow keys.",
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Input, {
+                  type: "number",
+                  min: "1",
+                  max: "60",
+                  className: "w-28",
+                  value: cz.skipSeconds,
+                  onChange: e => setRoot({
+                    skipSeconds: parseInt(e.target.value, 10) || 10
+                  })
+                })
+              })]
+            })]
+          }), sub === 'css' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
+            className: "p-6",
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
+              className: "font-semibold text-gray-900 !mb-1",
+              children: "Custom CSS"
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("p", {
+              className: "text-sm text-gray-500 mb-4",
+              children: ["Printed with this player on the frontend. Scope rules with ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("code", {
+                className: "text-xs bg-gray-100 px-1 rounded",
+                children: ".trueplayer-mount"
+              }), " (all players) or ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("code", {
+                className: "text-xs bg-gray-100 px-1 rounded",
+                children: ".tp-stage"
+              }), "."]
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+              className: "mt-4 pt-5 border-t border-solid border-line",
+              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Textarea, {
+                rows: 6,
+                className: "font-mono text-xs",
+                value: config.customize?.css || '',
+                onChange: e => setRoot({
+                  css: e.target.value
                 }),
-                className: "w-full accent-brand-500 cursor-pointer"
+                placeholder: '.tp-stage { box-shadow: 0 10px 40px rgba(0,0,0,.2); }'
               })
             })]
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-            checked: appearance.bigPlay,
-            onChange: v => setSection('appearance', {
-              bigPlay: v
-            }),
-            label: "Show large center play button"
           })]
-        })]
-      }), sub === 'captions' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
-        className: "p-6",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-          className: "font-semibold text-gray-900 !mb-1",
-          children: "Subtitle style"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
-          className: "text-sm text-gray-500",
-          children: "How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own."
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-          className: "grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line",
-          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: `Font size (${appearance.captionSize}%)`,
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("input", {
-              type: "range",
-              min: "50",
-              max: "200",
-              step: "10",
-              value: appearance.captionSize,
-              onChange: e => setSection('appearance', {
-                captionSize: parseInt(e.target.value, 10)
-              }),
-              className: "w-full accent-brand-500 cursor-pointer"
-            })
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: "Text color",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.ColorInput, {
-              value: appearance.captionColor,
-              onChange: v => setSection('appearance', {
-                captionColor: v
-              })
-            })
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: "Background color",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.ColorInput, {
-              value: appearance.captionBackground,
-              onChange: v => setSection('appearance', {
-                captionBackground: v
-              })
-            })
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: `Background opacity (${appearance.captionOpacity}%)`,
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("input", {
-              type: "range",
-              min: "0",
-              max: "100",
-              step: "5",
-              value: appearance.captionOpacity,
-              onChange: e => setSection('appearance', {
-                captionOpacity: parseInt(e.target.value, 10)
-              }),
-              className: "w-full accent-brand-500 cursor-pointer"
-            })
-          })]
-        })]
-      }), sub === 'controls' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
-        className: "p-6",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-          className: "font-semibold text-gray-900 !mb-1",
-          children: "Controls"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
-          className: "text-sm text-gray-500",
-          children: "Show or hide each control in the bar."
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
-          className: "grid md:grid-cols-2 gap-6 mt-4 pt-5 border-t border-solid border-line",
-          children: Object.keys(CONTROL_LABELS).map(key => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-            checked: controls[key],
-            onChange: v => setSection('controls', {
-              [key]: v
-            }),
-            label: CONTROL_LABELS[key]
-          }, key))
-        })]
-      }), sub === 'behavior' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
-        className: "p-6",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-          className: "font-semibold text-gray-900 mb-4",
-          children: "Behavior"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-          className: "grid gap-x-6 mt-4 pt-5 border-t border-solid border-line",
-          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: "Autoplay",
-            hint: "\u201CWith sound\u201D falls back to muted when the browser blocks it.",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
-              value: behavior.autoplayMode || (behavior.autoplay ? 'muted' : 'off'),
-              onChange: e => {
-                const mode = e.target.value;
-                // Keep the legacy boolean in sync for older readers.
-                setSection('behavior', {
-                  autoplayMode: mode,
-                  autoplay: mode !== 'off'
-                });
-              },
-              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "off",
-                children: "Off"
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "muted",
-                children: "On, muted"
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "sound",
-                children: "On, with sound"
-              })]
-            })
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-            className: "flex flex-col gap-6 mb-6",
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-              checked: behavior.muted,
-              onChange: v => setSection('behavior', {
-                muted: v
-              }),
-              label: "Start muted"
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-              checked: behavior.loop,
-              onChange: v => setSection('behavior', {
-                loop: v
-              }),
-              label: "Loop"
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-              checked: behavior.resetOnEnd,
-              onChange: v => setSection('behavior', {
-                resetOnEnd: v
-              }),
-              label: "Reset to start when finished"
-            })]
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-            className: "flex flex-col gap-6",
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-              checked: behavior.savePosition,
-              onChange: v => setSection('behavior', {
-                savePosition: v
-              }),
-              label: "Save & resume playback position"
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-              checked: behavior.hideControls,
-              onChange: v => setSection('behavior', {
-                hideControls: v
-              }),
-              label: "Auto-hide controls while playing"
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-              checked: behavior.sticky,
-              onChange: v => setSection('behavior', {
-                sticky: v
-              }),
-              label: "Float player when scrolling away"
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-              checked: behavior.noSkip,
-              onChange: v => setSection('behavior', {
-                noSkip: v
-              }),
-              label: "Prevent skipping ahead (no jumping to unwatched parts)",
-              disabled: behavior.disableSeek
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-              checked: behavior.disableSeek,
-              onChange: v => setSection('behavior', {
-                disableSeek: v
-              }),
-              label: "Disable the timeline entirely (no click or drag, forward or back)"
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-              checked: behavior.hoverPreview,
-              onChange: v => setSection('behavior', {
-                hoverPreview: v
-              }),
-              label: "Muted preview on hover (self-hosted video)"
-            })]
-          })]
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-          className: "grid md:grid-cols-2 gap-x-6 mt-6",
-          children: [behavior.sticky && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: "Float position",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
-              value: behavior.stickyPosition,
-              onChange: e => setSection('behavior', {
-                stickyPosition: e.target.value
-              }),
-              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "bottom-right",
-                children: "Bottom right"
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "bottom-left",
-                children: "Bottom left"
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "top-right",
-                children: "Top right"
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "top-left",
-                children: "Top left"
-              })]
-            })
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: "Preload",
-            hint: "How much to load before play.",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
-              value: behavior.preload,
-              onChange: e => setSection('behavior', {
-                preload: e.target.value
-              }),
-              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "metadata",
-                children: "Metadata only"
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "auto",
-                children: "Auto (full)"
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "none",
-                children: "None"
-              })]
-            })
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: "Load strategy",
-            hint: "When the player boots \u2014 keeps below-the-fold pages fast.",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
-              value: behavior.loadStrategy || 'facade',
-              onChange: e => setSection('behavior', {
-                loadStrategy: e.target.value
-              }),
-              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "facade",
-                children: "On click (poster until played)"
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "onvisible",
-                children: "When scrolled into view"
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
-                value: "eager",
-                children: "Immediately on page load"
-              })]
-            })
-          })]
-        })]
-      }), sub === 'playback' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
-        className: "p-6 max-w-2xl",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-          className: "font-semibold text-gray-900 mb-4",
-          children: "Playback"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-          className: "mt-4 pt-5 border-t border-solid border-line",
-          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: "Playback speeds",
-            hint: "Comma-separated, e.g. 0.5, 1, 1.5, 2",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Input, {
-              value: cz.speeds.join(', '),
-              onChange: e => {
-                const speeds = e.target.value.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n) && n > 0);
-                setRoot({
-                  speeds: speeds.length ? speeds : DEFAULTS.speeds
-                });
-              }
-            })
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
-            label: "Skip interval (seconds)",
-            hint: "Rewind / fast-forward + arrow keys.",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Input, {
-              type: "number",
-              min: "1",
-              max: "60",
-              className: "w-28",
-              value: cz.skipSeconds,
-              onChange: e => setRoot({
-                skipSeconds: parseInt(e.target.value, 10) || 10
-              })
-            })
-          })]
-        })]
-      }), sub === 'css' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
-        className: "p-6",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-          className: "font-semibold text-gray-900 !mb-1",
-          children: "Custom CSS"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("p", {
-          className: "text-sm text-gray-500 mb-4",
-          children: ["Printed with this player on the frontend. Scope rules with ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("code", {
-            className: "text-xs bg-gray-100 px-1 rounded",
-            children: ".trueplayer-mount"
-          }), " (all players) or ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("code", {
-            className: "text-xs bg-gray-100 px-1 rounded",
-            children: ".tp-stage"
-          }), "."]
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
-          className: "mt-4 pt-5 border-t border-solid border-line",
-          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Textarea, {
-            rows: 6,
-            className: "font-mono text-xs",
-            value: config.customize?.css || '',
-            onChange: e => setRoot({
-              css: e.target.value
-            }),
-            placeholder: '.tp-stage { box-shadow: 0 10px 40px rgba(0,0,0,.2); }'
-          })
-        })]
-      })]
+        })
+      })
     })]
   });
 }
