@@ -240,6 +240,10 @@
 		margin-top: 1.5rem;
 		margin-bottom: 1.5rem;
 }
+.my-4 {
+		margin-top: 1rem;
+		margin-bottom: 1rem;
+}
 .\!mb-1 {
 		margin-bottom: 0.25rem !important;
 }
@@ -308,6 +312,12 @@
 }
 .mt-px {
 		margin-top: 1px;
+}
+.\!mb-6 {
+		margin-bottom: 1.5rem !important;
+}
+.\!mb-2 {
+		margin-bottom: 0.5rem !important;
 }
 .block {
 		display: block;
@@ -959,6 +969,10 @@
 .py-8 {
 		padding-top: 2rem;
 		padding-bottom: 2rem;
+}
+.py-5 {
+		padding-top: 1.25rem;
+		padding-bottom: 1.25rem;
 }
 .pb-1 {
 		padding-bottom: 0.25rem;

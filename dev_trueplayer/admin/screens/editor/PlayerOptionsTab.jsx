@@ -93,7 +93,7 @@ export default function PlayerOptionsTab( { config, patch, presets = [] } ) {
 							</Select>
 						</Field>
 					) }
-					<div className="grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line">
+					<div className="grid md:grid-cols-2 gap-x-6">
 						<Field label="Skin" hint={ isPro() ? 'Overall player theme.' : 'Floating & Ambient need TruePlayer Pro.' }>
 							<Select value={ appearance.skin } onChange={ ( e ) => setSection( 'appearance', { skin: e.target.value } ) }>
 								{ SKINS.map( ( s ) => (

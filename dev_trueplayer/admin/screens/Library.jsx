@@ -205,8 +205,8 @@ function VideoList( { videos, copied, copy, onEdit, onViewers, onRemove, onAdd }
 			<Card className="p-12 text-center border-dashed">
 				<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="video" className="w-6 h-6" /></div>
 				<p className="font-semibold text-gray-900">No media yet</p>
-				<p className="text-sm text-muted mb-4">Create your first watch-verified player.</p>
-				<Button onClick={ onAdd }><Icon name="plus" className="w-4 h-4" /> Add media</Button>
+				<p className="text-sm text-muted !mb-6">Create your first watch-verified player.</p>
+				<Button onClick={ onAdd }><Icon name="plus" /> Add media</Button>
 			</Card>
 		);
 	}

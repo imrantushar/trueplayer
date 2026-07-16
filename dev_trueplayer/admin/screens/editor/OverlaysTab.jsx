@@ -140,7 +140,7 @@ export default function OverlaysTab( { config, patch } ) {
 											{ o.trigger === 'time' && (
 												<Toggle checked={ o.pause } onChange={ ( v ) => setOne( i, { pause: v } ) } label="Pause the video while showing" />
 											) }
-											<Toggle className="mb-6" checked={ o.dismissible !== false } onChange={ ( v ) => setOne( i, { dismissible: v } ) } label="Let viewers dismiss it (× close)" />
+											<Toggle className="mt-6" checked={ o.dismissible !== false } onChange={ ( v ) => setOne( i, { dismissible: v } ) } label="Let viewers dismiss it (× close)" />
 										</>
 									) }
 									<div className="text-right mt-2">

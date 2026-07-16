@@ -13,7 +13,7 @@ import { Icon } from './icons';
  */
 export default function Header( { crumbs = [], onHome } ) {
 	return (
-		<header className="sticky top-8 z-30 bg-white border-b border-line h-14 flex items-center px-5 gap-2 shrink-0">
+		<header className="sticky top-8 z-30 bg-white border-b border-line flex items-center px-6 py-5 gap-2 shrink-0">
 			<button onClick={ onHome } className="inline-flex w-8 h-8 rounded bg-brand-500 text-white items-center justify-center shrink-0">
 				<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
 			</button>

@@ -2838,7 +2838,7 @@ function Header({
   onHome
 }) {
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsxs)("header", {
-    className: "sticky top-8 z-30 bg-white border-b border-line h-14 flex items-center px-5 gap-2 shrink-0",
+    className: "sticky top-8 z-30 bg-white border-b border-line flex items-center px-6 py-5 gap-2 shrink-0",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("button", {
       onClick: onHome,
       className: "inline-flex w-8 h-8 rounded bg-brand-500 text-white items-center justify-center shrink-0",
@@ -4888,6 +4888,7 @@ function Dashboard({
             className: "text-sm text-gray-500 mb-3",
             children: "No media yet \u2014 add your first one."
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
+            className: "mt-6",
             onClick: () => onNavigate('library'),
             children: "Create media"
           })]
@@ -5587,13 +5588,12 @@ function VideoList({
         className: "font-semibold text-gray-900",
         children: "No media yet"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)("p", {
-        className: "text-sm text-muted mb-4",
+        className: "text-sm text-muted !mb-6",
         children: "Create your first watch-verified player."
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
         onClick: onAdd,
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(_components_icons__WEBPACK_IMPORTED_MODULE_3__.Icon, {
-          name: "plus",
-          className: "w-4 h-4"
+          name: "plus"
         }), " Add media"]
       })]
     });
@@ -8022,10 +8022,10 @@ function EmbedTab({
     setTimeout(() => setCopied(''), 1500);
   };
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
-    className: "p-6 max-w-2xl space-y-6",
+    className: "max-w-2xl space-y-6",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-        className: "font-semibold text-gray-900 mb-2",
+        className: "font-semibold text-gray-900 !mb-2",
         children: "Shortcode"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
         className: "flex gap-2 items-center",
@@ -8040,7 +8040,7 @@ function EmbedTab({
       })]
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-        className: "font-semibold text-gray-900 mb-2",
+        className: "font-semibold text-gray-900 !mb-2",
         children: "Block (paste into any post)"
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
         className: "flex gap-2 items-center",
@@ -8075,9 +8075,10 @@ function EmbedTab({
           onChange: v => patch({
             instantPage: v
           }),
-          label: "Enable the instant page"
+          label: "Enable the instant page",
+          className: "my-4"
         }), config.instantPage && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-          className: "flex gap-2 items-center mt-2",
+          className: "flex gap-2 items-center",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("code", {
             className: "flex-1 bg-gray-100 rounded px-3 py-2 text-sm break-all",
             children: instantUrl
@@ -9437,7 +9438,7 @@ function OverlaysTab({
                 }),
                 label: "Pause the video while showing"
               }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
-                className: "mb-6",
+                className: "mt-6",
                 checked: o.dismissible !== false,
                 onChange: v => setOne(i, {
                   dismissible: v
@@ -9700,7 +9701,7 @@ function PlayerOptionsTab({
               }, p.id))]
             })
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-            className: "grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line",
+            className: "grid md:grid-cols-2 gap-x-6",
             children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Field, {
               label: "Skin",
               hint: (0,_pro__WEBPACK_IMPORTED_MODULE_2__.isPro)() ? 'Overall player theme.' : 'Floating & Ambient need TruePlayer Pro.',
