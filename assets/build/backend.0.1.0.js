@@ -9800,6 +9800,29 @@ function PlayerOptionsTab({
   const appearance = cz.appearance;
   const behavior = cz.behavior;
   const controls = cz.controls;
+  const source = config.source || {};
+  const isEmbedProvider = source.type === 'youtube' || source.type === 'vimeo';
+  const isAudioSource = source.mediaType === 'audio';
+
+  // Which control-bar buttons can ever do anything for the current source —
+  // mirrors the provider capabilities in player/providers/*.js (youtube/vimeo
+  // have no download, youtube has no PiP, audio has no PiP/fullscreen) so we
+  // don't offer a toggle whose control button will just never render.
+  const CONTROL_AVAILABLE = {
+    download: !isEmbedProvider,
+    pip: source.type !== 'youtube' && !isAudioSource,
+    fullscreen: isEmbedProvider || !isAudioSource
+  };
+
+  // 'off' | 'muted' | 'sound' — same resolution as player/customize.js.
+  const apMode = behavior.autoplayMode || (behavior.autoplay ? 'muted' : 'off');
+
+  // Autoplay forces loadStrategy to 'eager' server-side (nothing to wait for),
+  // so hover preview — which attaches to the click-to-load facade — only ever
+  // has a facade to attach to when autoplay is off and loadStrategy isn't
+  // already 'eager'. Source-wise it's direct-file only (self/url, not audio,
+  // not an .m3u8 URL) — see attachHoverPreview() in player/mount.js.
+  const hoverPreviewEligible = ['self', 'url'].includes(source.type) && !isAudioSource && !/\.m3u8($|\?)/i.test(source.src || '') && apMode === 'off' && (behavior.loadStrategy || 'facade') !== 'eager';
   const [sub, setSub] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('appearance');
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
     className: "flex flex-col md:flex-row gap-6 items-start",
@@ -10005,7 +10028,7 @@ function PlayerOptionsTab({
               children: "Show or hide each control in the bar."
             }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
               className: "grid md:grid-cols-2 gap-6 mt-4 pt-5 border-t border-solid border-line",
-              children: Object.keys(CONTROL_LABELS).map(key => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+              children: Object.keys(CONTROL_LABELS).filter(key => CONTROL_AVAILABLE[key] !== false).map(key => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
                 checked: controls[key],
                 onChange: v => setSection('controls', {
                   [key]: v
@@ -10024,13 +10047,20 @@ function PlayerOptionsTab({
                 label: "Autoplay",
                 hint: "\u201CWith sound\u201D falls back to muted when the browser blocks it.",
                 children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Select, {
-                  value: behavior.autoplayMode || (behavior.autoplay ? 'muted' : 'off'),
+                  value: apMode,
                   onChange: e => {
                     const mode = e.target.value;
-                    // Keep the legacy boolean in sync for older readers.
                     setSection('behavior', {
                       autoplayMode: mode,
-                      autoplay: mode !== 'off'
+                      // Keep the legacy boolean in sync for older readers.
+                      autoplay: mode !== 'off',
+                      // Autoplay's own mode already decides the start-muted state (see
+                      // player/Player.jsx) — "Start muted" only applies, and is only
+                      // shown, when autoplay is off. Clear it so a leftover `true`
+                      // can't silently mute an "On, with sound" autoplay.
+                      ...(mode !== 'off' ? {
+                        muted: false
+                      } : {})
                     });
                   },
                   children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("option", {
@@ -10046,7 +10076,7 @@ function PlayerOptionsTab({
                 })
               }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
                 className: "flex flex-col gap-6 mb-6",
-                children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                children: [apMode === 'off' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
                   checked: behavior.muted,
                   onChange: v => setSection('behavior', {
                     muted: v
@@ -10095,10 +10125,13 @@ function PlayerOptionsTab({
                 }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
                   checked: behavior.disableSeek,
                   onChange: v => setSection('behavior', {
-                    disableSeek: v
+                    disableSeek: v,
+                    ...(v ? {
+                      noSkip: false
+                    } : {})
                   }),
                   label: "Disable the timeline entirely (no click or drag, forward or back)"
-                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
+                }), hoverPreviewEligible && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Toggle, {
                   checked: behavior.hoverPreview,
                   onChange: v => setSection('behavior', {
                     hoverPreview: v

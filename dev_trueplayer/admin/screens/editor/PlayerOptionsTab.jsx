@@ -71,6 +71,35 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 	const behavior = cz.behavior;
 	const controls = cz.controls;
 
+	const source = config.source || {};
+	const isEmbedProvider = source.type === 'youtube' || source.type === 'vimeo';
+	const isAudioSource = source.mediaType === 'audio';
+
+	// Which control-bar buttons can ever do anything for the current source —
+	// mirrors the provider capabilities in player/providers/*.js (youtube/vimeo
+	// have no download, youtube has no PiP, audio has no PiP/fullscreen) so we
+	// don't offer a toggle whose control button will just never render.
+	const CONTROL_AVAILABLE = {
+		download: !isEmbedProvider,
+		pip: source.type !== 'youtube' && !isAudioSource,
+		fullscreen: isEmbedProvider || !isAudioSource,
+	};
+
+	// 'off' | 'muted' | 'sound' — same resolution as player/customize.js.
+	const apMode = behavior.autoplayMode || (behavior.autoplay ? 'muted' : 'off');
+
+	// Autoplay forces loadStrategy to 'eager' server-side (nothing to wait for),
+	// so hover preview — which attaches to the click-to-load facade — only ever
+	// has a facade to attach to when autoplay is off and loadStrategy isn't
+	// already 'eager'. Source-wise it's direct-file only (self/url, not audio,
+	// not an .m3u8 URL) — see attachHoverPreview() in player/mount.js.
+	const hoverPreviewEligible =
+		['self', 'url'].includes(source.type) &&
+		!isAudioSource &&
+		!/\.m3u8($|\?)/i.test(source.src || '') &&
+		apMode === 'off' &&
+		(behavior.loadStrategy || 'facade') !== 'eager';
+
 	const [sub, setSub] = useState('appearance');
 
 	return (
@@ -165,7 +194,7 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 								<h3 className="font-semibold text-gray-900 !mb-1">Controls</h3>
 								<p className="text-sm text-gray-500">Show or hide each control in the bar.</p>
 								<div className="grid md:grid-cols-2 gap-6 mt-4 pt-5 border-t border-solid border-line">
-									{Object.keys(CONTROL_LABELS).map((key) => (
+									{Object.keys(CONTROL_LABELS).filter((key) => CONTROL_AVAILABLE[key] !== false).map((key) => (
 										<Toggle key={key} checked={controls[key]} onChange={(v) => setSection('controls', { [key]: v })} label={CONTROL_LABELS[key]} />
 									))}
 								</div>
@@ -179,11 +208,19 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 								<div className="grid gap-x-6 mt-4 pt-5 border-t border-solid border-line">
 									<Field label="Autoplay" hint="“With sound” falls back to muted when the browser blocks it.">
 										<Select
-											value={behavior.autoplayMode || (behavior.autoplay ? 'muted' : 'off')}
+											value={apMode}
 											onChange={(e) => {
 												const mode = e.target.value;
-												// Keep the legacy boolean in sync for older readers.
-												setSection('behavior', { autoplayMode: mode, autoplay: mode !== 'off' });
+												setSection('behavior', {
+													autoplayMode: mode,
+													// Keep the legacy boolean in sync for older readers.
+													autoplay: mode !== 'off',
+													// Autoplay's own mode already decides the start-muted state (see
+													// player/Player.jsx) — "Start muted" only applies, and is only
+													// shown, when autoplay is off. Clear it so a leftover `true`
+													// can't silently mute an "On, with sound" autoplay.
+													...(mode !== 'off' ? { muted: false } : {}),
+												});
 											}}
 										>
 											<option value="off">Off</option>
@@ -192,7 +229,9 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 										</Select>
 									</Field>
 									<div className='flex flex-col gap-6 mb-6'>
-										<Toggle checked={behavior.muted} onChange={(v) => setSection('behavior', { muted: v })} label="Start muted" />
+										{apMode === 'off' && (
+											<Toggle checked={behavior.muted} onChange={(v) => setSection('behavior', { muted: v })} label="Start muted" />
+										)}
 										<Toggle checked={behavior.loop} onChange={(v) => setSection('behavior', { loop: v })} label="Loop" />
 										<Toggle checked={behavior.resetOnEnd} onChange={(v) => setSection('behavior', { resetOnEnd: v })} label="Reset to start when finished" />
 									</div>
@@ -202,8 +241,14 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 										<Toggle checked={behavior.hideControls} onChange={(v) => setSection('behavior', { hideControls: v })} label="Auto-hide controls while playing" />
 										<Toggle checked={behavior.sticky} onChange={(v) => setSection('behavior', { sticky: v })} label="Float player when scrolling away" />
 										<Toggle checked={behavior.noSkip} onChange={(v) => setSection('behavior', { noSkip: v })} label="Prevent skipping ahead (no jumping to unwatched parts)" disabled={behavior.disableSeek} />
-										<Toggle checked={behavior.disableSeek} onChange={(v) => setSection('behavior', { disableSeek: v })} label="Disable the timeline entirely (no click or drag, forward or back)" />
-										<Toggle checked={behavior.hoverPreview} onChange={(v) => setSection('behavior', { hoverPreview: v })} label="Muted preview on hover (self-hosted video)" />
+										<Toggle
+											checked={behavior.disableSeek}
+											onChange={(v) => setSection('behavior', { disableSeek: v, ...(v ? { noSkip: false } : {}) })}
+											label="Disable the timeline entirely (no click or drag, forward or back)"
+										/>
+										{hoverPreviewEligible && (
+											<Toggle checked={behavior.hoverPreview} onChange={(v) => setSection('behavior', { hoverPreview: v })} label="Muted preview on hover (self-hosted video)" />
+										)}
 									</div>
 								</div>
 								<div className="grid md:grid-cols-2 gap-x-6 mt-6">
