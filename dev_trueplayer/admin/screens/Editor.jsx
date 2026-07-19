@@ -140,14 +140,9 @@ export default function Editor( { id, onEditState } ) {
 						{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
 						{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
 						<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>Embed</Button>
-						{ isLastTab ? (
-							<Button onClick={ () => save( false ) } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
-						) : (
-							<>
-								<Button variant="ghost" onClick={ () => save( false ) } disabled={ saving || ! dirty }>Save</Button>
-								<Button onClick={ () => save( true ) } disabled={ saving }>{ saving ? 'Saving…' : 'Save & Continue' }</Button>
-							</>
-						) }
+						<Button onClick={ () => save( ! isLastTab ) } disabled={ saving || ( isLastTab && ! dirty ) }>
+							{ saving ? 'Saving…' : ( isLastTab ? 'Save' : 'Save & Continue' ) }
+						</Button>
 					</>,
 					toolbarSlot
 				) }

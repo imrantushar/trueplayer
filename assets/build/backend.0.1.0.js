@@ -5211,21 +5211,10 @@ function Editor({
           variant: "ghost",
           onClick: () => setEmbedOpen(true),
           children: "Embed"
-        }), isLastTab ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
-          onClick: () => save(false),
-          disabled: saving || !dirty,
-          children: saving ? 'Saving…' : 'Save'
-        }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.Fragment, {
-          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
-            variant: "ghost",
-            onClick: () => save(false),
-            disabled: saving || !dirty,
-            children: "Save"
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
-            onClick: () => save(true),
-            disabled: saving,
-            children: saving ? 'Saving…' : 'Save & Continue'
-          })]
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
+          onClick: () => save(!isLastTab),
+          disabled: saving || isLastTab && !dirty,
+          children: saving ? 'Saving…' : isLastTab ? 'Save' : 'Save & Continue'
         })]
       }), toolbarSlot), embedOpen && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Modal, {
         title: "Embed this media",
