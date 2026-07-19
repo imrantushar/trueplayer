@@ -697,9 +697,6 @@
 .border-2 {
 		border-width: 2px;
 }
-.\!border {
-		border-width: 1px !important;
-}
 .border-b {
 		border-bottom-width: 1px;
 }

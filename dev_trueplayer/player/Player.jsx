@@ -859,7 +859,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			{ ! ready && ! error && <Spinner /> }
 			{ error && <Message>{ error }</Message> }
 
-			{ ready && ! started && ! locked && ! activeQuiz && ! activeOptin && ! error && appearance.bigPlay && source.mediaType !== 'audio' && <BigPlay onPlay={ playPause } /> }
+			{ ready && ! ui.playing && ! locked && ! activeQuiz && ! activeOptin && ! error && appearance.bigPlay && source.mediaType !== 'audio' && <BigPlay onPlay={ playPause } /> }
 
 			{ activeOptin && (
 				<Optin

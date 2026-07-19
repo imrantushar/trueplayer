@@ -972,7 +972,7 @@ function Player({
       })]
     }), !ready && !error && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_15__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_14__.Spinner, {}), error && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_15__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_14__.Message, {
       children: error
-    }), ready && !started && !locked && !activeQuiz && !activeOptin && !error && appearance.bigPlay && source.mediaType !== 'audio' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_15__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_14__.BigPlay, {
+    }), ready && !ui.playing && !locked && !activeQuiz && !activeOptin && !error && appearance.bigPlay && source.mediaType !== 'audio' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_15__.jsx)(_components_Overlays__WEBPACK_IMPORTED_MODULE_14__.BigPlay, {
       onPlay: playPause
     }), activeOptin && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_15__.jsx)(_components_Optin__WEBPACK_IMPORTED_MODULE_10__["default"], {
       videoId: videoId,
@@ -1470,8 +1470,7 @@ function Menu({
   setQuality,
   track,
   setTrack,
-  speeds,
-  showSpeed
+  speeds
 }) {
   const [open, setOpen] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const rates = speeds && speeds.length ? speeds : [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -1488,19 +1487,17 @@ function Menu({
       })
     }), open && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
       className: "tp-menu",
-      children: [showSpeed && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.Fragment, {
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
-          className: "tp-menu-section",
-          children: "Speed"
-        }), rates.map(r => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("button", {
-          className: `tp-menu-item ${r === rate ? 'is-active' : ''}`,
-          onClick: () => {
-            setRate(r);
-            setOpen(false);
-          },
-          children: r === 1 ? 'Normal' : `${r}×`
-        }, r))]
-      }), qualities.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.Fragment, {
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
+        className: "tp-menu-section",
+        children: "Speed"
+      }), rates.map(r => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("button", {
+        className: `tp-menu-item ${r === rate ? 'is-active' : ''}`,
+        onClick: () => {
+          setRate(r);
+          setOpen(false);
+        },
+        children: r === 1 ? 'Normal' : `${r}×`
+      }, r)), qualities.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.Fragment, {
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
           className: "tp-menu-section",
           children: "Quality"
@@ -1575,7 +1572,6 @@ function Controls(props) {
   } = props;
   const show = (key, fallback = true) => controls[key] === undefined ? fallback : controls[key];
   const chapterNow = currentChapter(chapters, current, duration);
-  const settingsHasContent = show('speed') || provider?.getQualities?.().length > 0 || provider?.getTextTracks?.().length > 0;
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
     className: "tp-controls",
     children: [audio && title && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
@@ -1655,7 +1651,7 @@ function Controls(props) {
         children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(Icon, {
           d: P.list
         })
-      }), show('settings') && settingsHasContent && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(Menu, {
+      }), show('settings') && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(Menu, {
         provider: provider,
         rate: rate,
         setRate: onRate,
@@ -1663,8 +1659,7 @@ function Controls(props) {
         setQuality: onQuality,
         track: track,
         setTrack: onTrack,
-        speeds: speeds,
-        showSpeed: show('speed')
+        speeds: speeds
       }), show('pip') && capabilities?.pip && !hidePiP && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("button", {
         className: "tp-btn",
         "aria-label": "Picture in picture",
@@ -2727,7 +2722,6 @@ const CUSTOMIZE_DEFAULTS = {
     captions: true,
     settings: true,
     // gear menu (speed/quality/captions)
-    speed: true,
     pip: true,
     fullscreen: true,
     download: false

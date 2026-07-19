@@ -267,7 +267,7 @@ function VideoList( { videos, copied, copy, onEdit, onViewers, onRemove, onAdd }
 							onClick={ () => onEdit( v.id ) }
 							aria-label="Edit"
 							title="Edit"
-							className="w-8 h-8 inline-flex items-center justify-center rounded text-muted hover:text-ink hover:bg-gray-100 transition-colors shrink-0 border border-line rounded"
+							className="w-8 h-8 inline-flex items-center justify-center text-muted hover:text-ink hover:bg-gray-100 transition-colors shrink-0 border border-line rounded"
 						>
 							<Icon name="edit" className="w-[18px] h-[18px]" />
 						</button>

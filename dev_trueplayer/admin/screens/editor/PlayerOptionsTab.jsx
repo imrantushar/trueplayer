@@ -40,15 +40,14 @@ const CONTROL_LABELS = {
 	mute: 'Mute',
 	volume: 'Volume slider',
 	captions: 'Captions',
-	settings: 'Settings (gear)',
-	speed: 'Playback speed',
+	settings: 'Settings (gear, incl. playback speed)',
 	pip: 'Picture-in-picture',
 	fullscreen: 'Fullscreen',
 	download: 'Download button',
 };
 
 const DEFAULTS = {
-	controls: { play: true, rewind: true, forward: true, progress: true, currentTime: true, duration: true, mute: true, volume: true, captions: true, settings: true, speed: true, pip: true, fullscreen: true, download: false },
+	controls: { play: true, rewind: true, forward: true, progress: true, currentTime: true, duration: true, mute: true, volume: true, captions: true, settings: true, pip: true, fullscreen: true, download: false },
 	behavior: { autoplay: false, autoplayMode: '', muted: false, loop: false, resetOnEnd: false, savePosition: true, hideControls: true, sticky: false, stickyPosition: 'bottom-right', preload: 'metadata', loadStrategy: 'facade', noSkip: false, disableSeek: false, hoverPreview: false },
 	appearance: { skin: 'default', accent: '#4f46e5', hoverColor: '', bigPlay: true, playButtonStyle: 'circle', roundness: 10, controlBarStyle: 'gradient', aspectRatio: '16:9', captionSize: 100, captionColor: '#ffffff', captionBackground: '#000000', captionOpacity: 75 },
 	speeds: [0.5, 0.75, 1, 1.25, 1.5, 2],
