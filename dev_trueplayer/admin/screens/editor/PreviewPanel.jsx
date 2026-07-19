@@ -1,5 +1,6 @@
 import { useState } from '@wordpress/element';
 import Player from '@Player/Player';
+import { hasVideoSource, sourceKey } from '../../utils/videoSource';
 // NOTE: the player CSS (style-frontend.css) is enqueued on admin pages by PHP.
 // Do NOT import it here — sharing that CSS module across the frontend + admin
 // entries makes webpack merge it into style-backend.css and stop emitting
@@ -16,8 +17,8 @@ import Player from '@Player/Player';
  */
 export default function PreviewPanel( { id, config, onDuration } ) {
 	const [ bump, setBump ] = useState( 0 );
-	const src = config.source && config.source.src;
-	const key = `${ config.source?.type || '' }:${ config.source?.src || '' }:${ bump }`;
+	const hasSource = hasVideoSource( config.source || {} );
+	const key = `${ sourceKey( config.source || {} ) }:${ bump }`;
 
 	return (
 		<div>
@@ -26,7 +27,7 @@ export default function PreviewPanel( { id, config, onDuration } ) {
 				<button className="text-xs text-gray-500 hover:text-gray-800" onClick={ () => setBump( ( b ) => b + 1 ) }>↻ Reload</button>
 			</div>
 
-			{ ! src ? (
+			{ ! hasSource ? (
 				<div className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-gray-400 bg-white">
 					Add a video under <strong>Source</strong> to preview it.
 				</div>

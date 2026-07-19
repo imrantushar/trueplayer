@@ -5034,8 +5034,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _editor_PreviewPanel__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./editor/PreviewPanel */ "./dev_trueplayer/admin/screens/editor/PreviewPanel.jsx");
 /* harmony import */ var _components_UpsellPanel__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../components/UpsellPanel */ "./dev_trueplayer/admin/components/UpsellPanel.jsx");
 /* harmony import */ var _pro__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../pro */ "./dev_trueplayer/admin/pro.js");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__);
+/* harmony import */ var _utils_videoSource__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../utils/videoSource */ "./dev_trueplayer/admin/utils/videoSource.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__);
+
 
 
 
@@ -5082,19 +5084,6 @@ const PRO_TAB_INFO = {
   }
 };
 
-// A video isn't playable without a source — what "set" means differs per type
-// (Source tab only asks for pullZone+videoId for bunny, playbackId for mux).
-function hasVideoSource(source = {}) {
-  switch (source.type) {
-    case 'bunny':
-      return !!(source.pullZone && source.videoId);
-    case 'mux':
-      return !!(source.playbackId || source.src);
-    default:
-      return !!source.src;
-  }
-}
-
 // Interactions = everything shown on/around the video. Overlays are free;
 // layers / timed content / email capture are pro (gated inline).
 function InteractionsTab({
@@ -5103,34 +5092,34 @@ function InteractionsTab({
   pro
 }) {
   const [sub, setSub] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('overlays');
-  const gate = (node, info) => pro ? node : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_14__["default"], {
+  const gate = (node, info) => pro ? node : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_14__["default"], {
     title: info.title,
     features: info.features
   });
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
     className: "flex flex-col md:flex-row gap-6 items-start",
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.SubSidebar, {
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.SubSidebar, {
       value: sub,
       onChange: setSub,
       items: [['overlays', 'Call to action'], ['layers', 'Layers', !pro], ['timed', 'Timed content', !pro], ['subscribe', 'Email capture', !pro]]
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
       className: "flex-1 min-w-0",
-      children: [sub === 'overlays' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_OverlaysTab__WEBPACK_IMPORTED_MODULE_6__["default"], {
+      children: [sub === 'overlays' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_OverlaysTab__WEBPACK_IMPORTED_MODULE_6__["default"], {
         config: config,
         patch: patch
-      }), sub === 'layers' && gate(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_LayersTab__WEBPACK_IMPORTED_MODULE_7__["default"], {
+      }), sub === 'layers' && gate(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_LayersTab__WEBPACK_IMPORTED_MODULE_7__["default"], {
         config: config,
         patch: patch
       }), {
         title: 'Interactive layers',
         features: ['Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Conditional display rules']
-      }), sub === 'timed' && gate(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_TimedContentTab__WEBPACK_IMPORTED_MODULE_8__["default"], {
+      }), sub === 'timed' && gate(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_TimedContentTab__WEBPACK_IMPORTED_MODULE_8__["default"], {
         config: config,
         patch: patch
       }), {
         title: 'Timed content',
         features: ['A content region below the player that changes with the video', 'Time-synced forms, buttons & text']
-      }), sub === 'subscribe' && gate(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_SubscribeTab__WEBPACK_IMPORTED_MODULE_11__["default"], {
+      }), sub === 'subscribe' && gate(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_SubscribeTab__WEBPACK_IMPORTED_MODULE_11__["default"], {
         config: config,
         patch: patch
       }), {
@@ -5148,18 +5137,18 @@ function AccessTab({
   patch
 }) {
   const [sub, setSub] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('gating');
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
     className: "flex flex-col md:flex-row gap-6 items-start",
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.SubSidebar, {
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.SubSidebar, {
       value: sub,
       onChange: setSub,
       items: [['gating', 'Verification & quiz'], ['protection', 'Protection']]
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
       className: "flex-1 min-w-0",
-      children: [sub === 'gating' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_GatingTab__WEBPACK_IMPORTED_MODULE_10__["default"], {
+      children: [sub === 'gating' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_GatingTab__WEBPACK_IMPORTED_MODULE_10__["default"], {
         config: config,
         patch: patch
-      }), sub === 'protection' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_ProtectionTab__WEBPACK_IMPORTED_MODULE_9__["default"], {
+      }), sub === 'protection' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_ProtectionTab__WEBPACK_IMPORTED_MODULE_9__["default"], {
         config: config,
         patch: patch
       })]
@@ -5225,7 +5214,7 @@ function Editor({
   // step is active — every tab patches the same shared config object — and
   // never advances the step for you.
   const save = async () => {
-    if (!hasVideoSource(video.config?.source || {})) {
+    if (!(0,_utils_videoSource__WEBPACK_IMPORTED_MODULE_16__.hasVideoSource)(video.config?.source || {})) {
       setToast({
         message: 'Add a video before saving.',
         tone: 'danger'
@@ -5252,7 +5241,7 @@ function Editor({
     }
   };
   if (!video) {
-    return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("main", {
+    return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("main", {
       className: "flex-1 p-8 text-gray-400",
       children: "Loading\u2026"
     });
@@ -5260,95 +5249,95 @@ function Editor({
   const config = video.config || {};
   const pro = (0,_pro__WEBPACK_IMPORTED_MODULE_15__.isPro)();
   const isProTab = !!TABS.find(t => t.key === tab)?.pro;
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.Fragment, {
-    children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.Fragment, {
+    children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
       className: "w-full mx-auto px-8 py-8",
-      children: [toolbarSlot && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createPortal)(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.Fragment, {
-        children: [dirty && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Badge, {
+      children: [toolbarSlot && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createPortal)(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.Fragment, {
+        children: [dirty && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Badge, {
           tone: "amber",
           children: "Unsaved"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
           variant: "ghost",
           onClick: () => setEmbedOpen(true),
           children: "Embed"
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
           onClick: save,
           disabled: saving || !dirty,
           children: saving ? 'Saving…' : 'Update'
         })]
-      }), toolbarSlot), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Toast, {
+      }), toolbarSlot), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Toast, {
         message: toast?.message,
         tone: toast?.tone,
         onDismiss: () => setToast(null)
-      }), embedOpen && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Modal, {
+      }), embedOpen && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Modal, {
         title: "Embed this media",
         onClose: () => setEmbedOpen(false),
         className: "max-w-lg",
-        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_EmbedTab__WEBPACK_IMPORTED_MODULE_12__["default"], {
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_EmbedTab__WEBPACK_IMPORTED_MODULE_12__["default"], {
           video: video,
           config: config,
           patch: patchConfig
         })
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
         className: "flex flex-col md:flex-row gap-6 items-start",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("aside", {
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("aside", {
           className: "w-full md:w-60 shrink-0 bg-white border-r border-line md:sticky md:top-[104px]",
-          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("nav", {
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("nav", {
             className: "p-3 space-y-1",
-            children: TABS.map(t => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("button", {
+            children: TABS.map(t => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("button", {
               onClick: () => setTab(t.key),
               className: `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'}`,
-              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("span", {
+              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
                 className: "text-base leading-none",
                 children: t.icon
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("span", {
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
                 className: "flex-1",
                 children: t.label
-              }), t.pro && !pro && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("span", {
+              }), t.pro && !pro && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("span", {
                 className: "text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1",
                 children: "PRO"
               })]
             }, t.key))
           })
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
           className: "flex-1 min-w-0 w-full",
-          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("div", {
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("div", {
             className: "mb-6",
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("h1", {
+            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("h1", {
               className: "text-2xl font-bold text-gray-900",
               children: TABS.find(t => t.key === tab)?.label
             })
-          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)("div", {
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)("div", {
             className: "flex flex-col min-[1440px]:flex-row gap-6 items-start mt-6",
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("div", {
+            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("div", {
               className: `w-full min-w-0 ${['player', 'interactions', 'access'].includes(tab) ? 'min-[1440px]:max-w-3xl min-[1440px]:shrink-0' : 'max-w-2xl'}`,
-              children: isProTab && !pro ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_14__["default"], {
+              children: isProTab && !pro ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_14__["default"], {
                 title: PRO_TAB_INFO[tab].title,
                 features: PRO_TAB_INFO[tab].features
-              }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.Fragment, {
-                children: [tab === 'source' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_SourceTab__WEBPACK_IMPORTED_MODULE_3__["default"], {
+              }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.Fragment, {
+                children: [tab === 'source' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_SourceTab__WEBPACK_IMPORTED_MODULE_3__["default"], {
                   config: config,
                   patch: patchConfig
-                }), tab === 'player' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_PlayerOptionsTab__WEBPACK_IMPORTED_MODULE_4__["default"], {
+                }), tab === 'player' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_PlayerOptionsTab__WEBPACK_IMPORTED_MODULE_4__["default"], {
                   config: config,
                   patch: patchConfig,
                   presets: presets
-                }), tab === 'appearance' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_AppearanceTab__WEBPACK_IMPORTED_MODULE_5__["default"], {
+                }), tab === 'appearance' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_AppearanceTab__WEBPACK_IMPORTED_MODULE_5__["default"], {
                   config: config,
                   patch: patchConfig,
                   duration: duration
-                }), tab === 'interactions' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(InteractionsTab, {
+                }), tab === 'interactions' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(InteractionsTab, {
                   config: config,
                   patch: patchConfig,
                   pro: pro
-                }), tab === 'access' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(AccessTab, {
+                }), tab === 'access' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(AccessTab, {
                   config: config,
                   patch: patchConfig
                 })]
               })
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)("div", {
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)("div", {
               className: "w-full min-[1440px]:flex-1 min-[1440px]:min-w-[420px] min-[1440px]:sticky min-[1440px]:top-[104px]",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_editor_PreviewPanel__WEBPACK_IMPORTED_MODULE_13__["default"], {
+              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_17__.jsx)(_editor_PreviewPanel__WEBPACK_IMPORTED_MODULE_13__["default"], {
                 id: id,
                 config: config,
                 onDuration: setDuration
@@ -10306,8 +10295,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/element */ "@wordpress/element");
 /* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _Player_Player__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @Player/Player */ "./dev_trueplayer/player/Player.jsx");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _utils_videoSource__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils/videoSource */ "./dev_trueplayer/admin/utils/videoSource.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__);
+
 
 
 // NOTE: the player CSS (style-frontend.css) is enqueued on admin pages by PHP.
@@ -10331,33 +10322,33 @@ function PreviewPanel({
   onDuration
 }) {
   const [bump, setBump] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(0);
-  const src = config.source && config.source.src;
-  const key = `${config.source?.type || ''}:${config.source?.src || ''}:${bump}`;
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
+  const hasSource = (0,_utils_videoSource__WEBPACK_IMPORTED_MODULE_2__.hasVideoSource)(config.source || {});
+  const key = `${(0,_utils_videoSource__WEBPACK_IMPORTED_MODULE_2__.sourceKey)(config.source || {})}:${bump}`;
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
       className: "flex items-center justify-between mb-2",
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("span", {
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
         className: "text-xs font-semibold uppercase tracking-wide text-gray-400",
         children: "Live preview"
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("button", {
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("button", {
         className: "text-xs text-gray-500 hover:text-gray-800",
         onClick: () => setBump(b => b + 1),
         children: "\u21BB Reload"
       })]
-    }), !src ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
+    }), !hasSource ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
       className: "rounded-lg border border-dashed border-line p-8 text-center text-sm text-gray-400 bg-white",
-      children: ["Add a video under ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("strong", {
+      children: ["Add a video under ", /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("strong", {
         children: "Source"
       }), " to preview it."]
-    }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
+    }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
       className: "trueplayer-mount",
-      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_Player_Player__WEBPACK_IMPORTED_MODULE_1__["default"], {
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_Player_Player__WEBPACK_IMPORTED_MODULE_1__["default"], {
         videoId: id,
         config: config,
         preview: true,
         onDuration: onDuration
       }, key)
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("p", {
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
       className: "text-xs text-gray-400 mt-2 leading-relaxed",
       children: "Exactly how it appears on the frontend. Watch-tracking & locking are off here; quizzes and the subscribe gate are simulated."
     })]
@@ -11194,6 +11185,52 @@ function pickMedia(type, cb) {
     cb(a.url);
   });
   frame.open();
+}
+
+/***/ },
+
+/***/ "./dev_trueplayer/admin/utils/videoSource.js"
+/*!***************************************************!*\
+  !*** ./dev_trueplayer/admin/utils/videoSource.js ***!
+  \***************************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   hasVideoSource: () => (/* binding */ hasVideoSource),
+/* harmony export */   sourceKey: () => (/* binding */ sourceKey)
+/* harmony export */ });
+/**
+ * A video isn't playable without a source — what "set" means differs per type
+ * (bunny needs pullZone+videoId, mux needs a playbackId or a full src url).
+ */
+function hasVideoSource(source = {}) {
+  switch (source.type) {
+    case 'bunny':
+      return !!(source.pullZone && source.videoId);
+    case 'mux':
+      return !!(source.playbackId || source.src);
+    default:
+      return !!source.src;
+  }
+}
+
+/**
+ * Stable identity string for whichever fields actually determine what plays —
+ * `src` alone misses bunny (pullZone+videoId) and can miss mux (playbackId).
+ * Used to force a remount (via React `key`) when the source materially
+ * changes, since the player's own provider-creation effect only re-runs on
+ * `videoId`, not on source edits (see player/Player.jsx).
+ */
+function sourceKey(source = {}) {
+  switch (source.type) {
+    case 'bunny':
+      return `bunny:${source.pullZone || ''}:${source.videoId || ''}`;
+    case 'mux':
+      return `mux:${source.playbackId || ''}:${source.src || ''}`;
+    default:
+      return `${source.type || ''}:${source.src || ''}`;
+  }
 }
 
 /***/ },

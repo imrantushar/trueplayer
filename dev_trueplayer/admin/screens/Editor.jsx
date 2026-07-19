@@ -14,6 +14,7 @@ import EmbedTab from './editor/EmbedTab';
 import PreviewPanel from './editor/PreviewPanel';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
+import { hasVideoSource } from '../utils/videoSource';
 
 const TABS = [
 	{ key: 'source', label: 'Source', icon: '🎬' },
@@ -26,19 +27,6 @@ const TABS = [
 const PRO_TAB_INFO = {
 	access: { title: 'Access & gating', features: [ 'Watch-verification (prove they watched, anti-skip)', 'Checkpoint & final quizzes, lock on failure', 'Private video with signed, expiring links' ] },
 };
-
-// A video isn't playable without a source — what "set" means differs per type
-// (Source tab only asks for pullZone+videoId for bunny, playbackId for mux).
-function hasVideoSource( source = {} ) {
-	switch ( source.type ) {
-		case 'bunny':
-			return !! ( source.pullZone && source.videoId );
-		case 'mux':
-			return !! ( source.playbackId || source.src );
-		default:
-			return !! source.src;
-	}
-}
 
 // Interactions = everything shown on/around the video. Overlays are free;
 // layers / timed content / email capture are pro (gated inline).
