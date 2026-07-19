@@ -16,7 +16,7 @@ export default function EmbedTab( { video, config = {}, patch } ) {
 	};
 
 	return (
-		<Card className="max-w-2xl space-y-6">
+		<Card className="max-w-2xl space-y-6 !border-none">
 			<div>
 				<h3 className="font-semibold text-gray-900 !mb-2">Shortcode</h3>
 				<div className="flex gap-2 items-center">

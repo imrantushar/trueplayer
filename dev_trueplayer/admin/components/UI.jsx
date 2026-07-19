@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, Children } from '@wordpress/element';
 import ReactSelect from 'react-select';
 import { Icon } from './icons';
+import { BsThreeDots } from "react-icons/bs";
 
 export function Button( { children, variant = 'primary', size = 'md', className = '', ...rest } ) {
 	// GemCRM button presets: primary (solid blue), secondary/ghost (outline),
@@ -154,9 +155,9 @@ export function OptionMenu( { items } ) {
 				type="button"
 				onClick={ () => setOpen( ( o ) => ! o ) }
 				aria-label="More actions"
-				className="w-8 h-8 inline-flex items-center justify-center rounded text-muted hover:text-ink hover:bg-gray-100 transition-colors"
+				className="w-8 h-8 inline-flex items-center justify-center rounded text-muted hover:text-ink hover:bg-gray-100 transition-colors border border-line"
 			>
-				<Icon name="moreVertical" className="w-[18px] h-[18px]" />
+				<BsThreeDots />
 			</button>
 			{ open && (
 				<div className="absolute right-0 top-full mt-1 w-44 py-1 rounded border border-line bg-white shadow-pop z-20">

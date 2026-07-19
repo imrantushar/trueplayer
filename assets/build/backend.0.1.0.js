@@ -2985,9 +2985,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var react_select__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-select */ "./node_modules/react-select/dist/react-select.esm.js");
 /* harmony import */ var _icons__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./icons */ "./dev_trueplayer/admin/components/icons.jsx");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__);
+Object(function webpackMissingModule() { const e = new Error("Cannot find module 'react-icons/bs'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__);
 /** Shared Tailwind UI primitives — GemCRM design language (see gemcrm/ui_rule.md). */
+
 
 
 
@@ -3016,7 +3018,7 @@ function Button({
     md: 'px-4 py-2 text-sm',
     lg: 'px-5 py-2.5 text-sm'
   };
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("button", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("button", {
     className: `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded font-medium leading-5 transition-[opacity,background-color,color] disabled:opacity-50 disabled:pointer-events-none ${styles[variant] || styles.primary} ${sizes[size] || sizes.md} ${className}`,
     ...rest,
     children: children
@@ -3028,12 +3030,12 @@ function Field({
   children,
   className = ''
 }) {
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("label", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("label", {
     className: `block mb-5 ${className}`,
-    children: [label && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
+    children: [label && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("span", {
       className: "block text-[13px] font-medium text-ink mb-1.5",
       children: label
-    }), children, hint && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
+    }), children, hint && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("span", {
       className: "block text-xs text-gray-400 mt-1.5",
       children: hint
     })]
@@ -3044,7 +3046,7 @@ function Input({
   className = '',
   ...props
 }) {
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("input", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("input", {
     ...props,
     className: `${controlBase} ${className}`
   });
@@ -3053,7 +3055,7 @@ function Textarea({
   className = '',
   ...props
 }) {
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("textarea", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("textarea", {
     ...props,
     className: `w-full rounded border border-line px-3 py-2 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none ${className}`
   });
@@ -3155,7 +3157,7 @@ function Select({
     }
   });
   const selected = options.find(o => String(o.value) === String(value ?? '')) || null;
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(react_select__WEBPACK_IMPORTED_MODULE_1__["default"], {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(react_select__WEBPACK_IMPORTED_MODULE_1__["default"], {
     className: className,
     classNamePrefix: "tp-rs",
     options: options,
@@ -3177,7 +3179,7 @@ function Card({
   children,
   className = ''
 }) {
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("div", {
     className: `bg-white rounded-card border border-line shadow-card ${className}`,
     children: children
   });
@@ -3206,28 +3208,25 @@ function OptionMenu({
       document.removeEventListener('keydown', onKey);
     };
   }, [open]);
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("div", {
     className: "relative shrink-0",
     ref: ref,
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("button", {
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("button", {
       type: "button",
       onClick: () => setOpen(o => !o),
       "aria-label": "More actions",
-      className: "w-8 h-8 inline-flex items-center justify-center rounded text-muted hover:text-ink hover:bg-gray-100 transition-colors",
-      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_icons__WEBPACK_IMPORTED_MODULE_2__.Icon, {
-        name: "moreVertical",
-        className: "w-[18px] h-[18px]"
-      })
-    }), open && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+      className: "w-8 h-8 inline-flex items-center justify-center rounded text-muted hover:text-ink hover:bg-gray-100 transition-colors border border-line",
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(Object(function webpackMissingModule() { const e = new Error("Cannot find module 'react-icons/bs'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), {})
+    }), open && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("div", {
       className: "absolute right-0 top-full mt-1 w-44 py-1 rounded border border-line bg-white shadow-pop z-20",
-      children: items.map((it, i) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("button", {
+      children: items.map((it, i) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("button", {
         type: "button",
         onClick: () => {
           setOpen(false);
           it.onClick();
         },
         className: `flex items-center gap-2.5 w-full px-3 py-2 text-sm text-left hover:bg-gray-50 ${it.danger ? 'text-danger' : 'text-ink'}`,
-        children: [it.icon && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_icons__WEBPACK_IMPORTED_MODULE_2__.Icon, {
+        children: [it.icon && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(_icons__WEBPACK_IMPORTED_MODULE_2__.Icon, {
           name: it.icon,
           className: "w-4 h-4 shrink-0"
         }), it.label]
@@ -3250,15 +3249,15 @@ function SubSidebar({
   // a nested sticky child has no room to stick, since its containing block is
   // the short wrapper, not the tall row. Header (top-8) + its h-14 bar are
   // ~88px; top-[104px] clears both with a small gap.
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("nav", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("nav", {
     className: `w-44 shrink-0 space-y-1 sticky top-[104px] bg-white border border-line rounded-card p-2 ${className}`,
-    children: items.map(([key, label, pro]) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("button", {
+    children: items.map(([key, label, pro]) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("button", {
       onClick: () => onChange(key),
       className: `flex items-center justify-between w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${value === key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'}`,
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("span", {
         className: "truncate",
         children: label
-      }), pro && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
+      }), pro && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("span", {
         className: "text-[10px] font-semibold text-brand-500",
         children: "PRO"
       })]
@@ -3274,27 +3273,27 @@ function Modal({
   footer,
   className = ''
 }) {
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("div", {
     className: "fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6",
     onClick: onClose,
-    children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+    children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("div", {
       className: `bg-white rounded-card shadow-pop w-full max-w-md ${className}`,
       onClick: e => e.stopPropagation(),
-      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("div", {
         className: "flex items-center justify-between px-6 py-4 border-b border-line",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("h3", {
           className: "text-base font-semibold text-ink",
           children: title
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("button", {
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("button", {
           onClick: onClose,
           className: "text-muted hover:text-ink text-lg leading-none",
           "aria-label": "Close",
           children: "\xD7"
         })]
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("div", {
         className: "p-6",
         children: children
-      }), footer && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+      }), footer && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("div", {
         className: "px-6 py-4 border-t border-line flex justify-end gap-2",
         children: footer
       })]
@@ -3308,12 +3307,12 @@ function SectionTitle({
   description,
   children
 }) {
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("div", {
     className: "mb-6 pb-4 border-b border-line",
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("h3", {
       className: "text-base font-semibold leading-6 text-ink",
       children: title || children
-    }), description && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
+    }), description && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("p", {
       className: "text-[13px] text-muted mt-1",
       children: description
     })]
@@ -3326,14 +3325,14 @@ function ColorInput({
   onChange,
   placeholder = ''
 }) {
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("div", {
     className: "flex gap-2 items-center",
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("input", {
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("input", {
       type: "color",
       value: value || '#000000',
       onChange: e => onChange(e.target.value),
       className: "h-10 w-11 shrink-0 rounded border border-line p-1 bg-white cursor-pointer"
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(Input, {
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(Input, {
       value: value || '',
       onChange: e => onChange(e.target.value),
       placeholder: placeholder
@@ -3347,15 +3346,15 @@ function Toggle({
   disabled = false,
   className
 }) {
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("label", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("label", {
     className: `flex items-start gap-3 select-none ${checked ? '' : ''} ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${className}`,
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("span", {
       onClick: () => !disabled && onChange(!checked),
       className: `relative inline-block shrink-0 mt-px w-[38px] h-[22px] rounded-full transition-colors ${checked ? 'bg-brand-500' : 'bg-gray-300'}`,
-      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("span", {
         className: `absolute top-[3px] left-[3px] w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${checked ? 'translate-x-4' : ''}`
       })
-    }), label && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
+    }), label && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("span", {
       className: "text-[13px] text-ink leading-5",
       children: label
     })]
@@ -3381,22 +3380,22 @@ function Pagination({
     }
   }
   const btn = 'min-w-[34px] h-[34px] px-2 rounded text-sm font-medium border border-line disabled:opacity-40 disabled:pointer-events-none';
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("div", {
     className: "flex items-center justify-center gap-1 mt-6",
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("button", {
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("button", {
       className: btn,
       disabled: page <= 1,
       onClick: () => onPage(page - 1),
       "aria-label": "Previous page",
       children: "\u2039"
-    }), nums.map((n, i) => n === '…' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
+    }), nums.map((n, i) => n === '…' ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("span", {
       className: "px-1 text-muted",
       children: "\u2026"
-    }, `e${i}`) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("button", {
+    }, `e${i}`) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("button", {
       onClick: () => onPage(n),
       className: `${btn} ${n === page ? 'bg-brand-500 text-white border-brand-500' : 'bg-white text-ink hover:bg-gray-50'}`,
       children: n
-    }, n)), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("button", {
+    }, n)), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("button", {
       className: btn,
       disabled: page >= pages,
       onClick: () => onPage(page + 1),
@@ -3417,7 +3416,7 @@ function Badge({
     amber: 'bg-warning-light text-warning',
     red: 'bg-danger-light text-danger'
   };
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("span", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("span", {
     className: `inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${tones[tone] || tones.gray}`,
     children: children
   });
@@ -3471,23 +3470,23 @@ function Thumb({
   const [broken, setBroken] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const isAudio = type === 'audio';
   const showPoster = poster && !broken;
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("div", {
     className: `relative shrink-0 w-24 aspect-video rounded-lg overflow-hidden border border-line bg-gray-100 ${className}`,
-    children: showPoster ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("img", {
+    children: showPoster ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("img", {
       src: poster,
       alt: "",
       loading: "lazy",
       onError: () => setBroken(true),
       className: "w-full h-full object-cover"
-    }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+    }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("div", {
       className: "w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 text-gray-400",
-      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("svg", {
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("svg", {
         viewBox: "0 0 24 24",
         width: "22",
         height: "22",
         fill: "currentColor",
         "aria-hidden": "true",
-        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("path", {
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("path", {
           d: isAudio ? 'M12 3v10.55A4 4 0 1014 17V7h4V3h-6z' : 'M8 5v14l11-7z'
         })
       })
@@ -5363,6 +5362,25 @@ const VIDEO_TYPES = [{
   pro: true
 }];
 const PER_PAGE = 10;
+
+// navigator.clipboard.writeText needs a secure context; fall back to the
+// classic textarea + execCommand trick (e.g. plain-http local dev sites).
+function legacyCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch (e) {
+    ok = false;
+  }
+  document.body.removeChild(ta);
+  return ok;
+}
 function Library({
   onEdit,
   onViewers,
@@ -5428,10 +5446,21 @@ function Library({
   };
   const [copied, setCopied] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const copy = (id, sc) => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(sc);
+    if (!sc) {
+      return;
+    }
+    const markCopied = () => {
       setCopied(id);
       setTimeout(() => setCopied(c => c === id ? null : c), 1500);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(sc).then(markCopied).catch(() => {
+        if (legacyCopy(sc)) {
+          markCopied();
+        }
+      });
+    } else if (legacyCopy(sc)) {
+      markCopied();
     }
   };
 
@@ -5633,15 +5662,21 @@ function VideoList({
               children: copied === v.id ? 'Copied ✓' : v.shortcode
             })]
           })]
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)("button", {
+          type: "button",
+          onClick: () => onEdit(v.id),
+          "aria-label": "Edit",
+          title: "Edit",
+          className: "w-8 h-8 inline-flex items-center justify-center rounded text-muted hover:text-ink hover:bg-gray-100 transition-colors shrink-0 border border-line rounded",
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(_components_icons__WEBPACK_IMPORTED_MODULE_3__.Icon, {
+            name: "edit",
+            className: "w-[18px] h-[18px]"
+          })
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.OptionMenu, {
           items: [{
             label: 'Analytics',
             icon: 'analytics',
             onClick: () => onViewers(v.id)
-          }, {
-            label: 'Edit',
-            icon: 'edit',
-            onClick: () => onEdit(v.id)
           }, {
             label: 'Delete',
             icon: 'trash',
@@ -8022,7 +8057,7 @@ function EmbedTab({
     setTimeout(() => setCopied(''), 1500);
   };
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_1__.Card, {
-    className: "max-w-2xl space-y-6",
+    className: "max-w-2xl space-y-6 !border-none",
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
         className: "font-semibold text-gray-900 !mb-2",

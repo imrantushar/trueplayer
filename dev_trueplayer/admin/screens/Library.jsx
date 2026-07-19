@@ -17,6 +17,25 @@ const VIDEO_TYPES = [
 
 const PER_PAGE = 10;
 
+// navigator.clipboard.writeText needs a secure context; fall back to the
+// classic textarea + execCommand trick (e.g. plain-http local dev sites).
+function legacyCopy( text ) {
+	const ta = document.createElement( 'textarea' );
+	ta.value = text;
+	ta.style.position = 'fixed';
+	ta.style.opacity = '0';
+	document.body.appendChild( ta );
+	ta.select();
+	let ok = false;
+	try {
+		ok = document.execCommand( 'copy' );
+	} catch ( e ) {
+		ok = false;
+	}
+	document.body.removeChild( ta );
+	return ok;
+}
+
 export default function Library( { onEdit, onViewers, initialTab = 'videos', onEditState } ) {
 	const [ tab, setTab ] = useState( initialTab === 'playlists' ? 'playlists' : 'videos' );
 	const [ videos, setVideos ] = useState( null );
@@ -71,10 +90,21 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos', onE
 
 	const [ copied, setCopied ] = useState( null );
 	const copy = ( id, sc ) => {
-		if ( navigator.clipboard ) {
-			navigator.clipboard.writeText( sc );
+		if ( ! sc ) {
+			return;
+		}
+		const markCopied = () => {
 			setCopied( id );
 			setTimeout( () => setCopied( ( c ) => ( c === id ? null : c ) ), 1500 );
+		};
+		if ( navigator.clipboard && window.isSecureContext ) {
+			navigator.clipboard.writeText( sc ).then( markCopied ).catch( () => {
+				if ( legacyCopy( sc ) ) {
+					markCopied();
+				}
+			} );
+		} else if ( legacyCopy( sc ) ) {
+			markCopied();
 		}
 	};
 
@@ -232,9 +262,17 @@ function VideoList( { videos, copied, copy, onEdit, onViewers, onRemove, onAdd }
 								</code>
 							</div>
 						</div>
+						<button
+							type="button"
+							onClick={ () => onEdit( v.id ) }
+							aria-label="Edit"
+							title="Edit"
+							className="w-8 h-8 inline-flex items-center justify-center rounded text-muted hover:text-ink hover:bg-gray-100 transition-colors shrink-0 border border-line rounded"
+						>
+							<Icon name="edit" className="w-[18px] h-[18px]" />
+						</button>
 						<OptionMenu items={ [
 							{ label: 'Analytics', icon: 'analytics', onClick: () => onViewers( v.id ) },
-							{ label: 'Edit', icon: 'edit', onClick: () => onEdit( v.id ) },
 							{ label: 'Delete', icon: 'trash', danger: true, onClick: () => onRemove( v.id ) },
 						] } />
 					</Card>

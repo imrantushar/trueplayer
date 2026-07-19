@@ -697,6 +697,9 @@
 .border-2 {
 		border-width: 2px;
 }
+.\!border {
+		border-width: 1px !important;
+}
 .border-b {
 		border-bottom-width: 1px;
 }
@@ -723,6 +726,9 @@
 }
 .border-dashed {
 		border-style: dashed;
+}
+.\!border-none {
+		border-style: none !important;
 }
 .border-brand-100 {
 		--tw-border-opacity: 1;
