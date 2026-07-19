@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, Children } from '@wordpress/element';
 import ReactSelect from 'react-select';
 import { Icon } from './icons';
 import { BsThreeDots } from "react-icons/bs";
+import { IoClose } from "react-icons/io5";
 
 export function Button( { children, variant = 'primary', size = 'md', className = '', ...rest } ) {
 	// GemCRM button presets: primary (solid blue), secondary/ghost (outline),
@@ -32,10 +33,14 @@ export function Button( { children, variant = 'primary', size = 'md', className 
 	);
 }
 
-export function Field( { label, hint, children, className = '' } ) {
+export function Field( { label, hint, required = false, children, className = '' } ) {
 	return (
 		<label className={ `block mb-5 ${ className }` }>
-			{ label && <span className="block text-[13px] font-medium text-ink mb-1.5">{ label }</span> }
+			{ label && (
+				<span className="block text-[13px] font-medium text-ink mb-1.5">
+					{ label }{ required && <span className="text-danger"> *</span> }
+				</span>
+			) }
 			{ children }
 			{ hint && <span className="block text-xs text-gray-400 mt-1.5">{ hint }</span> }
 		</label>
@@ -188,7 +193,7 @@ export function SubSidebar( { items, value, onChange, className = '' } ) {
 	// the short wrapper, not the tall row. Header (top-8) + its h-14 bar are
 	// ~88px; top-[104px] clears both with a small gap.
 	return (
-		<nav className={ `w-44 shrink-0 space-y-1 sticky top-[104px] bg-white border border-line rounded-card p-2 ${ className }` }>
+		<nav className={ `w-full md:w-44 md:shrink-0 space-y-1 md:sticky md:top-[104px] bg-white border border-line rounded-card p-2 ${ className }` }>
 			{ items.map( ( [ key, label, pro ] ) => (
 				<button
 					key={ key }
@@ -216,6 +221,28 @@ export function Modal( { title, onClose, children, footer, className = '' } ) {
 				</div>
 				<div className="p-6">{ children }</div>
 				{ footer && <div className="px-6 py-4 border-t border-line flex justify-end gap-2">{ footer }</div> }
+			</div>
+		</div>
+	);
+}
+
+/** Transient floating notice, bottom-right. Caller owns the auto-dismiss timer. */
+export function Toast( { message, tone = 'danger', onDismiss } ) {
+	if ( ! message ) {
+		return null;
+	}
+	const tones = {
+		danger: 'bg-danger-light text-danger',
+		success: 'bg-success-light text-success',
+		gray: 'bg-ink text-white',
+	};
+	return (
+		<div className="fixed bottom-6 right-6 z-[60]">
+			<div className={ `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium shadow-pop ${ tones[ tone ] || tones.danger }` }>
+				{ message }
+				{ onDismiss && (
+					<button type="button" onClick={ onDismiss } className="text-current opacity-60 hover:opacity-100 leading-none" aria-label="Dismiss"><IoClose /></button>
+				) }
 			</div>
 		</div>
 	);

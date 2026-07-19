@@ -178,6 +178,9 @@
 .bottom-2 {
 		bottom: 0.5rem;
 }
+.bottom-6 {
+		bottom: 1.5rem;
+}
 .bottom-full {
 		bottom: 100%;
 }
@@ -198,6 +201,9 @@
 }
 .right-2 {
 		left: 0.5rem;
+}
+.right-6 {
+		left: 1.5rem;
 }
 .top-0 {
 		top: 0px;
@@ -228,6 +234,9 @@
 }
 .z-50 {
 		z-index: 50;
+}
+.z-\[60\] {
+		z-index: 60;
 }
 .col-span-2 {
 		grid-column: span 2 / span 2;
@@ -807,6 +816,10 @@
 		--tw-bg-opacity: 1;
 		background-color: rgb(220 252 231 / var(--tw-bg-opacity, 1));
 }
+.bg-ink {
+		--tw-bg-opacity: 1;
+		background-color: rgb(31 41 55 / var(--tw-bg-opacity, 1));
+}
 .bg-success-light {
 		background-color: rgba(0,173,107,0.10);
 }
@@ -1120,6 +1133,9 @@
 		--tw-text-opacity: 1;
 		color: rgb(0 74 184 / var(--tw-text-opacity, 1));
 }
+.text-current {
+		color: currentColor;
+}
 .text-danger {
 		--tw-text-opacity: 1;
 		color: rgb(241 91 80 / var(--tw-text-opacity, 1));
@@ -1188,6 +1204,9 @@
 }
 .opacity-50 {
 		opacity: 0.5;
+}
+.opacity-60 {
+		opacity: 0.6;
 }
 .shadow-card {
 		--tw-shadow: 0 0 #0000;
@@ -1370,6 +1389,9 @@ body[class*="page_trueplayer"] #wpbody-content {
 		--tw-text-opacity: 1;
 		color: rgb(31 41 55 / var(--tw-text-opacity, 1));
 }
+.hover\:opacity-100:hover {
+		opacity: 1;
+}
 .hover\:opacity-90:hover {
 		opacity: 0.9;
 }
@@ -1410,8 +1432,14 @@ body[class*="page_trueplayer"] #wpbody-content {
 		.md\:top-\[104px\] {
 				top: 104px;
 		}
+		.md\:w-44 {
+				width: 11rem;
+		}
 		.md\:w-60 {
 				width: 15rem;
+		}
+		.md\:shrink-0 {
+				flex-shrink: 0;
 		}
 		.md\:grid-cols-2 {
 				grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1448,6 +1476,35 @@ body[class*="page_trueplayer"] #wpbody-content {
 				width: 400px;
 		}
 		.xl\:flex-row {
+				flex-direction: row;
+		}
+}
+@media (min-width: 1440px) {
+		.min-\[1440px\]\:sticky {
+				position: sticky;
+		}
+		.min-\[1440px\]\:top-\[104px\] {
+				top: 104px;
+		}
+		.min-\[1440px\]\:w-auto {
+				width: auto;
+		}
+		.min-\[1440px\]\:w-\[420px\] {
+				width: 420px;
+		}
+		.min-\[1440px\]\:min-w-\[420px\] {
+				min-width: 420px;
+		}
+		.min-\[1440px\]\:max-w-3xl {
+				max-width: 48rem;
+		}
+		.min-\[1440px\]\:flex-1 {
+				flex: 1 1 0%;
+		}
+		.min-\[1440px\]\:shrink-0 {
+				flex-shrink: 0;
+		}
+		.min-\[1440px\]\:flex-row {
 				flex-direction: row;
 		}
 }

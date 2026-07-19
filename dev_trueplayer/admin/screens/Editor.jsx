@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Modal, SubSidebar } from '../components/UI';
+import { Button, Modal, SubSidebar, Toast, Badge } from '../components/UI';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
@@ -27,13 +27,26 @@ const PRO_TAB_INFO = {
 	access: { title: 'Access & gating', features: [ 'Watch-verification (prove they watched, anti-skip)', 'Checkpoint & final quizzes, lock on failure', 'Private video with signed, expiring links' ] },
 };
 
+// A video isn't playable without a source — what "set" means differs per type
+// (Source tab only asks for pullZone+videoId for bunny, playbackId for mux).
+function hasVideoSource( source = {} ) {
+	switch ( source.type ) {
+		case 'bunny':
+			return !! ( source.pullZone && source.videoId );
+		case 'mux':
+			return !! ( source.playbackId || source.src );
+		default:
+			return !! source.src;
+	}
+}
+
 // Interactions = everything shown on/around the video. Overlays are free;
 // layers / timed content / email capture are pro (gated inline).
 function InteractionsTab( { config, patch, pro } ) {
 	const [ sub, setSub ] = useState( 'overlays' );
 	const gate = ( node, info ) => ( pro ? node : <UpsellPanel title={ info.title } features={ info.features } /> );
 	return (
-		<div className="flex gap-6 items-start">
+		<div className="flex flex-col md:flex-row gap-6 items-start">
 			<SubSidebar
 				value={ sub }
 				onChange={ setSub }
@@ -54,7 +67,7 @@ function InteractionsTab( { config, patch, pro } ) {
 function AccessTab( { config, patch } ) {
 	const [ sub, setSub ] = useState( 'gating' );
 	return (
-		<div className="flex gap-6 items-start">
+		<div className="flex flex-col md:flex-row gap-6 items-start">
 			<SubSidebar value={ sub } onChange={ setSub } items={ [ [ 'gating', 'Verification & quiz' ], [ 'protection', 'Protection' ] ] } />
 			<div className="flex-1 min-w-0">
 				{ sub === 'gating' && <GatingTab config={ config } patch={ patch } /> }
@@ -69,11 +82,11 @@ export default function Editor( { id, onEditState } ) {
 	const [ tab, setTab ] = useState( 'source' );
 	const [ dirty, setDirty ] = useState( false );
 	const [ saving, setSaving ] = useState( false );
-	const [ saved, setSaved ] = useState( false );
 	const [ presets, setPresets ] = useState( [] );
 	const [ toolbarSlot, setToolbarSlot ] = useState( null );
 	const [ embedOpen, setEmbedOpen ] = useState( false );
 	const [ duration, setDuration ] = useState( 0 );
+	const [ toast, setToast ] = useState( null );
 
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
@@ -81,10 +94,17 @@ export default function Editor( { id, onEditState } ) {
 		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
 	}, [ id ] );
 
+	useEffect( () => {
+		if ( ! toast ) {
+			return undefined;
+		}
+		const t = setTimeout( () => setToast( null ), 3000 );
+		return () => clearTimeout( t );
+	}, [ toast ] );
+
 	const patchConfig = useCallback( ( partial ) => {
 		setVideo( ( v ) => ( { ...v, config: { ...( v.config || {} ), ...partial } } ) );
 		setDirty( true );
-		setSaved( false );
 	}, [] );
 
 	const setTitle = ( title ) => {
@@ -106,14 +126,17 @@ export default function Editor( { id, onEditState } ) {
 	// Save (only hits the API when there are changes), then optionally advance to
 	// the next step — a light wizard flow through the editor.
 	const save = async ( continueNext = false ) => {
+		if ( ! hasVideoSource( video.config?.source || {} ) ) {
+			setToast( { message: 'Add a video before saving.', tone: 'danger' } );
+			return;
+		}
 		if ( dirty ) {
 			setSaving( true );
 			try {
 				const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
 				setVideo( updated );
 				setDirty( false );
-				setSaved( true );
-				setTimeout( () => setSaved( false ), 2000 );
+				setToast( { message: 'Saved ✓', tone: 'success' } );
 			} finally {
 				setSaving( false );
 			}
@@ -137,8 +160,7 @@ export default function Editor( { id, onEditState } ) {
 				{ /* Toolbar actions live in the topbar (portaled). */ }
 				{ toolbarSlot && createPortal(
 					<>
-						{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-						{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
+						{ dirty && <Badge tone="amber">Unsaved</Badge> }
 						<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>Embed</Button>
 						<Button onClick={ () => save( ! isLastTab ) } disabled={ saving || ( isLastTab && ! dirty ) }>
 							{ saving ? 'Saving…' : ( isLastTab ? 'Save' : 'Save & Continue' ) }
@@ -146,6 +168,8 @@ export default function Editor( { id, onEditState } ) {
 					</>,
 					toolbarSlot
 				) }
+
+				<Toast message={ toast?.message } tone={ toast?.tone } onDismiss={ () => setToast( null ) } />
 
 				{ embedOpen && (
 					<Modal title="Embed this media" onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
@@ -181,8 +205,12 @@ export default function Editor( { id, onEditState } ) {
 							<h1 className="text-2xl font-bold text-gray-900">{ TABS.find( ( t ) => t.key === tab )?.label }</h1>
 						</div>
 
-						<div className="flex flex-col xl:flex-row gap-6 items-start mt-6">
-							<div className='w-full max-w-2xl'>
+						<div className="flex flex-col min-[1440px]:flex-row gap-6 items-start mt-6">
+							{ /* Tabs with their own sub-nav (Player/Interactions/Access) need more
+								room than max-w-2xl (that's eaten into by the sub-nav's own width),
+								but still a bounded width — the preview (flex-1 below) gets whatever's
+								left, which is where the extra space is actually useful. */ }
+							<div className={ `w-full min-w-0 ${ [ 'player', 'interactions', 'access' ].includes( tab ) ? 'min-[1440px]:max-w-3xl min-[1440px]:shrink-0' : 'max-w-2xl' }` }>
 								{ isProTab && ! pro ? (
 									<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
 								) : (
@@ -196,7 +224,10 @@ export default function Editor( { id, onEditState } ) {
 								) }
 							</div>
 
-							<div className="shrink-0 xl:sticky xl:top-[104px]">
+							{ /* Below 1440px the preview drops under the content and takes the
+								full row width; at 1440px+ it takes whatever's left beside the
+								(now bounded) content column, instead of a small fixed width. */ }
+							<div className="w-full min-[1440px]:flex-1 min-[1440px]:min-w-[420px] min-[1440px]:sticky min-[1440px]:top-[104px]">
 								<PreviewPanel id={ id } config={ config } onDuration={ setDuration } />
 							</div>
 						</div>

@@ -74,7 +74,7 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 	const [sub, setSub] = useState('appearance');
 
 	return (
-		<div className="flex gap-6 items-start">
+		<div className="flex flex-col md:flex-row gap-6 items-start">
 			<SubSidebar items={PLAYER_SUBS} value={sub} onChange={setSub} />
 			<div className="flex-1 min-w-0 w-full">
 				<div className="flex gap-6 items-start">
