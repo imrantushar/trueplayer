@@ -6842,17 +6842,20 @@ function Settings({
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
             className: "px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400",
             children: group.label
-          }), group.items.map(t => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
-            onClick: () => setTab(t.key),
-            className: `flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${tab === t.key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'}`,
-            children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_icons__WEBPACK_IMPORTED_MODULE_3__.Icon, {
-              name: t.icon,
-              className: "w-[17px] h-[17px] shrink-0"
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("span", {
-              className: "truncate",
-              children: t.label
-            })]
-          }, t.key))]
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
+            className: "flex flex-col gap-2",
+            children: group.items.map(t => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("button", {
+              onClick: () => setTab(t.key),
+              className: `flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${tab === t.key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'}`,
+              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_icons__WEBPACK_IMPORTED_MODULE_3__.Icon, {
+                name: t.icon,
+                className: "w-[17px] h-[17px] shrink-0"
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("span", {
+                className: "truncate",
+                children: t.label
+              })]
+            }, t.key))
+          })]
         }, group.label))
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("div", {
         className: "flex-1 min-w-0",
@@ -6901,6 +6904,7 @@ function Settings({
               className: "mt-4 pt-5 border-t border-solid border-line",
               children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
                 label: "Aspect ratio",
+                className: "!mb-0",
                 children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Select, {
                   value: settings.customize?.appearance?.aspectRatio || '16:9',
                   onChange: e => setSettings(s => ({
@@ -7086,6 +7090,7 @@ function Settings({
                   })
                 }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
                   label: "Footer note",
+                  className: "!mb-0",
                   children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Input, {
                     value: c.certFooter,
                     onChange: e => setC({
@@ -7125,11 +7130,12 @@ function Settings({
                     retentionEnabled: v
                   }),
                   label: "Auto-purge old records"
-                }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
+                }), c.retentionEnabled ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
                   className: "mt-6",
-                  children: c.retentionEnabled && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
+                  children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
                     label: "Keep records for (days)",
                     hint: "Progress + quiz attempts past this age are deleted daily.",
+                    className: "!mb-0",
                     children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Input, {
                       type: "number",
                       min: "7",
@@ -7139,7 +7145,7 @@ function Settings({
                       })
                     })
                   })
-                })]
+                }) : null]
               });
             })()]
           })]
@@ -7216,6 +7222,7 @@ function Settings({
                 className: "mt-4 pt-5 border-t border-solid border-line",
                 children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
                   label: "Token Authentication Key",
+                  className: "!mb-0",
                   children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Input, {
                     type: "password",
                     value: settings.bunny?.tokenKey || '',
@@ -7243,6 +7250,7 @@ function Settings({
                 children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
                   label: "Expiry (hours)",
                   hint: "Applies to private self-hosted files and Bunny token links.",
+                  className: "!mb-0",
                   children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Input, {
                     type: "number",
                     min: "1",
@@ -7320,11 +7328,12 @@ function Settings({
                   }
                 })),
                 label: "Send player events to Google Analytics"
-              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
+              }), settings.integrations?.ga?.enabled ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)("div", {
                 className: "mt-6",
-                children: settings.integrations?.ga?.enabled && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
+                children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
                   label: "Measurement ID",
                   hint: "Optional \u2014 leave blank to use the site's existing GA tag.",
+                  className: "!mb-0",
                   children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Input, {
                     value: settings.integrations?.ga?.measurementId || '',
                     onChange: e => setSettings(s => ({
@@ -7340,7 +7349,7 @@ function Settings({
                     placeholder: "G-XXXXXXXXXX"
                   })
                 })
-              })]
+              }) : null]
             })]
           })]
         }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UpsellPanel__WEBPACK_IMPORTED_MODULE_5__["default"], {
@@ -7431,6 +7440,7 @@ function Settings({
                 className: "mt-4 pt-5 border-t border-solid border-line",
                 children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
                   label: "Logo image",
+                  className: "!mb-0",
                   children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxs)("div", {
                     className: "flex gap-2",
                     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_9__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Input, {

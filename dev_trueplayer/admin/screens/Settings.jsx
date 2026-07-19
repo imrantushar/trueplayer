@@ -176,17 +176,19 @@ export default function Settings({ onEditState }) {
 					{NAV_GROUPS.map((group, gi) => (
 						<div key={group.label} className={gi > 0 ? 'mt-1' : ''}>
 							<div className="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{group.label}</div>
-							{group.items.map((t) => (
-								<button
-									key={t.key}
-									onClick={() => setTab(t.key)}
-									className={`flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${tab === t.key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'
-										}`}
-								>
-									<Icon name={t.icon} className="w-[17px] h-[17px] shrink-0" />
-									<span className="truncate">{t.label}</span>
-								</button>
-							))}
+							<div className='flex flex-col gap-2'>
+								{group.items.map((t) => (
+									<button
+										key={t.key}
+										onClick={() => setTab(t.key)}
+										className={`flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm font-medium text-left transition-colors ${tab === t.key ? 'bg-brand-100 text-brand-500' : 'text-label hover:bg-gray-100'
+											}`}
+									>
+										<Icon name={t.icon} className="w-[17px] h-[17px] shrink-0" />
+										<span className="truncate">{t.label}</span>
+									</button>
+								))}
+							</div>
 						</div>
 					))}
 				</nav>
@@ -219,7 +221,7 @@ export default function Settings({ onEditState }) {
 								<h3 className="font-semibold text-gray-900 !mb-1">Default aspect ratio</h3>
 								<p className="text-sm text-muted mb-4">The frame shape new videos use unless overridden per video.</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									<Field label="Aspect ratio">
+									<Field label="Aspect ratio" className='!mb-0'>
 										<Select value={settings.customize?.appearance?.aspectRatio || '16:9'} onChange={(e) => setSettings((s) => ({ ...s, customize: { ...(s.customize || {}), appearance: { ...(s.customize?.appearance || {}), aspectRatio: e.target.value } } }))}>
 											{ASPECT_RATIOS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
 										</Select>
@@ -288,7 +290,7 @@ export default function Settings({ onEditState }) {
 												<Field label="Signature line" hint="e.g. a name / title printed under the certificate.">
 													<Input value={c.certSignature} onChange={(e) => setC({ certSignature: e.target.value })} placeholder="Jane Doe, Head of Training" />
 												</Field>
-												<Field label="Footer note">
+												<Field label="Footer note" className='!mb-0'>
 													<Input value={c.certFooter} onChange={(e) => setC({ certFooter: e.target.value })} placeholder="This certificate can be verified online." />
 												</Field>
 											</div>
@@ -305,13 +307,13 @@ export default function Settings({ onEditState }) {
 										return (
 											<div className='mt-4 pt-5 border-t border-solid border-line'>
 												<Toggle checked={c.retentionEnabled} onChange={(v) => setC({ retentionEnabled: v })} label="Auto-purge old records" />
-												<div className="mt-6">
-													{c.retentionEnabled && (
-														<Field label="Keep records for (days)" hint="Progress + quiz attempts past this age are deleted daily.">
+												{c.retentionEnabled ? (
+													<div className="mt-6">
+														<Field label="Keep records for (days)" hint="Progress + quiz attempts past this age are deleted daily." className='!mb-0'>
 															<Input type="number" min="7" value={c.retentionDays} onChange={(e) => setC({ retentionDays: parseInt(e.target.value, 10) || 0 })} />
 														</Field>
-													)}
-												</div>
+													</div>
+												) : null}
 											</div>
 										);
 									})()}
@@ -358,7 +360,7 @@ export default function Settings({ onEditState }) {
 										<h3 className="font-semibold text-gray-900 !mb-1">Bunny.net token authentication</h3>
 										<p className="text-sm text-muted mb-4">For <strong>private</strong> Bunny videos: enable Token Authentication on your pull zone, then paste its key. TruePlayer signs expiring playback URLs.</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
-											<Field label="Token Authentication Key">
+											<Field label="Token Authentication Key" className='!mb-0'>
 												<Input type="password" value={settings.bunny?.tokenKey || ''} onChange={(e) => setSettings((s) => ({ ...s, bunny: { ...(s.bunny || {}), tokenKey: e.target.value } }))} placeholder="••••••••-••••-••••" />
 											</Field>
 										</div>
@@ -367,7 +369,7 @@ export default function Settings({ onEditState }) {
 										<h3 className="font-semibold text-gray-900 !mb-1">Signed link expiry</h3>
 										<p className="text-sm text-muted mb-4">How long a signed / private playback URL stays valid before it must be re-issued.</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
-											<Field label="Expiry (hours)" hint="Applies to private self-hosted files and Bunny token links.">
+											<Field label="Expiry (hours)" hint="Applies to private self-hosted files and Bunny token links." className='!mb-0'>
 												<Input type="number" min="1" value={settings.sources?.signedUrlTtlHours || 6} onChange={(e) => setSettings((s) => ({ ...s, sources: { ...(s.sources || {}), signedUrlTtlHours: parseInt(e.target.value, 10) || 0 } }))} />
 											</Field>
 										</div>
@@ -407,13 +409,13 @@ export default function Settings({ onEditState }) {
 											onChange={(v) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), enabled: v } } }))}
 											label="Send player events to Google Analytics"
 										/>
-										<div className="mt-6">
-											{settings.integrations?.ga?.enabled && (
-												<Field label="Measurement ID" hint="Optional — leave blank to use the site's existing GA tag.">
+										{settings.integrations?.ga?.enabled ? (
+											<div className="mt-6">
+												<Field label="Measurement ID" hint="Optional — leave blank to use the site's existing GA tag." className="!mb-0">
 													<Input value={settings.integrations?.ga?.measurementId || ''} onChange={(e) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), measurementId: e.target.value.trim() } } }))} placeholder="G-XXXXXXXXXX" />
 												</Field>
-											)}
-										</div>
+											</div>
+										) : null}
 									</div>
 								</Card>
 							</div>
@@ -453,7 +455,7 @@ export default function Settings({ onEditState }) {
 										<h3 className="font-semibold text-gray-900 !mb-1">Player logo</h3>
 										<p className="text-sm text-muted">A watermark logo shown on every player by default.</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
-											<Field label="Logo image">
+											<Field label="Logo image" className='!mb-0'>
 												<div className="flex gap-2">
 													<Input value={brand.logo || ''} onChange={(e) => setBrand({ logo: e.target.value })} placeholder="https://…/logo.png" />
 													<Button variant="ghost" onClick={() => pickMedia('image', (url) => setBrand({ logo: url }))}>Media library</Button>
