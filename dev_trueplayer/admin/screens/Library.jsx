@@ -206,6 +206,8 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos', onE
 					<PlaylistList
 						playlists={ pagedPlaylists }
 						byId={ byId }
+						copied={ copied }
+						copy={ copy }
 						onEdit={ setEditingPlaylist }
 						onRemove={ removePlaylist }
 						onAdd={ () => openModal( 'playlist' ) }
@@ -282,7 +284,7 @@ function VideoList( { videos, copied, copy, onEdit, onViewers, onRemove, onAdd }
 	);
 }
 
-function PlaylistList( { playlists, byId, onEdit, onRemove, onAdd } ) {
+function PlaylistList( { playlists, byId, copied, copy, onEdit, onRemove, onAdd } ) {
 	if ( playlists === null ) {
 		return <p className="text-gray-400">Loading…</p>;
 	}
@@ -311,7 +313,9 @@ function PlaylistList( { playlists, byId, onEdit, onRemove, onAdd } ) {
 								<Badge tone="brand">{ p.config?.layout || 'sidebar' }</Badge>
 								<Badge>{ ids.length } video{ ids.length === 1 ? '' : 's' }</Badge>
 								{ p.config?.autoplayNext && <Badge tone="green">autoplay</Badge> }
-								<code className="text-xs text-muted">{ p.shortcode }</code>
+								<code className="text-xs text-muted cursor-pointer hover:text-brand-500" onClick={ () => copy( p.id, p.shortcode ) } title="Copy shortcode">
+									{ copied === p.id ? 'Copied ✓' : p.shortcode }
+								</code>
 							</div>
 						</div>
 						<OptionMenu items={ [

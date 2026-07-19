@@ -5566,6 +5566,8 @@ function Library({
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(PlaylistList, {
         playlists: pagedPlaylists,
         byId: byId,
+        copied: copied,
+        copy: copy,
         onEdit: setEditingPlaylist,
         onRemove: removePlaylist,
         onAdd: () => openModal('playlist')
@@ -5691,6 +5693,8 @@ function VideoList({
 function PlaylistList({
   playlists,
   byId,
+  copied,
+  copy,
   onEdit,
   onRemove,
   onAdd
@@ -5753,8 +5757,10 @@ function PlaylistList({
               tone: "green",
               children: "autoplay"
             }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)("code", {
-              className: "text-xs text-muted",
-              children: p.shortcode
+              className: "text-xs text-muted cursor-pointer hover:text-brand-500",
+              onClick: () => copy(p.id, p.shortcode),
+              title: "Copy shortcode",
+              children: copied === p.id ? 'Copied ✓' : p.shortcode
             })]
           })]
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_6__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.OptionMenu, {
@@ -5796,8 +5802,27 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-// The playlist editor, reused by the combined Videos screen (Library).
+// navigator.clipboard.writeText needs a secure context; fall back to the
+// classic textarea + execCommand trick (e.g. plain-http local dev sites).
 
+function legacyCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch (e) {
+    ok = false;
+  }
+  document.body.removeChild(ta);
+  return ok;
+}
+
+// The playlist editor, reused by the combined Videos screen (Library).
 function PlaylistEditor({
   playlist,
   videos,
@@ -5822,6 +5847,26 @@ function PlaylistEditor({
   const [query, setQuery] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
   const [dragIndex, setDragIndex] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const [overIndex, setOverIndex] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+  const [copied, setCopied] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const copyShortcode = () => {
+    const sc = playlist.shortcode;
+    if (!sc) {
+      return;
+    }
+    const markCopied = () => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(sc).then(markCopied).catch(() => {
+        if (legacyCopy(sc)) {
+          markCopied();
+        }
+      });
+    } else if (legacyCopy(sc)) {
+      markCopied();
+    }
+  };
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     setToolbarSlot(document.getElementById('tp-topbar-slot'));
   }, []);
@@ -5915,7 +5960,7 @@ function PlaylistEditor({
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
         className: "p-6",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-          className: "font-semibold text-ink mb-4",
+          className: "font-semibold text-ink !mb-5 !pb-4 border-b border-solid border-line",
           children: "Playlist settings"
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Field, {
           label: "Layout",
@@ -5937,7 +5982,8 @@ function PlaylistEditor({
           onChange: v => set({
             autoplayNext: v
           }),
-          label: "Autoplay the next video"
+          label: "Autoplay the next video",
+          className: "mb-6"
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Toggle, {
           checked: config.showTitles,
           onChange: v => set({
@@ -5945,19 +5991,21 @@ function PlaylistEditor({
           }),
           label: "Show video titles"
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
-          className: "mt-4 pt-4 border-t border-line",
+          className: "mt-4 pt-4 border-t border-line flex items-center justify-between gap-4",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("p", {
             className: "text-[13px] font-medium text-ink mb-1",
             children: "Embed"
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("code", {
-            className: "text-xs bg-gray-100 rounded px-2 py-1",
-            children: playlist.shortcode
+            className: "text-xs bg-gray-100 rounded px-2 py-1 cursor-pointer hover:text-brand-500",
+            onClick: copyShortcode,
+            title: "Copy shortcode",
+            children: copied ? 'Copied ✓' : playlist.shortcode
           })]
         })]
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Card, {
         className: "p-6",
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("h3", {
-          className: "font-semibold text-ink mb-1",
+          className: "font-semibold text-ink !mb-5 !pb-4 border-b border-solid border-line",
           children: "Media in this playlist"
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("p", {
           className: "text-sm text-gray-500 mb-3",

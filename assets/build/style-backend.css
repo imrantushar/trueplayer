@@ -253,6 +253,9 @@
 .\!mb-4 {
 		margin-bottom: 1rem !important;
 }
+.\!mb-5 {
+		margin-bottom: 1.25rem !important;
+}
 .\!mb-6 {
 		margin-bottom: 1.5rem !important;
 }
@@ -976,6 +979,9 @@
 .py-8 {
 		padding-top: 2rem;
 		padding-bottom: 2rem;
+}
+.\!pb-4 {
+		padding-bottom: 1rem !important;
 }
 .pb-1 {
 		padding-bottom: 0.25rem;
