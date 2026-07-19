@@ -5218,12 +5218,11 @@ function Editor({
     });
   }, [video?.title, dirty]);
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => () => onEditState && onEditState(null), []);
-  const tabIndex = TABS.findIndex(t => t.key === tab);
-  const isLastTab = tabIndex === TABS.length - 1;
 
-  // Save (only hits the API when there are changes), then optionally advance to
-  // the next step — a light wizard flow through the editor.
-  const save = async (continueNext = false) => {
+  // Update always saves the whole video (title + config) regardless of which
+  // step is active — every tab patches the same shared config object — and
+  // never advances the step for you.
+  const save = async () => {
     if (!hasVideoSource(video.config?.source || {})) {
       setToast({
         message: 'Add a video before saving.',
@@ -5231,25 +5230,23 @@ function Editor({
       });
       return;
     }
-    if (dirty) {
-      setSaving(true);
-      try {
-        const updated = await _api__WEBPACK_IMPORTED_MODULE_1__.api.updateVideo(id, {
-          title: video.title,
-          config: video.config || {}
-        });
-        setVideo(updated);
-        setDirty(false);
-        setToast({
-          message: 'Saved ✓',
-          tone: 'success'
-        });
-      } finally {
-        setSaving(false);
-      }
+    if (!dirty) {
+      return;
     }
-    if (continueNext && tabIndex > -1 && tabIndex < TABS.length - 1) {
-      setTab(TABS[tabIndex + 1].key);
+    setSaving(true);
+    try {
+      const updated = await _api__WEBPACK_IMPORTED_MODULE_1__.api.updateVideo(id, {
+        title: video.title,
+        config: video.config || {}
+      });
+      setVideo(updated);
+      setDirty(false);
+      setToast({
+        message: 'Saved ✓',
+        tone: 'success'
+      });
+    } finally {
+      setSaving(false);
     }
   };
   if (!video) {
@@ -5273,9 +5270,9 @@ function Editor({
           onClick: () => setEmbedOpen(true),
           children: "Embed"
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Button, {
-          onClick: () => save(!isLastTab),
-          disabled: saving || isLastTab && !dirty,
-          children: saving ? 'Saving…' : isLastTab ? 'Save' : 'Save & Continue'
+          onClick: save,
+          disabled: saving || !dirty,
+          children: saving ? 'Saving…' : 'Update'
         })]
       }), toolbarSlot), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_16__.jsx)(_components_UI__WEBPACK_IMPORTED_MODULE_2__.Toast, {
         message: toast?.message,

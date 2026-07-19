@@ -120,29 +120,25 @@ export default function Editor( { id, onEditState } ) {
 	}, [ video?.title, dirty ] );
 	useEffect( () => () => onEditState && onEditState( null ), [] );
 
-	const tabIndex = TABS.findIndex( ( t ) => t.key === tab );
-	const isLastTab = tabIndex === TABS.length - 1;
-
-	// Save (only hits the API when there are changes), then optionally advance to
-	// the next step — a light wizard flow through the editor.
-	const save = async ( continueNext = false ) => {
+	// Update always saves the whole video (title + config) regardless of which
+	// step is active — every tab patches the same shared config object — and
+	// never advances the step for you.
+	const save = async () => {
 		if ( ! hasVideoSource( video.config?.source || {} ) ) {
 			setToast( { message: 'Add a video before saving.', tone: 'danger' } );
 			return;
 		}
-		if ( dirty ) {
-			setSaving( true );
-			try {
-				const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
-				setVideo( updated );
-				setDirty( false );
-				setToast( { message: 'Saved ✓', tone: 'success' } );
-			} finally {
-				setSaving( false );
-			}
+		if ( ! dirty ) {
+			return;
 		}
-		if ( continueNext && tabIndex > -1 && tabIndex < TABS.length - 1 ) {
-			setTab( TABS[ tabIndex + 1 ].key );
+		setSaving( true );
+		try {
+			const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
+			setVideo( updated );
+			setDirty( false );
+			setToast( { message: 'Saved ✓', tone: 'success' } );
+		} finally {
+			setSaving( false );
 		}
 	};
 
@@ -162,8 +158,8 @@ export default function Editor( { id, onEditState } ) {
 					<>
 						{ dirty && <Badge tone="amber">Unsaved</Badge> }
 						<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>Embed</Button>
-						<Button onClick={ () => save( ! isLastTab ) } disabled={ saving || ( isLastTab && ! dirty ) }>
-							{ saving ? 'Saving…' : ( isLastTab ? 'Save' : 'Save & Continue' ) }
+						<Button onClick={ save } disabled={ saving || ! dirty }>
+							{ saving ? 'Saving…' : 'Update' }
 						</Button>
 					</>,
 					toolbarSlot

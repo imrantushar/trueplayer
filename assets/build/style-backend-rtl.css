@@ -1486,12 +1486,6 @@ body[class*="page_trueplayer"] #wpbody-content {
 		.min-\[1440px\]\:top-\[104px\] {
 				top: 104px;
 		}
-		.min-\[1440px\]\:w-auto {
-				width: auto;
-		}
-		.min-\[1440px\]\:w-\[420px\] {
-				width: 420px;
-		}
 		.min-\[1440px\]\:min-w-\[420px\] {
 				min-width: 420px;
 		}
