@@ -253,6 +253,9 @@
 		margin-top: 1.5rem;
 		margin-bottom: 1.5rem;
 }
+.\!mb-0 {
+		margin-bottom: 0px !important;
+}
 .\!mb-1 {
 		margin-bottom: 0.25rem !important;
 }
@@ -330,9 +333,6 @@
 }
 .mt-px {
 		margin-top: 1px;
-}
-.\!mb-0 {
-		margin-bottom: 0px !important;
 }
 .block {
 		display: block;

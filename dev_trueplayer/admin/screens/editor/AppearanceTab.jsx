@@ -2,6 +2,7 @@ import { useEffect, useState } from '@wordpress/element';
 import { Card, Field, Input, Button, Select, Textarea } from '../../components/UI';
 import { pickMedia } from '../../utils/media';
 import { parseChapters, secToClock, clockToSec } from '../../utils/chapters';
+import { BsTrash } from 'react-icons/bs';
 
 /** mm:ss input with ± steppers, clamped to [0, max]. Commits seconds on blur/Enter. */
 function TimeInput( { seconds, onCommit, max = 0 } ) {
@@ -273,7 +274,7 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 						<div key={ i } className="flex gap-2 items-center">
 							<TimeInput seconds={ c.at } onCommit={ ( s ) => setChapter( i, { at: s } ) } max={ duration } />
 							<Input value={ c.label } onChange={ ( e ) => setChapter( i, { label: e.target.value } ) } placeholder="Chapter title" />
-							<Button variant="danger" onClick={ () => removeChapter( i ) }>×</Button>
+							<Button variant="danger" onClick={ () => removeChapter( i ) }><BsTrash /></Button>
 						</div>
 					) ) }
 				</div>

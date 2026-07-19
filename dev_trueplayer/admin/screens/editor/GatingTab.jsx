@@ -1,6 +1,7 @@
 import { useEffect, useState } from '@wordpress/element';
 import { Card, Field, Input, Select, Toggle, Button, Badge } from '../../components/UI';
 import { api } from '../../api';
+import { BsTrash } from 'react-icons/bs';
 
 const uid = () => Math.random().toString( 36 ).slice( 2, 9 );
 
@@ -85,7 +86,7 @@ function QuestionList( { questions, onChange } ) {
 							<option value="boolean">True / False</option>
 						</Select>
 						<div className="flex-1" />
-						<Button variant="danger" onClick={ () => removeQ( qi ) }>Remove</Button>
+						<Button variant="danger" onClick={ () => removeQ( qi ) }><BsTrash /></Button>
 					</div>
 					<Input className="mb-3" value={ q.prompt } onChange={ ( e ) => setQ( qi, { prompt: e.target.value } ) } placeholder="Question prompt…" />
 
@@ -105,7 +106,7 @@ function QuestionList( { questions, onChange } ) {
 									<div key={ o.id } className="flex gap-2 items-center">
 										<input type="radio" name={ `correct-${ q.id }` } checked={ q.correct === o.id } onChange={ () => setQ( qi, { correct: o.id } ) } />
 										<Input value={ o.label } onChange={ ( e ) => setOpt( qi, oi, e.target.value ) } placeholder={ `Option ${ oi + 1 }` } />
-										{ q.options.length > 2 && <Button variant="danger" onClick={ () => removeOpt( qi, oi ) }>×</Button> }
+										{ q.options.length > 2 && <Button variant="danger" onClick={ () => removeOpt( qi, oi ) }><BsTrash /></Button> }
 									</div>
 								) ) }
 							</div>
@@ -171,7 +172,7 @@ export default function GatingTab( { config, patch } ) {
 								<Field label="At (seconds)"><Input type="number" className="w-28" value={ cp.at } onChange={ ( e ) => setCheckpoint( i, { at: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
 								<Field label="Pass %"><Input type="number" className="w-24" value={ cp.passPercent } onChange={ ( e ) => setCheckpoint( i, { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
 								<div className="flex-1"><Field label="Title"><Input value={ cp.title || '' } onChange={ ( e ) => setCheckpoint( i, { title: e.target.value } ) } placeholder="Checkpoint" /></Field></div>
-								<Button variant="danger" onClick={ () => removeCheckpoint( i ) }>Remove</Button>
+								<Button variant="danger" onClick={ () => removeCheckpoint( i ) }><BsTrash /></Button>
 							</div>
 							<QuestionList questions={ cp.questions || [] } onChange={ ( questions ) => setCheckpoint( i, { questions } ) } />
 						</div>

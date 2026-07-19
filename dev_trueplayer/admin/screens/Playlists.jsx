@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, createPortal } from '@wordpress/element';
 import { api } from '../api';
 import { Card, Button, Input, Select, Toggle, Badge, Field, sourceMeta } from '../components/UI';
+import { BsTrash } from 'react-icons/bs';
 
 // navigator.clipboard.writeText needs a secure context; fall back to the
 // classic textarea + execCommand trick (e.g. plain-http local dev sites).
@@ -173,7 +174,7 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved, onEditState
 										<button className="text-gray-300 hover:text-ink px-1" title="Move up" onClick={ () => move( i, -1 ) }>↑</button>
 										<button className="text-gray-300 hover:text-ink px-1" title="Move down" onClick={ () => move( i, 1 ) }>↓</button>
 									</div>
-									<Button variant="danger" size="sm" onClick={ () => remove( id ) }>×</Button>
+									<Button variant="danger" size="sm" onClick={ () => remove( id ) }><BsTrash /></Button>
 								</div>
 							);
 						} ) }

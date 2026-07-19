@@ -1,5 +1,6 @@
 import { useState } from '@wordpress/element';
 import { Card, Field, Input, Button, Textarea, Toggle, SectionTitle } from '../../components/UI';
+import { BsTrash } from 'react-icons/bs';
 
 const uid = () => 'tc_' + Math.random().toString( 36 ).slice( 2, 8 );
 
@@ -53,7 +54,7 @@ export default function TimedContentTab( { config, patch } ) {
 										<Field label="Content" hint="HTML or a shortcode, e.g. [contact-form-7 id=&quot;12&quot;].">
 											<Textarea rows={ 4 } value={ it.content || '' } onChange={ ( e ) => setItem( i, { content: e.target.value } ) } placeholder="<h3>Grab the worksheet</h3> or [your_shortcode]" />
 										</Field>
-										<div className="text-right mt-2"><Button variant="danger" size="sm" onClick={ () => remove( i ) }>Remove</Button></div>
+										<div className="text-right mt-2"><Button variant="danger" size="sm" onClick={ () => remove( i ) }><BsTrash /></Button></div>
 									</div>
 								) }
 							</Card>

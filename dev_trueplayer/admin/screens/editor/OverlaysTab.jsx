@@ -1,6 +1,7 @@
 import { useState } from '@wordpress/element';
 import { Card, Field, Input, Select, Toggle, Button, Badge, ColorInput } from '../../components/UI';
 import MediaPicker from '../../components/MediaPicker';
+import { BsTrash } from 'react-icons/bs';
 
 const newOverlay = ( type = 'cta' ) => ( {
 	id: 'ov_' + Math.random().toString( 36 ).slice( 2, 8 ),
@@ -144,7 +145,7 @@ export default function OverlaysTab( { config, patch } ) {
 										</>
 									) }
 									<div className="text-right mt-2">
-										<Button variant="danger" size="sm" onClick={ () => remove( i ) }>Remove</Button>
+										<Button variant="danger" size="sm" onClick={ () => remove( i ) }><BsTrash /></Button>
 									</div>
 								</div>
 							) }
