@@ -205,6 +205,9 @@ class H5pController extends WP_REST_Controller {
 		$library  = (string) $request->get_param( 'library' );
 		$params   = $request->get_param( 'params' );
 
+		// Load the vendored H5P classes before using \H5PCore statically — a
+		// cold save_content request may not have touched Core::core() yet.
+		Core::include_core();
 		$lib = \H5PCore::libraryFromString( $library );
 		if ( ! $lib ) {
 			return new WP_Error( 'bad_library', __( 'Invalid content type.', 'trueplayer' ), [ 'status' => 400 ] );
