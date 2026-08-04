@@ -188,16 +188,23 @@ function GroupField( { field, value, onChange, depth = 0 } ) {
 	}
 
 	// Top-level: a divided, collapsible section (matches OverlaysTab sections).
-	return <CollapsibleSection field={ field }>{ body }</CollapsibleSection>;
+	// Settings groups (most top-level groups) start collapsed to keep the form
+	// human-editable; only high-importance groups are expanded by default.
+	return (
+		<CollapsibleSection field={ field } defaultOpen={ field.importance === 'high' || field.expanded === true }>
+			{ body }
+		</CollapsibleSection>
+	);
 }
 
-function CollapsibleSection( { field, children } ) {
-	const [ open, setOpen ] = useState( field.expanded !== false );
+function CollapsibleSection( { field, children, defaultOpen = false, hint = '' } ) {
+	const [ open, setOpen ] = useState( defaultOpen );
 	return (
-		<div className="mt-6 pt-6 border-t border-line first:mt-0 first:pt-0 first:border-0">
-			<button type="button" className="flex items-center gap-2 w-full text-left" onClick={ () => setOpen( ! open ) }>
-				{ open ? <BsChevronDown className="text-gray-400" /> : <BsChevronRight className="text-gray-400" /> }
-				<span className="font-semibold text-gray-900">{ field.label }</span>
+		<div className="mt-5 pt-5 border-t border-line first:mt-0 first:pt-0 first:border-0">
+			<button type="button" className="flex items-center gap-2 w-full text-left group" onClick={ () => setOpen( ! open ) }>
+				{ open ? <BsChevronDown className="text-gray-400 shrink-0" size={ 13 } /> : <BsChevronRight className="text-gray-400 shrink-0" size={ 13 } /> }
+				<span className="font-medium text-gray-900 text-[15px]">{ field.label }</span>
+				{ ! open && hint && <span className="text-xs text-gray-400 font-normal">{ hint }</span> }
 			</button>
 			{ field.description && open && <p className="text-sm text-gray-500 mt-1">{ field.description }</p> }
 			{ open && children }
@@ -239,14 +246,12 @@ function ListField( { field, value, onChange, depth = 0 } ) {
 		</>
 	);
 
-	// Give a labelled list the same section treatment as a group.
+	// Give a labelled list the same section treatment as a group, but open by
+	// default — lists are usually primary content (answers, cards, questions).
 	if ( field.label && depth === 0 ) {
 		return (
-			<CollapsibleSection field={ field }>
-				<div className="mt-4">
-					<ListCount n={ items.length } />
-					{ inner }
-				</div>
+			<CollapsibleSection field={ field } defaultOpen={ field.importance !== 'low' } hint={ `${ items.length } item${ items.length === 1 ? '' : 's' }` }>
+				<div className="mt-4">{ inner }</div>
 			</CollapsibleSection>
 		);
 	}

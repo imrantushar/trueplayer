@@ -12,6 +12,7 @@ use WP_Error;
 use TruePlayer\H5P\Core;
 use TruePlayer\H5P\Module;
 use TruePlayer\H5P\Importer;
+use TruePlayer\H5P\Preview;
 
 /**
  * Admin REST for the H5P engine — content-type management, semantics retrieval,
@@ -267,6 +268,7 @@ class H5pController extends WP_REST_Controller {
 			'video'      => (int) $video_id,
 			'content_id' => (int) $content['id'],
 			'shortcode'  => sprintf( '[trueplayer id="%d"]', $video_id ),
+			'preview'    => Preview::url( (int) $video_id ),
 		] );
 	}
 
@@ -360,6 +362,7 @@ class H5pController extends WP_REST_Controller {
 			'title'   => $content['title'] ?? get_the_title( $video_id ),
 			'library' => \H5PCore::libraryToString( $content['library'] ),
 			'params'  => json_decode( $content['params'] ),
+			'preview' => Preview::url( $video_id ),
 		] );
 	}
 }

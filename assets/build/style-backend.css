@@ -409,6 +409,9 @@
 .h-\[22px\] {
 		height: 22px;
 }
+.h-\[300px\] {
+		height: 300px;
+}
 .h-\[34px\] {
 		height: 34px;
 }
@@ -502,6 +505,9 @@
 .min-w-\[34px\] {
 		min-width: 34px;
 }
+.min-w-\[64px\] {
+		min-width: 64px;
+}
 .max-w-2xl {
 		max-width: 42rem;
 }
@@ -563,11 +569,6 @@
 		-webkit-user-select: none;
 		   -moz-user-select: none;
 		        user-select: none;
-}
-.select-all {
-		-webkit-user-select: all;
-		   -moz-user-select: all;
-		        user-select: all;
 }
 .grid-cols-2 {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -765,10 +766,6 @@
 .\!border-none {
 		border-style: none !important;
 }
-.\!border-green-200 {
-		--tw-border-opacity: 1 !important;
-		border-color: rgb(187 247 208 / var(--tw-border-opacity, 1)) !important;
-}
 .border-brand-100 {
 		--tw-border-opacity: 1;
 		border-color: rgb(227 231 255 / var(--tw-border-opacity, 1));
@@ -848,10 +845,6 @@
 .bg-green-100 {
 		--tw-bg-opacity: 1;
 		background-color: rgb(220 252 231 / var(--tw-bg-opacity, 1));
-}
-.bg-green-50 {
-		--tw-bg-opacity: 1;
-		background-color: rgb(240 253 244 / var(--tw-bg-opacity, 1));
 }
 .bg-ink {
 		--tw-bg-opacity: 1;
@@ -1122,6 +1115,9 @@
 }
 .font-medium {
 		font-weight: 500;
+}
+.font-normal {
+		font-weight: 400;
 }
 .font-semibold {
 		font-weight: 600;
@@ -1445,6 +1441,9 @@ body[class*="page_trueplayer"] #wpbody-content {
 		--tw-text-opacity: 1;
 		color: rgb(31 41 55 / var(--tw-text-opacity, 1));
 }
+.hover\:underline:hover {
+		text-decoration-line: underline;
+}
 .hover\:opacity-100:hover {
 		opacity: 1;
 }
@@ -1514,14 +1513,26 @@ body[class*="page_trueplayer"] #wpbody-content {
 		}
 }
 @media (min-width: 1024px) {
+		.lg\:sticky {
+				position: sticky;
+		}
+		.lg\:top-4 {
+				top: 1rem;
+		}
 		.lg\:col-span-2 {
 				grid-column: span 2 / span 2;
+		}
+		.lg\:w-\[420px\] {
+				width: 420px;
 		}
 		.lg\:grid-cols-3 {
 				grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
 		.lg\:grid-cols-4 {
 				grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+		.lg\:flex-row {
+				flex-direction: row;
 		}
 }
 @media (min-width: 1280px) {

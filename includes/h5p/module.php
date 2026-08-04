@@ -54,10 +54,8 @@ class Module {
 			return;
 		}
 
-		// Runtime wiring (library storage, content REST, frontend + editor
-		// asset registration, xAPI → events bridge) is attached here as the
-		// engine is built out. Kept behind is_available() so a runtime-less
-		// build is a strict no-op.
+		// Isolated live-preview page for the builder.
+		Preview::init();
 	}
 
 	/**
