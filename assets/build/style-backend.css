@@ -1516,14 +1516,14 @@ body[class*="page_trueplayer"] #wpbody-content {
 		.lg\:sticky {
 				position: sticky;
 		}
-		.lg\:top-4 {
-				top: 1rem;
+		.lg\:top-\[104px\] {
+				top: 104px;
 		}
 		.lg\:col-span-2 {
 				grid-column: span 2 / span 2;
 		}
-		.lg\:w-\[420px\] {
-				width: 420px;
+		.lg\:w-\[380px\] {
+				width: 380px;
 		}
 		.lg\:grid-cols-3 {
 				grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from '@wordpress/element';
-import { Card, Field, Input, Button, Toast, Badge } from '../components/UI';
+import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
+import { Card, Field, Input, Button, Toast, Badge, SubSidebar } from '../components/UI';
 import SemanticsForm from '../h5p/SemanticsForm';
 import { api } from '../api';
 
 /**
- * Authoring screen for an H5P item: a two-column layout that mirrors the native
- * video editor — the semantics-driven form on the left, a live preview of the
- * real H5P content on the right. Edits auto-save (debounced) and the preview
- * reloads, so authors see what they're building.
+ * Authoring screen for an H5P item. Mirrors the native video editor: a
+ * contextual sidebar of sections (a "Content" section plus one tab per
+ * top-level setting group), the semantics-driven form in the middle, and a live
+ * preview of the real H5P content on the right. Edits auto-save (debounced) and
+ * the preview reloads.
  */
 export default function H5pEditor( { video = null, machineName = '', onBack } ) {
 	const [ loading, setLoading ] = useState( true );
@@ -22,10 +23,26 @@ export default function H5pEditor( { video = null, machineName = '', onBack } ) 
 	const [ typeTitle, setTypeTitle ] = useState( '' );
 	const [ preview, setPreview ] = useState( '' );
 	const [ previewKey, setPreviewKey ] = useState( 0 );
+	const [ sub, setSub ] = useState( '__content' );
 
-	// Guards so the initial load doesn't trigger an auto-save.
 	const hydrated = useRef( false );
 	const saveTimer = useRef( null );
+
+	// Split the top-level semantics into a "Content" bucket (scalars, lists,
+	// single-field + library groups) and one navigable tab per multi-field
+	// setting group (Behaviour, Text overrides, Feedback, …).
+	const { contentFields, groupTabs } = useMemo( () => {
+		const isTab = ( f ) => f.type === 'group' && ( f.fields || [] ).length > 1;
+		return {
+			contentFields: semantics.filter( ( f ) => ! isTab( f ) ),
+			groupTabs: semantics.filter( isTab ),
+		};
+	}, [ semantics ] );
+
+	const sidebarItems = useMemo(
+		() => [ [ '__content', 'Content' ], ...groupTabs.map( ( g ) => [ g.name, g.label || g.name ] ) ],
+		[ groupTabs ]
+	);
 
 	useEffect( () => {
 		let alive = true;
@@ -55,12 +72,12 @@ export default function H5pEditor( { video = null, machineName = '', onBack } ) 
 				setTitle( nextTitle || sem.title || '' );
 				setParams( nextParams || {} );
 				setPreview( nextPreview );
+				setSub( '__content' );
 			} catch ( e ) {
 				if ( alive ) setError( e.message || 'Failed to load the content type.' );
 			} finally {
 				if ( alive ) {
 					setLoading( false );
-					// Allow auto-save only after the first paint of loaded data.
 					setTimeout( () => { hydrated.current = true; }, 0 );
 				}
 			}
@@ -74,9 +91,7 @@ export default function H5pEditor( { video = null, machineName = '', onBack } ) 
 		try {
 			const res = await api.h5pSaveContent( { video: vid || 0, title, library, params } );
 			setVid( res.video );
-			if ( res.preview ) {
-				setPreview( res.preview );
-			}
+			if ( res.preview ) setPreview( res.preview );
 			setPreviewKey( ( k ) => k + 1 );
 			setStatus( 'saved' );
 		} catch ( e ) {
@@ -85,7 +100,6 @@ export default function H5pEditor( { video = null, machineName = '', onBack } ) 
 		}
 	};
 
-	// Debounced auto-save whenever the content changes.
 	useEffect( () => {
 		if ( ! hydrated.current ) return;
 		if ( saveTimer.current ) clearTimeout( saveTimer.current );
@@ -98,6 +112,7 @@ export default function H5pEditor( { video = null, machineName = '', onBack } ) 
 	}
 
 	const previewSrc = preview ? `${ preview }${ preview.includes( '?' ) ? '&' : '?' }k=${ previewKey }` : '';
+	const activeGroup = groupTabs.find( ( g ) => g.name === sub );
 
 	return (
 		<div>
@@ -115,20 +130,38 @@ export default function H5pEditor( { video = null, machineName = '', onBack } ) 
 			</div>
 
 			<div className="flex flex-col lg:flex-row gap-6 items-start">
-				{ /* Form */ }
-				<div className="flex-1 min-w-0 max-w-2xl w-full">
+				<SubSidebar value={ sub } onChange={ setSub } items={ sidebarItems } />
+
+				{ /* Active section */ }
+				<div className="flex-1 min-w-0 w-full">
 					<Card className="p-6">
-						<Field label="Title" hint="Shown in your Media library (not to viewers).">
-							<Input value={ title } onChange={ ( e ) => setTitle( e.target.value ) } placeholder="Untitled interactive" />
-						</Field>
-						<div className="mt-6 pt-6 border-t border-line">
-							<SemanticsForm semantics={ semantics } value={ params } onChange={ setParams } />
-						</div>
+						{ sub === '__content' ? (
+							<>
+								<Field label="Title" hint="Shown in your Media library (not to viewers).">
+									<Input value={ title } onChange={ ( e ) => setTitle( e.target.value ) } placeholder="Untitled interactive" />
+								</Field>
+								<div className="mt-6 pt-6 border-t border-line">
+									<SemanticsForm semantics={ contentFields } value={ params } onChange={ setParams } />
+								</div>
+							</>
+						) : activeGroup ? (
+							<>
+								<h3 className="font-medium text-gray-900 text-[15px] mb-1">{ activeGroup.label || activeGroup.name }</h3>
+								{ activeGroup.description && <p className="text-sm text-gray-500 mb-4">{ activeGroup.description }</p> }
+								<div className={ activeGroup.description ? '' : 'mt-2' }>
+									<SemanticsForm
+										semantics={ activeGroup.fields }
+										value={ params[ activeGroup.name ] || {} }
+										onChange={ ( v ) => setParams( { ...params, [ activeGroup.name ]: v } ) }
+									/>
+								</div>
+							</>
+						) : null }
 					</Card>
 				</div>
 
 				{ /* Live preview */ }
-				<div className="w-full lg:w-[420px] shrink-0 lg:sticky lg:top-4">
+				<div className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-[104px]">
 					<Card className="overflow-hidden">
 						<div className="flex items-center justify-between px-4 py-2.5 border-b border-line bg-gray-50">
 							<span className="text-[13px] font-medium text-gray-700">Live preview</span>
