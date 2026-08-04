@@ -28,6 +28,7 @@ class Database {
 		Database\CreateQuizAttemptsTable::up( $prefix, $charset_collate );
 		Database\CreateEngagementTable::up( $prefix, $charset_collate );
 		Database\CreateDailyTable::up( $prefix, $charset_collate );
+		Database\CreateH5PTables::up( $prefix, $charset_collate );
 	}
 
 	/**
@@ -39,7 +40,17 @@ class Database {
 		if ( get_option( 'trueplayer_db_version' ) === TRUEPLAYER_DB_VERSION ) {
 			return;
 		}
-		self::create_initial_custom_table();
+		// Runs on every request until it succeeds, so it must fail soft: a missing
+		// schema class (e.g. a half-shipped feature mid-update) must never fatal
+		// `plugins_loaded` and white-screen the whole site. Log and retry on a
+		// later load once the code is complete; the version is only bumped on a
+		// clean run, and dbDelta makes every table create idempotent.
+		try {
+			self::create_initial_custom_table();
+		} catch ( \Throwable $e ) {
+			error_log( 'TruePlayer: schema upgrade deferred — ' . $e->getMessage() );
+			return;
+		}
 		// New rewrite rules (instant video pages) need a one-time flush.
 		Helper::request_rewrite_flush();
 		update_option( 'trueplayer_db_version', TRUEPLAYER_DB_VERSION );

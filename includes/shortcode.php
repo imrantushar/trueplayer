@@ -62,6 +62,13 @@ class Shortcode {
 			return '';
 		}
 
+		// Engine router — an H5P-authored item is rendered by the H5P runtime,
+		// not the native player. Dormant until the runtime is vendored (see
+		// H5P\Module::is_available), so native embeds are unaffected.
+		if ( H5P\Module::is_h5p( $video_id ) ) {
+			return H5P\Renderer::render( $video_id );
+		}
+
 		// Ensure the runtime is on the page.
 		wp_enqueue_style( Assets::FRONTEND_STYLE_HANDLE );
 		wp_enqueue_script( Assets::FRONTEND_SCRIPT_HANDLE );
