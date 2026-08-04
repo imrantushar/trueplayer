@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from '@wordpress/element';
 import Library from './screens/Library';
 import Editor from './screens/Editor';
+import Interactive from './screens/Interactive';
 import Settings from './screens/Settings';
 import Analytics from './screens/Analytics';
 import Presets from './screens/Presets';
@@ -99,6 +100,7 @@ export default function App() {
 				: [ { label: 'Media playlists' } ];
 			case 'editor': return [ toMedia, { label: editState?.title || '', editable: true, onChange: editState?.onTitleChange } ];
 			case 'analytics': return [ toMedia, { label: 'Analytics' } ];
+			case 'interactive': return [ { label: 'Interactive' } ];
 			case 'presets': return editState
 				? [ { label: 'Presets', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
 				: [ { label: 'Presets' } ];
@@ -131,6 +133,7 @@ export default function App() {
 								/>
 							) }
 							{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library' ) } /> }
+							{ route.name === 'interactive' && <Interactive /> }
 							{ route.name === 'presets' && <Presets onEditState={ setEditState } /> }
 							{ route.name === 'settings' && <Settings onEditState={ setEditState } /> }
 						</div>

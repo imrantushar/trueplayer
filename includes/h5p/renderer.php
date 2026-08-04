@@ -41,7 +41,7 @@ class Renderer {
 		}
 		$content['id'] = $content_id;
 
-		return '<div class="trueplayer-h5p tp-v' . (int) $video_id . '">' . Assets::add_content( $content ) . '</div>';
+		return '<div class="trueplayer-h5p tp-v' . (int) $video_id . '">' . Assets::add_content( $content, $video_id ) . '</div>';
 	}
 
 	/**

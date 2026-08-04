@@ -33,6 +33,14 @@ export const api = {
 	// LMS course/lesson options (pro)
 	getLmsOptions: () => rest.get( 'lms/options' ),
 
+	// H5P engine (Interactive content)
+	h5pContentTypes: () => rest.get( 'h5p/content-types' ),
+	h5pItems: () => rest.get( 'h5p/items' ),
+	h5pInstallType: ( machineName ) => rest.post( 'h5p/content-types', { machineName } ),
+	h5pSemantics: ( name ) => rest.get( `h5p/semantics/${ encodeURIComponent( name ) }` ),
+	h5pSaveContent: ( data ) => rest.post( 'h5p/content', data ),
+	h5pGetContent: ( video ) => rest.get( `h5p/content/${ video }` ),
+
 	// Webhook delivery logs (pro)
 	getWebhookLogs: ( limit = 100 ) => rest.get( `webhook-logs?limit=${ limit }` ),
 };

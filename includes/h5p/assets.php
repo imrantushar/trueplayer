@@ -93,10 +93,20 @@ class Assets {
 	 * @param array $content A content array from H5PCore::loadContent().
 	 * @return string
 	 */
-	public static function add_content( array $content ): string {
+	public static function add_content( array $content, int $video_id = 0 ): string {
 		self::add_core_assets();
 		$core = Core::core();
 		$cid  = 'cid-' . $content['id'];
+
+		// xAPI → TruePlayer events bridge (loads after h5p.js).
+		$xapi_ver = defined( 'TRUEPLAYER_VERSION' ) ? TRUEPLAYER_VERSION : '1.0';
+		wp_enqueue_script( 'trueplayer-h5p-xapi', TRUEPLAYER_ASSETS_URI . 'h5p-xapi.js', [], $xapi_ver, true );
+		wp_localize_script( 'trueplayer-h5p-xapi', 'TruePlayerH5PxAPI', [
+			'endpoint'  => rest_url( TRUEPLAYER_PLUGIN_SLUG . '/v1/h5p/xapi' ),
+			'nonce'     => wp_create_nonce( 'wp_rest' ),
+			'video'     => $video_id,
+			'contentId' => (int) $content['id'],
+		] );
 
 		if ( ! isset( self::$settings['contents'][ $cid ] ) ) {
 			self::$settings['contents'][ $cid ] = self::content_settings( $content );

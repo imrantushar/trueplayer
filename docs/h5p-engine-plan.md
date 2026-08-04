@@ -60,24 +60,42 @@ kit so it looks and feels consistent with the rest of the admin.
   - Router (`_trueplayer_engine` + `_trueplayer_h5p_content_id` meta) delegates
     H5P videos to the runtime; native videos are byte-for-byte unchanged.
 
-- [ ] **Phase 2 — content REST + storage.** CRUD for H5P items: create/save
-  `content.json` + `h5p.json`, per-item library dependency resolution, `.h5p`
-  import/export.
+- [x] **Phase 2 — content REST + storage.** *(complete, verified)*
+  `API\H5pController` (`trueplayer/v1/h5p/*`): list installed + featured content
+  types, one-click install from the hub, fetch a library's semantics, and
+  create/update/read content (saved via H5PCore, linked to a `tp_video` on the
+  h5p engine). Verified with Accordion + MultiChoice.
 
-- [ ] **Phase 3 — builder UI (generic semantics renderer).** Read a content
-  type's `semantics.json`; map field types (text/html/number/boolean/select/
-  group/list/library/image/video/file) to TruePlayer's `Field`/`Input`/
-  `Select`/`Toggle`/`Card`/`MediaPicker`. Covers the field-only content types
-  end-to-end (Multiple Choice, True/False, Fill in the Blanks, Flashcards,
-  Summary, Accordion, Single-choice set).
+- [x] **Phase 3 — builder UI (generic semantics renderer).** *(complete, verified)*
+  `dev_trueplayer/admin/h5p/SemanticsForm.jsx` renders a content type's
+  `semantics.json` with TruePlayer's own components (text/html/number/boolean/
+  select/group/list/library/media, recursive). `screens/Interactive.jsx` (a new
+  "Interactive" submenu) is the hub — content-type gallery + item list; opens
+  `screens/H5pEditor.jsx` to author. Round-trips a full MultiChoice (nested
+  groups, answers list, behaviour flags) end-to-end.
 
-- [ ] **Phase 4 — spatial content types.** Custom authoring widgets (or an
-  H5P-editor iframe fallback) for Interactive Video, Drag & Drop, Course
-  Presentation, Branching Scenario.
+- [~] **Phase 4 — spatial content types.** *(functional via the generic
+  renderer; visual canvas editors remain)* The `SemanticsForm` renders *any*
+  content type's semantics recursively, so spatial types (Interactive Video,
+  Drag & Drop, Course Presentation, Branching Scenario) are authorable as
+  nested forms. Bespoke visual editors (timeline / drag canvas) — or an
+  H5P-editor iframe fallback — are the remaining UX polish.
 
-- [ ] **Phase 5 — shared services bridge.** Normalise H5P xAPI statements into
-  the existing events pipeline so analytics, webhooks, CRM rules, and Academy
-  LMS completion work identically across both engines.
+- [x] **Phase 5 — shared services bridge.** *(complete, verified)*
+  `assets/h5p-xapi.js` listens to root-level H5P xAPI statements and posts to
+  `h5p/xapi`, which normalises them into `Events::emit` (`view.completed`,
+  `quiz.passed`/`quiz.failed`) — the same bus the native player feeds, so
+  analytics / webhooks / CRM / Academy LMS work across both engines. Also
+  records a `tp_h5p_results` row. Nonce-verified.
+
+## Remaining loose ends
+
+- Visual canvas editors for spatial types (Phase 4 polish).
+- H5P content-state save/resume endpoints (`setFinished` / `contentUserData`)
+  referenced in `H5PIntegration` — currently `postUserStatistics` is off.
+- Uninstall cleanup for the `tp_h5p_*` tables + `uploads/trueplayer-h5p/`.
+- Multi-item pages: the xAPI localize is per-last-content (fine for one H5P item
+  per page; refine for several).
 
 ## Open decision (blocks Phase 1)
 

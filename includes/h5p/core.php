@@ -97,7 +97,9 @@ class Core {
 			self::include_core();
 			self::ensure_dirs();
 			$paths = self::paths();
-			$export = (bool) apply_filters( 'trueplayer/h5p/export_enabled', true );
+			// Export (.h5p download) is off by default — the builder doesn't need
+			// it, and enabling it rebuilds an export zip on every content save.
+			$export = (bool) apply_filters( 'trueplayer/h5p/export_enabled', false );
 
 			self::$core = new \H5PCore(
 				self::framework(),

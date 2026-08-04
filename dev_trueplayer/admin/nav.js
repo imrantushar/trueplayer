@@ -11,6 +11,7 @@ export const PAGE_OF = {
 	editor: SLUG + '-videos',
 	analytics: SLUG + '-videos',
 	playlists: SLUG + '-playlists',
+	interactive: SLUG + '-interactive',
 	presets: SLUG + '-presets',
 	settings: SLUG + '-settings',
 };
@@ -33,6 +34,9 @@ export function parseRoute() {
 	}
 	if ( page === SLUG + '-playlists' ) {
 		return { name: 'playlists' };
+	}
+	if ( page === SLUG + '-interactive' ) {
+		return { name: 'interactive' };
 	}
 	if ( page === SLUG + '-presets' ) {
 		return { name: 'presets' };
