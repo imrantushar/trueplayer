@@ -1,5 +1,5 @@
 import { useEffect, useState } from '@wordpress/element';
-import { Field, Input, Textarea, Select, Toggle, Button, Card, Badge } from '../components/UI';
+import { Field, Input, Textarea, Select, Toggle, Button, Badge } from '../components/UI';
 import MediaPicker from '../components/MediaPicker';
 import { api } from '../api';
 import { BsTrash, BsPlus, BsChevronDown, BsChevronRight } from 'react-icons/bs';
@@ -8,9 +8,10 @@ import { BsTrash, BsPlus, BsChevronDown, BsChevronRight } from 'react-icons/bs';
  * Renders an H5P content type's `semantics.json` as a native TruePlayer form.
  *
  * The stock H5P editor auto-generates its UI from semantics; so do we — but
- * with our own component kit, so an H5P item is authored with the same look as
- * the rest of the admin. Handles the field-based semantics types (text, html,
- * number, boolean, select, list, group, library, media); the spatial types
+ * with our own component kit and layout conventions (one containing Card, Field
+ * rows, bordered sub-sections rather than nested cards) so an H5P item looks
+ * like the rest of the admin. Handles the field-based semantics types (text,
+ * html, number, boolean, select, list, group, library, media); spatial types
  * fall back to a nested form of the same primitives.
  */
 
@@ -31,8 +32,8 @@ async function loadSemantics( machineName ) {
 
 const machineOf = ( libraryString ) => String( libraryString || '' ).split( ' ' )[ 0 ];
 
-/** One semantics field → a control. */
-function SemanticField( { field, value, onChange } ) {
+/** One semantics field → a control. `depth` drives nesting treatment. */
+function SemanticField( { field, value, onChange, depth = 0 } ) {
 	const label = field.label || field.name;
 	const common = { label, hint: field.description || '' };
 
@@ -42,7 +43,7 @@ function SemanticField( { field, value, onChange } ) {
 				return (
 					<Field { ...common }>
 						<Textarea
-							rows={ 4 }
+							rows={ 3 }
 							value={ value ?? field.default ?? '' }
 							onChange={ ( e ) => onChange( e.target.value ) }
 							placeholder={ field.placeholder || '' }
@@ -76,13 +77,13 @@ function SemanticField( { field, value, onChange } ) {
 
 		case 'boolean':
 			return (
-				<div className="mb-4">
+				<div className="mb-5">
 					<Toggle
 						checked={ value ?? field.default ?? false }
 						onChange={ ( v ) => onChange( v ) }
 						label={ label }
 					/>
-					{ field.description && <p className="text-xs text-gray-400 mt-1">{ field.description }</p> }
+					{ field.description && <p className="text-xs text-gray-400 mt-1.5">{ field.description }</p> }
 				</div>
 			);
 
@@ -104,6 +105,7 @@ function SemanticField( { field, value, onChange } ) {
 				<Field { ...common }>
 					<MediaPicker
 						accept="image"
+						label="Upload"
 						value={ value?.path || '' }
 						onChange={ ( media ) =>
 							onChange( media ? { path: media.url || media, mime: media.mime || 'image/jpeg', copyright: { license: 'U' } } : undefined )
@@ -118,6 +120,7 @@ function SemanticField( { field, value, onChange } ) {
 				<Field { ...common }>
 					<MediaPicker
 						accept={ field.type }
+						label="Upload"
 						value={ Array.isArray( value ) ? value[ 0 ]?.path : '' }
 						onChange={ ( media ) =>
 							onChange( media ? [ { path: media.url || media, mime: media.mime || `${ field.type }/mp4` } ] : undefined )
@@ -127,19 +130,13 @@ function SemanticField( { field, value, onChange } ) {
 			);
 
 		case 'group':
-			return (
-				<GroupField field={ field } value={ value } onChange={ onChange } />
-			);
+			return <GroupField field={ field } value={ value } onChange={ onChange } depth={ depth } />;
 
 		case 'list':
-			return (
-				<ListField field={ field } value={ value } onChange={ onChange } />
-			);
+			return <ListField field={ field } value={ value } onChange={ onChange } depth={ depth } />;
 
 		case 'library':
-			return (
-				<LibraryField field={ field } value={ value } onChange={ onChange } />
-			);
+			return <LibraryField field={ field } value={ value } onChange={ onChange } depth={ depth } />;
 
 		default:
 			return (
@@ -150,42 +147,66 @@ function SemanticField( { field, value, onChange } ) {
 	}
 }
 
-/** A `group` of sub-fields (collapsible when it has a label). */
-function GroupField( { field, value, onChange } ) {
-	const [ open, setOpen ] = useState( ! field.label || field.expanded !== false );
+/**
+ * A `group` of sub-fields. Top-level groups render as a divided section with a
+ * collapsible heading; nested groups render as a lightly-indented labelled
+ * block. Never a nested Card (matches the editor's tab layout).
+ */
+function GroupField( { field, value, onChange, depth = 0 } ) {
+	const fields = field.fields || [];
 	const obj = value && typeof value === 'object' ? value : {};
 	const setChild = ( name, v ) => onChange( { ...obj, [ name ]: v } );
-	const fields = field.fields || [];
 
-	// Single-field groups collapse to just their child (H5P convention).
+	// H5P convention: a single-field group collapses to just its child.
 	if ( fields.length === 1 ) {
 		return (
-			<SemanticField field={ fields[ 0 ] } value={ obj[ fields[ 0 ].name ] } onChange={ ( v ) => setChild( fields[ 0 ].name, v ) } />
+			<SemanticField field={ fields[ 0 ] } value={ obj[ fields[ 0 ].name ] } onChange={ ( v ) => setChild( fields[ 0 ].name, v ) } depth={ depth } />
 		);
 	}
 
+	const body = (
+		<div className="mt-4">
+			{ fields.map( ( f ) => (
+				<SemanticField key={ f.name } field={ f } value={ obj[ f.name ] } onChange={ ( v ) => setChild( f.name, v ) } depth={ depth + 1 } />
+			) ) }
+		</div>
+	);
+
+	if ( ! field.label ) {
+		return body;
+	}
+
+	// Nested (inside another group/list): light labelled block, indented.
+	if ( depth > 0 ) {
+		return (
+			<div className="mb-5">
+				<span className="block text-[13px] font-medium text-ink mb-1">{ field.label }</span>
+				{ field.description && <p className="text-xs text-gray-400 mb-2">{ field.description }</p> }
+				<div className="pl-4 border-l border-line">{ body }</div>
+			</div>
+		);
+	}
+
+	// Top-level: a divided, collapsible section (matches OverlaysTab sections).
+	return <CollapsibleSection field={ field }>{ body }</CollapsibleSection>;
+}
+
+function CollapsibleSection( { field, children } ) {
+	const [ open, setOpen ] = useState( field.expanded !== false );
 	return (
-		<Card className="p-4 mb-4">
-			{ field.label && (
-				<button type="button" className="flex items-center gap-2 w-full text-left font-medium text-gray-900 mb-1" onClick={ () => setOpen( ! open ) }>
-					{ open ? <BsChevronDown /> : <BsChevronRight /> }
-					{ field.label }
-				</button>
-			) }
-			{ field.description && open && <p className="text-xs text-gray-400 mb-3">{ field.description }</p> }
-			{ open && (
-				<div className="mt-2">
-					{ fields.map( ( f ) => (
-						<SemanticField key={ f.name } field={ f } value={ obj[ f.name ] } onChange={ ( v ) => setChild( f.name, v ) } />
-					) ) }
-				</div>
-			) }
-		</Card>
+		<div className="mt-6 pt-6 border-t border-line first:mt-0 first:pt-0 first:border-0">
+			<button type="button" className="flex items-center gap-2 w-full text-left" onClick={ () => setOpen( ! open ) }>
+				{ open ? <BsChevronDown className="text-gray-400" /> : <BsChevronRight className="text-gray-400" /> }
+				<span className="font-semibold text-gray-900">{ field.label }</span>
+			</button>
+			{ field.description && open && <p className="text-sm text-gray-500 mt-1">{ field.description }</p> }
+			{ open && children }
+		</div>
 	);
 }
 
 /** A `list` of repeated `field` items. */
-function ListField( { field, value, onChange } ) {
+function ListField( { field, value, onChange, depth = 0 } ) {
 	const items = Array.isArray( value ) ? value : [];
 	const item = field.field || {};
 	const min = field.min || 0;
@@ -195,37 +216,59 @@ function ListField( { field, value, onChange } ) {
 	const add = () => onChange( [ ...items, defaultFor( item ) ] );
 	const remove = ( i ) => onChange( items.filter( ( _, idx ) => idx !== i ) );
 
-	return (
-		<div className="mb-5">
-			<div className="flex items-center justify-between mb-2">
-				<span className="text-sm font-medium text-gray-800">{ field.label || field.name }</span>
-				<Badge tone="gray">{ items.length }</Badge>
-			</div>
-			{ field.description && <p className="text-xs text-gray-400 mb-2">{ field.description }</p> }
+	const inner = (
+		<>
 			{ items.map( ( it, i ) => (
-				<div key={ i } className="relative border border-line rounded-lg p-3 mb-2">
-					<div className="flex items-center justify-between mb-1">
-						<span className="text-xs text-gray-400">{ ( item.label || 'Item' ) + ' ' + ( i + 1 ) }</span>
+				<div key={ i } className="relative rounded border border-line p-4 mb-3 bg-gray-50/40">
+					<div className="flex items-center justify-between mb-2">
+						<span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{ ( item.label || field.entity || 'Item' ) + ' ' + ( i + 1 ) }</span>
 						{ items.length > min && (
-							<button type="button" className="text-gray-400 hover:text-red-500" onClick={ () => remove( i ) } aria-label="Remove">
-								<BsTrash />
+							<button type="button" className="text-gray-400 hover:text-danger transition-colors" onClick={ () => remove( i ) } aria-label="Remove">
+								<BsTrash size={ 14 } />
 							</button>
 						) }
 					</div>
-					<SemanticField field={ { ...item, label: item.label } } value={ it } onChange={ ( v ) => setItem( i, v ) } />
+					<SemanticField field={ { ...item, label: undefined } } value={ it } onChange={ ( v ) => setItem( i, v ) } depth={ depth + 1 } />
 				</div>
 			) ) }
 			{ items.length < max && (
-				<Button variant="ghost" size="sm" onClick={ add }>
-					<BsPlus /> Add { ( field.entity || 'item' ) }
+				<Button variant="ghost" size="sm" onClick={ add } className="!gap-1">
+					<BsPlus size={ 18 } /> Add { field.entity || 'item' }
 				</Button>
 			) }
+		</>
+	);
+
+	// Give a labelled list the same section treatment as a group.
+	if ( field.label && depth === 0 ) {
+		return (
+			<CollapsibleSection field={ field }>
+				<div className="mt-4">
+					<ListCount n={ items.length } />
+					{ inner }
+				</div>
+			</CollapsibleSection>
+		);
+	}
+
+	return (
+		<div className="mb-5">
+			{ field.label && (
+				<div className="flex items-center gap-2 mb-2">
+					<span className="text-[13px] font-medium text-ink">{ field.label }</span>
+					<ListCount n={ items.length } />
+				</div>
+			) }
+			{ field.description && <p className="text-xs text-gray-400 mb-2">{ field.description }</p> }
+			{ inner }
 		</div>
 	);
 }
 
+const ListCount = ( { n } ) => <Badge tone="gray">{ n }</Badge>;
+
 /** A `library` field: pick an allowed sub-library and edit its params. */
-function LibraryField( { field, value, onChange } ) {
+function LibraryField( { field, value, onChange, depth = 0 } ) {
 	const options = field.options || [];
 	const current = value && value.library ? value.library : ( options.length === 1 ? options[ 0 ] : '' );
 	const [ semantics, setSemantics ] = useState( null );
@@ -248,22 +291,23 @@ function LibraryField( { field, value, onChange } ) {
 	}, [ current ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
-		<div className="mb-4">
-			<Field label={ field.label || field.name } hint={ field.description }>
-				{ options.length > 1 ? (
+		<div className="mb-5">
+			{ options.length > 1 ? (
+				<Field label={ field.label || field.name } hint={ field.description }>
 					<Select value={ current } onChange={ ( e ) => onChange( { library: e.target.value, params: {}, subContentId: uuid(), metadata: { contentType: machineOf( e.target.value ) } } ) }>
 						<option value="">—</option>
 						{ options.map( ( o ) => <option key={ o } value={ o }>{ o.split( ' ' )[ 0 ].replace( 'H5P.', '' ) }</option> ) }
 					</Select>
-				) : (
-					<div className="text-xs text-gray-400">{ machineOf( current ).replace( 'H5P.', '' ) || '—' }</div>
-				) }
-			</Field>
+				</Field>
+			) : (
+				field.label && <span className="block text-[13px] font-medium text-ink mb-2">{ field.label }</span>
+			) }
 			{ current && semantics && (
-				<div className="pl-3 border-l-2 border-line ml-1">
+				<div className="pl-4 border-l border-line">
 					<SemanticsForm
 						semantics={ semantics }
 						value={ value?.params || {} }
+						depth={ depth + 1 }
 						onChange={ ( params ) => onChange( { ...( value || {} ), library: current, params, subContentId: value?.subContentId || uuid() } ) }
 					/>
 				</div>
@@ -294,12 +338,12 @@ function defaultFor( field ) {
 	}
 }
 
-export default function SemanticsForm( { semantics = [], value = {}, onChange } ) {
+export default function SemanticsForm( { semantics = [], value = {}, onChange, depth = 0 } ) {
 	const set = ( name, v ) => onChange( { ...value, [ name ]: v } );
 	return (
 		<div>
 			{ ( semantics || [] ).map( ( field ) => (
-				<SemanticField key={ field.name } field={ field } value={ value[ field.name ] } onChange={ ( v ) => set( field.name, v ) } />
+				<SemanticField key={ field.name } field={ field } value={ value[ field.name ] } onChange={ ( v ) => set( field.name, v ) } depth={ depth } />
 			) ) }
 		</div>
 	);

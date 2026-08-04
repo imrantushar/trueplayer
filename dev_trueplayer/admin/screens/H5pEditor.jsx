@@ -1,5 +1,5 @@
 import { useEffect, useState } from '@wordpress/element';
-import { Card, Field, Input, Button, Toast, Badge, SectionTitle } from '../components/UI';
+import { Card, Field, Input, Button, Toast, Badge } from '../components/UI';
 import SemanticsForm from '../h5p/SemanticsForm';
 import { api } from '../api';
 
@@ -72,7 +72,7 @@ export default function H5pEditor( { video = null, machineName = '', onBack } ) 
 	}
 
 	return (
-		<div className="max-w-3xl">
+		<div className="max-w-2xl">
 			<div className="flex items-center justify-between mb-5">
 				<div className="flex items-center gap-3">
 					<Button variant="ghost" size="sm" onClick={ onBack }>← Back</Button>
@@ -81,20 +81,18 @@ export default function H5pEditor( { video = null, machineName = '', onBack } ) 
 				<Button onClick={ save } disabled={ saving }>{ saving ? 'Saving…' : 'Save' }</Button>
 			</div>
 
-			<SectionTitle title={ video ? 'Edit interactive content' : 'New interactive content' } description="Authored with TruePlayer, rendered by H5P." />
-
-			<Card className="p-6 mt-4">
+			<Card className="p-6">
 				<Field label="Title" hint="Shown in your Media library (not to viewers).">
 					<Input value={ title } onChange={ ( e ) => setTitle( e.target.value ) } placeholder="Untitled interactive" />
 				</Field>
+
+				<div className="mt-6 pt-6 border-t border-line">
+					<SemanticsForm semantics={ semantics } value={ params } onChange={ setParams } />
+				</div>
 			</Card>
 
-			<div className="mt-6">
-				<SemanticsForm semantics={ semantics } value={ params } onChange={ setParams } />
-			</div>
-
 			{ savedShortcode && (
-				<Card className="p-5 mt-6 border-green-200 bg-green-50">
+				<Card className="p-5 mt-5 !border-green-200 bg-green-50">
 					<p className="text-sm text-gray-700 mb-2">Saved. Embed it anywhere with:</p>
 					<code className="block bg-white border border-line rounded px-3 py-2 text-sm select-all">{ savedShortcode }</code>
 				</Card>
