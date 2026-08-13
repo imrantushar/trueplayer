@@ -1,6 +1,7 @@
 import { useEffect, useState } from '@wordpress/element';
 import { Card, Field, Input, Select, Toggle, Button, Badge } from '../../components/UI';
 import { api } from '../../api';
+import { BsTrash } from 'react-icons/bs';
 
 const uid = () => Math.random().toString( 36 ).slice( 2, 9 );
 
@@ -85,7 +86,7 @@ function QuestionList( { questions, onChange } ) {
 							<option value="boolean">True / False</option>
 						</Select>
 						<div className="flex-1" />
-						<Button variant="danger" onClick={ () => removeQ( qi ) }>Remove</Button>
+						<Button variant="danger" onClick={ () => removeQ( qi ) }><BsTrash /></Button>
 					</div>
 					<Input className="mb-3" value={ q.prompt } onChange={ ( e ) => setQ( qi, { prompt: e.target.value } ) } placeholder="Question prompt…" />
 
@@ -105,7 +106,7 @@ function QuestionList( { questions, onChange } ) {
 									<div key={ o.id } className="flex gap-2 items-center">
 										<input type="radio" name={ `correct-${ q.id }` } checked={ q.correct === o.id } onChange={ () => setQ( qi, { correct: o.id } ) } />
 										<Input value={ o.label } onChange={ ( e ) => setOpt( qi, oi, e.target.value ) } placeholder={ `Option ${ oi + 1 }` } />
-										{ q.options.length > 2 && <Button variant="danger" onClick={ () => removeOpt( qi, oi ) }>×</Button> }
+										{ q.options.length > 2 && <Button variant="danger" onClick={ () => removeOpt( qi, oi ) }><BsTrash /></Button> }
 									</div>
 								) ) }
 							</div>
@@ -144,7 +145,7 @@ export default function GatingTab( { config, patch } ) {
 		<div className="space-y-6">
 			<Card className="p-6 max-w-2xl">
 				<h3 className="font-semibold text-gray-900 mb-4">Watch verification</h3>
-				<div className="grid grid-cols-2 gap-4">
+				<div className="grid grid-cols-2 gap-4 mt-4 pt-5 border-t border-solid border-line">
 					<Field label="Completion threshold (%)" hint="Coverage required to count as 'watched'.">
 						<Input type="number" min="1" max="100" value={ gating.completionThreshold } onChange={ ( e ) => set( { completionThreshold: parseInt( e.target.value, 10 ) || 0 } ) } />
 					</Field>
@@ -152,11 +153,11 @@ export default function GatingTab( { config, patch } ) {
 						<Input type="number" min="1" value={ gating.maxAttempts } onChange={ ( e ) => set( { maxAttempts: parseInt( e.target.value, 10 ) || 1 } ) } />
 					</Field>
 				</div>
-				<Toggle checked={ gating.antiSkip } onChange={ ( v ) => set( { antiSkip: v } ) } label="Anti-skip (block seeking past unwatched parts)" />
+				<Toggle className="mb-6" checked={ gating.antiSkip } onChange={ ( v ) => set( { antiSkip: v } ) } label="Anti-skip (block seeking past unwatched parts)" />
 				<Toggle checked={ gating.requireLoginForGate } onChange={ ( v ) => set( { requireLoginForGate: v } ) } label="Require login to watch (reliable per-person tracking)" />
 			</Card>
 
-			<Card className="p-6">
+			<Card className="p-6 max-w-2xl">
 				<div className="flex items-center justify-between mb-4">
 					<div>
 						<h3 className="font-semibold text-gray-900">Checkpoint questions</h3>
@@ -164,14 +165,14 @@ export default function GatingTab( { config, patch } ) {
 					</div>
 					<Button variant="ghost" onClick={ addCheckpoint }>+ Checkpoint</Button>
 				</div>
-				<div className="space-y-6">
+				<div className="space-y-6 mt-4 pt-5 border-t border-solid border-line">
 					{ gating.checkpoints.map( ( cp, i ) => (
 						<div key={ cp.id } className="border-l-4 border-brand-200 pl-4">
 							<div className="flex gap-2 items-end mb-3">
 								<Field label="At (seconds)"><Input type="number" className="w-28" value={ cp.at } onChange={ ( e ) => setCheckpoint( i, { at: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
 								<Field label="Pass %"><Input type="number" className="w-24" value={ cp.passPercent } onChange={ ( e ) => setCheckpoint( i, { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
 								<div className="flex-1"><Field label="Title"><Input value={ cp.title || '' } onChange={ ( e ) => setCheckpoint( i, { title: e.target.value } ) } placeholder="Checkpoint" /></Field></div>
-								<Button variant="danger" onClick={ () => removeCheckpoint( i ) }>Remove</Button>
+								<Button variant="danger" onClick={ () => removeCheckpoint( i ) }><BsTrash /></Button>
 							</div>
 							<QuestionList questions={ cp.questions || [] } onChange={ ( questions ) => setCheckpoint( i, { questions } ) } />
 						</div>
@@ -180,8 +181,8 @@ export default function GatingTab( { config, patch } ) {
 				</div>
 			</Card>
 
-			<Card className="p-6">
-				<div className="flex items-center justify-between mb-4">
+			<Card className="p-6 max-w-2xl">
+				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-3">
 						<h3 className="font-semibold text-gray-900">Final quiz (end gate)</h3>
 						{ gating.finalQuiz && <Badge tone="amber">on</Badge> }
@@ -189,7 +190,7 @@ export default function GatingTab( { config, patch } ) {
 					<Toggle checked={ !! gating.finalQuiz } onChange={ toggleFinal } label="Enable" />
 				</div>
 				{ gating.finalQuiz && (
-					<div>
+					<div className='mt-4 pt-5 border-t border-solid border-line'>
 						<div className="flex gap-2 items-end mb-4">
 							<div className="flex-1"><Field label="Title"><Input value={ gating.finalQuiz.title || '' } onChange={ ( e ) => setFinal( { title: e.target.value } ) } /></Field></div>
 							<Field label="Pass %"><Input type="number" className="w-24" value={ gating.finalQuiz.passPercent } onChange={ ( e ) => setFinal( { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>

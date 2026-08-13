@@ -15,7 +15,6 @@ export const CUSTOMIZE_DEFAULTS = {
 		volume: true,
 		captions: true,
 		settings: true, // gear menu (speed/quality/captions)
-		speed: true,
 		pip: true,
 		fullscreen: true,
 		download: false,

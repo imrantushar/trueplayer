@@ -30,36 +30,39 @@ export default function SourceTab( { config, patch } ) {
 			</Field>
 
 			{ source.type === 'self' && (
-				<Field label="Video file" hint="Pick an uploaded video from the media library.">
+				<Field label="Video file" required hint="Pick an uploaded video from the media library.">
 					<MediaPicker value={ source.src || '' } onChange={ ( url ) => set( { src: url } ) } accept="video" label="Upload a video" />
 				</Field>
 			) }
 
 			{ source.type === 'bunny' && (
 				<>
-					<Field label="Pull-zone hostname" hint="Your Bunny Stream CDN hostname, e.g. vz-abc123.b-cdn.net">
+					<Field label="Pull-zone hostname" required hint="Your Bunny Stream CDN hostname, e.g. vz-abc123.b-cdn.net">
 						<Input value={ source.pullZone || '' } onChange={ ( e ) => set( { pullZone: e.target.value.replace( /^https?:\/\//, '' ).replace( /\/$/, '' ) } ) } placeholder="vz-abc123.b-cdn.net" />
 					</Field>
-					<Field label="Video ID" hint="The Bunny library video GUID. We build the HLS URL and play it with your custom controls.">
+					<Field label="Video ID" required hint="The Bunny library video GUID. We build the HLS URL and play it with your custom controls.">
 						<Input value={ source.videoId || '' } onChange={ ( e ) => set( { videoId: e.target.value.trim() } ) } placeholder="e.g. 8f3b…-video-guid" />
 					</Field>
 				</>
 			) }
 
 			{ source.type === 'mux' && (
-				<Field label="Mux playback ID" hint="From your Mux asset. Or paste a full signed .m3u8 URL below.">
+				<Field label="Mux playback ID" required hint="From your Mux asset. Or paste a full signed .m3u8 URL below.">
 					<Input value={ source.playbackId || '' } onChange={ ( e ) => set( { playbackId: e.target.value.trim() } ) } placeholder="e.g. a4nOgmxGWg6gULfcBbAa00…" />
 				</Field>
 			) }
 
 			{ source.type === 'bunnyStorage' && (
-				<Field label="File URL" hint="A direct mp4/webm or .m3u8 URL from your Bunny Storage pull zone.">
+				<Field label="File URL" required hint="A direct mp4/webm or .m3u8 URL from your Bunny Storage pull zone.">
 					<Input value={ source.src || '' } onChange={ ( e ) => set( { src: e.target.value.trim() } ) } placeholder="https://your-zone.b-cdn.net/path/video.mp4" />
 				</Field>
 			) }
 
 			{ [ 'hls', 'youtube', 'vimeo', 'url', 'mux' ].includes( source.type ) && ! ( source.type === 'mux' && ! source.src ) && (
-				<Field label={ source.type === 'youtube' || source.type === 'vimeo' ? 'Video URL or ID' : ( source.type === 'mux' ? 'Signed playlist URL (optional)' : 'Media URL' ) }>
+				<Field
+					label={ source.type === 'youtube' || source.type === 'vimeo' ? 'Video URL or ID' : ( source.type === 'mux' ? 'Signed playlist URL (optional)' : 'Media URL' ) }
+					required={ source.type !== 'mux' }
+				>
 					<Input value={ source.src || '' } onChange={ ( e ) => set( { src: e.target.value } ) } placeholder={ source.type === 'youtube' ? 'https://youtube.com/watch?v=…' : 'https://…' } />
 				</Field>
 			) }

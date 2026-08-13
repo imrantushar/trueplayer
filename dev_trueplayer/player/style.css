@@ -76,7 +76,6 @@
 
 .tp-stage {
 	position: relative;
-	width: 100%;
 	aspect-ratio: 16 / 9;
 	background: var(--tp-bg);
 	color: var(--tp-fg);
@@ -1323,8 +1322,7 @@
 	color: #111827;
 }
 .tp-pl-main {
-	flex: 1;
-	min-width: 0;
+	width: min(960px, calc((100vh - 100px) * 16 / 9));
 }
 .tp-pl-list {
 	display: flex;
@@ -1335,6 +1333,9 @@
 	display: flex;
 	gap: 16px;
 	align-items: flex-start;
+    justify-content: center;
+	width: 100%;
+	margin: 0 auto;
 }
 .tp-pl-sidebar .tp-pl-list {
 	/* Proportional so the video keeps the lion's share of a medium column,

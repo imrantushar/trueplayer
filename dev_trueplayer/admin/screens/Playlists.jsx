@@ -1,18 +1,84 @@
-import { useState } from '@wordpress/element';
+import { useState, useEffect, useRef, createPortal } from '@wordpress/element';
 import { api } from '../api';
 import { Card, Button, Input, Select, Toggle, Badge, Field, sourceMeta } from '../components/UI';
+import { BsTrash } from 'react-icons/bs';
+
+// navigator.clipboard.writeText needs a secure context; fall back to the
+// classic textarea + execCommand trick (e.g. plain-http local dev sites).
+function legacyCopy( text ) {
+	const ta = document.createElement( 'textarea' );
+	ta.value = text;
+	ta.style.position = 'fixed';
+	ta.style.opacity = '0';
+	document.body.appendChild( ta );
+	ta.select();
+	let ok = false;
+	try {
+		ok = document.execCommand( 'copy' );
+	} catch ( e ) {
+		ok = false;
+	}
+	document.body.removeChild( ta );
+	return ok;
+}
 
 // The playlist editor, reused by the combined Videos screen (Library).
-export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
+export function PlaylistEditor( { playlist, videos, onBack, onSaved, onEditState } ) {
 	const [ title, setTitle ] = useState( playlist.title );
 	const [ config, setConfig ] = useState( { layout: 'sidebar', videos: [], autoplayNext: true, showTitles: true, ...( playlist.config || {} ) } );
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
+	const [ dirty, setDirty ] = useState( false );
+	const [ toolbarSlot, setToolbarSlot ] = useState( null );
+	const mounted = useRef( false );
 
 	const [ adding, setAdding ] = useState( false );
 	const [ query, setQuery ] = useState( '' );
 	const [ dragIndex, setDragIndex ] = useState( null );
 	const [ overIndex, setOverIndex ] = useState( null );
+	const [ copied, setCopied ] = useState( false );
+
+	const copyShortcode = () => {
+		const sc = playlist.shortcode;
+		if ( ! sc ) {
+			return;
+		}
+		const markCopied = () => {
+			setCopied( true );
+			setTimeout( () => setCopied( false ), 1500 );
+		};
+		if ( navigator.clipboard && window.isSecureContext ) {
+			navigator.clipboard.writeText( sc ).then( markCopied ).catch( () => {
+				if ( legacyCopy( sc ) ) {
+					markCopied();
+				}
+			} );
+		} else if ( legacyCopy( sc ) ) {
+			markCopied();
+		}
+	};
+
+	useEffect( () => {
+		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
+	}, [] );
+
+	// title/config are seeded once from `playlist` — any change after mount is
+	// a real edit.
+	useEffect( () => {
+		if ( ! mounted.current ) {
+			mounted.current = true;
+			return;
+		}
+		setDirty( true );
+	}, [ title, config ] );
+
+	// Report title/dirty/back state up to the app shell — it drives the
+	// breadcrumb ("Media playlists > this playlist", title editable right in
+	// the trail, parent crumb clicking back) and the unsaved-changes guard.
+	useEffect( () => {
+		onEditState && onEditState( { title, dirty, onBack, onTitleChange: setTitle } );
+	}, [ title, dirty ] );
+	useEffect( () => () => onEditState && onEditState( null ), [] );
 
 	const set = ( partial ) => setConfig( ( c ) => ( { ...c, ...partial } ) );
 	const selected = config.videos || [];
@@ -46,6 +112,7 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
 		setSaving( true );
 		try {
 			await api.updatePlaylist( playlist.id, { title, config } );
+			setDirty( false );
 			setSaved( true );
 			setTimeout( () => setSaved( false ), 2000 );
 			onSaved();
@@ -56,33 +123,35 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
 
 	return (
 		<div>
-			<div className="flex items-center gap-3 mb-6">
-				<Button variant="ghost" onClick={ onBack }>← Back</Button>
-				<input className="w-full max-w-md text-2xl font-bold text-ink bg-transparent outline-none border-b border-transparent focus:border-line" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } />
-				<div className="flex-1" />
-				{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-				<Button onClick={ save } disabled={ saving }>{ saving ? 'Saving…' : 'Save' }</Button>
-			</div>
-
+			{ /* Save lives in the topbar (portaled) — same pattern as the video editor. */ }
+			{ toolbarSlot && createPortal(
+				<>
+					{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
+					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+				</>,
+				toolbarSlot
+			) }
 			<div className="grid md:grid-cols-2 gap-6">
 				<Card className="p-6">
-					<h3 className="font-semibold text-ink mb-4">Playlist settings</h3>
+					<h3 className="font-semibold text-ink !mb-5 !pb-4 border-b border-solid border-line">Playlist settings</h3>
 					<Field label="Layout">
 						<Select value={ config.layout } onChange={ ( e ) => set( { layout: e.target.value } ) }>
 							<option value="sidebar">Sidebar (player + list)</option>
 							<option value="grid">Grid (cards)</option>
 						</Select>
 					</Field>
-					<Toggle checked={ config.autoplayNext } onChange={ ( v ) => set( { autoplayNext: v } ) } label="Autoplay the next video" />
+					<Toggle checked={ config.autoplayNext } onChange={ ( v ) => set( { autoplayNext: v } ) } label="Autoplay the next video" className="mb-6" />
 					<Toggle checked={ config.showTitles } onChange={ ( v ) => set( { showTitles: v } ) } label="Show video titles" />
-					<div className="mt-4 pt-4 border-t border-line">
+					<div className="mt-4 pt-4 border-t border-line flex items-center justify-between gap-4">
 						<p className="text-[13px] font-medium text-ink mb-1">Embed</p>
-						<code className="text-xs bg-gray-100 rounded px-2 py-1">{ playlist.shortcode }</code>
+						<code className="text-xs bg-gray-100 rounded px-2 py-1 cursor-pointer hover:text-brand-500" onClick={ copyShortcode } title="Copy shortcode">
+							{ copied ? 'Copied ✓' : playlist.shortcode }
+						</code>
 					</div>
 				</Card>
 
 				<Card className="p-6">
-					<h3 className="font-semibold text-ink mb-1">Media in this playlist</h3>
+					<h3 className="font-semibold text-ink !mb-5 !pb-4 border-b border-solid border-line">Media in this playlist</h3>
 					<p className="text-sm text-gray-500 mb-3">{ selected.length } selected · drag to reorder.</p>
 					<div className="space-y-2 mb-4">
 						{ selected.map( ( id, i ) => {
@@ -105,7 +174,7 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved } ) {
 										<button className="text-gray-300 hover:text-ink px-1" title="Move up" onClick={ () => move( i, -1 ) }>↑</button>
 										<button className="text-gray-300 hover:text-ink px-1" title="Move down" onClick={ () => move( i, 1 ) }>↓</button>
 									</div>
-									<Button variant="danger" size="sm" onClick={ () => remove( id ) }>×</Button>
+									<Button variant="danger" size="sm" onClick={ () => remove( id ) }><BsTrash /></Button>
 								</div>
 							);
 						} ) }

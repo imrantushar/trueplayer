@@ -4,7 +4,7 @@ Tags: video, player, lms, quiz, webhooks, watch tracking
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 1.0-beta1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,5 +22,27 @@ Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources 
 
 == Changelog ==
 
-= 0.1.0 =
-* Initial scaffold.
+= 1.0-beta1 - 13/08/2026 =
+First public beta. TruePlayer ships as a native WordPress video & audio player built for enforcement and automation.
+
+**Player**
+* Native React player with multiple skins (default, modern, simple, minimal, standard).
+* Sources: self-hosted / direct URL, HLS, audio, YouTube and Vimeo.
+* Full customization: control toggles, autoplay/loop/save-position/sticky-float, preload & load strategy (facade/eager/on-visible), accent color, play-button style, roundness, control-bar style, aspect ratio, caption size/color/background, playback speeds, Picture-in-Picture.
+* Optional bundled H5P interactive engine (import + render H5P content, xAPI fed into the event pipeline).
+
+**Watch verification**
+* Server-authoritative coverage tracking proves a viewer genuinely watched (whole-second progress only), with anti-skip / seek-jump and playback-rate guards.
+
+**Quiz gating**
+* Checkpoint and end-gate questions attached to a video; server-side grading (answers never sent to the client). Failing locks the video and resets coverage until the viewer re-watches and re-attempts. (Enforcement activates with TruePlayer Pro.)
+
+**Events & webhooks**
+* Event bus: view.started, progress.milestone, view.completed, checkpoint.passed/failed, quiz.passed/failed, video.locked/unlocked, subscriber.added.
+* HMAC-SHA256 signed JSON webhooks (X-TruePlayer-Signature header) for automation tools.
+
+**Admin**
+* React single-page admin: Dashboard, Media library, Editor, Playlists, Presets, Settings (and Interactive when the H5P engine is present).
+* WP-CLI `trueplayer` command; REST API across videos, progress, grading, playlists, presets, subtitles, viewers and webhooks.
+
+Premium sources (Bunny, Bunny Storage, Mux, signed/private streaming), premium skins (floating, ambient), playlists, interactive layers, analytics, LMS progression and white-label are unlocked by TruePlayer Pro.

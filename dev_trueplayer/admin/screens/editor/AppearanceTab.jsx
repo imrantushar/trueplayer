@@ -2,6 +2,7 @@ import { useEffect, useState } from '@wordpress/element';
 import { Card, Field, Input, Button, Select, Textarea } from '../../components/UI';
 import { pickMedia } from '../../utils/media';
 import { parseChapters, secToClock, clockToSec } from '../../utils/chapters';
+import { BsTrash } from 'react-icons/bs';
 
 /** mm:ss input with ± steppers, clamped to [0, max]. Commits seconds on blur/Enter. */
 function TimeInput( { seconds, onCommit, max = 0 } ) {
@@ -123,10 +124,10 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 	};
 
 	return (
-		<div className="space-y-6">
-			<div className="grid md:grid-cols-2 gap-6">
-				<Card className="p-6">
-					<h3 className="font-semibold text-gray-900 mb-4">Logo / watermark</h3>
+		<div className="space-y-6 max-w-2xl">
+			<Card className="p-6">
+				<h3 className="font-semibold text-gray-900">Logo / watermark</h3>
+				<div className='mt-4 pt-5 border-t border-solid border-line'>
 					{ branding.logo ? (
 						<div className="flex items-center gap-3 mb-4">
 							<div className="p-2 bg-gray-900 rounded-card shrink-0">
@@ -165,71 +166,85 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 							</Field>
 						</>
 					) }
-				</Card>
-
-				<Card className="p-6">
-					<div className="flex items-center justify-between mb-1">
-						<h3 className="font-semibold text-gray-900">Captions &amp; subtitles</h3>
-						{ source.type === 'youtube' && (
-							<Button variant="ghost" size="sm" onClick={ importYoutube } disabled={ ytImporting }>
-								{ ytImporting ? 'Importing…' : 'Import from YouTube' }
-							</Button>
-						) }
-					</div>
-					<p className="text-sm text-muted mb-4">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
-
-					{ subtitles.map( ( t, i ) => (
-						<div key={ i } className="border border-line rounded-card p-4 mb-3">
-							<div className="flex gap-2 mb-3">
-								{ ! t.src ? (
-									<Button variant="secondary" size="sm" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Upload .vtt file</Button>
-								) : (
-									<div className="flex items-center gap-2 text-sm text-muted min-w-0">
-										<span className="truncate max-w-[220px]">{ t.src.split( '/' ).pop() }</span>
-										<button className="text-brand-500 shrink-0" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Change</button>
-									</div>
-								) }
-								<div className="flex-1" />
-								<Button variant="ghost" size="sm" onClick={ () => removeTrack( i ) }>Remove</Button>
-							</div>
-							<div className="grid grid-cols-3 gap-x-3 items-end">
-								<Field label="Label" className="mb-0"><Input value={ t.label || '' } onChange={ ( e ) => setTrack( i, { label: e.target.value } ) } placeholder="English" /></Field>
-								<Field label="Lang" className="mb-0"><Input value={ t.srclang || '' } onChange={ ( e ) => setTrack( i, { srclang: e.target.value } ) } placeholder="en" /></Field>
-								<label className="flex items-center gap-2 h-10 text-[13px] text-ink">
-									<input type="radio" name="tp-default-track" checked={ !! t.default } onChange={ () => makeDefault( i ) } /> Default
-								</label>
-							</div>
-						</div>
-					) ) }
-
-					<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
-					{ note && <p className="text-xs text-brand-600 mt-2">{ note }</p> }
-				</Card>
-			</div>
+				</div>
+			</Card>
 
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 mb-1">Description below player</h3>
+				<div className="flex items-center justify-between pb-4 mb-5 border-b border-solid border-line">
+					<h3 className="font-semibold text-gray-900">Captions &amp; subtitles</h3>
+					{ source.type === 'youtube' && (
+						<Button variant="ghost" size="sm" onClick={ importYoutube } disabled={ ytImporting }>
+							{ ytImporting ? 'Importing…' : 'Import from YouTube' }
+						</Button>
+					) }
+				</div>
+
+				{ subtitles.length === 0 ? (
+					<div className="flex items-center justify-between gap-3">
+						<p className="text-sm text-muted">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
+						<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
+					</div>
+				) : (
+					<p className="text-sm text-muted mb-4">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
+				) }
+
+				{ subtitles.map( ( t, i ) => (
+					<div key={ i } className="border border-line rounded-card p-4 my-6">
+						<div className="flex gap-2 mb-3">
+							{ ! t.src ? (
+								<Button variant="secondary" size="sm" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Upload .vtt file</Button>
+							) : (
+								<div className="flex items-center gap-2 text-sm text-muted min-w-0">
+									<span className="truncate max-w-[220px]">{ t.src.split( '/' ).pop() }</span>
+									<button className="text-brand-500 shrink-0" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Change</button>
+								</div>
+							) }
+							<div className="flex-1" />
+							<Button variant="ghost" size="sm" onClick={ () => removeTrack( i ) }>Remove</Button>
+						</div>
+						<div className="grid grid-cols-3 gap-x-3 items-end">
+							<Field label="Label" className="mb-0"><Input value={ t.label || '' } onChange={ ( e ) => setTrack( i, { label: e.target.value } ) } placeholder="English" /></Field>
+							<Field label="Lang" className="mb-0"><Input value={ t.srclang || '' } onChange={ ( e ) => setTrack( i, { srclang: e.target.value } ) } placeholder="en" /></Field>
+							<label className="flex items-center gap-2 h-10 text-[13px] text-ink">
+								<input type="radio" name="tp-default-track" checked={ !! t.default } onChange={ () => makeDefault( i ) } /> Default
+							</label>
+						</div>
+					</div>
+				) ) }
+
+				{ subtitles.length > 0 && (
+					<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
+				) }
+				{ note && <p className="text-xs text-brand-600 mt-2">{ note }</p> }
+			</Card>
+
+			<Card className="p-6">
+				<h3 className="font-semibold text-gray-900 !mb-1">Description below player</h3>
 				<p className="text-sm text-gray-500 mb-3">Shown directly under the player wherever it's embedded. Basic HTML allowed.</p>
-				<Textarea
-					rows={ 4 }
-					value={ config.description || '' }
-					onChange={ ( e ) => patch( { description: e.target.value } ) }
-					placeholder="What this video covers, links, resources…"
-				/>
+				<div className='mt-4 pt-5 border-t border-solid border-line'>
+					<Textarea
+						rows={ 4 }
+						value={ config.description || '' }
+						onChange={ ( e ) => patch( { description: e.target.value } ) }
+						placeholder="What this video covers, links, resources…"
+					/>
+				</div>
 			</Card>
 
 			<Card className="p-6">
 				<div className="flex items-center justify-between mb-1">
-					<h3 className="font-semibold text-gray-900">Chapters</h3>
+					<div>
+						<h3 className="font-semibold text-gray-900 !mb-1">Chapters</h3>
+						<p className="text-sm text-gray-400">Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss{ duration > 0 ? ` · max ${ secToClock( duration ) }` : '' }.</p>
+					</div>
 					<div className="flex gap-2">
 						<Button variant="ghost" onClick={ () => { setImportOpen( ( o ) => ! o ); setNote( '' ); } }>Import</Button>
 						<Button variant="ghost" onClick={ addChapter }>+ Add</Button>
 					</div>
 				</div>
-				<p className="text-sm text-gray-400 mb-4">Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss{ duration > 0 ? ` · max ${ secToClock( duration ) }` : '' }.</p>
 
 				{ importOpen && (
-					<div className="mb-4 p-4 bg-gray-50 rounded-md border border-line">
+					<div className="mt-6 p-4 bg-gray-50 rounded-md border border-line">
 						<p className="text-[13px] font-medium text-ink mb-2">Paste timestamps or a WebVTT file</p>
 						<Textarea
 							rows={ 5 }
@@ -254,12 +269,12 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 
 				{ chapters.length === 0 && ! importOpen && <p className="text-sm text-gray-400">No chapters yet — add one or import a list.</p> }
 
-				<div className="space-y-2">
+				<div className="space-y-2 mt-6">
 					{ chapters.map( ( c, i ) => (
 						<div key={ i } className="flex gap-2 items-center">
 							<TimeInput seconds={ c.at } onCommit={ ( s ) => setChapter( i, { at: s } ) } max={ duration } />
 							<Input value={ c.label } onChange={ ( e ) => setChapter( i, { label: e.target.value } ) } placeholder="Chapter title" />
-							<Button variant="danger" onClick={ () => removeChapter( i ) }>×</Button>
+							<Button variant="danger" onClick={ () => removeChapter( i ) }><BsTrash /></Button>
 						</div>
 					) ) }
 				</div>

@@ -194,7 +194,7 @@ export function currentChapter( chapters, current, duration ) {
 	return seg && seg.label ? seg.label : '';
 }
 
-function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, speeds, showSpeed } ) {
+function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, speeds } ) {
 	const [ open, setOpen ] = useState( false );
 	const rates = speeds && speeds.length ? speeds : [ 0.5, 0.75, 1, 1.25, 1.5, 2 ];
 	const qualities = provider?.getQualities?.() || [];
@@ -207,16 +207,12 @@ function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, 
 			</button>
 			{ open && (
 				<div className="tp-menu">
-					{ showSpeed && (
-						<>
-							<div className="tp-menu-section">Speed</div>
-							{ rates.map( ( r ) => (
-								<button key={ r } className={ `tp-menu-item ${ r === rate ? 'is-active' : '' }` } onClick={ () => { setRate( r ); setOpen( false ); } }>
-									{ r === 1 ? 'Normal' : `${ r }×` }
-								</button>
-							) ) }
-						</>
-					) }
+					<div className="tp-menu-section">Speed</div>
+					{ rates.map( ( r ) => (
+						<button key={ r } className={ `tp-menu-item ${ r === rate ? 'is-active' : '' }` } onClick={ () => { setRate( r ); setOpen( false ); } }>
+							{ r === 1 ? 'Normal' : `${ r }×` }
+						</button>
+					) ) }
 					{ qualities.length > 0 && (
 						<>
 							<div className="tp-menu-section">Quality</div>
@@ -254,10 +250,6 @@ export default function Controls( props ) {
 
 	const show = ( key, fallback = true ) => ( controls[ key ] === undefined ? fallback : controls[ key ] );
 	const chapterNow = currentChapter( chapters, current, duration );
-	const settingsHasContent =
-		( show( 'speed' ) ) ||
-		( provider?.getQualities?.().length > 0 ) ||
-		( provider?.getTextTracks?.().length > 0 );
 
 	return (
 		<div className="tp-controls">
@@ -308,8 +300,8 @@ export default function Controls( props ) {
 						<Icon d={ P.list } />
 					</button>
 				) }
-				{ show( 'settings' ) && settingsHasContent && (
-					<Menu provider={ provider } rate={ rate } setRate={ onRate } quality={ quality } setQuality={ onQuality } track={ track } setTrack={ onTrack } speeds={ speeds } showSpeed={ show( 'speed' ) } />
+				{ show( 'settings' ) && (
+					<Menu provider={ provider } rate={ rate } setRate={ onRate } quality={ quality } setQuality={ onQuality } track={ track } setTrack={ onTrack } speeds={ speeds } />
 				) }
 				{ show( 'pip' ) && capabilities?.pip && ! hidePiP && (
 					<button className="tp-btn" aria-label="Picture in picture" onClick={ onPiP }>

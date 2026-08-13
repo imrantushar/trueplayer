@@ -11,13 +11,10 @@ export const PAGE_OF = {
 	editor: SLUG + '-videos',
 	analytics: SLUG + '-videos',
 	playlists: SLUG + '-playlists',
+	interactive: SLUG + '-interactive',
 	presets: SLUG + '-presets',
 	settings: SLUG + '-settings',
 };
-
-export function currentPage() {
-	return new URLSearchParams( window.location.search ).get( 'page' ) || SLUG;
-}
 
 /** Resolve the active screen + params from the URL. */
 export function parseRoute() {
@@ -37,6 +34,9 @@ export function parseRoute() {
 	}
 	if ( page === SLUG + '-playlists' ) {
 		return { name: 'playlists' };
+	}
+	if ( page === SLUG + '-interactive' ) {
+		return { name: 'interactive' };
 	}
 	if ( page === SLUG + '-presets' ) {
 		return { name: 'presets' };

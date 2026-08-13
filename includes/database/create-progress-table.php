@@ -27,7 +27,7 @@ class CreateProgressTable {
 		$table = $prefix . TRUEPLAYER_DB_PREFIX . '_progress';
 
 		$sql = "CREATE TABLE {$table} (
-			id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			video_id BIGINT UNSIGNED NOT NULL,
 			subject_type VARCHAR(16) NOT NULL DEFAULT 'guest',
 			subject_id VARCHAR(64) NOT NULL,
@@ -47,6 +47,7 @@ class CreateProgressTable {
 			last_seen DATETIME NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY  (id),
 			UNIQUE KEY uq_subject_video (video_id, subject_type, subject_id),
 			INDEX idx_video_status (video_id, status),
 			INDEX idx_subject (subject_type, subject_id)

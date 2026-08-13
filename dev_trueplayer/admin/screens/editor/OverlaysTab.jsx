@@ -1,6 +1,7 @@
 import { useState } from '@wordpress/element';
 import { Card, Field, Input, Select, Toggle, Button, Badge, ColorInput } from '../../components/UI';
 import MediaPicker from '../../components/MediaPicker';
+import { BsTrash } from 'react-icons/bs';
 
 const newOverlay = ( type = 'cta' ) => ( {
 	id: 'ov_' + Math.random().toString( 36 ).slice( 2, 8 ),
@@ -29,36 +30,36 @@ export default function OverlaysTab( { config, patch } ) {
 	const addAndOpen = ( type ) => { const o = newOverlay( type ); patch( { overlays: [ ...overlays, o ] } ); setOpenId( o.id ); setMenu( false ); };
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-6 max-w-2xl">
 			{ /* Action bar */ }
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 mb-1">Action bar</h3>
-				<p className="text-sm text-gray-500 mb-3">A persistent, clickable bar over the player — text plus a button.</p>
-				<Toggle checked={ !! actionBar.enabled } onChange={ ( v ) => setBar( { enabled: v } ) } label="Show the action bar" />
-				{ actionBar.enabled && (
-					<>
-						<Field label="Text"><Input value={ actionBar.text || '' } onChange={ ( e ) => setBar( { text: e.target.value } ) } placeholder="Limited offer — 30% off the full course" /></Field>
-						<div className="grid md:grid-cols-2 gap-x-6">
-							<Field label="Button label"><Input value={ actionBar.buttonLabel || '' } onChange={ ( e ) => setBar( { buttonLabel: e.target.value } ) } placeholder="Get it now" /></Field>
-							<Field label="Button URL"><Input value={ actionBar.buttonUrl || '' } onChange={ ( e ) => setBar( { buttonUrl: e.target.value } ) } placeholder="https://…" /></Field>
-							<Field label="Position">
-								<Select value={ actionBar.position || 'bottom' } onChange={ ( e ) => setBar( { position: e.target.value } ) }>
-									<option value="bottom">Bottom</option>
-									<option value="top">Top</option>
-								</Select>
-							</Field>
-							<Field label="Background" hint="Defaults to the accent color.">
-								<ColorInput value={ actionBar.background || '' } onChange={ ( v ) => setBar( { background: v } ) } placeholder="(accent)" />
-							</Field>
+				<h3 className="font-semibold text-gray-900 !mb-1">Action bar</h3>
+				<p className="text-sm text-gray-500">A persistent, clickable bar over the player — text plus a button.</p>
+				<div className='mt-4 pt-5 border-t border-solid border-line'>
+					<Toggle checked={ !! actionBar.enabled } onChange={ ( v ) => setBar( { enabled: v } ) } label="Show the action bar" />
+					{ actionBar.enabled && (
+						<div className="mt-6">
+							<Field label="Text"><Input value={ actionBar.text || '' } onChange={ ( e ) => setBar( { text: e.target.value } ) } placeholder="Limited offer — 30% off the full course" /></Field>
+							<div className="grid md:grid-cols-2 gap-x-6">
+								<Field label="Button label"><Input value={ actionBar.buttonLabel || '' } onChange={ ( e ) => setBar( { buttonLabel: e.target.value } ) } placeholder="Get it now" /></Field>
+								<Field label="Button URL"><Input value={ actionBar.buttonUrl || '' } onChange={ ( e ) => setBar( { buttonUrl: e.target.value } ) } placeholder="https://…" /></Field>
+								<Field label="Position">
+									<Select value={ actionBar.position || 'bottom' } onChange={ ( e ) => setBar( { position: e.target.value } ) }>
+										<option value="bottom">Bottom</option>
+										<option value="top">Top</option>
+									</Select>
+								</Field>
+								<Field label="Background" hint="Defaults to the accent color.">
+									<ColorInput value={ actionBar.background || '' } onChange={ ( v ) => setBar( { background: v } ) } placeholder="(accent)" />
+								</Field>
+							</div>
 						</div>
-					</>
-				) }
+					) }
+				</div>
 			</Card>
 
-			<div>
-				<h3 className="font-semibold text-gray-900">Overlays</h3>
-				<p className="text-sm text-gray-500">CTA cards pause for attention; text overlays label the picture during a window.</p>
-			</div>
+			<h3 className="font-semibold text-gray-900 !mb-1">Overlays</h3>
+			<p className="text-sm text-gray-500">CTA cards pause for attention; text overlays label the picture during a window.</p>
 
 			{ overlays.length === 0 && (
 				<Card className="p-10 text-center border-dashed">
@@ -140,11 +141,11 @@ export default function OverlaysTab( { config, patch } ) {
 											{ o.trigger === 'time' && (
 												<Toggle checked={ o.pause } onChange={ ( v ) => setOne( i, { pause: v } ) } label="Pause the video while showing" />
 											) }
-											<Toggle checked={ o.dismissible !== false } onChange={ ( v ) => setOne( i, { dismissible: v } ) } label="Let viewers dismiss it (× close)" />
+											<Toggle className="mt-6" checked={ o.dismissible !== false } onChange={ ( v ) => setOne( i, { dismissible: v } ) } label="Let viewers dismiss it (× close)" />
 										</>
 									) }
 									<div className="text-right mt-2">
-										<Button variant="danger" size="sm" onClick={ () => remove( i ) }>Remove</Button>
+										<Button variant="danger" size="sm" onClick={ () => remove( i ) }><BsTrash /></Button>
 									</div>
 								</div>
 							) }

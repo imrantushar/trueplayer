@@ -78,3 +78,14 @@ body[class*="page_trueplayer"] #wpbody-content {
 	color: var(--tp-ink);
 	font-weight: 600;
 }
+
+/* No implicit UA spacing — every gap is an explicit Tailwind margin/padding utility. */
+.tp-admin h1,
+.tp-admin h2,
+.tp-admin h3,
+.tp-admin h4,
+.tp-admin h5,
+.tp-admin h6,
+.tp-admin p {
+	margin: 0;
+}
