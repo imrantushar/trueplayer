@@ -35,6 +35,7 @@ class CreateH5PTables {
 			library_id INT UNSIGNED NOT NULL,
 			parameters LONGTEXT NOT NULL,
 			filtered LONGTEXT NOT NULL,
+			filtered_hash CHAR(64) NULL,
 			slug VARCHAR(127) NOT NULL,
 			embed_type VARCHAR(127) NOT NULL,
 			disable INT UNSIGNED NOT NULL DEFAULT 0,

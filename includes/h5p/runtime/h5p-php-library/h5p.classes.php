@@ -4711,7 +4711,7 @@ class H5PContentValidator {
 
     $isSubContent = isset($semantics->isSubContent) && $semantics->isSubContent === TRUE;
 
-    if (count($semantics->fields) == 1 && $flatten && !$isSubContent) {
+    if (isset($semantics->fields) && count($semantics->fields) == 1 && $flatten && !$isSubContent) {
       $field = $semantics->fields[0];
       $function = $this->typeMap[$field->type];
       $this->$function($group, $field);
@@ -4725,7 +4725,7 @@ class H5PContentValidator {
 
         // Find semantics for name=$key
         $found = FALSE;
-        foreach ($semantics->fields as $field) {
+        foreach (($semantics->fields ?? array()) as $field) {
           if ($field->name == $key) {
             if (isset($semantics->optional) && $semantics->optional) {
               $field->optional = TRUE;
@@ -4818,6 +4818,19 @@ class H5PContentValidator {
     if (!isset($this->libraries[$value->library])) {
       $libSpec = H5PCore::libraryFromString($value->library);
       $library = $this->h5pC->loadLibrary($libSpec['machineName'], $libSpec['majorVersion'], $libSpec['minorVersion']);
+      // TruePlayer hardening: the referenced library may not be installed (our
+      // builder can save a sub-content type — e.g. H5P.Video — that was never
+      // installed). Loading it then returns empty, its semantics is null, and
+      // recursing into validateGroup() would fatal on count(null) under PHP 8.
+      // Drop the invalid sub-content instead, exactly like the not-in-options
+      // branch above does.
+      if (empty($library)) {
+        $this->h5pF->setErrorMessage($this->h5pF->t('The H5P library %library used in the content is not valid', array(
+          '%library' => $value->library
+        )));
+        $value = NULL;
+        return;
+      }
       $library['semantics'] = $this->h5pC->loadLibrarySemantics($libSpec['machineName'], $libSpec['majorVersion'], $libSpec['minorVersion']);
       $this->libraries[$value->library] = $library;
     }

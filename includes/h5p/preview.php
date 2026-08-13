@@ -51,9 +51,9 @@ class Preview {
 		$markup = Module::is_h5p( $video_id ) ? do_shortcode( sprintf( '[trueplayer id="%d"]', $video_id ) ) : '';
 
 		// Minimal, theme-free document. H5P core + library assets and the
-		// H5PIntegration global are all footer-enqueued by H5P\Assets, so a
-		// single wp_footer() flushes everything the runtime needs — no wp_head,
-		// so the theme's styles never bleed into the preview.
+		// H5PIntegration global are all footer-enqueued by H5P\Assets, so flushing
+		// just those gives the runtime everything it needs — no wp_head, so the
+		// theme's styles never bleed into the preview.
 		header( 'Content-Type: text/html; charset=utf-8' );
 		echo '<!doctype html><html ' . get_language_attributes() . '><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
 		echo '<style>html,body{margin:0;padding:16px;background:#fff;color:#1f2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}.trueplayer-h5p-notice{display:none}</style>';
@@ -62,7 +62,15 @@ class Preview {
 		if ( '' === trim( wp_strip_all_tags( $markup ) ) && '' === trim( $markup ) ) {
 			echo '<p style="color:#9ca3af">Nothing to preview yet.</p>';
 		}
-		do_action( 'wp_footer' );
+		// Flush only the H5P runtime's own footer output — its H5PIntegration
+		// global (+ style links) and the footer-enqueued core/library scripts —
+		// rather than firing the site-wide wp_footer. Running the full wp_footer
+		// stack would execute every unrelated theme/plugin/core footer callback
+		// (e.g. the block-template skip link), whose markup — and any PHP
+		// deprecation notices under WP_DEBUG_DISPLAY — would bleed into this
+		// isolated preview document.
+		Assets::print_settings();
+		wp_print_footer_scripts();
 		echo '</body></html>';
 		exit;
 	}
