@@ -1,6 +1,7 @@
 import { useState } from '@wordpress/element';
 import { Card, Field, Input, Select, Button, Textarea } from '../../components/UI';
 import MediaPicker from '../../components/MediaPicker';
+import { BsTrash } from 'react-icons/bs';
 
 const uid = () => 'ly_' + Math.random().toString( 36 ).slice( 2, 8 );
 
@@ -110,7 +111,7 @@ export default function LayersTab( { config, patch } ) {
 	return (
 		<div className="space-y-4">
 			<div>
-				<h3 className="font-semibold text-gray-900">Interactive layers</h3>
+				<h3 className="font-semibold text-gray-900 !mb-1">Interactive layers</h3>
 				<p className="text-sm text-gray-500">Timed elements over the video — hotspots, banners, shortcodes and email forms.</p>
 			</div>
 
@@ -191,7 +192,7 @@ export default function LayersTab( { config, patch } ) {
 					) }
 
 					<ConditionsEditor value={ l.conditions } onChange={ ( c ) => setOne( i, { conditions: c } ) } />
-					<div className="text-right mt-2"><Button variant="danger" size="sm" onClick={ () => remove( i ) }>Remove</Button></div>
+					<div className="text-right mt-2"><Button variant="danger" size="sm" onClick={ () => remove( i ) }><BsTrash /></Button></div>
 					</div>
 					) }
 				</Card>

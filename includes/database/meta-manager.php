@@ -35,6 +35,41 @@ class MetaManager {
 			]
 		);
 
+		// Rendering engine for this item: 'native' (default — TruePlayer's own
+		// player) or 'h5p' (rendered by the bundled H5P runtime). A dedicated,
+		// queryable meta rather than a key inside `_trueplayer_config` so the
+		// Library screen and the frontend router can branch without decoding
+		// the whole JSON blob. Absent meta reads as 'native'.
+		register_post_meta(
+			TRUEPLAYER_VIDEO_POST_TYPE,
+			'_trueplayer_engine',
+			[
+				'type'          => 'string',
+				'single'        => true,
+				'default'       => 'native',
+				'show_in_rest'  => true,
+				'auth_callback' => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			]
+		);
+
+		// Links an H5P-engine video to its row in the H5P `contents` table. Only
+		// meaningful when `_trueplayer_engine` is `h5p`.
+		register_post_meta(
+			TRUEPLAYER_VIDEO_POST_TYPE,
+			'_trueplayer_h5p_content_id',
+			[
+				'type'          => 'integer',
+				'single'        => true,
+				'default'       => 0,
+				'show_in_rest'  => true,
+				'auth_callback' => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			]
+		);
+
 		register_post_meta(
 			TRUEPLAYER_PRESET_POST_TYPE,
 			'_trueplayer_preset',

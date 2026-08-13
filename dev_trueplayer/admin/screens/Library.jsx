@@ -1,6 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Card, Input, Select, Field, Badge, Modal, Pagination, Thumb, sourceMeta } from '../components/UI';
+import { Button, Card, Input, Select, Field, Badge, Modal, Pagination, Thumb, sourceMeta, OptionMenu } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
 import { PlaylistEditor } from './Playlists';
@@ -17,7 +17,26 @@ const VIDEO_TYPES = [
 
 const PER_PAGE = 10;
 
-export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) {
+// navigator.clipboard.writeText needs a secure context; fall back to the
+// classic textarea + execCommand trick (e.g. plain-http local dev sites).
+function legacyCopy( text ) {
+	const ta = document.createElement( 'textarea' );
+	ta.value = text;
+	ta.style.position = 'fixed';
+	ta.style.opacity = '0';
+	document.body.appendChild( ta );
+	ta.select();
+	let ok = false;
+	try {
+		ok = document.execCommand( 'copy' );
+	} catch ( e ) {
+		ok = false;
+	}
+	document.body.removeChild( ta );
+	return ok;
+}
+
+export default function Library( { onEdit, onViewers, initialTab = 'videos', onEditState } ) {
 	const [ tab, setTab ] = useState( initialTab === 'playlists' ? 'playlists' : 'videos' );
 	const [ videos, setVideos ] = useState( null );
 	const [ playlists, setPlaylists ] = useState( null );
@@ -71,10 +90,21 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 
 	const [ copied, setCopied ] = useState( null );
 	const copy = ( id, sc ) => {
-		if ( navigator.clipboard ) {
-			navigator.clipboard.writeText( sc );
+		if ( ! sc ) {
+			return;
+		}
+		const markCopied = () => {
 			setCopied( id );
 			setTimeout( () => setCopied( ( c ) => ( c === id ? null : c ) ), 1500 );
+		};
+		if ( navigator.clipboard && window.isSecureContext ) {
+			navigator.clipboard.writeText( sc ).then( markCopied ).catch( () => {
+				if ( legacyCopy( sc ) ) {
+					markCopied();
+				}
+			} );
+		} else if ( legacyCopy( sc ) ) {
+			markCopied();
 		}
 	};
 
@@ -86,6 +116,7 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 				videos={ videos || [] }
 				onBack={ () => { setEditingPlaylist( null ); loadPlaylists(); } }
 				onSaved={ loadPlaylists }
+				onEditState={ onEditState }
 			/>
 		);
 	}
@@ -175,6 +206,8 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 					<PlaylistList
 						playlists={ pagedPlaylists }
 						byId={ byId }
+						copied={ copied }
+						copy={ copy }
 						onEdit={ setEditingPlaylist }
 						onRemove={ removePlaylist }
 						onAdd={ () => openModal( 'playlist' ) }
@@ -183,17 +216,6 @@ export default function Library( { onEdit, onViewers, initialTab = 'videos' } ) 
 				</>
 			) }
 		</div>
-	);
-}
-
-function RowActions( { children } ) {
-	return <div className="flex items-center gap-1">{ children }</div>;
-}
-function IconBtn( { name, title, onClick, danger } ) {
-	return (
-		<button onClick={ onClick } title={ title } aria-label={ title } className={ `p-2 rounded text-muted hover:bg-gray-100 ${ danger ? 'hover:text-danger hover:bg-danger-light' : 'hover:text-brand-500' }` }>
-			<Icon name={ name } className="w-[18px] h-[18px]" />
-		</button>
 	);
 }
 
@@ -215,8 +237,8 @@ function VideoList( { videos, copied, copy, onEdit, onViewers, onRemove, onAdd }
 			<Card className="p-12 text-center border-dashed">
 				<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="video" className="w-6 h-6" /></div>
 				<p className="font-semibold text-gray-900">No media yet</p>
-				<p className="text-sm text-muted mb-4">Create your first watch-verified player.</p>
-				<Button onClick={ onAdd }><Icon name="plus" className="w-4 h-4" /> Add media</Button>
+				<p className="text-sm text-muted !mb-6">Create your first watch-verified player.</p>
+				<Button onClick={ onAdd }><Icon name="plus" /> Add media</Button>
 			</Card>
 		);
 	}
@@ -242,11 +264,19 @@ function VideoList( { videos, copied, copy, onEdit, onViewers, onRemove, onAdd }
 								</code>
 							</div>
 						</div>
-						<RowActions>
-							<IconBtn name="analytics" title="Analytics" onClick={ () => onViewers( v.id ) } />
-							<IconBtn name="edit" title="Edit video" onClick={ () => onEdit( v.id ) } />
-							<IconBtn name="trash" title="Delete" danger onClick={ () => onRemove( v.id ) } />
-						</RowActions>
+						<button
+							type="button"
+							onClick={ () => onEdit( v.id ) }
+							aria-label="Edit"
+							title="Edit"
+							className="w-8 h-8 inline-flex items-center justify-center text-muted hover:text-ink hover:bg-gray-100 transition-colors shrink-0 border border-line rounded"
+						>
+							<Icon name="edit" className="w-[18px] h-[18px]" />
+						</button>
+						<OptionMenu items={ [
+							{ label: 'Analytics', icon: 'analytics', onClick: () => onViewers( v.id ) },
+							{ label: 'Delete', icon: 'trash', danger: true, onClick: () => onRemove( v.id ) },
+						] } />
 					</Card>
 				);
 			} ) }
@@ -254,7 +284,7 @@ function VideoList( { videos, copied, copy, onEdit, onViewers, onRemove, onAdd }
 	);
 }
 
-function PlaylistList( { playlists, byId, onEdit, onRemove, onAdd } ) {
+function PlaylistList( { playlists, byId, copied, copy, onEdit, onRemove, onAdd } ) {
 	if ( playlists === null ) {
 		return <p className="text-gray-400">Loading…</p>;
 	}
@@ -264,7 +294,7 @@ function PlaylistList( { playlists, byId, onEdit, onRemove, onAdd } ) {
 				<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="playlist" className="w-6 h-6" /></div>
 				<p className="font-semibold text-gray-900">No playlists yet</p>
 				<p className="text-sm text-muted mb-4">Group videos into a grid or sidebar playlist.</p>
-				<Button onClick={ onAdd }><Icon name="plus" className="w-4 h-4" /> Add playlist</Button>
+				<Button onClick={ onAdd } className='mt-6'><Icon name="plus" className="w-4 h-4" /> Add playlist</Button>
 			</Card>
 		);
 	}
@@ -283,13 +313,15 @@ function PlaylistList( { playlists, byId, onEdit, onRemove, onAdd } ) {
 								<Badge tone="brand">{ p.config?.layout || 'sidebar' }</Badge>
 								<Badge>{ ids.length } video{ ids.length === 1 ? '' : 's' }</Badge>
 								{ p.config?.autoplayNext && <Badge tone="green">autoplay</Badge> }
-								<code className="text-xs text-muted">{ p.shortcode }</code>
+								<code className="text-xs text-muted cursor-pointer hover:text-brand-500" onClick={ () => copy( p.id, p.shortcode ) } title="Copy shortcode">
+									{ copied === p.id ? 'Copied ✓' : p.shortcode }
+								</code>
 							</div>
 						</div>
-						<RowActions>
-							<IconBtn name="edit" title="Edit playlist" onClick={ () => onEdit( p ) } />
-							<IconBtn name="trash" title="Delete" danger onClick={ () => onRemove( p.id ) } />
-						</RowActions>
+						<OptionMenu items={ [
+							{ label: 'Edit', icon: 'edit', onClick: () => onEdit( p ) },
+							{ label: 'Delete', icon: 'trash', danger: true, onClick: () => onRemove( p.id ) },
+						] } />
 					</Card>
 				);
 			} ) }

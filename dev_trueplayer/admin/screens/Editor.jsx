@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Select, Modal, SubSidebar, Card, Field } from '../components/UI';
+import { Button, Modal, SubSidebar, Toast, Badge } from '../components/UI';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
@@ -14,6 +14,7 @@ import EmbedTab from './editor/EmbedTab';
 import PreviewPanel from './editor/PreviewPanel';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
+import { hasVideoSource } from '../utils/videoSource';
 
 const TABS = [
 	{ key: 'source', label: 'Source', icon: '🎬' },
@@ -33,7 +34,7 @@ function InteractionsTab( { config, patch, pro } ) {
 	const [ sub, setSub ] = useState( 'overlays' );
 	const gate = ( node, info ) => ( pro ? node : <UpsellPanel title={ info.title } features={ info.features } /> );
 	return (
-		<div className="flex gap-6 items-start">
+		<div className="flex flex-col md:flex-row gap-6 items-start">
 			<SubSidebar
 				value={ sub }
 				onChange={ setSub }
@@ -54,7 +55,7 @@ function InteractionsTab( { config, patch, pro } ) {
 function AccessTab( { config, patch } ) {
 	const [ sub, setSub ] = useState( 'gating' );
 	return (
-		<div className="flex gap-6 items-start">
+		<div className="flex flex-col md:flex-row gap-6 items-start">
 			<SubSidebar value={ sub } onChange={ setSub } items={ [ [ 'gating', 'Verification & quiz' ], [ 'protection', 'Protection' ] ] } />
 			<div className="flex-1 min-w-0">
 				{ sub === 'gating' && <GatingTab config={ config } patch={ patch } /> }
@@ -64,29 +65,34 @@ function AccessTab( { config, patch } ) {
 	);
 }
 
-export default function Editor( { id, onBack } ) {
+export default function Editor( { id, onEditState } ) {
 	const [ video, setVideo ] = useState( null );
 	const [ tab, setTab ] = useState( 'source' );
 	const [ dirty, setDirty ] = useState( false );
 	const [ saving, setSaving ] = useState( false );
-	const [ saved, setSaved ] = useState( false );
 	const [ presets, setPresets ] = useState( [] );
 	const [ toolbarSlot, setToolbarSlot ] = useState( null );
-	const [ titleSlot, setTitleSlot ] = useState( null );
 	const [ embedOpen, setEmbedOpen ] = useState( false );
 	const [ duration, setDuration ] = useState( 0 );
+	const [ toast, setToast ] = useState( null );
 
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
 		api.listPresets().then( setPresets ).catch( () => {} );
 		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
-		setTitleSlot( document.getElementById( 'tp-topbar-title-slot' ) );
 	}, [ id ] );
+
+	useEffect( () => {
+		if ( ! toast ) {
+			return undefined;
+		}
+		const t = setTimeout( () => setToast( null ), 3000 );
+		return () => clearTimeout( t );
+	}, [ toast ] );
 
 	const patchConfig = useCallback( ( partial ) => {
 		setVideo( ( v ) => ( { ...v, config: { ...( v.config || {} ), ...partial } } ) );
 		setDirty( true );
-		setSaved( false );
 	}, [] );
 
 	const setTitle = ( title ) => {
@@ -94,26 +100,33 @@ export default function Editor( { id, onBack } ) {
 		setDirty( true );
 	};
 
-	const tabIndex = TABS.findIndex( ( t ) => t.key === tab );
-	const isLastTab = tabIndex === TABS.length - 1;
+	// Report title/dirty state up to the app shell — it drives the breadcrumb
+	// (the title is edited right in the crumb trail) and the unsaved-changes
+	// guard when leaving.
+	useEffect( () => {
+		onEditState && onEditState( { title: video?.title, dirty, onTitleChange: setTitle } );
+	}, [ video?.title, dirty ] );
+	useEffect( () => () => onEditState && onEditState( null ), [] );
 
-	// Save (only hits the API when there are changes), then optionally advance to
-	// the next step — a light wizard flow through the editor.
-	const save = async ( continueNext = false ) => {
-		if ( dirty ) {
-			setSaving( true );
-			try {
-				const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
-				setVideo( updated );
-				setDirty( false );
-				setSaved( true );
-				setTimeout( () => setSaved( false ), 2000 );
-			} finally {
-				setSaving( false );
-			}
+	// Update always saves the whole video (title + config) regardless of which
+	// step is active — every tab patches the same shared config object — and
+	// never advances the step for you.
+	const save = async () => {
+		if ( ! hasVideoSource( video.config?.source || {} ) ) {
+			setToast( { message: 'Add a video before saving.', tone: 'danger' } );
+			return;
 		}
-		if ( continueNext && tabIndex > -1 && tabIndex < TABS.length - 1 ) {
-			setTab( TABS[ tabIndex + 1 ].key );
+		if ( ! dirty ) {
+			return;
+		}
+		setSaving( true );
+		try {
+			const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
+			setVideo( updated );
+			setDirty( false );
+			setToast( { message: 'Saved ✓', tone: 'success' } );
+		} finally {
+			setSaving( false );
 		}
 	};
 
@@ -127,113 +140,84 @@ export default function Editor( { id, onBack } ) {
 
 	return (
 		<>
-			{ /* Contextual sidebar: the video editor's own step menu */ }
-			<aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col">
-				<div className="p-3 border-b border-line">
-					<button onClick={ onBack } className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100">
-						← Back to videos
-					</button>
-				</div>
-				<nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-					{ TABS.map( ( t ) => (
-						<button
-							key={ t.key }
-							onClick={ () => setTab( t.key ) }
-							className={ `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${
-								tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
-							}` }
-						>
-							<span className="text-base leading-none">{ t.icon }</span>
-							<span className="flex-1">{ t.label }</span>
-							{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
-						</button>
-					) ) }
-				</nav>
-			</aside>
+			<div className="w-full mx-auto px-8 py-8">
+				{ /* Toolbar actions live in the topbar (portaled). */ }
+				{ toolbarSlot && createPortal(
+					<>
+						{ dirty && <Badge tone="amber">Unsaved</Badge> }
+						<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>Embed</Button>
+						<Button onClick={ save } disabled={ saving || ! dirty }>
+							{ saving ? 'Saving…' : 'Update' }
+						</Button>
+					</>,
+					toolbarSlot
+				) }
 
-			{ /* Content */ }
-			<main className="flex-1 min-w-0">
-				<div className="max-w-6xl mx-auto px-8 py-8">
-					{ /* Toolbar actions live in the topbar (portaled). */ }
-					{ toolbarSlot && createPortal(
-						<>
-							{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-							{ dirty && ! saved && <span className="text-sm text-amber-600">Unsaved</span> }
-							<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>Embed</Button>
-							{ isLastTab ? (
-								<Button onClick={ () => save( false ) } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
-							) : (
-								<>
-									<Button variant="ghost" onClick={ () => save( false ) } disabled={ saving || ! dirty }>Save</Button>
-									<Button onClick={ () => save( true ) } disabled={ saving }>{ saving ? 'Saving…' : 'Save & Continue' }</Button>
-								</>
-							) }
-						</>,
-						toolbarSlot
-					) }
+				<Toast message={ toast?.message } tone={ toast?.tone } onDismiss={ () => setToast( null ) } />
 
-					{ /* Editable media title, portaled into the topbar. */ }
-					{ titleSlot && createPortal(
-						<input
-							className="text-sm font-semibold text-ink bg-transparent outline-none border-b border-transparent focus:border-brand-500 w-56 max-w-[40vw]"
-							value={ video.title }
-							onChange={ ( e ) => setTitle( e.target.value ) }
-							placeholder="Untitled media"
-							aria-label="Media title"
-						/>,
-						titleSlot
-					) }
+				{ embedOpen && (
+					<Modal title="Embed this media" onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
+						<EmbedTab video={ video } config={ config } patch={ patchConfig } />
+					</Modal>
+				) }
 
-					{ embedOpen && (
-						<Modal title="Embed this media" onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
-							<EmbedTab video={ video } config={ config } patch={ patchConfig } />
-						</Modal>
-					) }
+				<div className="flex flex-col md:flex-row gap-6 items-start">
+					{ /* Contextual sidebar: the video editor's own step menu. Sticky is applied
+						directly to this element (not a nested <nav>) — it must be the flex row's
+						direct child for position:sticky to have room to stick against the row's
+						full height, matched by the tall content column next to it. */ }
+					<aside className="w-full md:w-60 shrink-0 bg-white border-r border-line md:sticky md:top-[104px]">
+						<nav className="p-3 space-y-1">
+							{ TABS.map( ( t ) => (
+								<button
+									key={ t.key }
+									onClick={ () => setTab( t.key ) }
+									className={ `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${
+										tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
+									}` }
+								>
+									<span className="text-base leading-none">{ t.icon }</span>
+									<span className="flex-1">{ t.label }</span>
+									{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
+								</button>
+							) ) }
+						</nav>
+					</aside>
 
-					<div className="mb-6">
-						<h1 className="text-2xl font-bold text-gray-900">{ TABS.find( ( t ) => t.key === tab )?.label }</h1>
-					</div>
-
-					<div className="flex flex-col xl:flex-row gap-6 items-start">
-						<div className="flex-1 min-w-0 w-full">
-							{ isProTab && ! pro ? (
-								<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
-							) : (
-								<>
-									{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
-									{ tab === 'player' && (
-										<div className="space-y-6">
-											{ presets.length > 0 && (
-												<Card className="p-6 max-w-md">
-													<Field label="Preset" hint="Apply a saved player preset as the starting point — you can still tweak anything below.">
-														<Select
-															value={ config.presetId || '' }
-															onChange={ ( e ) => patchConfig( { presetId: e.target.value ? parseInt( e.target.value, 10 ) : undefined } ) }
-														>
-															<option value="">None</option>
-															{ presets.map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
-														</Select>
-													</Field>
-												</Card>
-											) }
-											<PlayerOptionsTab config={ config } patch={ patchConfig } />
-										</div>
-									) }
-									{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
-									{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } /> }
-									{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
-								</>
-							) }
+					<div className="flex-1 min-w-0 w-full">
+						<div className="mb-6">
+							<h1 className="text-2xl font-bold text-gray-900">{ TABS.find( ( t ) => t.key === tab )?.label }</h1>
 						</div>
 
-						<div className="w-full xl:w-[380px] shrink-0">
-							<div className="xl:sticky xl:top-4">
+						<div className="flex flex-col min-[1440px]:flex-row gap-6 items-start mt-6">
+							{ /* Tabs with their own sub-nav (Player/Interactions/Access) need more
+								room than max-w-2xl (that's eaten into by the sub-nav's own width),
+								but still a bounded width — the preview (flex-1 below) gets whatever's
+								left, which is where the extra space is actually useful. */ }
+							<div className={ `w-full min-w-0 ${ [ 'player', 'interactions', 'access' ].includes( tab ) ? 'min-[1440px]:max-w-3xl min-[1440px]:shrink-0' : 'max-w-2xl' }` }>
+								{ isProTab && ! pro ? (
+									<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
+								) : (
+									<>
+										{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
+										{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } /> }
+										{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
+										{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } /> }
+										{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
+									</>
+								) }
+							</div>
+
+							{ /* Below 1440px the preview drops under the content and takes the
+								full row width; at 1440px+ it takes whatever's left beside the
+								(now bounded) content column, instead of a small fixed width. */ }
+							<div className="w-full min-[1440px]:flex-1 min-[1440px]:min-w-[420px] min-[1440px]:sticky min-[1440px]:top-[104px]">
 								<PreviewPanel id={ id } config={ config } onDuration={ setDuration } />
 							</div>
 						</div>
 					</div>
 				</div>
-			</main>
+			</div>
 		</>
 	);
 }

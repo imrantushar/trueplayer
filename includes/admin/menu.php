@@ -31,9 +31,13 @@ class Menu {
 		$subs = [
 			$slug                => __( 'Dashboard', 'trueplayer' ),
 			$slug . '-videos'    => __( 'Media', 'trueplayer' ),
-			$slug . '-presets'   => __( 'Presets', 'trueplayer' ),
-			$slug . '-settings'  => __( 'Settings', 'trueplayer' ),
 		];
+		// The Interactive (H5P) section only appears when the engine is present.
+		if ( \TruePlayer\H5P\Module::is_available() ) {
+			$subs[ $slug . '-interactive' ] = __( 'Interactive', 'trueplayer' );
+		}
+		$subs[ $slug . '-presets' ]  = __( 'Presets', 'trueplayer' );
+		$subs[ $slug . '-settings' ] = __( 'Settings', 'trueplayer' );
 		foreach ( $subs as $page_slug => $label ) {
 			add_submenu_page( $slug, $label . ' – ' . $brand, $label, 'manage_options', $page_slug, [ $this, 'render_app' ] );
 		}

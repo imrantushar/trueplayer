@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from '@wordpress/element';
+import { useEffect, useState, useMemo, useRef, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Card, Button, Input, Select, Field, Modal } from '../components/UI';
+import { Card, Button, Input, Select, Field, Modal, OptionMenu } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
 import { PRESET_TEMPLATES, templateConfig } from '../data/preset-templates';
@@ -10,11 +10,36 @@ import PreviewPanel from './editor/PreviewPanel';
 // A built-in sample so a preset can be previewed even before any video exists.
 const SAMPLE_SOURCE = { type: 'url', src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', poster: '' };
 
-function Editor( { preset, onBack, onSaved } ) {
+function Editor( { preset, onBack, onSaved, onEditState } ) {
 	const [ title, setTitle ] = useState( preset.title );
 	const [ config, setConfig ] = useState( preset.config || {} );
 	const [ saving, setSaving ] = useState( false );
 	const [ saved, setSaved ] = useState( false );
+	const [ dirty, setDirty ] = useState( false );
+	const [ toolbarSlot, setToolbarSlot ] = useState( null );
+	const mounted = useRef( false );
+
+	useEffect( () => {
+		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
+	}, [] );
+
+	// title/config are seeded once from `preset` — any change after mount is a
+	// real edit.
+	useEffect( () => {
+		if ( ! mounted.current ) {
+			mounted.current = true;
+			return;
+		}
+		setDirty( true );
+	}, [ title, config ] );
+
+	// Report title/dirty/back state up to the app shell — it drives the
+	// breadcrumb ("Presets > this preset", title editable right in the trail,
+	// "Presets" clicking back to the list) and the unsaved-changes guard.
+	useEffect( () => {
+		onEditState && onEditState( { title, dirty, onBack, onTitleChange: setTitle } );
+	}, [ title, dirty ] );
+	useEffect( () => () => onEditState && onEditState( null ), [] );
 
 	// Preview subject: preview the preset's styling on a real video's source.
 	const [ videos, setVideos ] = useState( [] );
@@ -35,6 +60,7 @@ function Editor( { preset, onBack, onSaved } ) {
 		setSaving( true );
 		try {
 			await api.updatePreset( preset.id, { title, config } );
+			setDirty( false );
 			setSaved( true );
 			setTimeout( () => setSaved( false ), 2000 );
 			onSaved();
@@ -52,21 +78,23 @@ function Editor( { preset, onBack, onSaved } ) {
 
 	return (
 		<div>
-			<div className="flex items-center gap-3 mb-6">
-				<Button variant="ghost" onClick={ onBack }>← Back</Button>
-				<input className="w-full max-w-md text-2xl font-bold text-ink bg-transparent outline-none border-b border-transparent focus:border-line" value={ title } onChange={ ( e ) => setTitle( e.target.value ) } />
-				<div className="flex-1" />
-				{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
-				<Button onClick={ save } disabled={ saving }>{ saving ? 'Saving…' : 'Save' }</Button>
-			</div>
+			{ /* Save lives in the topbar (portaled) — same pattern as the video editor. */ }
+			{ toolbarSlot && createPortal(
+				<>
+					{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
+					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+				</>,
+				toolbarSlot
+			) }
 			<p className="text-sm text-muted mb-4">These styles &amp; behaviours apply to any video that uses this preset. Individual videos can still override anything.</p>
 
-			<div className="flex flex-col xl:flex-row gap-6 items-start">
+			<div className="flex flex-col xl:flex-row items-start gap-6 mt-6">
 				<div className="flex-1 min-w-0">
 					<PlayerOptionsTab config={ config } patch={ patch } />
 				</div>
 
-				<div className="w-full xl:w-[400px] shrink-0 xl:sticky xl:top-6">
+				{ /* Sticky header (top-8) + its h-14 bar are ~88px; top-[104px] clears both with a small gap. */ }
+				<div className="w-full xl:w-[400px] shrink-0 xl:sticky xl:top-[104px]">
 					<Card className="p-4">
 						{ videos.length > 0 && (
 							<div className="flex items-center gap-2 mb-3">
@@ -84,7 +112,7 @@ function Editor( { preset, onBack, onSaved } ) {
 	);
 }
 
-export default function Presets() {
+export default function Presets( { onEditState } ) {
 	const [ presets, setPresets ] = useState( null );
 	const [ title, setTitle ] = useState( '' );
 	const [ template, setTemplate ] = useState( 'default' );
@@ -118,7 +146,7 @@ export default function Presets() {
 	};
 
 	if ( editing ) {
-		return <Editor preset={ editing } onBack={ () => { setEditing( null ); load(); } } onSaved={ load } />;
+		return <Editor preset={ editing } onBack={ () => { setEditing( null ); load(); } } onSaved={ load } onEditState={ onEditState } />;
 	}
 
 	return (
@@ -177,8 +205,10 @@ export default function Presets() {
 								<div className="font-semibold text-ink truncate">{ p.title }</div>
 								<div className="text-xs text-gray-500">Player preset</div>
 							</div>
-							<Button variant="ghost" onClick={ () => setEditing( p ) }>Edit</Button>
-							<Button variant="danger" onClick={ () => remove( p.id ) }>Delete</Button>
+							<OptionMenu items={ [
+								{ label: 'Edit', icon: 'edit', onClick: () => setEditing( p ) },
+								{ label: 'Delete', icon: 'trash', danger: true, onClick: () => remove( p.id ) },
+							] } />
 						</Card>
 					);
 				} ) }

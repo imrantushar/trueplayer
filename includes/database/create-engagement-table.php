@@ -24,11 +24,12 @@ class CreateEngagementTable {
 		$table = $prefix . TRUEPLAYER_DB_PREFIX . '_engagement';
 
 		$sql = "CREATE TABLE {$table} (
-			id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			video_id BIGINT UNSIGNED NOT NULL,
 			bucket SMALLINT UNSIGNED NOT NULL,
 			plays INT UNSIGNED NOT NULL DEFAULT 0,
 			reached INT UNSIGNED NOT NULL DEFAULT 0,
+			PRIMARY KEY  (id),
 			UNIQUE KEY uq_video_bucket (video_id, bucket),
 			INDEX idx_video (video_id)
 		) {$charset_collate};";

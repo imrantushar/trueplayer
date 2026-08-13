@@ -1,6 +1,7 @@
 import { useState } from '@wordpress/element';
 import { api, EVENT_TYPES } from '../api';
 import { Input, Button, Toggle, Badge } from './UI';
+import { BsTrash } from 'react-icons/bs';
 
 const uid = () => Math.random().toString( 36 ).slice( 2, 9 );
 
@@ -35,7 +36,7 @@ export function EndpointList( { endpoints, onChange } ) {
 					<div className="flex gap-2 items-center mb-3">
 						<Input value={ e.url } onChange={ ( ev ) => set( i, { url: ev.target.value } ) } placeholder="https://your-endpoint.example/hook" />
 						<Button variant="ghost" onClick={ () => test( i ) }>Send test</Button>
-						<Button variant="danger" onClick={ () => remove( i ) }>×</Button>
+						<Button variant="danger" onClick={ () => remove( i ) }><BsTrash /></Button>
 					</div>
 					{ testing[ i ] && <p className="text-xs text-gray-500 mb-2">Test: { testing[ i ] }</p> }
 					<Input className="mb-3" value={ e.secret || '' } onChange={ ( ev ) => set( i, { secret: ev.target.value } ) } placeholder="Signing secret (optional) — used for X-TruePlayer-Signature" />

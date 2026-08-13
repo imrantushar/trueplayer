@@ -99,10 +99,8 @@ export default function Analytics( { id, onBack } ) {
 	if ( ! pro ) {
 		return (
 			<div>
-				<div className="flex items-center gap-3 mb-6">
-					<Button variant="ghost" onClick={ onBack }>← Back</Button>
-					<h1 className="text-2xl font-bold text-ink">Analytics</h1>
-				</div>
+				<h1 className="text-2xl font-bold text-ink">Analytics</h1>
+
 				<UpsellPanel title="Deep video analytics" features={ [ 'Audience retention curve', 'Replay heatmap — which parts get re-watched', 'Completion funnel & views over time', 'Per-viewer watch drill-down', 'Quiz performance' ] } />
 			</div>
 		);
@@ -140,12 +138,9 @@ export default function Analytics( { id, onBack } ) {
 
 	return (
 		<div>
-			<div className="flex items-center gap-3 mb-6">
-				<Button variant="ghost" onClick={ onBack }>← Back</Button>
-				<h1 className="text-2xl font-bold text-ink">Analytics</h1>
-			</div>
+			<h1 className="text-2xl font-bold text-ink">Analytics</h1>
 
-			<div className="flex gap-1 border-b border-line mb-6">
+			<div className="flex gap-1 border-b border-line my-6">
 				{ [ 'overview', 'viewers', 'attestations' ].map( ( t ) => (
 					<button key={ t } onClick={ () => setTab( t ) }
 						className={ `px-4 py-2 text-sm font-medium border-b-2 -mb-px capitalize ${ tab === t ? 'border-brand-500 text-brand-700' : 'border-transparent text-gray-500 hover:text-gray-800' }` }>
