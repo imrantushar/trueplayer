@@ -116,6 +116,18 @@ final class TruePlayer {
 		}
 		require_once TRUEPLAYER_INCLUDES_DIR_PATH . 'autoload.php';
 		require_once TRUEPLAYER_INCLUDES_DIR_PATH . 'functions.php';
+
+		// StoreEngine license SDK (bundled, not composer-autoloaded). Its init.php
+		// registers a plugins_loaded:0 version loader that defines se_license_init()
+		// and the SE_License_SDK_* classes. Guarded so multiple Kodezen plugins
+		// bundling the SDK don't double-register.
+		$sdk_init = TRUEPLAYER_ROOT_DIR_PATH . 'vendor/storeengine/wordpress-sdk/init.php';
+		if ( ! function_exists( 'se_license_init' ) && file_exists( $sdk_init ) ) {
+			require_once $sdk_init;
+		}
+
+		// Configure the SDK (free product 430 — insights only).
+		TruePlayer\StoreLicense::init();
 	}
 
 	public function activate() {

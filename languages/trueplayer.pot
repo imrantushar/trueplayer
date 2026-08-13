@@ -1,0 +1,238 @@
+# Copyright (C) 2026 Kodezen
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: TruePlayer 1.0-beta1\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/trueplayer\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-08-13T15:37:24+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: trueplayer\n"
+
+#. Plugin Name of the plugin
+#: trueplayer.php
+msgid "TruePlayer"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: trueplayer.php
+msgid "https://kodezen.com/trueplayer"
+msgstr ""
+
+#. Description of the plugin
+#: trueplayer.php
+msgid "A watch-verified, quiz-gated video & audio player for WordPress — knows whether a viewer actually watched, locks the video on quiz failure, and fires webhooks for automation."
+msgstr ""
+
+#. Author of the plugin
+#: trueplayer.php
+msgid "Kodezen"
+msgstr ""
+
+#. Author URI of the plugin
+#: trueplayer.php
+msgid "https://kodezen.com"
+msgstr ""
+
+#: includes/addons.php:98
+msgid "This addon cannot be activated right now."
+msgstr ""
+
+#: includes/admin/menu.php:32
+msgid "Dashboard"
+msgstr ""
+
+#: includes/admin/menu.php:33
+msgid "Media"
+msgstr ""
+
+#: includes/admin/menu.php:37
+msgid "Interactive"
+msgstr ""
+
+#: includes/admin/menu.php:39
+msgid "Presets"
+msgstr ""
+
+#: includes/admin/menu.php:40
+msgid "Settings"
+msgstr ""
+
+#: includes/api/gate-controller.php:47
+#: includes/api/grade-controller.php:47
+#: includes/api/optin-controller.php:52
+#: includes/api/progress-controller.php:45
+msgid "Video not found."
+msgstr ""
+
+#. translators: %s: date the video becomes available
+#: includes/api/gate-controller.php:76
+#, php-format
+msgid "Available on %s."
+msgstr ""
+
+#: includes/api/h5p-controller.php:158
+msgid "A content type is required."
+msgstr ""
+
+#: includes/api/h5p-controller.php:181
+msgid "Content type is not installed."
+msgstr ""
+
+#: includes/api/h5p-controller.php:213
+msgid "Invalid content type."
+msgstr ""
+
+#: includes/api/h5p-controller.php:219
+msgid "That content type is not installed."
+msgstr ""
+
+#: includes/api/h5p-controller.php:223
+msgid "Untitled interactive"
+msgstr ""
+
+#: includes/api/h5p-controller.php:286
+msgid "Invalid request."
+msgstr ""
+
+#: includes/api/h5p-controller.php:292
+msgid "Not an interactive item."
+msgstr ""
+
+#: includes/api/h5p-controller.php:352
+msgid "Not found."
+msgstr ""
+
+#: includes/api/h5p-controller.php:361
+msgid "Content could not be loaded."
+msgstr ""
+
+#: includes/api/optin-controller.php:41
+msgid "Subscribe/opt-in requires TruePlayer Pro."
+msgstr ""
+
+#: includes/api/optin-controller.php:49
+msgid "Please enter a valid email."
+msgstr ""
+
+#: includes/api/optin-controller.php:68
+msgid "Could not subscribe."
+msgstr ""
+
+#: includes/api/playlists-controller.php:63
+msgid "Untitled playlist"
+msgstr ""
+
+#: includes/api/presets-controller.php:92
+msgid "Untitled preset"
+msgstr ""
+
+#: includes/api/stream-controller.php:44
+msgid "This link has expired."
+msgstr ""
+
+#: includes/api/stream-controller.php:54
+msgid "Video file not found."
+msgstr ""
+
+#: includes/api/subtitles-controller.php:46
+msgid "Not a valid YouTube URL or ID."
+msgstr ""
+
+#: includes/api/subtitles-controller.php:51
+msgid "No public captions found for this video."
+msgstr ""
+
+#: includes/api/subtitles-controller.php:56
+msgid "Captions could not be parsed."
+msgstr ""
+
+#: includes/api/videos-controller.php:138
+msgid "Untitled video"
+msgstr ""
+
+#: includes/api/webhooks-controller.php:46
+msgid "A valid URL is required."
+msgstr ""
+
+#: includes/database/post-type.php:34
+msgid "Video Tags"
+msgstr ""
+
+#: includes/database/post-type.php:47
+msgid "Videos"
+msgstr ""
+
+#: includes/database/post-type.php:64
+msgid "Player Presets"
+msgstr ""
+
+#: includes/h5p/importer.php:36
+msgid "H5P package not found."
+msgstr ""
+
+#: includes/h5p/importer.php:46
+msgid "Could not stage the H5P package for import."
+msgstr ""
+
+#: includes/h5p/importer.php:52
+msgid "The file is not a valid H5P package."
+msgstr ""
+
+#: includes/h5p/importer.php:61
+msgid "Imported content"
+msgstr ""
+
+#: includes/h5p/renderer.php:34
+msgid "This interactive content has not been built yet."
+msgstr ""
+
+#: includes/h5p/renderer.php:40
+msgid "Interactive content could not be loaded."
+msgstr ""
+
+#: includes/integrations.php:78
+msgid "No subscription provider is configured."
+msgstr ""
+
+#: includes/integrations/gem-crm.php:63
+msgid "GemCRM is not active."
+msgstr ""
+
+#: includes/integrations/gem-crm.php:68
+#: includes/integrations/mailchimp.php:86
+msgid "Invalid email."
+msgstr ""
+
+#: includes/integrations/gem-crm.php:91
+msgid "Already subscribed."
+msgstr ""
+
+#: includes/integrations/mailchimp.php:82
+msgid "Mailchimp is not configured."
+msgstr ""
+
+#: includes/integrations/mailchimp.php:93
+msgid "No Mailchimp audience selected."
+msgstr ""
+
+#: includes/integrations/mailchimp.php:113
+msgid "Mailchimp rejected the subscription."
+msgstr ""
+
+#: includes/playlist.php:32
+msgid "Playlists"
+msgstr ""
+
+#: includes/shortcode.php:40
+msgid "Watch video"
+msgstr ""
+
+#: includes/shortcode.php:291
+msgid "Play video"
+msgstr ""
