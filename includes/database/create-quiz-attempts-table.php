@@ -23,7 +23,7 @@ class CreateQuizAttemptsTable {
 		$table = $prefix . TRUEPLAYER_DB_PREFIX . '_quiz_attempts';
 
 		$sql = "CREATE TABLE {$table} (
-			id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			video_id BIGINT UNSIGNED NOT NULL,
 			gate_id VARCHAR(64) NOT NULL DEFAULT 'final',
 			subject_type VARCHAR(16) NOT NULL DEFAULT 'guest',
@@ -33,6 +33,7 @@ class CreateQuizAttemptsTable {
 			passed TINYINT(1) NOT NULL DEFAULT 0,
 			attempt_no INT UNSIGNED NOT NULL DEFAULT 1,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY  (id),
 			INDEX idx_subject_video (video_id, subject_type, subject_id),
 			INDEX idx_video_gate (video_id, gate_id)
 		) {$charset_collate};";
