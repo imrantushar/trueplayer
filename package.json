@@ -8,7 +8,10 @@
     "start": "wp-scripts start",
     "format": "wp-scripts format",
     "lint:js": "wp-scripts lint-js",
-    "lint:css": "wp-scripts lint-style"
+    "lint:css": "wp-scripts lint-style",
+    "dist": "node build-tools/build.mjs",
+    "dist:zip": "node build-tools/build.mjs --only=zip",
+    "dist:dev": "node build-tools/build.mjs --dev"
   },
   "author": "Kodezen",
   "license": "GPL-2.0-or-later",
@@ -34,8 +37,10 @@
   "devDependencies": {
     "@wordpress/eslint-plugin": "^17.2.0",
     "@wordpress/scripts": "^30.8.1",
+    "archiver": "^8.0.0",
     "autoprefixer": "^10.5.0",
     "clean-webpack-plugin": "^4.0.0",
+    "ignore": "^7.0.6",
     "mini-css-extract-plugin": "^2.7.6",
     "postcss": "^8.5.10",
     "postcss-loader": "^7.3.3",

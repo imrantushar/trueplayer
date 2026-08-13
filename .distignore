@@ -1,0 +1,48 @@
+# Patterns use .gitignore syntax. Everything listed here is EXCLUDED from the
+# release zip (build via `npm run dist`). Ship only what the plugin needs at runtime.
+
+# === Dev sources & toolchain ===
+/dev_trueplayer/
+/assets/scss/
+/assets/src/
+webpack.config.js
+tailwind.config.js
+postcss.config.js
+package.json
+package-lock.json
+
+# === Cross-platform build kit (dev-only, never shipped) ===
+/build-tools/
+/build.config.json
+/.build-cache/
+/dist/
+
+# === JS / editor configs ===
+.babelrc
+.eslintignore
+.eslintrc*
+.prettierignore
+.prettierrc*
+jsconfig.json
+.editorconfig
+
+# === VCS / IDE / OS / AI workspace ===
+.git
+.github
+.gitattributes
+.gitignore
+.distignore
+.idea
+.vscode
+.DS_Store
+node_modules
+.claude
+.agents
+openspec
+CLAUDE.md
+AGENTS.md
+
+# === Misc ===
+*.log
+*.map
+*.sh
