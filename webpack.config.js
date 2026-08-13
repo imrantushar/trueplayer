@@ -4,8 +4,9 @@ const path = require('path');
 
 // Single source of truth — must match trueplayer.php's TRUEPLAYER_VERSION
 // so PHP's wp_enqueue_script(`build/{name}.{VERSION}.js`) resolves to the
-// file webpack actually emitted.
-const TRUEPLAYER_VERSION = require('./package.json').version;
+// file webpack actually emitted. Hardcoded (not package.json.version) because
+// the plugin version label `1.0-beta1` is not valid npm semver.
+const TRUEPLAYER_VERSION = '1.0-beta1';
 
 const config = {
 	...defaultConfig,
