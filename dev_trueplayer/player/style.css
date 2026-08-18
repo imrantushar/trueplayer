@@ -334,7 +334,6 @@
 	border-radius: 8px;
 }
 .tp-skin-modern .tp-bigplay {
-	background: var( --tp-accent );
 	width: 84px;
 	height: 84px;
 }
@@ -354,7 +353,6 @@
 .tp-skin-simple .tp-bigplay {
 	width: 64px;
 	height: 64px;
-	background: rgba( 0, 0, 0, 0.65 );
 }
 
 /* minimal: scrubber + essentials only; secondary controls hidden */
@@ -1176,7 +1174,9 @@
 	height: 78px;
 	border-radius: 50%;
 	border: 0;
-	background: rgba( 0, 0, 0, 0.55 );
+	/* Accent-driven on every skin (matches the poster facade button). Skins may
+	   still override size/shape, but the accent color stays. */
+	background: var( --tp-accent, #4f46e5 );
 	color: #fff;
 	display: flex;
 	align-items: center;
@@ -1185,7 +1185,7 @@
 	z-index: 5;
 }
 .tp-bigplay:hover {
-	background: var(--tp-accent);
+	filter: brightness( 1.08 );
 }
 
 .tp-lock-card,
