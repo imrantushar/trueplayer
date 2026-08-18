@@ -334,8 +334,8 @@
 	border-radius: 8px;
 }
 .tp-skin-modern .tp-bigplay {
-	width: 84px;
-	height: 84px;
+	width: var( --tp-bigplay-size, 84px );
+	height: var( --tp-bigplay-size, 84px );
 }
 
 /* simple: flat thin bar, no gradient wash */
@@ -351,8 +351,8 @@
 	height: 10px;
 }
 .tp-skin-simple .tp-bigplay {
-	width: 64px;
-	height: 64px;
+	width: var( --tp-bigplay-size, 64px );
+	height: var( --tp-bigplay-size, 64px );
 }
 
 /* minimal: scrubber + essentials only; secondary controls hidden */
@@ -1170,8 +1170,10 @@
 	position: absolute;
 	inset: 0;
 	margin: auto;
-	width: 78px;
-	height: 78px;
+	/* Size is author-controllable via --tp-bigplay-size; each skin keeps its own
+	   fallback when the control is left on "Auto". */
+	width: var( --tp-bigplay-size, 78px );
+	height: var( --tp-bigplay-size, 78px );
 	border-radius: 50%;
 	border: 0;
 	/* Accent-driven on every skin (matches the poster facade button). Skins may
@@ -1183,6 +1185,11 @@
 	justify-content: center;
 	cursor: pointer;
 	z-index: 5;
+}
+/* Icon scales with the button so larger sizes stay proportional. */
+.tp-bigplay svg {
+	width: 48%;
+	height: 48%;
 }
 .tp-bigplay:hover {
 	filter: brightness( 1.08 );

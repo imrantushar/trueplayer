@@ -50,7 +50,7 @@ const CONTROL_LABELS = {
 const DEFAULTS = {
 	controls: { play: true, rewind: true, forward: true, progress: true, currentTime: true, duration: true, mute: true, volume: true, captions: true, settings: true, pip: true, fullscreen: true, download: false },
 	behavior: { autoplay: false, autoplayMode: '', muted: false, loop: false, resetOnEnd: false, savePosition: true, hideControls: true, sticky: false, stickyPosition: 'bottom-right', preload: 'metadata', loadStrategy: 'facade', noSkip: false, disableSeek: false, hoverPreview: false },
-	appearance: { skin: 'default', accent: '#4f46e5', hoverColor: '', bigPlay: true, playButtonStyle: 'circle', roundness: 10, controlBarStyle: 'gradient', aspectRatio: '16:9', captionSize: 100, captionColor: '#ffffff', captionBackground: '#000000', captionOpacity: 75 },
+	appearance: { skin: 'default', accent: '#4f46e5', hoverColor: '', bigPlay: true, playButtonStyle: 'circle', playButtonSize: 0, roundness: 10, controlBarStyle: 'gradient', aspectRatio: '16:9', captionSize: 100, captionColor: '#ffffff', captionBackground: '#000000', captionOpacity: 75 },
 	speeds: [0.5, 0.75, 1, 1.25, 1.5, 2],
 	skipSeconds: 10,
 };
@@ -144,6 +144,15 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 												<option value="circle">Circle</option>
 												<option value="soft">Soft (rounded)</option>
 												<option value="square">Square</option>
+											</Select>
+										</Field>
+										<Field label="Play button size">
+											<Select value={appearance.playButtonSize} onChange={(e) => setSection('appearance', { playButtonSize: parseInt(e.target.value, 10) })}>
+												<option value="0">Auto (skin default)</option>
+												<option value="56">Small</option>
+												<option value="72">Medium</option>
+												<option value="88">Large</option>
+												<option value="108">Extra large</option>
 											</Select>
 										</Field>
 										<Field label="Control bar style">

@@ -714,6 +714,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	if ( appearance.hoverColor ) {
 		stageStyle[ '--tp-hover' ] = appearance.hoverColor;
 	}
+	// Center play-button size override (0 = let each skin keep its own default).
+	if ( appearance.playButtonSize ) {
+		stageStyle[ '--tp-bigplay-size' ] = `${ appearance.playButtonSize }px`;
+	}
 	// Caption cue styling (html5-backed providers; embeds render their own).
 	stageStyle[ '--tp-cap-scale' ] = ( appearance.captionSize || 100 ) / 100;
 	stageStyle[ '--tp-cap-color' ] = appearance.captionColor || '#ffffff';
