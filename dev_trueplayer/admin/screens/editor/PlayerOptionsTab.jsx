@@ -1,8 +1,9 @@
-import { useState } from '@wordpress/element';
-import { Card, Field, Input, Select, Toggle, Textarea, SubSidebar, ColorInput } from '../../components/UI';
+import { Card, Field, Input, Select, Toggle, Textarea, ColorInput } from '../../components/UI';
 import { isPro, PRO_SKINS } from '../../pro';
 
-const PLAYER_SUBS = [
+// Player sub-sections. Exported so the editor's left-nav accordion (Editor.jsx)
+// can drive which one is shown — this tab renders the active section only.
+export const PLAYER_SUBS = [
 	['appearance', 'Appearance'],
 	['captions', 'Captions'],
 	['controls', 'Controls'],
@@ -54,7 +55,7 @@ const DEFAULTS = {
 	skipSeconds: 10,
 };
 
-export default function PlayerOptionsTab({ config, patch, presets = [] }) {
+export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'appearance' }) {
 	const cz = {
 		controls: { ...DEFAULTS.controls, ...(config.customize?.controls || {}) },
 		behavior: { ...DEFAULTS.behavior, ...(config.customize?.behavior || {}) },
@@ -100,15 +101,9 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 		apMode === 'off' &&
 		(behavior.loadStrategy || 'facade') !== 'eager';
 
-	const [sub, setSub] = useState('appearance');
-
 	return (
-		<div className="flex flex-col md:flex-row gap-6 items-start">
-			<SubSidebar items={PLAYER_SUBS} value={sub} onChange={setSub} />
-			<div className="flex-1 min-w-0 w-full">
-				<div className="flex gap-6 items-start">
-					<div className="w-full max-w-2xl space-y-6">
-						{sub === 'appearance' && (
+		<div className="w-full max-w-2xl space-y-6">
+			{sub === 'appearance' && (
 							<Card className="p-6">
 								<h3 className="font-semibold text-gray-900">Appearance</h3>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
@@ -319,9 +314,6 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 								</div>
 							</Card>
 						)}
-					</div>
-				</div>
-			</div>
 		</div>
 	);
 }

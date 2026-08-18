@@ -1,5 +1,6 @@
 import { useState } from '@wordpress/element';
 import Player from '@Player/Player';
+import { Card } from '../../components/UI';
 import { hasVideoSource, sourceKey } from '../../utils/videoSource';
 // NOTE: the player CSS (style-frontend.css) is enqueued on admin pages by PHP.
 // Do NOT import it here — sharing that CSS module across the frontend + admin
@@ -21,7 +22,7 @@ export default function PreviewPanel( { id, config, onDuration } ) {
 	const key = `${ sourceKey( config.source || {} ) }:${ bump }`;
 
 	return (
-		<div>
+		<Card className="p-4">
 			<div className="flex items-center justify-between mb-2">
 				<span className="text-xs font-semibold uppercase tracking-wide text-gray-400">Live preview</span>
 				<button className="text-xs text-gray-500 hover:text-gray-800" onClick={ () => setBump( ( b ) => b + 1 ) }>↻ Reload</button>
@@ -38,8 +39,8 @@ export default function PreviewPanel( { id, config, onDuration } ) {
 			) }
 
 			<p className="text-xs text-gray-400 mt-2 leading-relaxed">
-				Exactly how it appears on the frontend. Watch-tracking & locking are off here; quizzes and the subscribe gate are simulated.
+				Watch-tracking & locking are off in preview.
 			</p>
-		</div>
+		</Card>
 	);
 }
