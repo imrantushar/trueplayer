@@ -75,26 +75,46 @@ function trueplayer_uninstall_requested(): bool {
 /**
  * Delete a directory and its contents, refusing to step outside the uploads
  * tree it's supposed to live in.
+ *
+ * Goes through WP_Filesystem where it's available, and falls back to a guarded
+ * direct walk when it isn't — uninstall can run in contexts where the
+ * filesystem API can't be initialised without credentials.
+ *
+ * @param string $dir  Directory to remove.
+ * @param string $root Directory it must live inside.
  */
 function trueplayer_uninstall_rmdir( string $dir, string $root ): void {
 	$dir  = (string) realpath( $dir );
 	$root = (string) realpath( $root );
+	// realpath() has already resolved any symlink, so a path that points out of
+	// the uploads tree fails this check rather than being followed.
 	if ( '' === $dir || '' === $root || 0 !== strpos( $dir, $root ) || ! is_dir( $dir ) ) {
 		return;
 	}
 
+	global $wp_filesystem;
+	if ( ! $wp_filesystem ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		WP_Filesystem();
+	}
+	if ( $wp_filesystem && $wp_filesystem->delete( $dir, true ) ) {
+		return;
+	}
+
+	// RecursiveDirectoryIterator does not descend into symlinked directories
+	// unless explicitly asked to, so this stays inside the tree as well.
 	$items = new RecursiveIteratorIterator(
 		new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ),
 		RecursiveIteratorIterator::CHILD_FIRST
 	);
 	foreach ( $items as $item ) {
-		if ( $item->isDir() ) {
-			@rmdir( $item->getPathname() ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		if ( $item->isDir() && ! $item->isLink() ) {
+			@rmdir( $item->getPathname() ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
 		} else {
-			@unlink( $item->getPathname() ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			wp_delete_file( $item->getPathname() );
 		}
 	}
-	@rmdir( $dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+	@rmdir( $dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_rmdir
 }
 
 /** Wipe one site's TruePlayer footprint. */
@@ -133,7 +153,7 @@ function trueplayer_uninstall_site(): void {
 
 	foreach ( trueplayer_uninstall_tables() as $table ) {
 		// Table names can't be parameterised; they're this file's own literals.
-		$wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->prefix}{$table}`" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+		$wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->prefix}{$table}`" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
 	}
 
 	foreach ( trueplayer_uninstall_options() as $option ) {

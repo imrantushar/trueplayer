@@ -26,6 +26,13 @@ class UserData {
 	/** Default autosave interval, in seconds. */
 	const SAVE_FREQ = 30;
 
+	/**
+	 * Ceiling on a single stored state, in bytes. The column is LONGTEXT and any
+	 * signed-in user can write to it, so without a bound one account can push
+	 * arbitrary volume into the table. Generous next to real state payloads.
+	 */
+	const MAX_STATE_BYTES = 262144;
+
 	public static function init(): void {
 		add_action( 'wp_ajax_trueplayer_h5p_content_user_data', [ __CLASS__, 'content_user_data' ] );
 		add_action( 'wp_ajax_trueplayer_h5p_set_finished', [ __CLASS__, 'set_finished' ] );
@@ -35,6 +42,24 @@ class UserData {
 	private static function table(): string {
 		global $wpdb;
 		return $wpdb->prefix . 'tp_h5p_contents_user_data';
+	}
+
+	/**
+	 * Does this content actually exist? Both endpoints are open to any signed-in
+	 * user, so without this an account could write rows for arbitrary ids and
+	 * grow the tables unbounded.
+	 *
+	 * @param int $content_id Content to check.
+	 * @return bool
+	 */
+	private static function content_exists( int $content_id ): bool {
+		global $wpdb;
+		$table = $wpdb->prefix . 'tp_h5p_contents';
+		return (bool) $wpdb->get_var( $wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is a literal built above.
+			"SELECT id FROM {$table} WHERE id = %d",
+			$content_id
+		) );
 	}
 
 	/**
@@ -73,6 +98,10 @@ class UserData {
 	 * Saved state for a piece of content, shaped the way H5P.getUserData reads
 	 * it: [ subContentId => [ dataId => json string ] ]. Only rows flagged
 	 * `preload` are inlined; the rest are fetched on demand.
+	 *
+	 * @param int $content_id Content the state belongs to.
+	 * @param int $user_id    Viewer whose state to load; 0 for none.
+	 * @return array
 	 */
 	public static function preloaded( int $content_id, int $user_id ): array {
 		if ( ! $user_id ) {
@@ -113,14 +142,18 @@ class UserData {
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$user_id = get_current_user_id();
-		if ( ! $content_id || '' === $data_id || ! $user_id ) {
+		if ( ! $content_id || '' === $data_id || ! $user_id || ! self::content_exists( $content_id ) ) {
 			wp_send_json( [ 'success' => false, 'message' => __( 'Nothing to store.', 'trueplayer' ) ] );
 		}
 
 		global $wpdb;
 		$table = self::table();
 
-		if ( 'POST' !== strtoupper( (string) ( $_SERVER['REQUEST_METHOD'] ?? 'GET' ) ) ) {
+		$method = isset( $_SERVER['REQUEST_METHOD'] )
+			? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) )
+			: 'GET';
+
+		if ( 'POST' !== $method ) {
 			$data = $wpdb->get_var( $wpdb->prepare(
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is a literal built above.
 				"SELECT data FROM {$table} WHERE content_id = %d AND user_id = %d AND sub_content_id = %d AND data_id = %s",
@@ -155,6 +188,11 @@ class UserData {
 
 		if ( ! is_string( $raw ) ) {
 			wp_send_json( [ 'success' => false, 'message' => __( 'Unexpected payload.', 'trueplayer' ) ] );
+		}
+
+		$max = (int) apply_filters( 'trueplayer/h5p/max_state_bytes', self::MAX_STATE_BYTES );
+		if ( $max > 0 && strlen( $raw ) > $max ) {
+			wp_send_json( [ 'success' => false, 'message' => __( 'That state is too large to store.', 'trueplayer' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
@@ -194,7 +232,7 @@ class UserData {
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		$user_id = get_current_user_id();
-		if ( ! $content_id || ! $user_id || null === $score || null === $max ) {
+		if ( ! $content_id || ! $user_id || null === $score || null === $max || ! self::content_exists( $content_id ) ) {
 			wp_send_json( [ 'success' => false, 'message' => __( 'Nothing to record.', 'trueplayer' ) ] );
 		}
 
@@ -214,7 +252,7 @@ class UserData {
 			'score'      => max( 0, $score ),
 			'max_score'  => max( 0, $max ),
 			'opened'     => $opened,
-			'finished'   => $finished ?: time(),
+			'finished'   => $finished ? $finished : time(),
 			'time'       => $time,
 		];
 

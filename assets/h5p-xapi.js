@@ -11,7 +11,10 @@
  * is read from the statement itself (H5P stamps the local content id into the
  * object extensions) and resolved against the content-id => video-id map — never
  * from a single ambient value.
+ *
+ * @global H5P  Provided by the H5P runtime; guarded on before use.
  */
+/* global H5P */
 ( function () {
 	var cfg = window.TruePlayerH5PxAPI || {};
 	if ( ! window.H5P || ! window.H5P.externalDispatcher || ! cfg.endpoint ) {

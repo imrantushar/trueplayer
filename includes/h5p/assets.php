@@ -19,6 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Assets {
 
+	/** Escaping for JSON printed inside an inline <script> block. */
+	const JSON_INLINE_FLAGS = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+
 	/** @var array|null The single H5PIntegration settings object for the request. */
 	private static $settings = null;
 
@@ -193,18 +196,25 @@ class Assets {
 			echo '<link rel="stylesheet" href="' . esc_url( $url ) . '" />' . "\n";
 		}
 
-		$json = wp_json_encode( self::$settings );
+		// JSON_HEX_* because this lands inside an inline <script>: the settings
+		// carry the viewer's own saved content state, and a raw `<!--<script>`
+		// in it puts the HTML tokenizer into script-data-double-escaped state,
+		// swallowing the rest of the document into this block.
+		$json = wp_json_encode( self::$settings, self::JSON_INLINE_FLAGS );
 		if ( $json !== false ) {
 			echo '<script>window.H5PIntegration = ' . $json . ';</script>';
 		}
 
 		if ( self::$xapi_items ) {
-			$xapi = wp_json_encode( [
-				'endpoint' => rest_url( TRUEPLAYER_PLUGIN_SLUG . '/v1/h5p/xapi' ),
-				'nonce'    => wp_create_nonce( 'wp_rest' ),
-				// JSON object keys are strings; the bridge looks them up as such.
-				'items'    => (object) self::$xapi_items,
-			] );
+			$xapi = wp_json_encode(
+				[
+					'endpoint' => rest_url( TRUEPLAYER_PLUGIN_SLUG . '/v1/h5p/xapi' ),
+					'nonce'    => wp_create_nonce( 'wp_rest' ),
+					// JSON object keys are strings; the bridge looks them up as such.
+					'items'    => (object) self::$xapi_items,
+				],
+				self::JSON_INLINE_FLAGS
+			);
 			if ( $xapi !== false ) {
 				echo '<script>window.TruePlayerH5PxAPI = ' . $xapi . ';</script>';
 			}
