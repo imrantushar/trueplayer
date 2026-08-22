@@ -349,23 +349,37 @@ class H5pController extends WP_REST_Controller {
 			'scaled'     => is_numeric( $scaled ) ? (float) $scaled : null,
 		];
 
-		// Persist a result row (best effort).
+		// Persist a result row (best effort). A signed-in learner keeps one row
+		// per item — retaking replaces it — matching what the runtime's own
+		// setFinished endpoint writes, so the two paths can't disagree or stack
+		// duplicates. Guests all share user 0 and can't be told apart, so their
+		// completions stay append-only.
 		if ( is_numeric( $raw ) && is_numeric( $max ) ) {
 			global $wpdb;
-			$now = time();
-			$wpdb->insert(
-				$wpdb->prefix . 'tp_h5p_results',
-				[
-					'content_id' => $content_id,
-					'user_id'    => $user_id,
-					'score'      => (int) round( (float) $raw ),
-					'max_score'  => (int) round( (float) $max ),
-					'opened'     => $now,
-					'finished'   => $now,
-					'time'       => $now,
-				],
-				[ '%d', '%d', '%d', '%d', '%d', '%d', '%d' ]
-			);
+			$now   = time();
+			$table = $wpdb->prefix . 'tp_h5p_results';
+			$row   = [
+				'content_id' => $content_id,
+				'user_id'    => $user_id,
+				'score'      => (int) round( (float) $raw ),
+				'max_score'  => (int) round( (float) $max ),
+				'opened'     => $now,
+				'finished'   => $now,
+				'time'       => $now,
+			];
+
+			$existing = $user_id ? $wpdb->get_var( $wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is a literal built above.
+				"SELECT id FROM {$table} WHERE content_id = %d AND user_id = %d",
+				$content_id,
+				$user_id
+			) ) : null;
+
+			if ( $existing ) {
+				$wpdb->update( $table, $row, [ 'id' => (int) $existing ] );
+			} else {
+				$wpdb->insert( $table, $row, [ '%d', '%d', '%d', '%d', '%d', '%d', '%d' ] );
+			}
 		}
 
 		// Completion always; pass/fail when the statement carries success.

@@ -59,15 +59,23 @@ class Assets {
 		$base      = self::core_base_url();
 		$ver       = defined( 'TRUEPLAYER_VERSION' ) ? TRUEPLAYER_VERSION : '1.0';
 
+		// Save & resume is per user: H5P refuses to store anything unless
+		// `user` is set, and there's no dependable identity to resume a
+		// logged-out visitor against.
+		// `track_user` lets a context opt out of save/resume + result reporting
+		// entirely (the builder preview does).
+		$user  = apply_filters( 'trueplayer/h5p/track_user', true ) ? UserData::current_user() : null;
+		$nonce = $user ? wp_create_nonce( UserData::NONCE ) : '';
+
 		self::$settings = [
 			'baseUrl'            => site_url(),
 			'url'                => Core::paths()['url'],
-			'postUserStatistics' => false,
+			'postUserStatistics' => (bool) $user,
 			'ajax'               => [
-				'setFinished'     => admin_url( 'admin-ajax.php?action=trueplayer_h5p_set_finished' ),
-				'contentUserData' => admin_url( 'admin-ajax.php?action=trueplayer_h5p_content_user_data&content_id=:contentId&data_type=:dataType&sub_content_id=:subContentId' ),
+				'setFinished'     => admin_url( 'admin-ajax.php?action=trueplayer_h5p_set_finished&_wpnonce=' . $nonce ),
+				'contentUserData' => admin_url( 'admin-ajax.php?action=trueplayer_h5p_content_user_data&content_id=:contentId&data_type=:dataType&sub_content_id=:subContentId&_wpnonce=' . $nonce ),
 			],
-			'saveFreq'           => false,
+			'saveFreq'           => $user ? UserData::save_freq() : false,
 			'siteUrl'            => site_url(),
 			'l10n'               => [ 'H5P' => $core->getLocalization() ],
 			'hubIsEnabled'       => false,
@@ -80,6 +88,10 @@ class Assets {
 			'loadedCss'          => [],
 			'contents'           => [],
 		];
+
+		if ( $user ) {
+			self::$settings['user'] = $user;
+		}
 
 		foreach ( \H5PCore::$styles as $style ) {
 			$url                                = $base . $style . '?ver=' . $ver;
@@ -160,7 +172,9 @@ class Assets {
 			'title'           => $content['title'] ?? '',
 			'displayOptions'  => $core->getDisplayOptionsForView( $content['disable'], (int) ( $content['user_id'] ?? 0 ) ),
 			'metadata'        => $content['metadata'] ?? [],
-			'contentUserData' => [ 0 => [ 'state' => '{}' ] ],
+			'contentUserData' => isset( self::$settings['user'] )
+				? UserData::preloaded( (int) $content['id'], get_current_user_id() )
+				: [ 0 => [] ],
 		];
 	}
 

@@ -56,6 +56,9 @@ class Module {
 
 		// Isolated live-preview page for the builder.
 		Preview::init();
+
+		// Save & resume + finished-attempt endpoints for the runtime.
+		UserData::init();
 	}
 
 	/**

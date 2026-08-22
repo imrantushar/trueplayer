@@ -48,6 +48,13 @@ class Preview {
 		}
 
 		nocache_headers();
+
+		// The preview is for authoring, not learning: resuming the author's own
+		// half-finished attempt across reloads would show stale answers over the
+		// content they're editing, and reporting it would pollute their results.
+		add_filter( 'trueplayer/h5p/save_freq', '__return_false' );
+		add_filter( 'trueplayer/h5p/track_user', '__return_false' );
+
 		$markup = Module::is_h5p( $video_id ) ? do_shortcode( sprintf( '[trueplayer id="%d"]', $video_id ) ) : '';
 
 		// Minimal, theme-free document. H5P core + library assets and the
