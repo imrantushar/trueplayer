@@ -827,6 +827,9 @@
 		--tw-border-opacity: 1;
 		border-color: rgb(0 107 255 / var(--tw-border-opacity, 1));
 }
+.border-danger\/30 {
+		border-color: rgb(241 91 80 / 0.3);
+}
 .border-gray-100 {
 		--tw-border-opacity: 1;
 		border-color: rgb(243 244 246 / var(--tw-border-opacity, 1));
