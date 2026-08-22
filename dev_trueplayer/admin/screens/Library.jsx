@@ -18,13 +18,12 @@ const PER_PAGE = 10;
 
 const h5pAvailable = () => !! ( window.TruePlayerGlobal && window.TruePlayerGlobal.h5p_available );
 
-// Filter chip => the route that owns it. Playlists / Interactive have their own
-// page slug so the WP submenu highlight follows the filter.
+// Filter chips. All four are the one library route with a different ?kind=.
 const FILTERS = [
-	{ kind: 'all', label: 'All', route: 'library' },
-	{ kind: 'media', label: 'Media', route: 'library' },
-	{ kind: 'playlist', label: 'Playlists', route: 'playlists' },
-	{ kind: 'interactive', label: 'Interactive', route: 'interactive' },
+	{ kind: 'all', label: 'All' },
+	{ kind: 'media', label: 'Media' },
+	{ kind: 'playlist', label: 'Playlists' },
+	{ kind: 'interactive', label: 'Interactive' },
 ];
 
 // navigator.clipboard.writeText needs a secure context; fall back to the
@@ -104,7 +103,7 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 
 	const goToFilter = ( f ) => {
 		if ( onNavigate ) {
-			onNavigate( f.route, 'library' === f.route ? { kind: f.kind } : {} );
+			onNavigate( 'library', { kind: f.kind } );
 		}
 	};
 

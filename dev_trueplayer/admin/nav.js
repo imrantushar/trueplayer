@@ -10,11 +10,17 @@ export const PAGE_OF = {
 	library: SLUG + '-videos',
 	editor: SLUG + '-videos',
 	analytics: SLUG + '-videos',
-	playlists: SLUG + '-playlists',
-	interactive: SLUG + '-interactive',
 	presets: SLUG + '-presets',
 	settings: SLUG + '-settings',
 };
+
+/** Legacy page slugs, still registered in WP, that are now library filters. */
+const LEGACY_KIND = {
+	[ SLUG + '-playlists' ]: 'playlist',
+	[ SLUG + '-interactive' ]: 'interactive',
+};
+
+const KINDS = [ 'all', 'media', 'playlist', 'interactive' ];
 
 /** Resolve the active screen + params from the URL. */
 export function parseRoute() {
@@ -30,17 +36,13 @@ export function parseRoute() {
 		if ( action === 'analytics' && id ) {
 			return { name: 'analytics', id };
 		}
-		// The library screen lists every kind; ?kind=media narrows it to players
-		// without giving that filter its own submenu page.
-		return { name: 'library', kind: q.get( 'kind' ) === 'media' ? 'media' : 'all' };
+		// One library screen; ?kind= picks the filter.
+		const kind = q.get( 'kind' ) || 'all';
+		return { name: 'library', kind: KINDS.includes( kind ) ? kind : 'all' };
 	}
-	// Playlists / Interactive are the same screen, deep-linked to their filter —
-	// each keeps its own page slug so the WP submenu highlight still works.
-	if ( page === SLUG + '-playlists' ) {
-		return { name: 'playlists', kind: 'playlist' };
-	}
-	if ( page === SLUG + '-interactive' ) {
-		return { name: 'interactive', kind: 'interactive' };
+	// Old per-section URLs land on the library, filtered to what they used to be.
+	if ( LEGACY_KIND[ page ] ) {
+		return { name: 'library', kind: LEGACY_KIND[ page ] };
 	}
 	if ( page === SLUG + '-presets' ) {
 		return { name: 'presets' };
@@ -49,22 +51,6 @@ export function parseRoute() {
 		return { name: 'settings' };
 	}
 	return { name: 'dashboard' };
-}
-
-/**
- * The library filter a route implies. Playlists / Interactive are fixed by
- * their page slug; the Media page carries its filter in ?kind= (default all).
- * Needed because navigation can arrive without params — the WP submenu links
- * are hijacked by name alone.
- */
-export function kindForRoute( name, kind ) {
-	if ( 'playlists' === name ) {
-		return 'playlist';
-	}
-	if ( 'interactive' === name ) {
-		return 'interactive';
-	}
-	return kind || 'all';
 }
 
 /** Build the admin URL for a screen. */

@@ -7,7 +7,7 @@ import Presets from './screens/Presets';
 import Dashboard from './screens/Dashboard';
 import Header from './components/Header';
 import { Button, Modal } from './components/UI';
-import { parseRoute, routeUrl, kindForRoute, PAGE_OF } from './nav';
+import { parseRoute, routeUrl, PAGE_OF } from './nav';
 
 export default function App() {
 	const [ route, setRoute ] = useState( () => parseRoute() );
@@ -125,13 +125,7 @@ export default function App() {
 	}, [] );
 
 	const goCreate = ( kind ) => {
-		if ( 'playlist' === kind ) {
-			go( 'playlists' );
-		} else if ( 'interactive' === kind ) {
-			go( 'interactive' );
-		} else {
-			go( 'library', { kind: 'media' } );
-		}
+		go( 'library', { kind } );
 		setCreateIntent( kind );
 	};
 
@@ -139,9 +133,7 @@ export default function App() {
 		const toMedia = { label: 'Media', onClick: () => go( 'library' ) };
 		switch ( name ) {
 			case 'dashboard': return [ { label: 'Dashboard' } ];
-			case 'library':
-			case 'playlists':
-			case 'interactive': return editState
+			case 'library': return editState
 				? [ { label: 'Media', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
 				: [ { label: 'Media' } ];
 			case 'editor': return [ toMedia, { label: editState?.title || '', editable: true, onChange: editState?.onTitleChange } ];
@@ -169,9 +161,9 @@ export default function App() {
 					<main className="flex-1 min-w-0">
 						<div className="max-w-[1250px] mx-auto px-8 py-8">
 							{ route.name === 'dashboard' && <Dashboard onNavigate={ go } onCreate={ goCreate } /> }
-							{ [ 'library', 'playlists', 'interactive' ].includes( route.name ) && (
+							{ route.name === 'library' && (
 								<Library
-									kind={ kindForRoute( route.name, route.kind ) }
+									kind={ route.kind || 'all' }
 									onEdit={ ( id ) => go( 'editor', { id } ) }
 									onViewers={ ( id ) => go( 'analytics', { id } ) }
 									onEditState={ setEditState }
