@@ -212,9 +212,12 @@ export function SubSidebar( { items, value, onChange, className = '' } ) {
 
 /** Centered modal dialog. Click the backdrop or ✕ to close. */
 export function Modal( { title, onClose, children, footer, className = '' } ) {
+	// Two max-w utilities on one element resolve by stylesheet order, not by
+	// source order — so drop the default whenever the caller supplies its own.
+	const width = className.includes( 'max-w-' ) ? '' : 'max-w-md';
 	return (
 		<div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6" onClick={ onClose }>
-			<div className={ `bg-white rounded-card shadow-pop w-full max-w-md ${ className }` } onClick={ ( e ) => e.stopPropagation() }>
+			<div className={ `bg-white rounded-card shadow-pop w-full ${ width } ${ className }` } onClick={ ( e ) => e.stopPropagation() }>
 				<div className="flex items-center justify-between px-6 py-4 border-b border-line">
 					<h3 className="text-base font-semibold text-ink">{ title }</h3>
 					<button onClick={ onClose } className="text-muted hover:text-ink text-lg leading-none" aria-label="Close">&times;</button>

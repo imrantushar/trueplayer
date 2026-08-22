@@ -23,6 +23,10 @@ const P = {
 	webhook: <><circle cx="12" cy="7" r="3" /><path d="M12 10l-3.5 6" /><circle cx="7" cy="18" r="2.5" /><path d="M9.5 18H16" /><circle cx="17" cy="15" r="2.5" /></>,
 	tag: <><path d="M4 12V5a1 1 0 011-1h7l8 8-8 8-8-8z" /><circle cx="8.5" cy="8.5" r="1.2" /></>,
 	key: <><circle cx="8" cy="12" r="4" /><path d="M11 12h9M17 12v3M20 12v2" /></>,
+	help: <><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 114 2c-.9.7-1.5 1.2-1.5 2.2" /><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none" /></>,
+	quiz: <><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 3h6v3H9z" /><path d="M9 12l2 2 4-4" /></>,
+	cards: <><rect x="3" y="7" width="13" height="12" rx="2" /><path d="M7 4h11a2 2 0 012 2v10" /></>,
+	search: <><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5" /></>,
 	chevronRight: <path d="M9 6l6 6-6 6" />,
 	moreVertical: <><circle cx="12" cy="5" r="1.3" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" /><circle cx="12" cy="19" r="1.3" fill="currentColor" stroke="none" /></>,
 };

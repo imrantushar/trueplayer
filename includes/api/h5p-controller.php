@@ -27,18 +27,21 @@ class H5pController extends WP_REST_Controller {
 	/**
 	 * A curated set of field-based content types the semantics-driven builder
 	 * handles well out of the box. One-click installable from the H5P hub.
+	 *
+	 * machineName => [ title, description, category ]. The category groups the
+	 * tiles in the admin "create" picker.
 	 */
 	const FEATURED = [
-		'H5P.MultiChoice'     => 'Multiple Choice',
-		'H5P.TrueFalse'       => 'True/False Question',
-		'H5P.Blanks'          => 'Fill in the Blanks',
-		'H5P.DragText'        => 'Drag the Words',
-		'H5P.MarkTheWords'    => 'Mark the Words',
-		'H5P.Accordion'       => 'Accordion',
-		'H5P.Summary'         => 'Summary',
-		'H5P.QuestionSet'     => 'Question Set (Quiz)',
-		'H5P.Flashcards'      => 'Flashcards',
-		'H5P.Dialogcards'     => 'Dialog Cards',
+		'H5P.MultiChoice'  => [ 'Multiple Choice', 'A question with one or several correct answers.', 'question' ],
+		'H5P.TrueFalse'    => [ 'True / False', 'A single statement the learner marks true or false.', 'question' ],
+		'H5P.Blanks'       => [ 'Fill in the Blanks', 'Learners type the missing words into a passage.', 'question' ],
+		'H5P.DragText'     => [ 'Drag the Words', 'Drag word chips into the gaps of a sentence.', 'question' ],
+		'H5P.MarkTheWords' => [ 'Mark the Words', 'Learners click the words that match a rule.', 'question' ],
+		'H5P.Summary'      => [ 'Summary', 'Build a correct summary by picking the right statements.', 'question' ],
+		'H5P.QuestionSet'  => [ 'Question Set', 'A full quiz: several questions with a pass mark and results.', 'quiz' ],
+		'H5P.Flashcards'   => [ 'Flashcards', 'Text-and-image cards the learner answers one by one.', 'study' ],
+		'H5P.Dialogcards'  => [ 'Dialog Cards', 'Two-sided cards for drilling terms and phrases.', 'study' ],
+		'H5P.Accordion'    => [ 'Accordion', 'Collapsible sections of rich text — good for long copy.', 'content' ],
 	];
 
 	public function __construct() {
@@ -105,13 +108,29 @@ class H5pController extends WP_REST_Controller {
 			'orderby'        => 'modified',
 			'order'          => 'DESC',
 		] );
+		// content_id => content type, so each row can show what it actually is.
+		$types = [];
+		if ( $posts ) {
+			global $wpdb;
+			$p    = $wpdb->prefix . 'tp_h5p_';
+			$rows = $wpdb->get_results( "SELECT c.id, l.name, l.title FROM {$p}contents c INNER JOIN {$p}libraries l ON l.id = c.library_id" );
+			foreach ( (array) $rows as $r ) {
+				$types[ (int) $r->id ] = [ 'machineName' => $r->name, 'type' => $r->title ];
+			}
+		}
+
 		$out = [];
 		foreach ( $posts as $post ) {
-			$out[] = [
-				'video'     => $post->ID,
-				'title'     => get_the_title( $post ),
-				'shortcode' => sprintf( '[trueplayer id="%d"]', $post->ID ),
-				'modified'  => get_the_modified_date( 'c', $post ),
+			$content_id = (int) get_post_meta( $post->ID, '_trueplayer_h5p_content_id', true );
+			$type       = $types[ $content_id ] ?? [ 'machineName' => '', 'type' => '' ];
+			$out[]      = [
+				'video'       => $post->ID,
+				'title'       => get_the_title( $post ),
+				'shortcode'   => sprintf( '[trueplayer id="%d"]', $post->ID ),
+				'modified'    => get_the_modified_date( 'c', $post ),
+				'status'      => $post->post_status,
+				'machineName' => $type['machineName'],
+				'type'        => $type['type'],
 			];
 		}
 		return rest_ensure_response( $out );
@@ -135,11 +154,28 @@ class H5pController extends WP_REST_Controller {
 		}
 
 		$featured = [];
-		foreach ( self::FEATURED as $machine => $title ) {
+		foreach ( self::FEATURED as $machine => $meta ) {
 			$featured[] = [
 				'machineName' => $machine,
-				'title'       => $title,
+				'title'       => $meta[0],
+				'description' => $meta[1],
+				'category'    => $meta[2],
 				'installed'   => isset( $installed[ $machine ] ),
+			];
+		}
+
+		// Runnable types that arrived as dependencies (or were side-loaded) are
+		// authorable too — offer them alongside the curated set.
+		foreach ( $installed as $machine => $lib ) {
+			if ( isset( self::FEATURED[ $machine ] ) ) {
+				continue;
+			}
+			$featured[] = [
+				'machineName' => $machine,
+				'title'       => $lib['title'],
+				'description' => '',
+				'category'    => 'other',
+				'installed'   => true,
 			];
 		}
 

@@ -10,7 +10,7 @@ import { api } from '../api';
  * preview of the real H5P content on the right. Edits auto-save (debounced) and
  * the preview reloads.
  */
-export default function H5pEditor( { video = null, machineName = '', onBack } ) {
+export default function H5pEditor( { video = null, machineName = '', title: initialTitle = '', onBack } ) {
 	const [ loading, setLoading ] = useState( true );
 	const [ error, setError ] = useState( null );
 	const [ status, setStatus ] = useState( 'idle' ); // idle | saving | saved
@@ -69,7 +69,7 @@ export default function H5pEditor( { video = null, machineName = '', onBack } ) 
 				setLibrary( sem.library );
 				setSemantics( sem.semantics || [] );
 				setTypeTitle( sem.title || machine.replace( 'H5P.', '' ) );
-				setTitle( nextTitle || sem.title || '' );
+				setTitle( nextTitle || initialTitle || sem.title || '' );
 				setParams( nextParams || {} );
 				setPreview( nextPreview );
 				setSub( '__content' );
