@@ -132,6 +132,74 @@ export function Card( { children, className = '' } ) {
 }
 
 /** Row-actions dropdown — kebab trigger + icon/label menu. items: [ { label, icon, onClick, danger? } ]; danger items (e.g. Delete) render in red. */
+/**
+ * Primary action with a caret that reveals related actions — the main segment
+ * fires the default action in one click, so secondary kinds cost no more than
+ * they did on their own screens.
+ */
+export function SplitButton( { children, onClick, items = [], size = 'md', className = '' } ) {
+	const [ open, setOpen ] = useState( false );
+	const ref = useRef( null );
+
+	useEffect( () => {
+		if ( ! open ) {
+			return;
+		}
+		const close = ( e ) => {
+			if ( ! ref.current || ! ref.current.contains( e.target ) ) {
+				setOpen( false );
+			}
+		};
+		const onKey = ( e ) => e.key === 'Escape' && setOpen( false );
+		document.addEventListener( 'mousedown', close );
+		document.addEventListener( 'keydown', onKey );
+		return () => {
+			document.removeEventListener( 'mousedown', close );
+			document.removeEventListener( 'keydown', onKey );
+		};
+	}, [ open ] );
+
+	const pad = size === 'sm' ? 'px-3 py-1.5 text-[13px]' : 'px-4 py-2 text-sm';
+
+	return (
+		<div className={ `relative inline-flex ${ className }` } ref={ ref }>
+			<button
+				type="button"
+				onClick={ onClick }
+				className={ `inline-flex items-center gap-2 rounded-l font-medium bg-brand-500 hover:opacity-90 text-white border border-brand-500 transition-opacity ${ pad }` }
+			>
+				{ children }
+			</button>
+			<button
+				type="button"
+				onClick={ () => setOpen( ( o ) => ! o ) }
+				aria-haspopup="menu"
+				aria-expanded={ open }
+				aria-label="More create options"
+				className="inline-flex items-center justify-center w-8 rounded-r bg-brand-500 hover:opacity-90 text-white border border-brand-500 border-l-brand-600 transition-opacity"
+			>
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+			</button>
+			{ open && (
+				<div className="absolute right-0 top-full mt-1 z-30 min-w-[190px] bg-white border border-line rounded-card shadow-pop py-1" role="menu">
+					{ items.map( ( it ) => (
+						<button
+							key={ it.label }
+							type="button"
+							role="menuitem"
+							onClick={ () => { setOpen( false ); it.onClick(); } }
+							className="flex flex-col w-full text-left px-3 py-2 hover:bg-brand-50 transition-colors"
+						>
+							<span className="text-[13px] font-medium text-ink">{ it.label }</span>
+							{ it.hint && <span className="text-xs text-muted mt-0.5">{ it.hint }</span> }
+						</button>
+					) ) }
+				</div>
+			) }
+		</div>
+	);
+}
+
 export function OptionMenu( { items } ) {
 	const [ open, setOpen ] = useState( false );
 	const ref = useRef( null );
@@ -217,13 +285,15 @@ export function Modal( { title, onClose, children, footer, className = '' } ) {
 	const width = className.includes( 'max-w-' ) ? '' : 'max-w-md';
 	return (
 		<div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6" onClick={ onClose }>
-			<div className={ `bg-white rounded-card shadow-pop w-full ${ width } ${ className }` } onClick={ ( e ) => e.stopPropagation() }>
-				<div className="flex items-center justify-between px-6 py-4 border-b border-line">
+			{ /* Bounded column: the header and footer stay put and only the body
+			     scrolls, so a tall dialog never runs off the top of the screen. */ }
+			<div className={ `bg-white rounded-card shadow-pop w-full flex flex-col max-h-[calc(100vh-6rem)] ${ width } ${ className }` } onClick={ ( e ) => e.stopPropagation() }>
+				<div className="flex items-center justify-between px-6 py-4 border-b border-line shrink-0">
 					<h3 className="text-base font-semibold text-ink">{ title }</h3>
 					<button onClick={ onClose } className="text-muted hover:text-ink text-lg leading-none" aria-label="Close">&times;</button>
 				</div>
-				<div className="p-6">{ children }</div>
-				{ footer && <div className="px-6 py-4 border-t border-line flex justify-end gap-2">{ footer }</div> }
+				<div className="p-6 overflow-y-auto">{ children }</div>
+				{ footer && <div className="px-6 py-4 border-t border-line flex items-center justify-end gap-2 shrink-0">{ footer }</div> }
 			</div>
 		</div>
 	);

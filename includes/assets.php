@@ -158,7 +158,12 @@ class Assets {
 	private function get_backend_scripts_data(): array {
 		return apply_filters(
 			'trueplayer/assets/backend_scripts_data',
-			$this->get_common_scripts_data()
+			array_merge(
+				$this->get_common_scripts_data(),
+				// The library screen offers an "Interactive" filter + create
+				// option only when the H5P engine is actually present.
+				[ 'h5p_available' => \TruePlayer\H5P\Module::is_available() ]
+			)
 		);
 	}
 

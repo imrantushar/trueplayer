@@ -127,7 +127,7 @@ class H5pController extends WP_REST_Controller {
 				'video'       => $post->ID,
 				'title'       => get_the_title( $post ),
 				'shortcode'   => sprintf( '[trueplayer id="%d"]', $post->ID ),
-				'modified'    => get_the_modified_date( 'c', $post ),
+				'modified'    => $post->post_modified_gmt,
 				'status'      => $post->post_status,
 				'machineName' => $type['machineName'],
 				'type'        => $type['type'],

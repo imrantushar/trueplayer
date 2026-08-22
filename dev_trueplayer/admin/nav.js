@@ -30,13 +30,17 @@ export function parseRoute() {
 		if ( action === 'analytics' && id ) {
 			return { name: 'analytics', id };
 		}
-		return { name: 'library' };
+		// The library screen lists every kind; ?kind=media narrows it to players
+		// without giving that filter its own submenu page.
+		return { name: 'library', kind: q.get( 'kind' ) === 'media' ? 'media' : 'all' };
 	}
+	// Playlists / Interactive are the same screen, deep-linked to their filter —
+	// each keeps its own page slug so the WP submenu highlight still works.
 	if ( page === SLUG + '-playlists' ) {
-		return { name: 'playlists' };
+		return { name: 'playlists', kind: 'playlist' };
 	}
 	if ( page === SLUG + '-interactive' ) {
-		return { name: 'interactive' };
+		return { name: 'interactive', kind: 'interactive' };
 	}
 	if ( page === SLUG + '-presets' ) {
 		return { name: 'presets' };
@@ -45,6 +49,22 @@ export function parseRoute() {
 		return { name: 'settings' };
 	}
 	return { name: 'dashboard' };
+}
+
+/**
+ * The library filter a route implies. Playlists / Interactive are fixed by
+ * their page slug; the Media page carries its filter in ?kind= (default all).
+ * Needed because navigation can arrive without params — the WP submenu links
+ * are hijacked by name alone.
+ */
+export function kindForRoute( name, kind ) {
+	if ( 'playlists' === name ) {
+		return 'playlist';
+	}
+	if ( 'interactive' === name ) {
+		return 'interactive';
+	}
+	return kind || 'all';
 }
 
 /** Build the admin URL for a screen. */
@@ -59,6 +79,9 @@ export function routeUrl( name, params = {} ) {
 	}
 	if ( params.id ) {
 		q.set( 'id', params.id );
+	}
+	if ( name === 'library' && params.kind && 'all' !== params.kind ) {
+		q.set( 'kind', params.kind );
 	}
 	return 'admin.php?' + q.toString();
 }

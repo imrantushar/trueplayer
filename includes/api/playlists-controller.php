@@ -111,6 +111,7 @@ class PlaylistsController extends WP_REST_Controller {
 			'title'     => $post->post_title,
 			'shortcode' => sprintf( '[trueplayer_playlist id="%d"]', $post->ID ),
 			'config'    => is_array( $cfg ) ? $cfg : [],
+			'modified'  => $post->post_modified_gmt,
 		];
 	}
 }

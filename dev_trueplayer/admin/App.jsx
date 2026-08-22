@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from '@wordpress/element';
 import Library from './screens/Library';
 import Editor from './screens/Editor';
-import Interactive from './screens/Interactive';
 import Settings from './screens/Settings';
 import Analytics from './screens/Analytics';
 import Presets from './screens/Presets';
 import Dashboard from './screens/Dashboard';
 import Header from './components/Header';
 import { Button, Modal } from './components/UI';
-import { parseRoute, routeUrl, PAGE_OF } from './nav';
+import { parseRoute, routeUrl, kindForRoute, PAGE_OF } from './nav';
 
 export default function App() {
 	const [ route, setRoute ] = useState( () => parseRoute() );
@@ -31,15 +30,20 @@ export default function App() {
 			return;
 		}
 		const slug = PAGE_OF[ name ] || PAGE_OF.dashboard;
-		menu.querySelectorAll( 'a.current' ).forEach( ( a ) => {
-			a.classList.remove( 'current' );
-			a.removeAttribute( 'aria-current' );
+		// WP marks the submenu <li> as current, not the <a> — clear both, or the
+		// server-rendered highlight stays behind on the page we actually loaded.
+		menu.querySelectorAll( 'li.current, a.current' ).forEach( ( el ) => {
+			el.classList.remove( 'current' );
+			el.removeAttribute( 'aria-current' );
 		} );
 		menu.querySelectorAll( 'a[href*="page="]' ).forEach( ( a ) => {
 			const m = ( a.getAttribute( 'href' ) || '' ).match( /[?&]page=([a-z0-9_-]+)/i );
 			if ( m && m[ 1 ] === slug ) {
 				a.classList.add( 'current' );
 				a.setAttribute( 'aria-current', 'page' );
+				if ( a.parentElement ) {
+					a.parentElement.classList.add( 'current' );
+				}
 			}
 		} );
 	};
@@ -121,15 +125,13 @@ export default function App() {
 		const toMedia = { label: 'Media', onClick: () => go( 'library' ) };
 		switch ( name ) {
 			case 'dashboard': return [ { label: 'Dashboard' } ];
-			case 'library': return editState
+			case 'library':
+			case 'playlists':
+			case 'interactive': return editState
 				? [ { label: 'Media', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
 				: [ { label: 'Media' } ];
-			case 'playlists': return editState
-				? [ { label: 'Media playlists', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
-				: [ { label: 'Media playlists' } ];
 			case 'editor': return [ toMedia, { label: editState?.title || '', editable: true, onChange: editState?.onTitleChange } ];
 			case 'analytics': return [ toMedia, { label: 'Analytics' } ];
-			case 'interactive': return [ { label: 'Interactive' } ];
 			case 'presets': return editState
 				? [ { label: 'Presets', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
 				: [ { label: 'Presets' } ];
@@ -153,16 +155,16 @@ export default function App() {
 					<main className="flex-1 min-w-0">
 						<div className="max-w-[1250px] mx-auto px-8 py-8">
 							{ route.name === 'dashboard' && <Dashboard onNavigate={ go } /> }
-							{ ( route.name === 'library' || route.name === 'playlists' ) && (
+							{ [ 'library', 'playlists', 'interactive' ].includes( route.name ) && (
 								<Library
-									initialTab={ route.name === 'playlists' ? 'playlists' : 'videos' }
+									kind={ kindForRoute( route.name, route.kind ) }
 									onEdit={ ( id ) => go( 'editor', { id } ) }
 									onViewers={ ( id ) => go( 'analytics', { id } ) }
 									onEditState={ setEditState }
+									onNavigate={ go }
 								/>
 							) }
 							{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library' ) } /> }
-							{ route.name === 'interactive' && <Interactive /> }
 							{ route.name === 'presets' && <Presets onEditState={ setEditState } /> }
 							{ route.name === 'settings' && <Settings onEditState={ setEditState } /> }
 						</div>
