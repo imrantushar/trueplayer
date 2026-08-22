@@ -20,8 +20,36 @@ export default function App() {
 	const [ confirmNav, setConfirmNav ] = useState( null ); // pending navigation, blocked by unsaved changes
 	const dirty = editState?.dirty ?? false;
 
+	// WordPress applies the submenu's "current" highlight server-side, based on
+	// the page actually requested — a pushState-only navigation (go(), including
+	// native-menu clicks hijacked below) never touches it, so the sidebar can
+	// keep pointing at a stale page while the app has already moved on. Keep it
+	// in sync by hand whenever the route changes.
+	const syncAdminMenuHighlight = ( name ) => {
+		const menu = document.getElementById( 'adminmenu' );
+		if ( ! menu ) {
+			return;
+		}
+		const slug = PAGE_OF[ name ] || PAGE_OF.dashboard;
+		menu.querySelectorAll( 'a.current' ).forEach( ( a ) => {
+			a.classList.remove( 'current' );
+			a.removeAttribute( 'aria-current' );
+		} );
+		menu.querySelectorAll( 'a[href*="page="]' ).forEach( ( a ) => {
+			const m = ( a.getAttribute( 'href' ) || '' ).match( /[?&]page=([a-z0-9_-]+)/i );
+			if ( m && m[ 1 ] === slug ) {
+				a.classList.add( 'current' );
+				a.setAttribute( 'aria-current', 'page' );
+			}
+		} );
+	};
+
 	useEffect( () => {
-		const onPop = () => setRoute( parseRoute() );
+		const onPop = () => {
+			const next = parseRoute();
+			setRoute( next );
+			syncAdminMenuHighlight( next.name );
+		};
 		window.addEventListener( 'popstate', onPop );
 		return () => window.removeEventListener( 'popstate', onPop );
 	}, [] );
@@ -56,6 +84,7 @@ export default function App() {
 	const go = ( name, params = {} ) => requestNav( () => {
 		window.history.pushState( {}, '', routeUrl( name, params ) );
 		setRoute( { name, ...params } );
+		syncAdminMenuHighlight( name );
 		window.scrollTo( 0, 0 );
 	} );
 
