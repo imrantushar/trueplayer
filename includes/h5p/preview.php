@@ -58,10 +58,32 @@ class Preview {
 		echo '<!doctype html><html ' . get_language_attributes() . '><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
 		echo '<style>html,body{margin:0;padding:16px;background:#fff;color:#1f2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}.trueplayer-h5p-notice{display:none}</style>';
 		echo '</head><body>';
+
+		// A freshly created item still has empty required fields, which makes
+		// the H5P runtime throw while trying to mount an incomplete runnable
+		// (and its own error() helper then crashes logging that error — BUG-4).
+		// Attached before any H5P script runs, so it catches that and degrades
+		// to a placeholder instead of an uncaught exception + a blank panel.
+		echo '<script>(function(){
+			var shown=false;
+			function fallback(){
+				if(shown)return; shown=true;
+				var root=document.getElementById("tp-h5p-preview-root");
+				if(root)root.style.display="none";
+				var msg=document.getElementById("tp-h5p-preview-fallback");
+				if(msg)msg.style.display="block";
+			}
+			window.addEventListener("error",function(e){fallback();e.preventDefault();},true);
+			window.addEventListener("unhandledrejection",function(){fallback();});
+		})();</script>';
+
+		echo '<div id="tp-h5p-preview-root">';
 		echo $markup; // already escaped/built by the renderer + H5P. phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		if ( '' === trim( wp_strip_all_tags( $markup ) ) && '' === trim( $markup ) ) {
-			echo '<p style="color:#9ca3af">Nothing to preview yet.</p>';
-		}
+		echo '</div>';
+		$empty = '' === trim( wp_strip_all_tags( $markup ) ) && '' === trim( $markup );
+		echo '<p id="tp-h5p-preview-fallback" style="display:' . ( $empty ? 'block' : 'none' ) . ';color:#9ca3af">'
+			. ( $empty ? esc_html__( 'Nothing to preview yet.', 'trueplayer' ) : esc_html__( 'Fill in the required fields to preview.', 'trueplayer' ) )
+			. '</p>';
 		// Flush only the H5P runtime's own footer output — its H5PIntegration
 		// global (+ style links) and the footer-enqueued core/library scripts —
 		// rather than firing the site-wide wp_footer. Running the full wp_footer
