@@ -31,6 +31,7 @@ class Menu {
 		$subs = [
 			$slug                => __( 'Dashboard', 'trueplayer' ),
 			$slug . '-videos'    => __( 'Media', 'trueplayer' ),
+			$slug . '-playlists' => __( 'Playlists', 'trueplayer' ),
 		];
 		// The Interactive (H5P) section only appears when the engine is present.
 		if ( \TruePlayer\H5P\Module::is_available() ) {
