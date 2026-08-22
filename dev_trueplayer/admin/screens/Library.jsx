@@ -46,7 +46,7 @@ function legacyCopy( text ) {
 	return ok;
 }
 
-export default function Library( { kind = 'all', onEdit, onViewers, onEditState, onNavigate } ) {
+export default function Library( { kind = 'all', onEdit, onViewers, onEditState, onNavigate, createIntent = null, onCreateHandled } ) {
 	const [ videos, setVideos ] = useState( null );
 	const [ playlists, setPlaylists ] = useState( null );
 	const [ interactive, setInteractive ] = useState( h5pAvailable() ? null : [] );
@@ -68,6 +68,14 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 
 	useEffect( () => { loadAll(); }, [] );
 	useEffect( () => { setPage( 1 ); }, [ kind ] );
+
+	// A create request that arrived with the navigation (dashboard buttons).
+	useEffect( () => {
+		if ( createIntent ) {
+			setCreate( createIntent );
+			onCreateHandled?.();
+		}
+	}, [ createIntent, onCreateHandled ] );
 
 	// One row shape for all three kinds, so the list, the copy handler and the
 	// delete flow don't have to branch per source.

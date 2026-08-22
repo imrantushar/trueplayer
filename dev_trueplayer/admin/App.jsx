@@ -17,6 +17,9 @@ export default function App() {
 	// crumb and the unsaved-changes guard below.
 	const [ editState, setEditState ] = useState( null );
 	const [ confirmNav, setConfirmNav ] = useState( null ); // pending navigation, blocked by unsaved changes
+	// A "create X" click from outside the library (the dashboard) — navigate to
+	// the matching filter, then hand the kind to Library so it opens the dialog.
+	const [ createIntent, setCreateIntent ] = useState( null );
 	const dirty = editState?.dirty ?? false;
 
 	// WordPress applies the submenu's "current" highlight server-side, based on
@@ -121,6 +124,17 @@ export default function App() {
 		return () => menu.removeEventListener( 'click', onMenuClick );
 	}, [] );
 
+	const goCreate = ( kind ) => {
+		if ( 'playlist' === kind ) {
+			go( 'playlists' );
+		} else if ( 'interactive' === kind ) {
+			go( 'interactive' );
+		} else {
+			go( 'library', { kind: 'media' } );
+		}
+		setCreateIntent( kind );
+	};
+
 	const crumbsFor = ( name ) => {
 		const toMedia = { label: 'Media', onClick: () => go( 'library' ) };
 		switch ( name ) {
@@ -154,7 +168,7 @@ export default function App() {
 				) : (
 					<main className="flex-1 min-w-0">
 						<div className="max-w-[1250px] mx-auto px-8 py-8">
-							{ route.name === 'dashboard' && <Dashboard onNavigate={ go } /> }
+							{ route.name === 'dashboard' && <Dashboard onNavigate={ go } onCreate={ goCreate } /> }
 							{ [ 'library', 'playlists', 'interactive' ].includes( route.name ) && (
 								<Library
 									kind={ kindForRoute( route.name, route.kind ) }
@@ -162,6 +176,8 @@ export default function App() {
 									onViewers={ ( id ) => go( 'analytics', { id } ) }
 									onEditState={ setEditState }
 									onNavigate={ go }
+									createIntent={ createIntent }
+									onCreateHandled={ () => setCreateIntent( null ) }
 								/>
 							) }
 							{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library' ) } /> }

@@ -33,13 +33,19 @@ function QuickLink( { icon, label, onClick } ) {
 	);
 }
 
-export default function Dashboard( { onNavigate } ) {
+const h5pAvailable = () => !! ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.h5p_available );
+
+export default function Dashboard( { onNavigate, onCreate } ) {
 	const [ videos, setVideos ] = useState( null );
 	const [ playlists, setPlaylists ] = useState( [] );
+	const [ interactive, setInteractive ] = useState( [] );
 
 	useEffect( () => {
 		api.listVideos().then( setVideos ).catch( () => setVideos( [] ) );
 		api.listPlaylists().then( setPlaylists ).catch( () => {} );
+		if ( h5pAvailable() ) {
+			api.h5pItems().then( setInteractive ).catch( () => {} );
+		}
 	}, [] );
 
 	const vids = videos || [];
@@ -58,15 +64,17 @@ export default function Dashboard( { onNavigate } ) {
 					<p className="text-sm text-gray-500">Your watch-verified media library at a glance.</p>
 				</div>
 				<div className="flex gap-2">
-					<Button variant="ghost" onClick={ () => onNavigate( 'playlists' ) }>New playlist</Button>
-					<Button onClick={ () => onNavigate( 'library' ) }><Icon name="plus" className="w-4 h-4" /> New media</Button>
+					<Button variant="ghost" onClick={ () => onCreate( 'playlist' ) }>New playlist</Button>
+					<Button onClick={ () => onCreate( 'media' ) }><Icon name="plus" className="w-4 h-4" /> New media</Button>
 				</div>
 			</div>
 
 			<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 				<Stat icon="video" label="Videos" value={ videos === null ? '—' : vids.length } tone="brand" />
 				<Stat icon="playlist" label="Playlists" value={ playlists.length } tone="gray" />
-				<Stat icon="check" label="Quiz-gated" value={ quizzed } tone="green" />
+				{ h5pAvailable()
+					? <Stat icon="spark" label="Interactive" value={ interactive.length } tone="green" />
+					: <Stat icon="check" label="Quiz-gated" value={ quizzed } tone="green" /> }
 				<Stat icon="book" label="With chapters" value={ withChapters } tone="amber" />
 			</div>
 
@@ -81,7 +89,7 @@ export default function Dashboard( { onNavigate } ) {
 						<div className="text-center py-10 border border-dashed border-line rounded-lg">
 							<div className="mx-auto mb-3 w-11 h-11 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="video" className="w-5 h-5" /></div>
 							<p className="text-sm text-gray-500 mb-3">No media yet — add your first one.</p>
-							<Button className='mt-6' onClick={ () => onNavigate( 'library' ) }>Create media</Button>
+							<Button className='mt-6' onClick={ () => onCreate( 'media' ) }>Create media</Button>
 						</div>
 					) }
 					<div className="space-y-2">
@@ -105,8 +113,9 @@ export default function Dashboard( { onNavigate } ) {
 					<Card className="p-6">
 						<h3 className="font-semibold text-ink mb-3">Quick start</h3>
 						<div className="space-y-1">
-							<QuickLink icon="video" label="Add a video" onClick={ () => onNavigate( 'library' ) } />
-							<QuickLink icon="playlist" label="Build a playlist" onClick={ () => onNavigate( 'playlists' ) } />
+							<QuickLink icon="video" label="Add a video" onClick={ () => onCreate( 'media' ) } />
+							<QuickLink icon="playlist" label="Build a playlist" onClick={ () => onCreate( 'playlist' ) } />
+							{ h5pAvailable() && <QuickLink icon="spark" label="Create interactive content" onClick={ () => onCreate( 'interactive' ) } /> }
 							<QuickLink icon="settings" label="Player defaults" onClick={ () => onNavigate( 'settings' ) } />
 						</div>
 					</Card>
