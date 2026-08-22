@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from '@wordpress/element';
-import { Button, Modal, Field, Input, Select } from '../components/UI';
+import { Button, Modal, Field, Input } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
 import { api } from '../api';
@@ -15,13 +15,13 @@ import { api } from '../api';
  */
 
 const MEDIA_TYPES = [
-	{ value: 'self', label: 'Self-hosted (media library)' },
-	{ value: 'youtube', label: 'YouTube' },
-	{ value: 'vimeo', label: 'Vimeo' },
-	{ value: 'url', label: 'External URL (mp4/webm)' },
-	{ value: 'bunny', label: 'Bunny.net Stream', pro: true },
-	{ value: 'mux', label: 'Mux', pro: true },
-	{ value: 'hls', label: 'HLS stream (.m3u8)', pro: true },
+	{ value: 'self', label: 'Self-hosted', hint: 'From your media library' },
+	{ value: 'youtube', label: 'YouTube', hint: 'Paste a video link' },
+	{ value: 'vimeo', label: 'Vimeo', hint: 'Paste a video link' },
+	{ value: 'url', label: 'External URL', hint: 'A direct mp4 / webm file' },
+	{ value: 'bunny', label: 'Bunny.net Stream', hint: 'Signed, private delivery', pro: true },
+	{ value: 'mux', label: 'Mux', hint: 'Adaptive streaming', pro: true },
+	{ value: 'hls', label: 'HLS stream', hint: 'An .m3u8 playlist', pro: true },
 ];
 
 // H5P category → picker group label + tile icon.
@@ -123,7 +123,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 	return (
 		<Modal
 			title={ `Create ${ KIND_LABEL[ kind ].toLowerCase() }` }
-			className={ 'interactive' === kind ? 'max-w-3xl' : '' }
+			className={ 'interactive' === kind ? 'max-w-3xl' : 'max-w-lg' }
 			onClose={ onClose }
 			footer={
 				<>
@@ -161,15 +161,26 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 			</Field>
 
 			{ 'media' === kind && (
-				<Field label="Media type" hint={ isPro() ? 'Change the source details in the editor.' : 'Bunny / Mux / HLS need TruePlayer Pro.' }>
-					<Select value={ mediaType } onChange={ ( e ) => setMediaType( e.target.value ) }>
-						{ MEDIA_TYPES.map( ( t ) => (
-							<option key={ t.value } value={ t.value } disabled={ t.pro && ! isPro() }>
-								{ t.label }{ t.pro && ! isPro() ? ' (Pro)' : '' }
-							</option>
-						) ) }
-					</Select>
-				</Field>
+				<div className="mb-1">
+					<span className="block text-[13px] font-medium text-ink mb-1.5">Media type</span>
+					<div role="radiogroup" aria-label="Media type" className="grid sm:grid-cols-2 gap-2">
+						{ MEDIA_TYPES.map( ( t ) => {
+							const locked = t.pro && ! isPro();
+							return (
+								<RadioOption
+									key={ t.value }
+									option={ t }
+									locked={ locked }
+									active={ mediaType === t.value }
+									onPick={ () => ! locked && setMediaType( t.value ) }
+								/>
+							);
+						} ) }
+					</div>
+					<span className="block text-xs text-gray-400 mt-2">
+						{ isPro() ? 'Change the source details in the editor.' : 'Bunny / Mux / HLS need TruePlayer Pro.' }
+					</span>
+				</div>
 			) }
 
 			{ 'interactive' === kind && (
@@ -199,6 +210,41 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 				</>
 			) }
 		</Modal>
+	);
+}
+
+/** One media source, as a radio option. */
+function RadioOption( { option, active, locked, onPick } ) {
+	return (
+		<button
+			type="button"
+			role="radio"
+			aria-checked={ active }
+			disabled={ locked }
+			onClick={ onPick }
+			className={ `w-full text-left flex items-start gap-2.5 px-3 py-2.5 rounded border transition-colors ${
+				locked
+					? 'border-line bg-gray-50 opacity-60 cursor-not-allowed'
+					: active
+						? 'border-brand-500 bg-brand-50'
+						: 'border-line bg-white hover:border-brand-200 hover:bg-gray-50'
+			}` }
+		>
+			<span
+				className={ `mt-0.5 w-4 h-4 shrink-0 rounded-full border flex items-center justify-center ${
+					active ? 'border-brand-500' : 'border-gray-300'
+				}` }
+			>
+				{ active && <span className="w-2 h-2 rounded-full bg-brand-500" /> }
+			</span>
+			<span className="min-w-0 flex-1">
+				<span className="flex items-center gap-1.5">
+					<span className="text-[13px] font-medium text-ink truncate">{ option.label }</span>
+					{ locked && <span className="text-[9px] font-semibold text-brand-500 shrink-0">PRO</span> }
+				</span>
+				{ option.hint && <span className="block text-xs text-muted mt-0.5 leading-4">{ option.hint }</span> }
+			</span>
+		</button>
 	);
 }
 
