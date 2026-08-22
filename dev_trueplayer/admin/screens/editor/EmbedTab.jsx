@@ -2,6 +2,25 @@ import { useState } from '@wordpress/element';
 import { Card, Button, Toggle, Badge } from '../../components/UI';
 import { isPro } from '../../pro';
 
+// navigator.clipboard.writeText needs a secure context; fall back to the
+// classic textarea + execCommand trick (e.g. plain-http local dev sites).
+function legacyCopy( text ) {
+	const ta = document.createElement( 'textarea' );
+	ta.value = text;
+	ta.style.position = 'fixed';
+	ta.style.opacity = '0';
+	document.body.appendChild( ta );
+	ta.select();
+	let ok = false;
+	try {
+		ok = document.execCommand( 'copy' );
+	} catch ( e ) {
+		ok = false;
+	}
+	document.body.removeChild( ta );
+	return ok;
+}
+
 export default function EmbedTab( { video, config = {}, patch } ) {
 	const [ copied, setCopied ] = useState( '' );
 	const shortcode = video.shortcode || `[trueplayer id="${ video.id }"]`;
@@ -10,9 +29,19 @@ export default function EmbedTab( { video, config = {}, patch } ) {
 	const instantUrl = `${ siteUrl }/tp/${ video.id }/`;
 
 	const copy = ( text, key ) => {
-		navigator.clipboard && navigator.clipboard.writeText( text );
-		setCopied( key );
-		setTimeout( () => setCopied( '' ), 1500 );
+		const markCopied = () => {
+			setCopied( key );
+			setTimeout( () => setCopied( ( c ) => ( c === key ? '' : c ) ), 1500 );
+		};
+		if ( navigator.clipboard && window.isSecureContext ) {
+			navigator.clipboard.writeText( text ).then( markCopied ).catch( () => {
+				if ( legacyCopy( text ) ) {
+					markCopied();
+				}
+			} );
+		} else if ( legacyCopy( text ) ) {
+			markCopied();
+		}
 	};
 
 	return (
