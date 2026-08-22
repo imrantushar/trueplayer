@@ -6,6 +6,11 @@
  * same event bus the native player feeds (analytics, webhooks, CRM, LMS). Only
  * the top-level statement (no parent context) is reported, so sub-question
  * chatter is ignored.
+ *
+ * A page can hold several interactive items, so the item a statement belongs to
+ * is read from the statement itself (H5P stamps the local content id into the
+ * object extensions) and resolved against the content-id => video-id map — never
+ * from a single ambient value.
  */
 ( function () {
 	var cfg = window.TruePlayerH5PxAPI || {};
@@ -13,15 +18,29 @@
 		return;
 	}
 
+	var CONTENT_ID_EXT = 'http://h5p.org/x-api/h5p-local-content-id';
+	var SUB_CONTENT_EXT = 'http://h5p.org/x-api/h5p-subContentId';
+	var items = cfg.items || {};
 	var sent = {};
+
+	// sendBeacon can't set headers, and a REST request without X-WP-Nonce is
+	// treated as logged-out — the auth cookie is ignored, so the nonce in the
+	// body can never validate and the result is dropped along with the user it
+	// belonged to. _wpnonce on the query string is the mechanism that works for
+	// both transports.
+	var endpoint =
+		cfg.endpoint +
+		( cfg.endpoint.indexOf( '?' ) === -1 ? '?' : '&' ) +
+		'_wpnonce=' +
+		encodeURIComponent( cfg.nonce || '' );
 
 	function post( payload ) {
 		try {
 			var body = JSON.stringify( payload );
 			if ( navigator.sendBeacon ) {
-				navigator.sendBeacon( cfg.endpoint, new Blob( [ body ], { type: 'application/json' } ) );
+				navigator.sendBeacon( endpoint, new Blob( [ body ], { type: 'application/json' } ) );
 			} else {
-				fetch( cfg.endpoint, {
+				fetch( endpoint, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': cfg.nonce || '' },
 					credentials: 'same-origin',
@@ -59,7 +78,19 @@
 			return;
 		}
 
-		var contentId = cfg.contentId;
+		var ext =
+			( s.object && s.object.definition && s.object.definition.extensions ) || {};
+		// Belt-and-braces: a sub-content statement that somehow lost its parent
+		// context still isn't the item's own result.
+		if ( ext[ SUB_CONTENT_EXT ] ) {
+			return;
+		}
+
+		var contentId = parseInt( ext[ CONTENT_ID_EXT ], 10 );
+		if ( ! contentId || ! Object.prototype.hasOwnProperty.call( items, contentId ) ) {
+			return;
+		}
+
 		if ( sent[ contentId ] ) {
 			return;
 		}
@@ -69,7 +100,7 @@
 		var score = result.score || {};
 
 		post( {
-			video: cfg.video,
+			video: items[ contentId ],
 			content_id: contentId,
 			nonce: cfg.nonce,
 			verb: verb || verbId,
