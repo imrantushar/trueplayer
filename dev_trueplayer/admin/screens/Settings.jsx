@@ -236,29 +236,6 @@ export default function Settings({ onEditState }) {
 									<Textarea rows={6} className="font-mono text-xs" value={settings.customize?.css || ''} onChange={(e) => setSettings((s) => ({ ...s, customize: { ...(s.customize || {}), css: e.target.value } }))} placeholder=".tp-controls { --tp-accent: #4F46E5; }" />
 								</div>
 							</Card>
-
-							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">When you delete TruePlayer</h3>
-								<p className="text-sm text-muted">By default your data survives deleting the plugin, so reinstalling picks up where you left off.</p>
-								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									<Toggle
-										checked={!!settings.deleteDataOnUninstall}
-										onChange={(v) => setSettings((s) => ({ ...s, deleteDataOnUninstall: v }))}
-										label="Remove all TruePlayer data when the plugin is deleted"
-									/>
-									{settings.deleteDataOnUninstall ? (
-										<div className="mt-4 rounded border border-danger/30 bg-danger-light p-4">
-											<p className="text-[13px] font-semibold text-danger !mb-1">This cannot be undone.</p>
-											<p className="text-[13px] text-ink leading-5">
-												Deleting the plugin will also remove every player, playlist and interactive
-												item, all watch &amp; quiz records, the installed H5P content types and their
-												uploaded files, and every TruePlayer setting. Deactivating the plugin does
-												nothing — only deleting it does.
-											</p>
-										</div>
-									) : null}
-								</div>
-							</Card>
 						</div>
 					)}
 

@@ -91,6 +91,7 @@ kit so it looks and feels consistent with the rest of the admin.
 ## Remaining loose ends
 
 - Visual canvas editors for spatial types (Phase 4 polish).
+- Uninstall cleanup for the `tp_h5p_*` tables + `uploads/trueplayer-h5p/`.
 
 ### Closed
 
@@ -99,9 +100,6 @@ kit so it looks and feels consistent with the rest of the admin.
   request. Per signed-in user (H5P won't save without `user`). Autosave interval
   is filterable via `trueplayer/h5p/save_freq`, and `trueplayer/h5p/track_user`
   disables the lot for a context — the builder preview opts out.
-- [x] **Uninstall cleanup.** `uninstall.php` removes the `tp_*` tables (H5P's
-  included), posts, options, cron and `uploads/trueplayer-h5p/` — opt-in via
-  Settings → General, off by default.
 - [x] **Multi-item pages.** The bridge config is printed once with a
   content-id => video-id map and each statement resolves against it using the
   local content id H5P stamps into the statement. Previously a second item on
