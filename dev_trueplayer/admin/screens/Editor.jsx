@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Modal, SubSidebar, Toast, Badge } from '../components/UI';
+import { Button, Modal, Toast, Badge } from '../components/UI';
 import { Icon } from '../components/icons';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab, { PLAYER_SUBS } from './editor/PlayerOptionsTab';
@@ -26,12 +26,19 @@ const INTERACTIONS_SUBS = [
 	[ 'subscribe', 'Email capture', true ],
 ];
 
+// Access & gating sub-sections. No per-sub pro flag: the whole tab is pro, so
+// the parent nav item already carries the badge.
+const ACCESS_SUBS = [
+	[ 'gating', 'Verification & quiz' ],
+	[ 'protection', 'Protection' ],
+];
+
 const TABS = [
 	{ key: 'source', label: 'Source', icon: 'film' },
 	{ key: 'player', label: 'Player', icon: 'sliders', subs: PLAYER_SUBS },
 	{ key: 'appearance', label: 'Chapters & branding', icon: 'bookmark' },
 	{ key: 'interactions', label: 'Interactions', icon: 'puzzle', subs: INTERACTIONS_SUBS },
-	{ key: 'access', label: 'Access & gating', icon: 'shield', pro: true },
+	{ key: 'access', label: 'Access & gating', icon: 'shield', pro: true, subs: ACCESS_SUBS },
 ];
 
 const PRO_TAB_INFO = {
@@ -54,16 +61,14 @@ function InteractionsTab( { config, patch, pro, sub = 'overlays', onPreviewOverl
 }
 
 // Access & gating = who can watch + proving they watched. All pro (the Editor
-// upsells the whole tab for free users).
-function AccessTab( { config, patch } ) {
-	const [ sub, setSub ] = useState( 'gating' );
+// upsells the whole tab for free users). Like Player and Interactions, the
+// sub-nav lives in the editor's left-nav accordion rather than in a second
+// column of its own, so this renders the active one only.
+function AccessTab( { config, patch, sub = 'gating' } ) {
 	return (
-		<div className="flex flex-col md:flex-row gap-6 items-start">
-			<SubSidebar value={ sub } onChange={ setSub } items={ [ [ 'gating', 'Verification & quiz' ], [ 'protection', 'Protection' ] ] } />
-			<div className="flex-1 min-w-0">
-				{ sub === 'gating' && <GatingTab config={ config } patch={ patch } /> }
-				{ sub === 'protection' && <ProtectionTab config={ config } patch={ patch } /> }
-			</div>
+		<div className="w-full min-w-0">
+			{ sub === 'gating' && <GatingTab config={ config } patch={ patch } /> }
+			{ sub === 'protection' && <ProtectionTab config={ config } patch={ patch } /> }
 		</div>
 	);
 }
@@ -71,7 +76,7 @@ function AccessTab( { config, patch } ) {
 export default function Editor( { id, onEditState } ) {
 	const [ video, setVideo ] = useState( null );
 	const [ tab, setTab ] = useState( 'source' );
-	const [ activeSub, setActiveSub ] = useState( { player: 'appearance', interactions: 'overlays' } ); // active sub per accordion section
+	const [ activeSub, setActiveSub ] = useState( { player: 'appearance', interactions: 'overlays', access: 'gating' } ); // active sub per accordion section
 	const [ navOpen, setNavOpen ] = useState( null ); // which nav section's accordion is expanded
 	const selectSub = ( key, subKey ) => { setTab( key ); setNavOpen( key ); setActiveSub( ( m ) => ( { ...m, [ key ]: subKey } ) ); };
 	const [ dirty, setDirty ] = useState( false );
@@ -244,7 +249,7 @@ export default function Editor( { id, onEditState } ) {
 								{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } sub={ activeSub.player } /> }
 								{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
 								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } previewingId={ previewCue?.overlayId || null } /> }
-								{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
+								{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } sub={ activeSub.access } /> }
 							</>
 						) }
 					</div>
