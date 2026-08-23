@@ -41,11 +41,11 @@ const PRO_TAB_INFO = {
 // Interactions = everything shown on/around the video. Overlays are free;
 // layers / timed content / email capture are pro (gated inline). The sub-nav
 // lives in the editor's left-nav accordion, so this renders the active one only.
-function InteractionsTab( { config, patch, pro, sub = 'overlays', onPreviewOverlay } ) {
+function InteractionsTab( { config, patch, pro, sub = 'overlays', onPreviewOverlay, previewingId } ) {
 	const gate = ( node, info ) => ( pro ? node : <UpsellPanel title={ info.title } features={ info.features } /> );
 	return (
 		<div className="w-full min-w-0">
-			{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } onPreviewOverlay={ onPreviewOverlay } /> }
+			{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } onPreviewOverlay={ onPreviewOverlay } previewingId={ previewingId } /> }
 			{ sub === 'layers' && gate( <LayersTab config={ config } patch={ patch } />, { title: 'Interactive layers', features: [ 'Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Conditional display rules' ] } ) }
 			{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, { title: 'Timed content', features: [ 'A content region below the player that changes with the video', 'Time-synced forms, buttons & text' ] } ) }
 			{ sub === 'subscribe' && gate( <SubscribeTab config={ config } patch={ patch } />, { title: 'Email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] } ) }
@@ -81,10 +81,14 @@ export default function Editor( { id, onEditState } ) {
 	const [ embedOpen, setEmbedOpen ] = useState( false );
 	const [ duration, setDuration ] = useState( 0 );
 	const [ toast, setToast ] = useState( null );
-	// The overlay list's eye button: a one-shot cue the preview player acts on.
-	// The token is what lets a second click on the same row fire again.
+	// The overlay list's eye button: a cue the preview player acts on. Clicking
+	// the same row again sends `overlayId: null`, which means "clear it"; the
+	// token changes on every click so the player re-runs either way.
 	const [ previewCue, setPreviewCue ] = useState( null );
-	const previewOverlay = useCallback( ( overlayId ) => setPreviewCue( { overlayId, token: Date.now() } ), [] );
+	const previewOverlay = useCallback( ( overlayId ) => setPreviewCue( ( cur ) => ( {
+		overlayId: cur && cur.overlayId === overlayId ? null : overlayId,
+		token: Date.now(),
+	} ) ), [] );
 
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
@@ -239,7 +243,7 @@ export default function Editor( { id, onEditState } ) {
 								{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
 								{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } sub={ activeSub.player } /> }
 								{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
-								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } /> }
+								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } previewingId={ previewCue?.overlayId || null } /> }
 								{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
 							</>
 						) }

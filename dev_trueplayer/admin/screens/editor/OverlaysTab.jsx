@@ -20,11 +20,18 @@ const POSITIONS = [
 
 const posLabel = ( v ) => ( POSITIONS.find( ( p ) => p[ 0 ] === v ) || [ , v ] )[ 1 ];
 
-export default function OverlaysTab( { config, patch, onPreviewOverlay } ) {
+export default function OverlaysTab( { config, patch, onPreviewOverlay, previewingId = null } ) {
 	const overlays = config.overlays || [];
 	const actionBar = config.actionBar || {};
 	const setOne = ( i, partial ) => patch( { overlays: overlays.map( ( o, idx ) => ( idx === i ? { ...o, ...partial } : o ) ) } );
-	const remove = ( i ) => patch( { overlays: overlays.filter( ( _, idx ) => idx !== i ) } );
+	const remove = ( i ) => {
+		// Clear it from the preview first, or the player keeps showing a card
+		// that no longer exists in the list.
+		if ( previewingId && overlays[ i ] && overlays[ i ].id === previewingId && onPreviewOverlay ) {
+			onPreviewOverlay( previewingId );
+		}
+		patch( { overlays: overlays.filter( ( _, idx ) => idx !== i ) } );
+	};
 	const setBar = ( partial ) => patch( { actionBar: { ...actionBar, ...partial } } );
 	const [ openId, setOpenId ] = useState( null );
 	const [ menu, setMenu ] = useState( false );
@@ -86,6 +93,7 @@ export default function OverlaysTab( { config, patch, onPreviewOverlay } ) {
 				{ overlays.map( ( o, i ) => {
 					const isText = ( o.type || 'cta' ) === 'text';
 					const open = openId === o.id;
+					const shown = previewingId === o.id;
 					const summary = isText
 						? `${ secToClock( o.start ) }–${ o.end === '' || o.end == null ? 'end' : secToClock( o.end ) } · ${ posLabel( o.position || 'top-left' ) }`
 						: ( o.trigger === 'end' ? 'End screen' : `At ${ secToClock( o.at ) }` );
@@ -110,9 +118,12 @@ export default function OverlaysTab( { config, patch, onPreviewOverlay } ) {
 								<button
 									type="button"
 									onClick={ () => onPreviewOverlay && onPreviewOverlay( o.id ) }
-									title="Show this in the live preview"
-									aria-label="Show this in the live preview"
-									className="relative z-10 w-8 h-8 shrink-0 inline-flex items-center justify-center rounded border border-line text-muted hover:text-ink hover:bg-gray-100 transition-colors"
+									title={ shown ? 'Hide it from the live preview' : 'Show this in the live preview' }
+									aria-label={ shown ? 'Hide it from the live preview' : 'Show this in the live preview' }
+									aria-pressed={ shown }
+									className={ `relative z-10 w-8 h-8 shrink-0 inline-flex items-center justify-center rounded border transition-colors ${
+										shown ? 'border-brand-500 bg-brand-50 text-brand-500' : 'border-line text-muted hover:text-ink hover:bg-gray-100'
+									}` }
 								>
 									<Icon name="eye" className="w-4 h-4" />
 								</button>

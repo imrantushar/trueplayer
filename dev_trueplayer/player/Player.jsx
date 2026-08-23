@@ -85,6 +85,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	}
 	const firedOverlays = useRef( new Set() );
 	const overlayActiveRef = useRef( false );
+	// Text overlay the editor's eye toggle has hidden; syncTextOverlays skips it
+	// until a new cue or a play releases it.
+	const hiddenTextRef = useRef( null );
 	const gaStartedRef = useRef( false );
 
 	// "Player free, intelligence pro": watch-verification, quiz-gating and
@@ -312,6 +315,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 						gaStartedRef.current = true;
 						gaEvent( 'video_start', { video_id: videoId, video_title: title } );
 					}
+					// Playing on returns the preview to normal timed behaviour, so a
+					// text overlay the editor's eye toggle hid becomes eligible again.
+					hiddenTextRef.current = null;
 					setStarted( true );
 					sync();
 				} );
@@ -434,6 +440,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			return;
 		}
 		const ids = textOverlays
+			.filter( ( o ) => o.id !== hiddenTextRef.current )
 			.filter( ( o ) => t >= ( parseFloat( o.start ) || 0 ) && ( ! o.end || t < parseFloat( o.end ) ) )
 			.map( ( o ) => o.id );
 		setActiveTextIds( ( prev ) => ( prev.length === ids.length && prev.every( ( id, i ) => id === ids[ i ] ) ? prev : ids ) );
@@ -444,20 +451,44 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		setActiveOverlay( null );
 	};
 
-	// Editor only — the overlay list's eye button. Seeks to that overlay's own
-	// time, pauses there and puts it on screen, so the author sees the card
-	// exactly as configured. `token` changes on every click, which re-fires it.
+	// Editor only — the overlay list's eye button, which toggles. A cue with an
+	// id seeks to that overlay's own time, pauses there and puts it on screen so
+	// the author sees the card exactly as configured; a cue with `overlayId:
+	// null` takes it back down. `token` changes on every click, which re-fires
+	// this either way.
 	const cueRef = useRef( null );
+	const cuedTextRef = useRef( null ); // text overlay the eye currently has up
 	useEffect( () => {
 		if ( ! preview || ! previewCue || ! ready || cueRef.current === previewCue.token ) {
 			return;
 		}
 		const p = providerRef.current;
-		const o = allOverlays.find( ( x ) => x.id === previewCue.overlayId );
-		if ( ! p || ! o ) {
+		if ( ! p ) {
 			return;
 		}
 		cueRef.current = previewCue.token;
+
+		const o = previewCue.overlayId ? allOverlays.find( ( x ) => x.id === previewCue.overlayId ) : null;
+		if ( ! o ) {
+			// Toggled off (or the overlay is gone) — take down whatever the eye
+			// put up. A text overlay also has to be suppressed, because we are
+			// paused inside its window and syncTextOverlays would re-add it on
+			// the very next timeupdate.
+			const cued = cuedTextRef.current;
+			hiddenTextRef.current = cued;
+			cuedTextRef.current = null;
+			overlayActiveRef.current = false;
+			setActiveOverlay( null );
+			// Drop only the one the eye raised — blanking the list would also
+			// hide text overlays that are legitimately inside their window, and
+			// a paused <video> fires no timeupdate to put them back.
+			if ( cued ) {
+				setActiveTextIds( ( prev ) => prev.filter( ( id ) => id !== cued ) );
+			}
+			return;
+		}
+
+		hiddenTextRef.current = null; // a new cue releases any earlier suppression
 		setStarted( true );
 		const isText = ( o.type || 'cta' ) === 'text';
 		const at = isText
@@ -466,8 +497,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		p.seek( at );
 		p.pause();
 		if ( isText ) {
+			cuedTextRef.current = o.id;
 			setActiveTextIds( [ o.id ] );
 		} else {
+			cuedTextRef.current = null;
 			// Mark it fired so playing on from here doesn't pop it a second time.
 			firedOverlays.current.add( o.id );
 			overlayActiveRef.current = true;
