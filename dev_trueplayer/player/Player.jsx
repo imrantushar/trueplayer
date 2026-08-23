@@ -46,7 +46,7 @@ function hexToRgba( hex, alpha ) {
 	return `rgba(${ ( n >> 16 ) & 255 },${ ( n >> 8 ) & 255 },${ n & 255 },${ alpha })`;
 }
 
-export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false } ) {
+export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false, previewCue = null } ) {
 	const stageRef = useRef( null );
 	const stickySentinelRef = useRef( null );
 	const stickyDismissedRef = useRef( false ); // explicit close, until back at the top
@@ -202,6 +202,11 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				};
 				provider = await createProvider( containerRef.current, source, { behavior: providerBehavior, autoStart } );
 			} catch ( e ) {
+				// Surface the real cause — a blocked/neutered YouTube IFrame API,
+				// a failed lazy provider chunk and a bad source URL all look
+				// identical once this message is all the author sees.
+				// eslint-disable-next-line no-console
+				console.error( '[TruePlayer] provider failed to load', source.type, e );
 				setError( 'Unable to load the player.' );
 				return;
 			}
@@ -438,6 +443,39 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		overlayActiveRef.current = false;
 		setActiveOverlay( null );
 	};
+
+	// Editor only — the overlay list's eye button. Seeks to that overlay's own
+	// time, pauses there and puts it on screen, so the author sees the card
+	// exactly as configured. `token` changes on every click, which re-fires it.
+	const cueRef = useRef( null );
+	useEffect( () => {
+		if ( ! preview || ! previewCue || ! ready || cueRef.current === previewCue.token ) {
+			return;
+		}
+		const p = providerRef.current;
+		const o = allOverlays.find( ( x ) => x.id === previewCue.overlayId );
+		if ( ! p || ! o ) {
+			return;
+		}
+		cueRef.current = previewCue.token;
+		setStarted( true );
+		const isText = ( o.type || 'cta' ) === 'text';
+		const at = isText
+			? parseFloat( o.start ) || 0
+			: ( o.trigger === 'end' ? Math.max( 0, p.getDuration() - 0.25 ) : parseFloat( o.at ) || 0 );
+		p.seek( at );
+		p.pause();
+		if ( isText ) {
+			setActiveTextIds( [ o.id ] );
+		} else {
+			// Mark it fired so playing on from here doesn't pop it a second time.
+			firedOverlays.current.add( o.id );
+			overlayActiveRef.current = true;
+			setActiveOverlay( o );
+		}
+		sync();
+	}, [ previewCue, ready ] );
+
 	const replayFromStart = () => {
 		firedOverlays.current.clear();
 		overlayActiveRef.current = false;

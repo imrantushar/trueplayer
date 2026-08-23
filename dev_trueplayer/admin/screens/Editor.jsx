@@ -41,11 +41,11 @@ const PRO_TAB_INFO = {
 // Interactions = everything shown on/around the video. Overlays are free;
 // layers / timed content / email capture are pro (gated inline). The sub-nav
 // lives in the editor's left-nav accordion, so this renders the active one only.
-function InteractionsTab( { config, patch, pro, sub = 'overlays' } ) {
+function InteractionsTab( { config, patch, pro, sub = 'overlays', onPreviewOverlay } ) {
 	const gate = ( node, info ) => ( pro ? node : <UpsellPanel title={ info.title } features={ info.features } /> );
 	return (
 		<div className="w-full min-w-0">
-			{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } /> }
+			{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } onPreviewOverlay={ onPreviewOverlay } /> }
 			{ sub === 'layers' && gate( <LayersTab config={ config } patch={ patch } />, { title: 'Interactive layers', features: [ 'Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Conditional display rules' ] } ) }
 			{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, { title: 'Timed content', features: [ 'A content region below the player that changes with the video', 'Time-synced forms, buttons & text' ] } ) }
 			{ sub === 'subscribe' && gate( <SubscribeTab config={ config } patch={ patch } />, { title: 'Email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] } ) }
@@ -81,6 +81,10 @@ export default function Editor( { id, onEditState } ) {
 	const [ embedOpen, setEmbedOpen ] = useState( false );
 	const [ duration, setDuration ] = useState( 0 );
 	const [ toast, setToast ] = useState( null );
+	// The overlay list's eye button: a one-shot cue the preview player acts on.
+	// The token is what lets a second click on the same row fire again.
+	const [ previewCue, setPreviewCue ] = useState( null );
+	const previewOverlay = useCallback( ( overlayId ) => setPreviewCue( { overlayId, token: Date.now() } ), [] );
 
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
@@ -235,7 +239,7 @@ export default function Editor( { id, onEditState } ) {
 								{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
 								{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } sub={ activeSub.player } /> }
 								{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
-								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } /> }
+								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } /> }
 								{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
 							</>
 						) }
@@ -244,7 +248,7 @@ export default function Editor( { id, onEditState } ) {
 					{ /* Column 3 — live preview, pinned so the author sees changes as
 						they edit. */ }
 					<div className="w-full min-w-0 xl:sticky xl:top-[104px]">
-						<PreviewPanel id={ id } config={ config } onDuration={ setDuration } />
+						<PreviewPanel id={ id } config={ config } onDuration={ setDuration } previewCue={ previewCue } />
 					</div>
 				</div>
 			</div>

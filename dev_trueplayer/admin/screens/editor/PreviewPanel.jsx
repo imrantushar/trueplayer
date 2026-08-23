@@ -16,7 +16,7 @@ import { hasVideoSource, sourceKey } from '../../utils/videoSource';
  * recomputes its customization from props each render) — no video reload while
  * you tweak styles.
  */
-export default function PreviewPanel( { id, config, onDuration } ) {
+export default function PreviewPanel( { id, config, onDuration, previewCue = null } ) {
 	const [ bump, setBump ] = useState( 0 );
 	const hasSource = hasVideoSource( config.source || {} );
 	const key = `${ sourceKey( config.source || {} ) }:${ bump }`;
@@ -39,7 +39,7 @@ export default function PreviewPanel( { id, config, onDuration } ) {
 				</div>
 			) : (
 				<div className="trueplayer-mount">
-					<Player key={ key } videoId={ id } config={ config } preview onDuration={ onDuration } />
+					<Player key={ key } videoId={ id } config={ config } preview onDuration={ onDuration } previewCue={ previewCue } />
 				</div>
 			) }
 
