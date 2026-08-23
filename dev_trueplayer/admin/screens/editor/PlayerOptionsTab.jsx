@@ -123,7 +123,7 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 											<Select value={appearance.skin} onChange={(e) => setSection('appearance', { skin: e.target.value })}>
 												{SKINS.map((s) => (
 													<option key={s.value} value={s.value} disabled={!isPro() && PRO_SKINS.includes(s.value)}>
-														{s.label}{!isPro() && PRO_SKINS.includes(s.value) ? ' 🔒 Pro' : ''}
+														{s.label}{!isPro() && PRO_SKINS.includes(s.value) ? ' (Pro)' : ''}
 													</option>
 												))}
 											</Select>

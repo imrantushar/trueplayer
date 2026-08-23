@@ -774,7 +774,9 @@
 	padding: 6px 8px 2px;
 }
 .tp-menu-item {
-	display: block;
+	display: flex;
+	align-items: center;
+	gap: 6px;
 	width: 100%;
 	text-align: left;
 	background: transparent;
@@ -793,8 +795,16 @@
 	font-weight: 600;
 }
 .tp-menu-item.is-active::after {
-	content: ' ✓';
-	color: var(--tp-accent);
+	/* Masked SVG tick rather than a text glyph, so it renders identically
+	   everywhere and still takes the player's accent colour. */
+	content: '';
+	width: 13px;
+	height: 13px;
+	margin-left: auto;
+	flex: none;
+	background-color: var(--tp-accent);
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") no-repeat center / contain;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") no-repeat center / contain;
 }
 
 /* ---- timed text overlays ---- */
@@ -1209,7 +1219,10 @@
 	box-shadow: 0 12px 40px rgba( 0, 0, 0, 0.3 );
 }
 .tp-lock-icon {
-	font-size: 40px;
+	display: flex;
+	justify-content: center;
+	margin-bottom: 4px;
+	opacity: 0.9;
 }
 .tp-quiz-card {
 	text-align: left;
@@ -1248,6 +1261,9 @@
 	background: rgba( 79, 70, 229, 0.06 );
 }
 .tp-quiz-feedback {
+	display: flex;
+	align-items: center;
+	gap: 6px;
 	font-weight: 600;
 	margin: 8px 0;
 }

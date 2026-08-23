@@ -4,7 +4,12 @@ export function LockScreen( { requireRewatch, onRewatch } ) {
 	return (
 		<div className="tp-overlay tp-lock">
 			<div className="tp-lock-card">
-				<div className="tp-lock-icon" aria-hidden="true">🔒</div>
+				<div className="tp-lock-icon" aria-hidden="true">
+					<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+						<rect x="5" y="11" width="14" height="9" rx="2" />
+						<path d="M8 11V8a4 4 0 018 0v3" />
+					</svg>
+				</div>
 				<h3>Video locked</h3>
 				<p>
 					{ requireRewatch

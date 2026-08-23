@@ -330,7 +330,7 @@ function RowList( { rows, kind, byId, copied, onCopy, onEdit, onViewers, onRemov
 						<div className="flex items-center flex-wrap gap-2 mt-1.5">
 							<RowBadges row={ row } />
 							<code className="text-xs text-muted cursor-pointer hover:text-brand-500" onClick={ () => onCopy( row ) } title="Copy shortcode">
-								{ copied === row.key ? 'Copied ✓' : row.shortcode }
+								{ copied === row.key ? <span className="inline-flex items-center gap-1"><Icon name="checkmark" className="w-3.5 h-3.5" /> Copied</span> : row.shortcode }
 							</code>
 						</div>
 					</div>

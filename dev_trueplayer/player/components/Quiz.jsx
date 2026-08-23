@@ -75,7 +75,12 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 							: `Not quite (${ result.score }%). Attempts left: ${ result.attemptsLeft }.` }
 					</p>
 				) }
-				{ result && result.passed && <p className="tp-quiz-feedback tp-pass">Passed ({ result.score }%)! 🎉</p> }
+				{ result && result.passed && (
+					<p className="tp-quiz-feedback tp-pass">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+						Passed ({ result.score }%)
+					</p>
+				) }
 				{ result && result.error && <p className="tp-quiz-feedback tp-fail">{ result.error }</p> }
 
 				<button className="tp-quiz-submit" disabled={ ! answeredAll || busy } onClick={ submit }>

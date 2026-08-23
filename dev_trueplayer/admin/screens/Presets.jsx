@@ -81,7 +81,7 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 			{ /* Save lives in the topbar (portaled) — same pattern as the video editor. */ }
 			{ toolbarSlot && createPortal(
 				<>
-					{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
+					{ saved && <span className="inline-flex items-center gap-1 text-sm text-green-600"><Icon name="checkmark" className="w-4 h-4" /> Saved</span> }
 					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
 				</>,
 				toolbarSlot

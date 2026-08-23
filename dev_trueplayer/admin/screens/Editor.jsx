@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
 import { Button, Modal, SubSidebar, Toast, Badge } from '../components/UI';
+import { Icon } from '../components/icons';
 import SourceTab from './editor/SourceTab';
 import PlayerOptionsTab, { PLAYER_SUBS } from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
@@ -26,11 +27,11 @@ const INTERACTIONS_SUBS = [
 ];
 
 const TABS = [
-	{ key: 'source', label: 'Source', icon: '🎬' },
-	{ key: 'player', label: 'Player', icon: '🎛️', subs: PLAYER_SUBS },
-	{ key: 'appearance', label: 'Chapters & branding', icon: '🔖' },
-	{ key: 'interactions', label: 'Interactions', icon: '🧩', subs: INTERACTIONS_SUBS },
-	{ key: 'access', label: 'Access & gating', icon: '🛡️', pro: true },
+	{ key: 'source', label: 'Source', icon: 'film' },
+	{ key: 'player', label: 'Player', icon: 'sliders', subs: PLAYER_SUBS },
+	{ key: 'appearance', label: 'Chapters & branding', icon: 'bookmark' },
+	{ key: 'interactions', label: 'Interactions', icon: 'puzzle', subs: INTERACTIONS_SUBS },
+	{ key: 'access', label: 'Access & gating', icon: 'shield', pro: true },
 ];
 
 const PRO_TAB_INFO = {
@@ -129,7 +130,7 @@ export default function Editor( { id, onEditState } ) {
 			const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
 			setVideo( updated );
 			setDirty( false );
-			setToast( { message: 'Saved ✓', tone: 'success' } );
+			setToast( { message: 'Saved', tone: 'success' } );
 		} finally {
 			setSaving( false );
 		}
@@ -193,7 +194,7 @@ export default function Editor( { id, onEditState } ) {
 												active ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
 											}` }
 										>
-											<span className="text-base leading-none">{ t.icon }</span>
+											<Icon name={ t.icon } className="w-[18px] h-[18px] shrink-0" />
 											<span className="flex-1">{ t.label }</span>
 											{ t.subs && (
 												<svg className={ `w-3.5 h-3.5 shrink-0 transition-transform ${ open ? 'rotate-90' : '' }` } viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M9 6l6 6-6 6" /></svg>
