@@ -1628,9 +1628,6 @@ body[class*="page_trueplayer"] #wpbody-content {
 		.md\:grid-cols-4 {
 				grid-template-columns: repeat(4, minmax(0, 1fr));
 		}
-		.md\:flex-row {
-				flex-direction: row;
-		}
 }
 @media (min-width: 1024px) {
 		.lg\:sticky {
