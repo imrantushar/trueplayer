@@ -12,6 +12,12 @@ use WP_REST_Server;
 /**
  * Admin-only lookups for the LMS progression section (pro): Academy courses
  * and lessons to attach a video to. Empty lists when Academy isn't installed.
+ *
+ * Lessons come from each course's own `academy_course_curriculum` meta, not
+ * from a `get_posts()` on the `academy_lessons` post type: Academy registers
+ * that post type but keeps the rows in its own `wp_academy_lessons` table, so
+ * a post query silently returns nothing. Reading the curriculum also scopes
+ * the list to the chosen course instead of offering every lesson on the site.
  */
 class LmsController {
 
@@ -31,33 +37,68 @@ class LmsController {
 
 	public function options() {
 		if ( ! Pro::active() ) {
-			return rest_ensure_response( [ 'available' => false, 'courses' => [], 'lessons' => [] ] );
+			return rest_ensure_response( [ 'available' => false, 'courses' => [] ] );
 		}
-		$available = post_type_exists( 'academy_courses' );
+		if ( ! post_type_exists( 'academy_courses' ) ) {
+			return rest_ensure_response( [ 'available' => false, 'courses' => [] ] );
+		}
 
-		$map = static function ( $post_type ) {
-			return array_map(
-				static function ( $p ) {
-					return [ 'id' => $p->ID, 'title' => $p->post_title ];
-				},
-				get_posts(
-					[
-						'post_type'      => $post_type,
-						'post_status'    => 'publish',
-						'posts_per_page' => 200,
-						'orderby'        => 'title',
-						'order'          => 'ASC',
-					]
-				)
-			);
-		};
+		$courses = get_posts(
+			[
+				'post_type'      => 'academy_courses',
+				'post_status'    => 'publish',
+				'posts_per_page' => 200,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+			]
+		);
 
 		return rest_ensure_response(
 			[
-				'available' => $available,
-				'courses'   => $available ? $map( 'academy_courses' ) : [],
-				'lessons'   => post_type_exists( 'academy_lessons' ) ? $map( 'academy_lessons' ) : [],
+				'available' => true,
+				'courses'   => array_map(
+					static function ( $course ) {
+						return [
+							'id'      => $course->ID,
+							'title'   => $course->post_title,
+							'lessons' => self::lessons_of( $course->ID ),
+						];
+					},
+					$courses
+				),
 			]
 		);
+	}
+
+	/**
+	 * The lesson topics of one course, in curriculum order.
+	 *
+	 * The curriculum is a list of sections, each holding `topics` of mixed type
+	 * (`lesson`, `quiz`, …). Only lessons are offered here, matching what the
+	 * academy-sync addon marks complete.
+	 *
+	 * @param int $course_id Academy course post ID.
+	 * @return array<int, array{id:int, title:string}>
+	 */
+	private static function lessons_of( int $course_id ): array {
+		$curriculum = get_post_meta( $course_id, 'academy_course_curriculum', true );
+		if ( ! is_array( $curriculum ) ) {
+			return [];
+		}
+
+		$out = [];
+		foreach ( $curriculum as $section ) {
+			foreach ( (array) ( $section['topics'] ?? [] ) as $topic ) {
+				$id = (int) ( $topic['id'] ?? 0 );
+				if ( ! $id || 'lesson' !== ( $topic['type'] ?? '' ) ) {
+					continue;
+				}
+				$out[] = [
+					'id'    => $id,
+					'title' => (string) ( $topic['name'] ?? sprintf( 'Lesson %d', $id ) ),
+				];
+			}
+		}
+		return $out;
 	}
 }
