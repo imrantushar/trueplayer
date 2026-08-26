@@ -89,11 +89,20 @@ class Subject {
 		return null;
 	}
 
+	public function name() {
+		if ( 'user' === $this->type ) {
+			$u = get_userdata( (int) $this->id );
+			return $u ? $u->display_name : null;
+		}
+		return null;
+	}
+
 	public function to_array() {
 		return [
 			'type'  => $this->type,
 			'id'    => $this->id,
 			'email' => $this->email(),
+			'name'  => $this->name(),
 		];
 	}
 }

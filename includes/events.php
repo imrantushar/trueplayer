@@ -54,6 +54,20 @@ class Events {
 		);
 
 		/**
+		 * Mirror the viewer's contact fields to the top level.
+		 *
+		 * `subject` stays exactly as it was (nothing here is removed), but most
+		 * receivers — CRMs, Zapier, Make — map a flat `email` and reject a
+		 * payload that only nests it. Promoting them here covers every emit
+		 * site at once instead of each caller remembering to do it.
+		 */
+		foreach ( [ 'email', 'name' ] as $field ) {
+			if ( ! isset( $payload[ $field ] ) && ! empty( $payload['subject'][ $field ] ) ) {
+				$payload[ $field ] = $payload['subject'][ $field ];
+			}
+		}
+
+		/**
 		 * Generic hook (all events) + specific hook (per event name).
 		 */
 		do_action( 'trueplayer/event', $name, $payload );
