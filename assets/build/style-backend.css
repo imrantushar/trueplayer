@@ -1322,6 +1322,10 @@
 		--tw-text-opacity: 1;
 		color: rgb(239 68 68 / var(--tw-text-opacity, 1));
 }
+.text-red-600 {
+		--tw-text-opacity: 1;
+		color: rgb(220 38 38 / var(--tw-text-opacity, 1));
+}
 .text-success {
 		--tw-text-opacity: 1;
 		color: rgb(0 173 107 / var(--tw-text-opacity, 1));
