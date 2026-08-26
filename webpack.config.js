@@ -29,7 +29,12 @@ const config = {
 		// Lazy chunks (hls.js, YouTube/Vimeo providers) load from the build dir.
 		publicPath: 'auto',
 	},
-	plugins: [...defaultConfig.plugins, new CleanWebpackPlugin()],
+	// `cleanStaleWebpackAssets` is off because it breaks `wp-scripts start`:
+	// on an incremental rebuild webpack only re-emits what changed, so the
+	// plugin treats untouched lazy chunks (yt/vimeo/hlsjs) as stale and deletes
+	// them — and the next player mount dies with a ChunkLoadError. The
+	// once-before-build clean still runs, so a fresh build stays tidy.
+	plugins: [ ...defaultConfig.plugins, new CleanWebpackPlugin( { cleanStaleWebpackAssets: false } ) ],
 	resolve: {
 		...defaultConfig.resolve,
 		extensions: [ '.js', '.jsx', '.ts', '.tsx', '.json', '...' ],

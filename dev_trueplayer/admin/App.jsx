@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from '@wordpress/element';
 import Library from './screens/Library';
 import Editor from './screens/Editor';
-import Interactive from './screens/Interactive';
 import Settings from './screens/Settings';
 import Analytics from './screens/Analytics';
 import Presets from './screens/Presets';
@@ -18,10 +17,46 @@ export default function App() {
 	// crumb and the unsaved-changes guard below.
 	const [ editState, setEditState ] = useState( null );
 	const [ confirmNav, setConfirmNav ] = useState( null ); // pending navigation, blocked by unsaved changes
+	// A "create X" click from outside the library (the dashboard) — navigate to
+	// the matching filter, then hand the kind to Library so it opens the dialog.
+	const [ createIntent, setCreateIntent ] = useState( null );
 	const dirty = editState?.dirty ?? false;
 
+	// WordPress applies the submenu's "current" highlight server-side, based on
+	// the page actually requested — a pushState-only navigation (go(), including
+	// native-menu clicks hijacked below) never touches it, so the sidebar can
+	// keep pointing at a stale page while the app has already moved on. Keep it
+	// in sync by hand whenever the route changes.
+	const syncAdminMenuHighlight = ( name ) => {
+		const menu = document.getElementById( 'adminmenu' );
+		if ( ! menu ) {
+			return;
+		}
+		const slug = PAGE_OF[ name ] || PAGE_OF.dashboard;
+		// WP marks the submenu <li> as current, not the <a> — clear both, or the
+		// server-rendered highlight stays behind on the page we actually loaded.
+		menu.querySelectorAll( 'li.current, a.current' ).forEach( ( el ) => {
+			el.classList.remove( 'current' );
+			el.removeAttribute( 'aria-current' );
+		} );
+		menu.querySelectorAll( 'a[href*="page="]' ).forEach( ( a ) => {
+			const m = ( a.getAttribute( 'href' ) || '' ).match( /[?&]page=([a-z0-9_-]+)/i );
+			if ( m && m[ 1 ] === slug ) {
+				a.classList.add( 'current' );
+				a.setAttribute( 'aria-current', 'page' );
+				if ( a.parentElement ) {
+					a.parentElement.classList.add( 'current' );
+				}
+			}
+		} );
+	};
+
 	useEffect( () => {
-		const onPop = () => setRoute( parseRoute() );
+		const onPop = () => {
+			const next = parseRoute();
+			setRoute( next );
+			syncAdminMenuHighlight( next.name );
+		};
 		window.addEventListener( 'popstate', onPop );
 		return () => window.removeEventListener( 'popstate', onPop );
 	}, [] );
@@ -56,6 +91,7 @@ export default function App() {
 	const go = ( name, params = {} ) => requestNav( () => {
 		window.history.pushState( {}, '', routeUrl( name, params ) );
 		setRoute( { name, ...params } );
+		syncAdminMenuHighlight( name );
 		window.scrollTo( 0, 0 );
 	} );
 
@@ -88,6 +124,11 @@ export default function App() {
 		return () => menu.removeEventListener( 'click', onMenuClick );
 	}, [] );
 
+	const goCreate = ( kind ) => {
+		go( 'library', { kind } );
+		setCreateIntent( kind );
+	};
+
 	const crumbsFor = ( name ) => {
 		const toMedia = { label: 'Media', onClick: () => go( 'library' ) };
 		switch ( name ) {
@@ -95,12 +136,8 @@ export default function App() {
 			case 'library': return editState
 				? [ { label: 'Media', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
 				: [ { label: 'Media' } ];
-			case 'playlists': return editState
-				? [ { label: 'Media playlists', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
-				: [ { label: 'Media playlists' } ];
 			case 'editor': return [ toMedia, { label: editState?.title || '', editable: true, onChange: editState?.onTitleChange } ];
 			case 'analytics': return [ toMedia, { label: 'Analytics' } ];
-			case 'interactive': return [ { label: 'Interactive' } ];
 			case 'presets': return editState
 				? [ { label: 'Presets', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
 				: [ { label: 'Presets' } ];
@@ -123,17 +160,19 @@ export default function App() {
 				) : (
 					<main className="flex-1 min-w-0">
 						<div className="max-w-[1250px] mx-auto px-8 py-8">
-							{ route.name === 'dashboard' && <Dashboard onNavigate={ go } /> }
-							{ ( route.name === 'library' || route.name === 'playlists' ) && (
+							{ route.name === 'dashboard' && <Dashboard onNavigate={ go } onCreate={ goCreate } /> }
+							{ route.name === 'library' && (
 								<Library
-									initialTab={ route.name === 'playlists' ? 'playlists' : 'videos' }
+									kind={ route.kind || 'all' }
 									onEdit={ ( id ) => go( 'editor', { id } ) }
 									onViewers={ ( id ) => go( 'analytics', { id } ) }
 									onEditState={ setEditState }
+									onNavigate={ go }
+									createIntent={ createIntent }
+									onCreateHandled={ () => setCreateIntent( null ) }
 								/>
 							) }
 							{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library' ) } /> }
-							{ route.name === 'interactive' && <Interactive /> }
 							{ route.name === 'presets' && <Presets onEditState={ setEditState } /> }
 							{ route.name === 'settings' && <Settings onEditState={ setEditState } /> }
 						</div>

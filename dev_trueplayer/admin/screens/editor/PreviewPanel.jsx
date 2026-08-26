@@ -1,5 +1,6 @@
 import { useState } from '@wordpress/element';
 import Player from '@Player/Player';
+import { Card } from '../../components/UI';
 import { hasVideoSource, sourceKey } from '../../utils/videoSource';
 // NOTE: the player CSS (style-frontend.css) is enqueued on admin pages by PHP.
 // Do NOT import it here — sharing that CSS module across the frontend + admin
@@ -15,16 +16,21 @@ import { hasVideoSource, sourceKey } from '../../utils/videoSource';
  * recomputes its customization from props each render) — no video reload while
  * you tweak styles.
  */
-export default function PreviewPanel( { id, config, onDuration } ) {
+export default function PreviewPanel( { id, config, onDuration, previewCue = null } ) {
 	const [ bump, setBump ] = useState( 0 );
 	const hasSource = hasVideoSource( config.source || {} );
 	const key = `${ sourceKey( config.source || {} ) }:${ bump }`;
 
 	return (
-		<div>
+		<Card className="p-4">
 			<div className="flex items-center justify-between mb-2">
 				<span className="text-xs font-semibold uppercase tracking-wide text-gray-400">Live preview</span>
-				<button className="text-xs text-gray-500 hover:text-gray-800" onClick={ () => setBump( ( b ) => b + 1 ) }>↻ Reload</button>
+				<button
+					className="inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-gray-100 transition-colors"
+					onClick={ () => setBump( ( b ) => b + 1 ) }
+				>
+					<span aria-hidden="true">↻</span> Reload
+				</button>
 			</div>
 
 			{ ! hasSource ? (
@@ -33,13 +39,10 @@ export default function PreviewPanel( { id, config, onDuration } ) {
 				</div>
 			) : (
 				<div className="trueplayer-mount">
-					<Player key={ key } videoId={ id } config={ config } preview onDuration={ onDuration } />
+					<Player key={ key } videoId={ id } config={ config } preview onDuration={ onDuration } previewCue={ previewCue } />
 				</div>
 			) }
 
-			<p className="text-xs text-gray-400 mt-2 leading-relaxed">
-				Exactly how it appears on the frontend. Watch-tracking & locking are off here; quizzes and the subscribe gate are simulated.
-			</p>
-		</div>
+		</Card>
 	);
 }

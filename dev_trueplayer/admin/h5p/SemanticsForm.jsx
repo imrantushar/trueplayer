@@ -32,6 +32,47 @@ async function loadSemantics( machineName ) {
 
 const machineOf = ( libraryString ) => String( libraryString || '' ).split( ' ' )[ 0 ];
 
+const stripTags = ( v ) => String( v ).replace( /<[^>]*>/g, ' ' ).replace( /&nbsp;/g, ' ' ).replace( /\s+/g, ' ' ).trim();
+
+/**
+ * First meaningful text inside a list item, used as its collapsed heading — a
+ * stack of "Content 1 / Content 2" rows is unreadable, whereas the panel's own
+ * title ("what is your name") tells you which row you want. Walks the item's
+ * declared fields in semantics order so the content type decides what comes
+ * first, rather than us guessing at key names.
+ */
+function itemSummary( itemField, value, depth = 0 ) {
+	if ( depth > 2 || ! value ) {
+		return '';
+	}
+	if ( typeof value === 'string' ) {
+		return stripTags( value );
+	}
+	if ( typeof value !== 'object' ) {
+		return '';
+	}
+	const fields = itemField.fields || ( itemField.field ? [ itemField.field ] : [] );
+	for ( const f of fields ) {
+		const v = value[ f.name ];
+		if ( v === undefined || v === null ) {
+			continue;
+		}
+		if ( f.type === 'text' && typeof v === 'string' ) {
+			const text = stripTags( v );
+			if ( text ) {
+				return text;
+			}
+		}
+		if ( f.type === 'group' ) {
+			const nested = itemSummary( f, v, depth + 1 );
+			if ( nested ) {
+				return nested;
+			}
+		}
+	}
+	return '';
+}
+
 /** One semantics field → a control. `depth` drives nesting treatment. */
 function SemanticField( { field, value, onChange, depth = 0 } ) {
 	const label = field.label || field.name;
@@ -212,32 +253,84 @@ function CollapsibleSection( { field, children, defaultOpen = false, hint = '' }
 	);
 }
 
-/** A `list` of repeated `field` items. */
+/**
+ * A `list` of repeated `field` items, rendered as an accordion.
+ *
+ * Every item expanded at once buries the list — with a handful of panels the
+ * "Add" button ends up several screens down and you cannot see the shape of
+ * what you built. One open at a time keeps the whole list in view, and each
+ * collapsed row is titled with its own content so it stays identifiable.
+ */
 function ListField( { field, value, onChange, depth = 0 } ) {
 	const items = Array.isArray( value ) ? value : [];
 	const item = field.field || {};
 	const min = field.min || 0;
 	const max = field.max || Infinity;
+	const entity = item.label || field.entity || 'Item';
+
+	// -1 = every row closed. A fresh list opens its first item, since a lone
+	// collapsed row with nothing in it is just a dead end.
+	const [ openIdx, setOpenIdx ] = useState( items.length === 1 ? 0 : -1 );
 
 	const setItem = ( i, v ) => onChange( items.map( ( it, idx ) => ( idx === i ? v : it ) ) );
-	const add = () => onChange( [ ...items, defaultFor( item ) ] );
-	const remove = ( i ) => onChange( items.filter( ( _, idx ) => idx !== i ) );
+	const add = () => {
+		onChange( [ ...items, defaultFor( item ) ] );
+		setOpenIdx( items.length ); // open what was just added — it needs filling in
+	};
+	const remove = ( i ) => {
+		onChange( items.filter( ( _, idx ) => idx !== i ) );
+		// Keep the open row pointing at the same item after the list shifts.
+		setOpenIdx( ( cur ) => ( cur === i ? -1 : cur > i ? cur - 1 : cur ) );
+	};
 
 	const inner = (
 		<>
-			{ items.map( ( it, i ) => (
-				<div key={ i } className="relative rounded border border-line p-4 mb-3 bg-gray-50/40">
-					<div className="flex items-center justify-between mb-2">
-						<span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{ ( item.label || field.entity || 'Item' ) + ' ' + ( i + 1 ) }</span>
-						{ items.length > min && (
-							<button type="button" className="text-gray-400 hover:text-danger transition-colors" onClick={ () => remove( i ) } aria-label="Remove">
-								<BsTrash size={ 14 } />
+			{ items.map( ( it, i ) => {
+				const open = openIdx === i;
+				const summary = itemSummary( item, it );
+				const ordinal = `${ entity } ${ i + 1 }`;
+				return (
+					<div key={ i } className={ `rounded border mb-2 overflow-hidden transition-colors ${ open ? 'border-brand-500 bg-white' : 'border-line bg-white' }` }>
+						{ /* The whole header toggles the row — the title button is
+						     stretched over it, so the trash stays its own target. */ }
+						<div className={ `relative flex items-center gap-3 px-3.5 py-2.5 ${ open ? '' : 'hover:bg-gray-50' }` }>
+							<span className="shrink-0 w-6 h-6 inline-flex items-center justify-center rounded bg-gray-100 text-[11px] font-semibold text-gray-500 tabular-nums">
+								{ i + 1 }
+							</span>
+
+							<button
+								type="button"
+								onClick={ () => setOpenIdx( open ? -1 : i ) }
+								aria-expanded={ open }
+								className="flex-1 min-w-0 text-left after:absolute after:inset-0 after:content-['']"
+							>
+								<span className="block text-[13px] font-medium text-ink truncate">{ summary || ordinal }</span>
+								{ summary && <span className="block text-[11px] text-gray-400 uppercase tracking-wide truncate">{ ordinal }</span> }
 							</button>
+
+							{ items.length > min && (
+								<button
+									type="button"
+									className="relative z-10 w-7 h-7 shrink-0 inline-flex items-center justify-center rounded text-gray-400 hover:text-danger hover:bg-danger-light transition-colors"
+									onClick={ () => remove( i ) }
+									title={ `Remove ${ ordinal }` }
+									aria-label={ `Remove ${ ordinal }` }
+								>
+									<BsTrash size={ 14 } />
+								</button>
+							) }
+
+							<BsChevronDown size={ 13 } aria-hidden="true" className={ `shrink-0 text-gray-400 transition-transform ${ open ? 'rotate-180' : '' }` } />
+						</div>
+
+						{ open && (
+							<div className="px-4 pt-4 pb-1 border-t border-line bg-gray-50/60">
+								<SemanticField field={ { ...item, label: undefined } } value={ it } onChange={ ( v ) => setItem( i, v ) } depth={ depth + 1 } />
+							</div>
 						) }
 					</div>
-					<SemanticField field={ { ...item, label: undefined } } value={ it } onChange={ ( v ) => setItem( i, v ) } depth={ depth + 1 } />
-				</div>
-			) ) }
+				);
+			} ) }
 			{ items.length < max && (
 				<Button variant="ghost" size="sm" onClick={ add } className="!gap-1">
 					<BsPlus size={ 18 } /> Add { field.entity || 'item' }
@@ -246,13 +339,17 @@ function ListField( { field, value, onChange, depth = 0 } ) {
 		</>
 	);
 
-	// Give a labelled list the same section treatment as a group, but open by
-	// default — lists are usually primary content (answers, cards, questions).
+	// A labelled top-level list gets the same divided section as a group, but a
+	// plain heading rather than a collapsible one — the rows inside are already
+	// an accordion, and collapsing the whole list behind a second toggle just
+	// hides the primary content (panels, answers, cards) one level too deep.
 	if ( field.label && depth === 0 ) {
 		return (
-			<CollapsibleSection field={ field } defaultOpen={ field.importance !== 'low' } hint={ `${ items.length } item${ items.length === 1 ? '' : 's' }` }>
-				<div className="mt-4">{ inner }</div>
-			</CollapsibleSection>
+			<div className="mt-5 pt-5 border-t border-line first:mt-0 first:pt-0 first:border-0">
+				<h4 className="font-medium text-gray-900 text-[15px]">{ field.label }</h4>
+				{ field.description && <p className="text-sm text-gray-500 mt-1">{ field.description }</p> }
+				<div className="my-4">{ inner }</div>
+			</div>
 		);
 	}
 

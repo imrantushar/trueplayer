@@ -19,8 +19,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Assets {
 
+	/** Escaping for JSON printed inside an inline <script> block. */
+	const JSON_INLINE_FLAGS = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+
 	/** @var array|null The single H5PIntegration settings object for the request. */
 	private static $settings = null;
+
+	/**
+	 * content id => video id for every H5P item rendered this request. The xAPI
+	 * bridge resolves the item a statement came from against this map, so a page
+	 * holding several interactive items reports each one correctly.
+	 *
+	 * @var array<int,int>
+	 */
+	private static $xapi_items = [];
 
 	/**
 	 * Stylesheet URLs to emit in the footer. A shortcode renders inside
@@ -50,15 +62,23 @@ class Assets {
 		$base      = self::core_base_url();
 		$ver       = defined( 'TRUEPLAYER_VERSION' ) ? TRUEPLAYER_VERSION : '1.0';
 
+		// Save & resume is per user: H5P refuses to store anything unless
+		// `user` is set, and there's no dependable identity to resume a
+		// logged-out visitor against.
+		// `track_user` lets a context opt out of save/resume + result reporting
+		// entirely (the builder preview does).
+		$user  = apply_filters( 'trueplayer/h5p/track_user', true ) ? UserData::current_user() : null;
+		$nonce = $user ? wp_create_nonce( UserData::NONCE ) : '';
+
 		self::$settings = [
 			'baseUrl'            => site_url(),
 			'url'                => Core::paths()['url'],
-			'postUserStatistics' => false,
+			'postUserStatistics' => (bool) $user,
 			'ajax'               => [
-				'setFinished'     => admin_url( 'admin-ajax.php?action=trueplayer_h5p_set_finished' ),
-				'contentUserData' => admin_url( 'admin-ajax.php?action=trueplayer_h5p_content_user_data&content_id=:contentId&data_type=:dataType&sub_content_id=:subContentId' ),
+				'setFinished'     => admin_url( 'admin-ajax.php?action=trueplayer_h5p_set_finished&_wpnonce=' . $nonce ),
+				'contentUserData' => admin_url( 'admin-ajax.php?action=trueplayer_h5p_content_user_data&content_id=:contentId&data_type=:dataType&sub_content_id=:subContentId&_wpnonce=' . $nonce ),
 			],
-			'saveFreq'           => false,
+			'saveFreq'           => $user ? UserData::save_freq() : false,
 			'siteUrl'            => site_url(),
 			'l10n'               => [ 'H5P' => $core->getLocalization() ],
 			'hubIsEnabled'       => false,
@@ -71,6 +91,10 @@ class Assets {
 			'loadedCss'          => [],
 			'contents'           => [],
 		];
+
+		if ( $user ) {
+			self::$settings['user'] = $user;
+		}
 
 		foreach ( \H5PCore::$styles as $style ) {
 			$url                                = $base . $style . '?ver=' . $ver;
@@ -98,15 +122,18 @@ class Assets {
 		$core = Core::core();
 		$cid  = 'cid-' . $content['id'];
 
-		// xAPI → TruePlayer events bridge (loads after h5p.js).
-		$xapi_ver = defined( 'TRUEPLAYER_VERSION' ) ? TRUEPLAYER_VERSION : '1.0';
+		// xAPI → TruePlayer events bridge (loads after h5p.js). The config is
+		// printed once from print_settings(), not localized per content — a
+		// second wp_localize_script call on the same handle just redeclares the
+		// global, which used to leave every item on the page reporting as the
+		// last one rendered.
+		// Version by mtime like the built assets do — this one has no build step,
+		// so a plugin-version bump is the only thing that would otherwise break
+		// the cache on a stale bridge.
+		$xapi_path = TRUEPLAYER_ASSETS_DIR_PATH . 'h5p-xapi.js';
+		$xapi_ver  = file_exists( $xapi_path ) ? filemtime( $xapi_path ) : TRUEPLAYER_VERSION;
 		wp_enqueue_script( 'trueplayer-h5p-xapi', TRUEPLAYER_ASSETS_URI . 'h5p-xapi.js', [], $xapi_ver, true );
-		wp_localize_script( 'trueplayer-h5p-xapi', 'TruePlayerH5PxAPI', [
-			'endpoint'  => rest_url( TRUEPLAYER_PLUGIN_SLUG . '/v1/h5p/xapi' ),
-			'nonce'     => wp_create_nonce( 'wp_rest' ),
-			'video'     => $video_id,
-			'contentId' => (int) $content['id'],
-		] );
+		self::$xapi_items[ (int) $content['id'] ] = $video_id;
 
 		if ( ! isset( self::$settings['contents'][ $cid ] ) ) {
 			self::$settings['contents'][ $cid ] = self::content_settings( $content );
@@ -148,7 +175,9 @@ class Assets {
 			'title'           => $content['title'] ?? '',
 			'displayOptions'  => $core->getDisplayOptionsForView( $content['disable'], (int) ( $content['user_id'] ?? 0 ) ),
 			'metadata'        => $content['metadata'] ?? [],
-			'contentUserData' => [ 0 => [ 'state' => '{}' ] ],
+			'contentUserData' => isset( self::$settings['user'] )
+				? UserData::preloaded( (int) $content['id'], get_current_user_id() )
+				: [ 0 => [] ],
 		];
 	}
 
@@ -167,9 +196,28 @@ class Assets {
 			echo '<link rel="stylesheet" href="' . esc_url( $url ) . '" />' . "\n";
 		}
 
-		$json = wp_json_encode( self::$settings );
+		// JSON_HEX_* because this lands inside an inline <script>: the settings
+		// carry the viewer's own saved content state, and a raw `<!--<script>`
+		// in it puts the HTML tokenizer into script-data-double-escaped state,
+		// swallowing the rest of the document into this block.
+		$json = wp_json_encode( self::$settings, self::JSON_INLINE_FLAGS );
 		if ( $json !== false ) {
 			echo '<script>window.H5PIntegration = ' . $json . ';</script>';
+		}
+
+		if ( self::$xapi_items ) {
+			$xapi = wp_json_encode(
+				[
+					'endpoint' => rest_url( TRUEPLAYER_PLUGIN_SLUG . '/v1/h5p/xapi' ),
+					'nonce'    => wp_create_nonce( 'wp_rest' ),
+					// JSON object keys are strings; the bridge looks them up as such.
+					'items'    => (object) self::$xapi_items,
+				],
+				self::JSON_INLINE_FLAGS
+			);
+			if ( $xapi !== false ) {
+				echo '<script>window.TruePlayerH5PxAPI = ' . $xapi . ';</script>';
+			}
 		}
 	}
 }

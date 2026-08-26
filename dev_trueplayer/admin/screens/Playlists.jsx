@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, createPortal } from '@wordpress/element';
 import { api } from '../api';
+import { Icon } from '../components/icons';
 import { Card, Button, Input, Select, Toggle, Badge, Field, sourceMeta } from '../components/UI';
 import { BsTrash } from 'react-icons/bs';
 
@@ -126,7 +127,7 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved, onEditState
 			{ /* Save lives in the topbar (portaled) — same pattern as the video editor. */ }
 			{ toolbarSlot && createPortal(
 				<>
-					{ saved && <span className="text-sm text-green-600">Saved ✓</span> }
+					{ saved && <span className="inline-flex items-center gap-1 text-sm text-green-600"><Icon name="checkmark" className="w-4 h-4" /> Saved</span> }
 					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
 				</>,
 				toolbarSlot
@@ -145,7 +146,7 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved, onEditState
 					<div className="mt-4 pt-4 border-t border-line flex items-center justify-between gap-4">
 						<p className="text-[13px] font-medium text-ink mb-1">Embed</p>
 						<code className="text-xs bg-gray-100 rounded px-2 py-1 cursor-pointer hover:text-brand-500" onClick={ copyShortcode } title="Copy shortcode">
-							{ copied ? 'Copied ✓' : playlist.shortcode }
+							{ copied ? <span className="inline-flex items-center gap-1"><Icon name="checkmark" className="w-3.5 h-3.5" /> Copied</span> : playlist.shortcode }
 						</code>
 					</div>
 				</Card>

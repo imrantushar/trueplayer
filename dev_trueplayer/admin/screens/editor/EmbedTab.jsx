@@ -1,6 +1,26 @@
 import { useState } from '@wordpress/element';
 import { Card, Button, Toggle, Badge } from '../../components/UI';
 import { isPro } from '../../pro';
+import { Icon } from '../../components/icons';
+
+// navigator.clipboard.writeText needs a secure context; fall back to the
+// classic textarea + execCommand trick (e.g. plain-http local dev sites).
+function legacyCopy( text ) {
+	const ta = document.createElement( 'textarea' );
+	ta.value = text;
+	ta.style.position = 'fixed';
+	ta.style.opacity = '0';
+	document.body.appendChild( ta );
+	ta.select();
+	let ok = false;
+	try {
+		ok = document.execCommand( 'copy' );
+	} catch ( e ) {
+		ok = false;
+	}
+	document.body.removeChild( ta );
+	return ok;
+}
 
 export default function EmbedTab( { video, config = {}, patch } ) {
 	const [ copied, setCopied ] = useState( '' );
@@ -10,9 +30,19 @@ export default function EmbedTab( { video, config = {}, patch } ) {
 	const instantUrl = `${ siteUrl }/tp/${ video.id }/`;
 
 	const copy = ( text, key ) => {
-		navigator.clipboard && navigator.clipboard.writeText( text );
-		setCopied( key );
-		setTimeout( () => setCopied( '' ), 1500 );
+		const markCopied = () => {
+			setCopied( key );
+			setTimeout( () => setCopied( ( c ) => ( c === key ? '' : c ) ), 1500 );
+		};
+		if ( navigator.clipboard && window.isSecureContext ) {
+			navigator.clipboard.writeText( text ).then( markCopied ).catch( () => {
+				if ( legacyCopy( text ) ) {
+					markCopied();
+				}
+			} );
+		} else if ( legacyCopy( text ) ) {
+			markCopied();
+		}
 	};
 
 	return (
@@ -21,14 +51,14 @@ export default function EmbedTab( { video, config = {}, patch } ) {
 				<h3 className="font-semibold text-gray-900 !mb-2">Shortcode</h3>
 				<div className="flex gap-2 items-center">
 					<code className="flex-1 bg-gray-100 rounded px-3 py-2 text-sm">{ shortcode }</code>
-					<Button variant="ghost" onClick={ () => copy( shortcode, 'sc' ) }>{ copied === 'sc' ? 'Copied ✓' : 'Copy' }</Button>
+					<Button variant="ghost" onClick={ () => copy( shortcode, 'sc' ) }>{ copied === 'sc' ? <><Icon name="checkmark" className="w-4 h-4" /> Copied</> : 'Copy' }</Button>
 				</div>
 			</div>
 			<div>
 				<h3 className="font-semibold text-gray-900 !mb-2">Block (paste into any post)</h3>
 				<div className="flex gap-2 items-center">
 					<code className="flex-1 bg-gray-100 rounded px-3 py-2 text-sm break-all">{ block }</code>
-					<Button variant="ghost" onClick={ () => copy( block, 'bl' ) }>{ copied === 'bl' ? 'Copied ✓' : 'Copy' }</Button>
+					<Button variant="ghost" onClick={ () => copy( block, 'bl' ) }>{ copied === 'bl' ? <><Icon name="checkmark" className="w-4 h-4" /> Copied</> : 'Copy' }</Button>
 				</div>
 				<p className="text-xs text-gray-400 mt-1">Or search “TruePlayer” in the block inserter.</p>
 			</div>
@@ -49,7 +79,7 @@ export default function EmbedTab( { video, config = {}, patch } ) {
 						{ config.instantPage && (
 							<div className="flex gap-2 items-center">
 								<code className="flex-1 bg-gray-100 rounded px-3 py-2 text-sm break-all">{ instantUrl }</code>
-								<Button variant="ghost" onClick={ () => copy( instantUrl, 'ip' ) }>{ copied === 'ip' ? 'Copied ✓' : 'Copy' }</Button>
+								<Button variant="ghost" onClick={ () => copy( instantUrl, 'ip' ) }>{ copied === 'ip' ? <><Icon name="checkmark" className="w-4 h-4" /> Copied</> : 'Copy' }</Button>
 							</div>
 						) }
 					</>

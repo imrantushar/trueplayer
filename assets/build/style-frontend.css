@@ -86,6 +86,9 @@
 	border-radius: var(--tp-radius, 10px);
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 	outline: none;
+	/* Size container so the control bar can adapt to the player's own width
+	   (narrow admin preview panel, small/mobile embeds) instead of the viewport. */
+	container-type: inline-size;
 }
 
 /* control-bar style variants */
@@ -336,9 +339,8 @@
 	border-radius: 8px;
 }
 .tp-skin-modern .tp-bigplay {
-	background: var( --tp-accent );
-	width: 84px;
-	height: 84px;
+	width: var( --tp-bigplay-size, 84px );
+	height: var( --tp-bigplay-size, 84px );
 }
 
 /* simple: flat thin bar, no gradient wash */
@@ -354,9 +356,8 @@
 	height: 10px;
 }
 .tp-skin-simple .tp-bigplay {
-	width: 64px;
-	height: 64px;
-	background: rgba( 0, 0, 0, 0.65 );
+	width: var( --tp-bigplay-size, 64px );
+	height: var( --tp-bigplay-size, 64px );
 }
 
 /* minimal: scrubber + essentials only; secondary controls hidden */
@@ -609,6 +610,35 @@
 	cursor: pointer;
 }
 
+/* Narrow players: shed the widest, least-critical controls so the single-row
+   control bar never overflows the (overflow:hidden) stage and gets clipped.
+   Keyed to the player's own width via the .tp-stage size container. */
+@container (max-width: 480px) {
+	.tp-controls-row {
+		gap: 4px;
+	}
+	.tp-volume {
+		display: none; /* mute button stays */
+	}
+	.tp-btn {
+		width: 30px;
+		height: 30px;
+	}
+	.tp-time {
+		font-size: 11px;
+	}
+}
+@container (max-width: 340px) {
+	.tp-btn {
+		width: 28px;
+		height: 28px;
+	}
+	.tp-btn svg {
+		width: 17px;
+		height: 17px;
+	}
+}
+
 /* ---- scrubber ---- */
 .tp-scrubber {
 	padding: 8px 0;
@@ -751,7 +781,9 @@
 	padding: 6px 8px 2px;
 }
 .tp-menu-item {
-	display: block;
+	display: flex;
+	align-items: center;
+	gap: 6px;
 	width: 100%;
 	text-align: left;
 	background: transparent;
@@ -770,8 +802,16 @@
 	font-weight: 600;
 }
 .tp-menu-item.is-active::after {
-	content: ' ✓';
-	color: var(--tp-accent);
+	/* Masked SVG tick rather than a text glyph, so it renders identically
+	   everywhere and still takes the player's accent colour. */
+	content: '';
+	width: 13px;
+	height: 13px;
+	margin-left: auto;
+	flex: none;
+	background-color: var(--tp-accent);
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%273%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M5 12.5l4.5 4.5L19 7.5%27/%3E%3C/svg%3E") no-repeat center / contain;
+	mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%273%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M5 12.5l4.5 4.5L19 7.5%27/%3E%3C/svg%3E") no-repeat center / contain;
 }
 
 /* ---- timed text overlays ---- */
@@ -1150,11 +1190,15 @@
 	position: absolute;
 	inset: 0;
 	margin: auto;
-	width: 78px;
-	height: 78px;
+	/* Size is author-controllable via --tp-bigplay-size; each skin keeps its own
+	   fallback when the control is left on "Auto". */
+	width: var( --tp-bigplay-size, 78px );
+	height: var( --tp-bigplay-size, 78px );
 	border-radius: 50%;
 	border: 0;
-	background: rgba( 0, 0, 0, 0.55 );
+	/* Accent-driven on every skin (matches the poster facade button). Skins may
+	   still override size/shape, but the accent color stays. */
+	background: var( --tp-accent, #4f46e5 );
 	color: #fff;
 	display: flex;
 	align-items: center;
@@ -1162,8 +1206,13 @@
 	cursor: pointer;
 	z-index: 5;
 }
+/* Icon scales with the button so larger sizes stay proportional. */
+.tp-bigplay svg {
+	width: 48%;
+	height: 48%;
+}
 .tp-bigplay:hover {
-	background: var(--tp-accent);
+	filter: brightness( 1.08 );
 }
 
 .tp-lock-card,
@@ -1180,7 +1229,10 @@
 	box-shadow: 0 12px 40px rgba( 0, 0, 0, 0.3 );
 }
 .tp-lock-icon {
-	font-size: 40px;
+	display: flex;
+	justify-content: center;
+	margin-bottom: 4px;
+	opacity: 0.9;
 }
 .tp-quiz-card {
 	text-align: left;
@@ -1219,6 +1271,9 @@
 	background: rgba( 79, 70, 229, 0.06 );
 }
 .tp-quiz-feedback {
+	display: flex;
+	align-items: center;
+	gap: 6px;
 	font-weight: 600;
 	margin: 8px 0;
 }

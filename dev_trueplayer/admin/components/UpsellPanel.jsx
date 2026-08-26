@@ -1,4 +1,5 @@
 import { Card, Button, Badge } from './UI';
+import { Icon } from './icons';
 
 /**
  * Shown in place of a pro-only screen/tab when no license is active.
@@ -13,7 +14,7 @@ export default function UpsellPanel( { title, features = [] } ) {
 			{ features.length > 0 && (
 				<ul className="text-sm text-gray-600 text-left inline-block mb-5 space-y-1">
 					{ features.map( ( f ) => (
-						<li key={ f } className="flex items-center gap-2"><span className="text-brand-500">✓</span> { f }</li>
+						<li key={ f } className="flex items-center gap-2"><Icon name="checkmark" className="w-4 h-4 text-brand-500 shrink-0" /> { f }</li>
 					) ) }
 				</ul>
 			) }

@@ -10,11 +10,17 @@ export const PAGE_OF = {
 	library: SLUG + '-videos',
 	editor: SLUG + '-videos',
 	analytics: SLUG + '-videos',
-	playlists: SLUG + '-playlists',
-	interactive: SLUG + '-interactive',
 	presets: SLUG + '-presets',
 	settings: SLUG + '-settings',
 };
+
+/** Legacy page slugs, still registered in WP, that are now library filters. */
+const LEGACY_KIND = {
+	[ SLUG + '-playlists' ]: 'playlist',
+	[ SLUG + '-interactive' ]: 'interactive',
+};
+
+const KINDS = [ 'all', 'media', 'playlist', 'interactive' ];
 
 /** Resolve the active screen + params from the URL. */
 export function parseRoute() {
@@ -30,13 +36,13 @@ export function parseRoute() {
 		if ( action === 'analytics' && id ) {
 			return { name: 'analytics', id };
 		}
-		return { name: 'library' };
+		// One library screen; ?kind= picks the filter.
+		const kind = q.get( 'kind' ) || 'all';
+		return { name: 'library', kind: KINDS.includes( kind ) ? kind : 'all' };
 	}
-	if ( page === SLUG + '-playlists' ) {
-		return { name: 'playlists' };
-	}
-	if ( page === SLUG + '-interactive' ) {
-		return { name: 'interactive' };
+	// Old per-section URLs land on the library, filtered to what they used to be.
+	if ( LEGACY_KIND[ page ] ) {
+		return { name: 'library', kind: LEGACY_KIND[ page ] };
 	}
 	if ( page === SLUG + '-presets' ) {
 		return { name: 'presets' };
@@ -59,6 +65,9 @@ export function routeUrl( name, params = {} ) {
 	}
 	if ( params.id ) {
 		q.set( 'id', params.id );
+	}
+	if ( name === 'library' && params.kind && 'all' !== params.kind ) {
+		q.set( 'kind', params.kind );
 	}
 	return 'admin.php?' + q.toString();
 }

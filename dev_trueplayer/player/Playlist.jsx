@@ -1,5 +1,50 @@
-import { useState } from '@wordpress/element';
+import { useEffect, useRef, useState } from '@wordpress/element';
 import Player from './Player';
+
+/**
+ * Load-strategy resolution, mirrored from includes/shortcode.php's
+ * Shortcode::render() — a playlist has no SSR facade pass, so the client
+ * works this out from the video's own config payload instead.
+ */
+function resolveLoadStrategy( config ) {
+	const behavior = ( config && config.customize && config.customize.behavior ) || {};
+	const apMode = behavior.autoplayMode || '';
+	const autoplay = apMode ? apMode !== 'off' : !! behavior.autoplay;
+	let strategy = [ 'facade', 'eager', 'onvisible' ].includes( behavior.loadStrategy ) ? behavior.loadStrategy : 'facade';
+	if ( autoplay ) {
+		strategy = 'eager';
+	}
+	return { strategy, autoplay };
+}
+
+/** Static poster + play button — matches the standalone embed's facade
+ *  markup/CSS (includes/shortcode.php's render_facade()) so `.tp-facade`
+ *  styling applies as-is. */
+function Facade( { config, onPlay } ) {
+	const source = ( config && config.source ) || {};
+	const isAudio = source.mediaType === 'audio';
+	const poster = source.poster || '';
+	const appearance = ( config && config.customize && config.customize.appearance ) || {};
+	const accent = appearance.accent || ( config && config.branding && config.branding.accent ) || '';
+	const ratio = appearance.aspectRatio || '';
+
+	const style = {};
+	if ( accent ) {
+		style[ '--tp-accent' ] = accent;
+	}
+	if ( ratio && ratio !== '16:9' && ! isAudio && /^\d+:\d+$/.test( ratio ) ) {
+		style.aspectRatio = ratio.replace( ':', ' / ' );
+	}
+
+	return (
+		<button type="button" className={ `tp-facade${ isAudio ? ' is-audio' : '' }` } style={ style } aria-label="Play video" onClick={ onPlay }>
+			{ poster && <img className="tp-facade-poster" src={ poster } alt="" loading="lazy" decoding="async" /> }
+			<span className="tp-facade-btn">
+				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+			</span>
+		</button>
+	);
+}
 
 /**
  * Renders a group of videos as a sidebar (main player + list) or a grid.
@@ -7,15 +52,47 @@ import Player from './Player';
  */
 export default function Playlist( { data } ) {
 	const items = data.items || [];
+	const first = items[ 0 ];
+	const initial = first ? resolveLoadStrategy( first.config ) : { strategy: 'eager', autoplay: false };
+
 	const [ active, setActive ] = useState( 0 );
-	const [ autoStart, setAutoStart ] = useState( false );
+	const [ autoStart, setAutoStart ] = useState( initial.autoplay );
+	// Gates mounting the real <Player> (and the video element / provider it
+	// creates on mount regardless of autoStart) the same way the standalone
+	// embed's poster facade does — so a playlist sitting below the fold
+	// doesn't pay the player-bundle + metadata-request cost on page load.
+	const [ booted, setBooted ] = useState( initial.strategy === 'eager' );
+	const containerRef = useRef( null );
 	const item = items[ active ];
+
+	useEffect( () => {
+		if ( booted || initial.strategy !== 'onvisible' || ! ( 'IntersectionObserver' in window ) ) {
+			return;
+		}
+		const node = containerRef.current;
+		if ( ! node ) {
+			return;
+		}
+		const io = new IntersectionObserver(
+			( entries ) => {
+				if ( entries.some( ( entry ) => entry.isIntersecting ) ) {
+					io.disconnect();
+					setBooted( true );
+				}
+			},
+			{ rootMargin: '200px' }
+		);
+		io.observe( node );
+		return () => io.disconnect();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [ booted ] );
 
 	// Picking an item (or auto-advancing) should play it; the first render just
 	// shows its poster so nothing loads until the viewer chooses to watch.
 	const pick = ( i ) => {
 		setActive( i );
 		setAutoStart( true );
+		setBooted( true );
 	};
 	const goNext = () => {
 		if ( data.autoplayNext && active < items.length - 1 ) {
@@ -32,12 +109,16 @@ export default function Playlist( { data } ) {
 	const isGrid = data.layout === 'grid';
 
 	return (
-		<div className={ `tp-pl tp-pl-${ data.layout }` }>
+		<div className={ `tp-pl tp-pl-${ data.layout }` } ref={ containerRef }>
 			{ data.title && <div className="tp-pl-title">{ data.title }</div> }
 			<div className="tp-pl-body">
 				<div className="tp-pl-main">
 					<div className="trueplayer-mount">
-						<Player key={ item.videoId } videoId={ item.videoId } config={ item.config } title={ item.title } autoStart={ autoStart } onEnded={ goNext } />
+						{ booted ? (
+							<Player key={ item.videoId } videoId={ item.videoId } config={ item.config } title={ item.title } autoStart={ autoStart } onEnded={ goNext } />
+						) : (
+							<Facade config={ item.config } onPlay={ () => pick( active ) } />
+						) }
 					</div>
 				</div>
 				<div className="tp-pl-list">

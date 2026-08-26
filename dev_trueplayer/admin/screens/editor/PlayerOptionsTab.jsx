@@ -1,8 +1,9 @@
-import { useState } from '@wordpress/element';
-import { Card, Field, Input, Select, Toggle, Textarea, SubSidebar, ColorInput } from '../../components/UI';
+import { Card, Field, Input, Select, Toggle, Textarea, ColorInput } from '../../components/UI';
 import { isPro, PRO_SKINS } from '../../pro';
 
-const PLAYER_SUBS = [
+// Player sub-sections. Exported so the editor's left-nav accordion (Editor.jsx)
+// can drive which one is shown — this tab renders the active section only.
+export const PLAYER_SUBS = [
 	['appearance', 'Appearance'],
 	['captions', 'Captions'],
 	['controls', 'Controls'],
@@ -49,12 +50,12 @@ const CONTROL_LABELS = {
 const DEFAULTS = {
 	controls: { play: true, rewind: true, forward: true, progress: true, currentTime: true, duration: true, mute: true, volume: true, captions: true, settings: true, pip: true, fullscreen: true, download: false },
 	behavior: { autoplay: false, autoplayMode: '', muted: false, loop: false, resetOnEnd: false, savePosition: true, hideControls: true, sticky: false, stickyPosition: 'bottom-right', preload: 'metadata', loadStrategy: 'facade', noSkip: false, disableSeek: false, hoverPreview: false },
-	appearance: { skin: 'default', accent: '#4f46e5', hoverColor: '', bigPlay: true, playButtonStyle: 'circle', roundness: 10, controlBarStyle: 'gradient', aspectRatio: '16:9', captionSize: 100, captionColor: '#ffffff', captionBackground: '#000000', captionOpacity: 75 },
+	appearance: { skin: 'default', accent: '#4f46e5', hoverColor: '', bigPlay: true, playButtonStyle: 'circle', playButtonSize: 0, roundness: 10, controlBarStyle: 'gradient', aspectRatio: '16:9', captionSize: 100, captionColor: '#ffffff', captionBackground: '#000000', captionOpacity: 75 },
 	speeds: [0.5, 0.75, 1, 1.25, 1.5, 2],
 	skipSeconds: 10,
 };
 
-export default function PlayerOptionsTab({ config, patch, presets = [] }) {
+export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'appearance' }) {
 	const cz = {
 		controls: { ...DEFAULTS.controls, ...(config.customize?.controls || {}) },
 		behavior: { ...DEFAULTS.behavior, ...(config.customize?.behavior || {}) },
@@ -100,15 +101,9 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 		apMode === 'off' &&
 		(behavior.loadStrategy || 'facade') !== 'eager';
 
-	const [sub, setSub] = useState('appearance');
-
 	return (
-		<div className="flex flex-col md:flex-row gap-6 items-start">
-			<SubSidebar items={PLAYER_SUBS} value={sub} onChange={setSub} />
-			<div className="flex-1 min-w-0 w-full">
-				<div className="flex gap-6 items-start">
-					<div className="w-full max-w-2xl space-y-6">
-						{sub === 'appearance' && (
+		<div className="w-full max-w-2xl space-y-6">
+			{sub === 'appearance' && (
 							<Card className="p-6">
 								<h3 className="font-semibold text-gray-900">Appearance</h3>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
@@ -128,7 +123,7 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 											<Select value={appearance.skin} onChange={(e) => setSection('appearance', { skin: e.target.value })}>
 												{SKINS.map((s) => (
 													<option key={s.value} value={s.value} disabled={!isPro() && PRO_SKINS.includes(s.value)}>
-														{s.label}{!isPro() && PRO_SKINS.includes(s.value) ? ' 🔒 Pro' : ''}
+														{s.label}{!isPro() && PRO_SKINS.includes(s.value) ? ' (Pro)' : ''}
 													</option>
 												))}
 											</Select>
@@ -149,6 +144,15 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 												<option value="circle">Circle</option>
 												<option value="soft">Soft (rounded)</option>
 												<option value="square">Square</option>
+											</Select>
+										</Field>
+										<Field label="Play button size">
+											<Select value={appearance.playButtonSize} onChange={(e) => setSection('appearance', { playButtonSize: parseInt(e.target.value, 10) })}>
+												<option value="0">Auto (skin default)</option>
+												<option value="56">Small</option>
+												<option value="72">Medium</option>
+												<option value="88">Large</option>
+												<option value="108">Extra large</option>
 											</Select>
 										</Field>
 										<Field label="Control bar style">
@@ -319,9 +323,6 @@ export default function PlayerOptionsTab({ config, patch, presets = [] }) {
 								</div>
 							</Card>
 						)}
-					</div>
-				</div>
-			</div>
 		</div>
 	);
 }

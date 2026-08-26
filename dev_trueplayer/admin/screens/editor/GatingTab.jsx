@@ -13,10 +13,16 @@ const uid = () => Math.random().toString( 36 ).slice( 2, 9 );
 function LmsLink( { config, patch } ) {
 	const lms = config.lms || {};
 	const [ opts, setOpts ] = useState( null );
-	useEffect( () => { api.getLmsOptions().then( setOpts ).catch( () => setOpts( { available: false, courses: [], lessons: [] } ) ); }, [] );
+	useEffect( () => { api.getLmsOptions().then( setOpts ).catch( () => setOpts( { available: false, courses: [] } ) ); }, [] );
 
 	const set = ( partial ) => patch( { lms: { ...lms, ...partial } } );
 	const enabled = ( lms.provider || '' ) === 'academy';
+
+	// Lessons belong to a course, so the list follows the course picker — every
+	// lesson on the site in one dropdown made it easy to attach the wrong one.
+	const courses = ( opts && opts.courses ) || [];
+	const course = courses.find( ( c ) => c.id === lms.course );
+	const lessons = course ? course.lessons || [] : [];
 
 	if ( opts && ! opts.available ) {
 		return (
@@ -36,15 +42,24 @@ function LmsLink( { config, patch } ) {
 				<div className="mt-4 space-y-4">
 					<div className="grid grid-cols-2 gap-4">
 						<Field label="Course">
-							<Select value={ lms.course || '' } onChange={ ( e ) => set( { course: parseInt( e.target.value, 10 ) || 0 } ) }>
+							{ /* Changing the course clears the lesson — a lesson id from
+							     the previous course would complete the wrong topic. */ }
+							<Select value={ lms.course || '' } onChange={ ( e ) => set( { course: parseInt( e.target.value, 10 ) || 0, topic: 0 } ) }>
 								<option value="">— select —</option>
-								{ ( opts ? opts.courses : [] ).map( ( c ) => <option key={ c.id } value={ c.id }>{ c.title }</option> ) }
+								{ courses.map( ( c ) => <option key={ c.id } value={ c.id }>{ c.title }</option> ) }
 							</Select>
 						</Field>
-						<Field label="Lesson">
-							<Select value={ lms.topic || '' } onChange={ ( e ) => set( { topic: parseInt( e.target.value, 10 ) || 0, topicType: 'lesson' } ) }>
+						<Field
+							label="Lesson"
+							hint={ ! lms.course ? 'Pick a course first.' : ( ! lessons.length ? 'This course has no lessons in its curriculum yet.' : 'Marked complete when the viewer completes this video.' ) }
+						>
+							<Select
+								value={ lms.topic || '' }
+								disabled={ ! lessons.length }
+								onChange={ ( e ) => set( { topic: parseInt( e.target.value, 10 ) || 0, topicType: 'lesson' } ) }
+							>
 								<option value="">— select —</option>
-								{ ( opts ? opts.lessons : [] ).map( ( l ) => <option key={ l.id } value={ l.id }>{ l.title }</option> ) }
+								{ lessons.map( ( l ) => <option key={ l.id } value={ l.id }>{ l.title }</option> ) }
 							</Select>
 						</Field>
 					</div>

@@ -41,6 +41,7 @@ export const CUSTOMIZE_DEFAULTS = {
 		hoverColor: '',
 		bigPlay: true,
 		playButtonStyle: 'circle', // circle | square | soft
+		playButtonSize: 0, // center play-button diameter in px; 0 = skin default
 		roundness: 10, // stage border radius, px
 		controlBarStyle: 'gradient', // gradient | solid | minimal
 		aspectRatio: '16:9', // 16:9 | 9:16 | 4:3 | 1:1 | 21:9 | auto

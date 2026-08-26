@@ -81,6 +81,14 @@ class VideosController extends WP_REST_Controller {
 			'orderby'        => 'date',
 			'order'          => 'DESC',
 		];
+		// H5P-engine posts share the tp_video post type but are authored and
+		// listed as interactive items, not as players with a source.
+		$args['meta_query'] = [
+			'relation' => 'OR',
+			[ 'key' => \TruePlayer\H5P\Module::ENGINE_META, 'compare' => 'NOT EXISTS' ],
+			[ 'key' => \TruePlayer\H5P\Module::ENGINE_META, 'value' => 'h5p', 'compare' => '!=' ],
+		];
+
 		$tag = $request ? sanitize_title( (string) $request->get_param( 'tag' ) ) : '';
 		if ( $tag ) {
 			$args['tax_query'] = [

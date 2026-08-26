@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Button, Modal, SubSidebar, Toast, Badge } from '../components/UI';
+import { Button, Modal, Toast, Badge } from '../components/UI';
+import { Icon } from '../components/icons';
 import SourceTab from './editor/SourceTab';
-import PlayerOptionsTab from './editor/PlayerOptionsTab';
+import PlayerOptionsTab, { PLAYER_SUBS } from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
 import OverlaysTab from './editor/OverlaysTab';
 import LayersTab from './editor/LayersTab';
@@ -16,12 +17,28 @@ import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
 import { hasVideoSource } from '../utils/videoSource';
 
+// Interactions sub-sections. The 3rd tuple item flags a pro-gated sub so the
+// nav can badge it. Overlays (Call to action) is free; the rest are pro.
+const INTERACTIONS_SUBS = [
+	[ 'overlays', 'Call to action' ],
+	[ 'layers', 'Layers', true ],
+	[ 'timed', 'Timed content', true ],
+	[ 'subscribe', 'Email capture', true ],
+];
+
+// Access & gating sub-sections. No per-sub pro flag: the whole tab is pro, so
+// the parent nav item already carries the badge.
+const ACCESS_SUBS = [
+	[ 'gating', 'Verification & quiz' ],
+	[ 'protection', 'Protection' ],
+];
+
 const TABS = [
-	{ key: 'source', label: 'Source', icon: '🎬' },
-	{ key: 'player', label: 'Player', icon: '🎛️' },
-	{ key: 'appearance', label: 'Chapters & branding', icon: '🔖' },
-	{ key: 'interactions', label: 'Interactions', icon: '🧩' },
-	{ key: 'access', label: 'Access & gating', icon: '🛡️', pro: true },
+	{ key: 'source', label: 'Source', icon: 'film' },
+	{ key: 'player', label: 'Player', icon: 'sliders', subs: PLAYER_SUBS },
+	{ key: 'appearance', label: 'Chapters & branding', icon: 'bookmark' },
+	{ key: 'interactions', label: 'Interactions', icon: 'puzzle', subs: INTERACTIONS_SUBS },
+	{ key: 'access', label: 'Access & gating', icon: 'shield', pro: true, subs: ACCESS_SUBS },
 ];
 
 const PRO_TAB_INFO = {
@@ -29,38 +46,29 @@ const PRO_TAB_INFO = {
 };
 
 // Interactions = everything shown on/around the video. Overlays are free;
-// layers / timed content / email capture are pro (gated inline).
-function InteractionsTab( { config, patch, pro } ) {
-	const [ sub, setSub ] = useState( 'overlays' );
+// layers / timed content / email capture are pro (gated inline). The sub-nav
+// lives in the editor's left-nav accordion, so this renders the active one only.
+function InteractionsTab( { config, patch, pro, sub = 'overlays', onPreviewOverlay, previewingId } ) {
 	const gate = ( node, info ) => ( pro ? node : <UpsellPanel title={ info.title } features={ info.features } /> );
 	return (
-		<div className="flex flex-col md:flex-row gap-6 items-start">
-			<SubSidebar
-				value={ sub }
-				onChange={ setSub }
-				items={ [ [ 'overlays', 'Call to action' ], [ 'layers', 'Layers', ! pro ], [ 'timed', 'Timed content', ! pro ], [ 'subscribe', 'Email capture', ! pro ] ] }
-			/>
-			<div className="flex-1 min-w-0">
-				{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } /> }
-				{ sub === 'layers' && gate( <LayersTab config={ config } patch={ patch } />, { title: 'Interactive layers', features: [ 'Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Conditional display rules' ] } ) }
-				{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, { title: 'Timed content', features: [ 'A content region below the player that changes with the video', 'Time-synced forms, buttons & text' ] } ) }
-				{ sub === 'subscribe' && gate( <SubscribeTab config={ config } patch={ patch } />, { title: 'Email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] } ) }
-			</div>
+		<div className="w-full min-w-0">
+			{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } onPreviewOverlay={ onPreviewOverlay } previewingId={ previewingId } /> }
+			{ sub === 'layers' && gate( <LayersTab config={ config } patch={ patch } />, { title: 'Interactive layers', features: [ 'Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Conditional display rules' ] } ) }
+			{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, { title: 'Timed content', features: [ 'A content region below the player that changes with the video', 'Time-synced forms, buttons & text' ] } ) }
+			{ sub === 'subscribe' && gate( <SubscribeTab config={ config } patch={ patch } />, { title: 'Email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] } ) }
 		</div>
 	);
 }
 
 // Access & gating = who can watch + proving they watched. All pro (the Editor
-// upsells the whole tab for free users).
-function AccessTab( { config, patch } ) {
-	const [ sub, setSub ] = useState( 'gating' );
+// upsells the whole tab for free users). Like Player and Interactions, the
+// sub-nav lives in the editor's left-nav accordion rather than in a second
+// column of its own, so this renders the active one only.
+function AccessTab( { config, patch, sub = 'gating' } ) {
 	return (
-		<div className="flex flex-col md:flex-row gap-6 items-start">
-			<SubSidebar value={ sub } onChange={ setSub } items={ [ [ 'gating', 'Verification & quiz' ], [ 'protection', 'Protection' ] ] } />
-			<div className="flex-1 min-w-0">
-				{ sub === 'gating' && <GatingTab config={ config } patch={ patch } /> }
-				{ sub === 'protection' && <ProtectionTab config={ config } patch={ patch } /> }
-			</div>
+		<div className="w-full min-w-0">
+			{ sub === 'gating' && <GatingTab config={ config } patch={ patch } /> }
+			{ sub === 'protection' && <ProtectionTab config={ config } patch={ patch } /> }
 		</div>
 	);
 }
@@ -68,6 +76,9 @@ function AccessTab( { config, patch } ) {
 export default function Editor( { id, onEditState } ) {
 	const [ video, setVideo ] = useState( null );
 	const [ tab, setTab ] = useState( 'source' );
+	const [ activeSub, setActiveSub ] = useState( { player: 'appearance', interactions: 'overlays', access: 'gating' } ); // active sub per accordion section
+	const [ navOpen, setNavOpen ] = useState( null ); // which nav section's accordion is expanded
+	const selectSub = ( key, subKey ) => { setTab( key ); setNavOpen( key ); setActiveSub( ( m ) => ( { ...m, [ key ]: subKey } ) ); };
 	const [ dirty, setDirty ] = useState( false );
 	const [ saving, setSaving ] = useState( false );
 	const [ presets, setPresets ] = useState( [] );
@@ -75,6 +86,14 @@ export default function Editor( { id, onEditState } ) {
 	const [ embedOpen, setEmbedOpen ] = useState( false );
 	const [ duration, setDuration ] = useState( 0 );
 	const [ toast, setToast ] = useState( null );
+	// The overlay list's eye button: a cue the preview player acts on. Clicking
+	// the same row again sends `overlayId: null`, which means "clear it"; the
+	// token changes on every click so the player re-runs either way.
+	const [ previewCue, setPreviewCue ] = useState( null );
+	const previewOverlay = useCallback( ( overlayId ) => setPreviewCue( ( cur ) => ( {
+		overlayId: cur && cur.overlayId === overlayId ? null : overlayId,
+		token: Date.now(),
+	} ) ), [] );
 
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
@@ -124,7 +143,7 @@ export default function Editor( { id, onEditState } ) {
 			const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
 			setVideo( updated );
 			setDirty( false );
-			setToast( { message: 'Saved ✓', tone: 'success' } );
+			setToast( { message: 'Saved', tone: 'success' } );
 		} finally {
 			setSaving( false );
 		}
@@ -140,7 +159,7 @@ export default function Editor( { id, onEditState } ) {
 
 	return (
 		<>
-			<div className="w-full mx-auto px-8 py-8">
+			<div className="w-full mx-auto pl-[10px] pr-6 py-6">
 				{ /* Toolbar actions live in the topbar (portaled). */ }
 				{ toolbarSlot && createPortal(
 					<>
@@ -161,60 +180,84 @@ export default function Editor( { id, onEditState } ) {
 					</Modal>
 				) }
 
-				<div className="flex flex-col md:flex-row gap-6 items-start">
-					{ /* Contextual sidebar: the video editor's own step menu. Sticky is applied
-						directly to this element (not a nested <nav>) — it must be the flex row's
-						direct child for position:sticky to have room to stick against the row's
-						full height, matched by the tall content column next to it. */ }
-					<aside className="w-full md:w-60 shrink-0 bg-white border-r border-line md:sticky md:top-[104px]">
-						<nav className="p-3 space-y-1">
-							{ TABS.map( ( t ) => (
-								<button
-									key={ t.key }
-									onClick={ () => setTab( t.key ) }
-									className={ `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${
-										tab === t.key ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
-									}` }
-								>
-									<span className="text-base leading-none">{ t.icon }</span>
-									<span className="flex-1">{ t.label }</span>
-									{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
-								</button>
-							) ) }
+				{ /* 3-column workspace: step menu (20%) · active tab (50%) · live
+					preview (30%) — fractional tracks 2fr/5fr/3fr so the gaps stay even.
+					Stacks vertically below xl. Sticky lives on the two side columns
+					directly so they hold position while the taller middle column scrolls;
+					items-start keeps grid tracks from stretching, which is what gives the
+					sticky children room to stick. */ }
+				<div className="flex flex-col gap-4 xl:grid xl:grid-cols-[2fr_5fr_3fr] xl:items-start">
+					{ /* Column 1 — the video editor's own step menu. */ }
+					<aside className="w-full bg-white border border-line rounded-card xl:sticky xl:top-[104px]">
+						<nav className="p-1.5 space-y-1">
+							{ TABS.map( ( t ) => {
+								const active = tab === t.key;
+								const open = navOpen === t.key;
+								// A tab with subs toggles its accordion (and navigates in);
+								// a plain tab just navigates and collapses any open accordion.
+								const onClickPrimary = () => {
+									setTab( t.key );
+									setNavOpen( t.subs ? ( open ? null : t.key ) : null );
+								};
+								return (
+									<div key={ t.key }>
+										<button
+											onClick={ onClickPrimary }
+											className={ `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition ${
+												active ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
+											}` }
+										>
+											<Icon name={ t.icon } className="w-[18px] h-[18px] shrink-0" />
+											<span className="flex-1">{ t.label }</span>
+											{ t.subs && (
+												<svg className={ `w-3.5 h-3.5 shrink-0 transition-transform ${ open ? 'rotate-90' : '' }` } viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M9 6l6 6-6 6" /></svg>
+											) }
+											{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
+										</button>
+
+										{ /* Sub-sections live inline in the nav (accordion), so the
+											content column shows only the active one. */ }
+										{ t.subs && open && (
+											<div className="mt-1 mb-1 ml-4 pl-3 border-l-2 border-brand-100 space-y-0.5">
+												{ t.subs.map( ( [ subKey, subLabel, subPro ] ) => (
+													<button
+														key={ subKey }
+														onClick={ () => selectSub( t.key, subKey ) }
+														className={ `flex items-center justify-between gap-2 w-full px-3 py-1.5 rounded-md text-[13px] text-left transition ${
+															active && activeSub[ t.key ] === subKey ? 'bg-white text-brand-700 font-semibold shadow-sm' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+														}` }
+													>
+														<span className="truncate">{ subLabel }</span>
+														{ subPro && ! pro && <span className="text-[10px] font-semibold text-brand-600 shrink-0">PRO</span> }
+													</button>
+												) ) }
+											</div>
+										) }
+									</div>
+								);
+							} ) }
 						</nav>
 					</aside>
 
-					<div className="flex-1 min-w-0 w-full">
-						<div className="mb-6">
-							<h1 className="text-2xl font-bold text-gray-900">{ TABS.find( ( t ) => t.key === tab )?.label }</h1>
-						</div>
+					{ /* Column 2 — the active tab. */ }
+					<div className="w-full min-w-0">
+						{ isProTab && ! pro ? (
+							<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
+						) : (
+							<>
+								{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
+								{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } sub={ activeSub.player } /> }
+								{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
+								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } previewingId={ previewCue?.overlayId || null } /> }
+								{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } sub={ activeSub.access } /> }
+							</>
+						) }
+					</div>
 
-						<div className="flex flex-col min-[1440px]:flex-row gap-6 items-start mt-6">
-							{ /* Tabs with their own sub-nav (Player/Interactions/Access) need more
-								room than max-w-2xl (that's eaten into by the sub-nav's own width),
-								but still a bounded width — the preview (flex-1 below) gets whatever's
-								left, which is where the extra space is actually useful. */ }
-							<div className={ `w-full min-w-0 ${ [ 'player', 'interactions', 'access' ].includes( tab ) ? 'min-[1440px]:max-w-3xl min-[1440px]:shrink-0' : 'max-w-2xl' }` }>
-								{ isProTab && ! pro ? (
-									<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
-								) : (
-									<>
-										{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
-										{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } /> }
-										{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
-										{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } /> }
-										{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } /> }
-									</>
-								) }
-							</div>
-
-							{ /* Below 1440px the preview drops under the content and takes the
-								full row width; at 1440px+ it takes whatever's left beside the
-								(now bounded) content column, instead of a small fixed width. */ }
-							<div className="w-full min-[1440px]:flex-1 min-[1440px]:min-w-[420px] min-[1440px]:sticky min-[1440px]:top-[104px]">
-								<PreviewPanel id={ id } config={ config } onDuration={ setDuration } />
-							</div>
-						</div>
+					{ /* Column 3 — live preview, pinned so the author sees changes as
+						they edit. */ }
+					<div className="w-full min-w-0 xl:sticky xl:top-[104px]">
+						<PreviewPanel id={ id } config={ config } onDuration={ setDuration } previewCue={ previewCue } />
 					</div>
 				</div>
 			</div>
