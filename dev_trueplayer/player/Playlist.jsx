@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from '@wordpress/element';
 import Player from './Player';
+import { resolveCustomize } from './customize';
 
 /**
  * Load-strategy resolution, mirrored from includes/shortcode.php's
@@ -17,6 +18,15 @@ function resolveLoadStrategy( config ) {
 	return { strategy, autoplay };
 }
 
+/**
+ * The effective accent for a member video — built-in default, then the
+ * site-wide default, then the video's own value (resolveCustomize handles the
+ * layering, including the legacy `branding.accent`).
+ */
+function resolveAccent( config ) {
+	return resolveCustomize( config || {} ).appearance.accent || '';
+}
+
 /** Static poster + play button — matches the standalone embed's facade
  *  markup/CSS (includes/shortcode.php's render_facade()) so `.tp-facade`
  *  styling applies as-is. */
@@ -25,7 +35,7 @@ function Facade( { config, onPlay } ) {
 	const isAudio = source.mediaType === 'audio';
 	const poster = source.poster || '';
 	const appearance = ( config && config.customize && config.customize.appearance ) || {};
-	const accent = appearance.accent || ( config && config.branding && config.branding.accent ) || '';
+	const accent = resolveAccent( config );
 	const ratio = appearance.aspectRatio || '';
 
 	const style = {};
@@ -108,8 +118,14 @@ export default function Playlist( { data } ) {
 	// stays slim (and titles get more room).
 	const isGrid = data.layout === 'grid';
 
+	const accent = resolveAccent( item.config );
+
 	return (
-		<div className={ `tp-pl tp-pl-${ data.layout }` } ref={ containerRef }>
+		<div
+			className={ `tp-pl tp-pl-${ data.layout }` }
+			ref={ containerRef }
+			style={ accent ? { '--tp-accent': accent } : undefined }
+		>
 			{ data.title && <div className="tp-pl-title">{ data.title }</div> }
 			<div className="tp-pl-body">
 				<div className="tp-pl-main">

@@ -1376,8 +1376,13 @@
 	margin-bottom: 12px;
 	color: #111827;
 }
+/* Cap the stage the way the standalone embed does — but as a *max*, not a
+   hard width. A fixed width overflows any content column narrower than the cap
+   (a theme's column is commonly ~650px), which is what pushed the sidebar list
+   out of the row entirely. */
 .tp-pl-main {
-	width: min(960px, calc((100vh - 100px) * 16 / 9));
+	width: 100%;
+	max-width: min(960px, calc((100vh - 100px) * 16 / 9));
 }
 .tp-pl-list {
 	display: flex;
@@ -1388,15 +1393,28 @@
 	display: flex;
 	gap: 16px;
 	align-items: flex-start;
-    justify-content: center;
+	justify-content: center;
 	width: 100%;
 	margin: 0 auto;
 }
+/* 450px stage. Kept as a shrinkable basis rather than a hard `width` so a
+   content column narrower than 450 + gap + list can't be overflowed — that
+   fixed width is what broke this layout in the first place. `min-width: 0` is
+   required or the video refuses to shrink below its intrinsic size. */
+.tp-pl-sidebar .tp-pl-main {
+	flex: 0 1 450px;
+	max-width: 450px;
+	min-width: 0;
+}
 .tp-pl-sidebar .tp-pl-list {
-	/* Proportional so the video keeps the lion's share of a medium column,
-	   instead of a fixed 300px list squeezing it. */
-	width: clamp( 200px, 30%, 300px );
-	flex-shrink: 0;
+	/* Basis 0 so the list claims only the room the 450px stage leaves, rather
+	   than competing with it for width and shrinking it below 450. The floor
+	   makes the stage yield instead of starving the list in a mid-width column;
+	   the cap stops a wide container handing the list half the row. */
+	flex: 1 1 0;
+	min-width: 150px;
+	max-width: 300px;
+	gap: 6px;
 	max-height: 70vh;
 	overflow-y: auto;
 	padding-right: 4px;
@@ -1426,6 +1444,17 @@
 }
 .tp-pl-item:hover {
 	background: rgba( 0, 0, 0, 0.04 );
+}
+/* Clicking an item leaves it focused, and a theme's default button ring on a
+   picked row reads as a rendering glitch — drop it. `:focus-visible` then puts
+   the ring back for keyboard navigation only, so arrowing/tabbing through the
+   list still shows where you are. */
+.tp-pl-item:focus {
+	outline: none;
+}
+.tp-pl-item:focus-visible {
+	outline: 2px solid var( --tp-accent );
+	outline-offset: 2px;
 }
 .tp-pl-item.is-active {
 	background: rgba( 0, 0, 0, 0.06 );
@@ -1477,30 +1506,108 @@
 	width: 100%;
 	height: 96px;
 }
-@container ( max-width: 700px ) {
+/* ---- sidebar rows ---- */
+.tp-pl-sidebar .tp-pl-item {
+	gap: 12px;
+	padding: 8px 10px;
+	border-radius: 10px;
+}
+.tp-pl-sidebar .tp-pl-item.is-active {
+	background: rgba( 0, 0, 0, 0.06 );
+	border-color: var( --tp-accent );
+}
+.tp-pl-sidebar .tp-pl-icon {
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+	background: rgba( 0, 0, 0, 0.06 );
+	color: #111827;
+}
+.tp-pl-sidebar .tp-pl-icon svg {
+	width: 13px;
+	height: 13px;
+}
+.tp-pl-sidebar .tp-pl-item-title {
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.35;
+	color: #111827;
+	/* A long title wraps to two lines instead of stretching the row. */
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+@container ( max-width: 520px ) {
 	.tp-pl-sidebar .tp-pl-body {
 		flex-direction: column;
 		align-items: stretch; /* full-width video when stacked */
 	}
-	.tp-pl-sidebar .tp-pl-list {
+	/* Stacked, the body is a COLUMN flex container — flex-basis maps to
+	   HEIGHT, so the row-mode `flex: 1 1 0` collapsed this list to 0px tall
+	   (items clipped, area looked empty) and `flex: 0 1 450px` gave the
+	   stage a 450px height basis. Reset both to content sizing. */
+	.tp-pl-sidebar .tp-pl-main {
+		flex: 0 0 auto;
 		width: 100%;
+		max-width: none;
+	}
+	.tp-pl-sidebar .tp-pl-list {
+		flex: 0 0 auto;
+		width: 100%;
+		max-width: none;
+		min-width: 0;
 		flex-direction: row;
 		overflow-x: auto;
 		max-height: none;
 	}
+	/* Stacked, the rows scroll sideways — size each to its content instead
+	   of letting them share the width and truncate to a few characters. */
+	.tp-pl-sidebar .tp-pl-item {
+		flex: 0 0 auto;
+		width: auto;
+		max-width: 220px;
+	}
+	.tp-pl-sidebar .tp-pl-item-title {
+		-webkit-line-clamp: 1;
+		white-space: nowrap;
+	}
 }
 /* Fallback for browsers without container queries: stack on a narrow viewport. */
 @supports not ( container-type: inline-size ) {
-	@media ( max-width: 700px ) {
+	@media ( max-width: 520px ) {
 		.tp-pl-sidebar .tp-pl-body {
 			flex-direction: column;
 			align-items: stretch;
 		}
-		.tp-pl-sidebar .tp-pl-list {
+		/* Stacked, the body is a COLUMN flex container — flex-basis maps to
+		   HEIGHT, so the row-mode `flex: 1 1 0` collapsed this list to 0px tall
+		   (items clipped, area looked empty) and `flex: 0 1 450px` gave the
+		   stage a 450px height basis. Reset both to content sizing. */
+		.tp-pl-sidebar .tp-pl-main {
+			flex: 0 0 auto;
 			width: 100%;
+			max-width: none;
+		}
+		.tp-pl-sidebar .tp-pl-list {
+			flex: 0 0 auto;
+			width: 100%;
+			max-width: none;
+			min-width: 0;
 			flex-direction: row;
 			overflow-x: auto;
 			max-height: none;
+		}
+		/* Stacked, the rows scroll sideways — size each to its content instead
+		   of letting them share the width and truncate to a few characters. */
+		.tp-pl-sidebar .tp-pl-item {
+			flex: 0 0 auto;
+			width: auto;
+			max-width: 220px;
+		}
+		.tp-pl-sidebar .tp-pl-item-title {
+			-webkit-line-clamp: 1;
+			white-space: nowrap;
 		}
 	}
 }

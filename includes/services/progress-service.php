@@ -302,6 +302,12 @@ class ProgressService {
 		}
 
 		// Events.
+		// A play session actually began (first heartbeat of this session that
+		// carried played seconds). This is the honest trigger for `view.started`:
+		// it fires per view, on real playback, rather than once-ever on mount.
+		if ( $session_start ) {
+			Events::emit( 'view.started', self::event_payload( $video_id, $subject, [ 'coverage_percent' => $percent ] ) );
+		}
 		self::maybe_emit_milestones( $video_id, $subject, $prev_percent, $percent );
 		if ( $viewed && ! $prev_viewed ) {
 			Events::emit( 'view.completed', self::event_payload( $video_id, $subject, [ 'coverage_percent' => $percent ] ) );

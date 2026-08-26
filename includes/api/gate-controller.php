@@ -10,7 +10,6 @@ use WP_REST_Controller;
 use WP_REST_Server;
 use TruePlayer\Subject;
 use TruePlayer\Services\ProgressService;
-use TruePlayer\Events;
 
 /**
  * GET /trueplayer/v1/gate?video=ID
@@ -100,10 +99,11 @@ class GateController extends WP_REST_Controller {
 
 		$state = ProgressService::state( $video_id, $subject );
 
-		$row = ProgressService::get_row( $video_id, $subject );
-		if ( ! $row ) {
-			Events::emit( 'view.started', ProgressService::event_payload( $video_id, $subject ) );
-		}
+		// `view.started` is NOT emitted here. This endpoint runs on mount, before
+		// the viewer has pressed play — and it only ever saw a missing progress
+		// row, so the event fired at most once per (video, subject) for all time
+		// and never again once any coverage was recorded. It now fires from
+		// ProgressService::record() on a real play session instead.
 
 		$state['subject'] = [ 'type' => $subject->type ];
 		return rest_ensure_response( $state );
