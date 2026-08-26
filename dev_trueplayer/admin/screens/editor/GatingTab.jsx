@@ -6,6 +6,15 @@ import { BsTrash } from 'react-icons/bs';
 const uid = () => Math.random().toString( 36 ).slice( 2, 9 );
 
 /**
+ * Hides the "Course completion (Academy LMS)" card in the Questions & gating
+ * tab. The <LmsLink> component below and everything behind it (the lms/options
+ * endpoint, the academy-sync addon, any `config.lms` already saved on a video)
+ * are untouched — this only controls whether the card is offered in the editor.
+ * Flip to true to show it again.
+ */
+const SHOW_LMS_LINK = false;
+
+/**
  * Video → Academy course/lesson link. When set, the academy-sync pro addon
  * gates playback by enrollment and marks the mapped lesson complete when the
  * viewer passes watch-verification / the quiz.
@@ -215,7 +224,7 @@ export default function GatingTab( { config, patch } ) {
 				) }
 			</Card>
 
-			<LmsLink config={ config } patch={ patch } />
+			{ SHOW_LMS_LINK && <LmsLink config={ config } patch={ patch } /> }
 		</div>
 	);
 }

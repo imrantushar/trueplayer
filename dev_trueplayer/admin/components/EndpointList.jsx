@@ -19,13 +19,38 @@ export function EndpointList( { endpoints, onChange } ) {
 		set( i, { events: has ? e.events.filter( ( x ) => x !== ev ) : [ ...( e.events || [] ), ev ] } );
 	};
 
+	/**
+	 * Turn a test result into something an admin can act on. A rejected
+	 * delivery has to say the receiver's reason — "HTTP 422" alone sent us
+	 * chasing a webhook that was firing perfectly well.
+	 */
+	const describeTest = ( res ) => {
+		if ( res.error ) {
+			return { ok: false, text: `Could not reach endpoint: ${ res.error }` };
+		}
+		if ( res.ok ) {
+			return { ok: true, text: `Delivered — HTTP ${ res.code }` };
+		}
+		let reason = ( res.response || '' ).trim();
+		try {
+			const parsed = JSON.parse( reason );
+			reason = parsed.message || parsed.error || reason;
+		} catch ( e ) {
+			// Not JSON — show the raw reply, trimmed.
+		}
+		return {
+			ok: false,
+			text: `Rejected — HTTP ${ res.code }${ reason ? `: ${ reason.slice( 0, 200 ) }` : '' }`,
+		};
+	};
+
 	const test = async ( i ) => {
-		setTesting( ( t ) => ( { ...t, [ i ]: 'sending' } ) );
+		setTesting( ( t ) => ( { ...t, [ i ]: { ok: null, text: 'Sending…' } } ) );
 		try {
 			const res = await api.testWebhook( endpoints[ i ].url, endpoints[ i ].secret );
-			setTesting( ( t ) => ( { ...t, [ i ]: res.ok ? `HTTP ${ res.code }` : `Error: ${ res.error }` } ) );
+			setTesting( ( t ) => ( { ...t, [ i ]: describeTest( res ) } ) );
 		} catch ( e ) {
-			setTesting( ( t ) => ( { ...t, [ i ]: e.message } ) );
+			setTesting( ( t ) => ( { ...t, [ i ]: { ok: false, text: e.message } } ) );
 		}
 	};
 
@@ -38,7 +63,11 @@ export function EndpointList( { endpoints, onChange } ) {
 						<Button variant="ghost" onClick={ () => test( i ) }>Send test</Button>
 						<Button variant="danger" onClick={ () => remove( i ) }><BsTrash /></Button>
 					</div>
-					{ testing[ i ] && <p className="text-xs text-gray-500 mb-2">Test: { testing[ i ] }</p> }
+					{ testing[ i ] && (
+						<p className={ `text-xs mb-2 ${ testing[ i ].ok === false ? 'text-red-600' : testing[ i ].ok ? 'text-green-600' : 'text-gray-500' }` }>
+							Test: { testing[ i ].text }
+						</p>
+					) }
 					<Input className="mb-3" value={ e.secret || '' } onChange={ ( ev ) => set( i, { secret: ev.target.value } ) } placeholder="Signing secret (optional) — used for X-TruePlayer-Signature" />
 					<Toggle checked={ e.active !== false } onChange={ ( v ) => set( i, { active: v } ) } label="Active" />
 					<div className="mt-2">

@@ -121,6 +121,12 @@ class Dispatcher {
 		);
 
 		$code = is_wp_error( $response ) ? 0 : wp_remote_retrieve_response_code( $response );
+		// Keep the receiver's reply. Without it a rejection surfaces as a bare
+		// status code and the actual reason ("required field X missing") is
+		// thrown away, which makes a misconfigured endpoint look like a
+		// webhook that never fired. Truncated so a chatty endpoint can't bloat
+		// the log row.
+		$reply = is_wp_error( $response ) ? '' : (string) wp_remote_retrieve_body( $response );
 
 		/**
 		 * Pro's webhook-logs addon hooks this to persist delivery attempts +
@@ -133,6 +139,7 @@ class Dispatcher {
 				'event'    => $payload['event'] ?? '',
 				'code'     => $code,
 				'error'    => is_wp_error( $response ) ? $response->get_error_message() : '',
+				'response' => function_exists( 'mb_substr' ) ? mb_substr( $reply, 0, 2000 ) : substr( $reply, 0, 2000 ),
 				'payload'  => $payload,
 			]
 		);
