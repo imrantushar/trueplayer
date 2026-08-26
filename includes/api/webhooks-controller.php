@@ -46,14 +46,21 @@ class WebhooksController extends WP_REST_Controller {
 			return new \WP_Error( 'bad_url', __( 'A valid URL is required.', 'trueplayer' ), [ 'status' => 400 ] );
 		}
 
+		// Build it exactly like a live event, including the viewer contact fields
+		// a receiver maps on. The previous test body carried no subject/email at
+		// all, so a correctly-configured CRM rejected the test while real events
+		// went through — the button reported a problem that did not exist.
+		$subject = \TruePlayer\Subject::resolve();
 		$payload = wp_json_encode(
-			[
-				'event'     => 'webhook.test',
-				'video_id'  => 0,
-				'timestamp' => \TruePlayer\Helper::now_iso(),
-				'site'      => wp_parse_url( home_url(), PHP_URL_HOST ),
-				'message'   => 'This is a TruePlayer test delivery.',
-			]
+			\TruePlayer\Events::shape(
+				'webhook.test',
+				[
+					'video_id'    => 0,
+					'video_title' => __( 'Test video', 'trueplayer' ),
+					'subject'     => $subject->to_array(),
+					'message'     => 'This is a TruePlayer test delivery.',
+				]
+			)
 		);
 
 		$headers = [
@@ -68,10 +75,17 @@ class WebhooksController extends WP_REST_Controller {
 		if ( is_wp_error( $response ) ) {
 			return rest_ensure_response( [ 'ok' => false, 'error' => $response->get_error_message() ] );
 		}
+		// `ok` means the receiver ACCEPTED it, not merely that the request
+		// completed. Returning true for a 4xx made a rejection render as a
+		// result ("HTTP 422") with no hint of what was wrong.
+		$code  = (int) wp_remote_retrieve_response_code( $response );
+		$reply = (string) wp_remote_retrieve_body( $response );
+
 		return rest_ensure_response(
 			[
-				'ok'   => true,
-				'code' => wp_remote_retrieve_response_code( $response ),
+				'ok'       => $code >= 200 && $code < 300,
+				'code'     => $code,
+				'response' => function_exists( 'mb_substr' ) ? mb_substr( $reply, 0, 2000 ) : substr( $reply, 0, 2000 ),
 			]
 		);
 	}

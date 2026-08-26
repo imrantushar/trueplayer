@@ -43,7 +43,20 @@ class Events {
 	 * @param string $name    One of self::KNOWN.
 	 * @param array  $payload Event payload.
 	 */
-	public static function emit( $name, array $payload = [] ) {
+	/**
+	 * Build the canonical wire payload for an event.
+	 *
+	 * Split out of emit() so anything that sends a TruePlayer-shaped body
+	 * WITHOUT firing the bus — notably the "Send test" delivery — produces the
+	 * exact same structure. A test that doesn't match real traffic is worse
+	 * than no test: it passes against a receiver that would reject the real
+	 * thing, or fails against one that would accept it.
+	 *
+	 * @param string $name    Event name.
+	 * @param array  $payload Event-specific data.
+	 * @return array
+	 */
+	public static function shape( $name, array $payload = [] ) {
 		$payload = array_merge(
 			[
 				'event'     => $name,
@@ -66,6 +79,12 @@ class Events {
 				$payload[ $field ] = $payload['subject'][ $field ];
 			}
 		}
+
+		return $payload;
+	}
+
+	public static function emit( $name, array $payload = [] ) {
+		$payload = self::shape( $name, $payload );
 
 		/**
 		 * Generic hook (all events) + specific hook (per event name).
