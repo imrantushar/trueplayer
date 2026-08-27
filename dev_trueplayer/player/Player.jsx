@@ -854,9 +854,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			) }
 
 			{ /* Universal poster: works for every provider (not just html5's poster attr).
-			     Audio uses the compact art tile above instead of a full-bleed poster. */ }
+			     Audio uses the compact art tile above instead of a full-bleed poster.
+			     A provider-derived poster is framed for the stage, so it covers;
+			     an author's own poster is contained so nothing is cropped. */ }
 			{ source.poster && ! started && ! error && source.mediaType !== 'audio' && (
-				<div className="tp-poster" style={ { backgroundImage: `url("${ source.poster }")` } } />
+				<div
+					className={ `tp-poster${ source.posterDerived ? ' is-cover' : '' }` }
+					style={ { backgroundImage: `url("${ source.poster }")` } }
+				/>
 			) }
 
 			{ branding.logo && (

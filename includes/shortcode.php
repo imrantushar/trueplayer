@@ -128,6 +128,7 @@ class Shortcode {
 	 */
 	public static function resolved_config( int $video_id ): array {
 		$config = Helper::apply_preset( Helper::get_video_config( $video_id ) );
+		$config = Helper::with_derived_poster( $config );
 		$config = Helper::apply_global_branding( $config );
 		$config = Helper::enforce_pro_limits( $config );
 		if ( Pro::active() ) {
@@ -217,16 +218,12 @@ class Shortcode {
 
 	/**
 	 * VideoObject JSON-LD for SEO (Google video rich results). Requires a
-	 * thumbnail — YouTube posters are derived when none is set. Filterable/
-	 * disable-able via `trueplayer/seo_schema`.
+	 * thumbnail — provider posters are derived upstream (Helper::with_derived_poster)
+	 * when none is set. Filterable/disable-able via `trueplayer/seo_schema`.
 	 */
 	private static function video_schema( int $video_id, array $config ): string {
 		$source = is_array( $config['source'] ?? null ) ? $config['source'] : [];
 		$poster = is_string( $source['poster'] ?? null ) ? $source['poster'] : '';
-		if ( '' === $poster && 'youtube' === ( $source['type'] ?? '' ) ) {
-			$yid = self::youtube_id( $source['src'] ?? '' );
-			$poster = $yid ? 'https://i.ytimg.com/vi/' . $yid . '/hqdefault.jpg' : '';
-		}
 		// Google requires a thumbnail — skip schema rather than emit an invalid one.
 		if ( '' === $poster ) {
 			return '';
@@ -262,13 +259,6 @@ class Shortcode {
 		$is_audio = ( $source['mediaType'] ?? '' ) === 'audio';
 		$poster   = is_string( $source['poster'] ?? null ) ? $source['poster'] : '';
 
-		if ( '' === $poster && 'youtube' === ( $source['type'] ?? '' ) ) {
-			$yid = self::youtube_id( $source['src'] ?? '' );
-			if ( $yid ) {
-				$poster = 'https://i.ytimg.com/vi/' . $yid . '/hqdefault.jpg';
-			}
-		}
-
 		$accent = $config['customize']['appearance']['accent'] ?? ( $config['branding']['accent'] ?? '' );
 		$ratio  = $config['customize']['appearance']['aspectRatio'] ?? '';
 		$rules  = [];
@@ -280,8 +270,25 @@ class Shortcode {
 			$rules[] = 'aspect-ratio:' . str_replace( ':', ' / ', $ratio );
 		}
 		$style = $rules ? sprintf( ' style="%s"', esc_attr( implode( ';', $rules ) ) ) : '';
-		$img   = $poster
-			? sprintf( '<img class="tp-facade-poster" src="%s" alt="" loading="lazy" decoding="async" />', esc_url( $poster ) )
+		// Provider thumbnails are framed to fill the stage, and the smaller
+		// YouTube sizes carry letterbox bars in the pixels — cover crops those
+		// off. An author's own poster keeps `contain` so nothing is cut.
+		$fit = ! empty( $source['posterDerived'] ) ? ' is-cover' : '';
+
+		// A derived poster asks for the widest size first, which YouTube 404s
+		// on non-HD uploads — the rest of the chain rides on the tag for the
+		// runtime to step through (mount.js: attachPosterFallback).
+		$fallbacks = array_values( array_filter( (array) ( $source['posterFallbacks'] ?? [] ), 'is_string' ) );
+		$chain     = $fallbacks
+			? sprintf( ' data-tp-poster-fallback="%s"', esc_attr( wp_json_encode( $fallbacks ) ) )
+			: '';
+		$img = $poster
+			? sprintf(
+				'<img class="tp-facade-poster%s" src="%s" alt="" loading="lazy" decoding="async"%s />',
+				esc_attr( $fit ),
+				esc_url( $poster ),
+				$chain
+			)
 			: '';
 
 		return sprintf(
@@ -291,14 +298,6 @@ class Shortcode {
 			esc_attr__( 'Play video', 'trueplayer' ),
 			$img
 		);
-	}
-
-	/** Extract an 11-char YouTube id from a watch/share/embed URL. */
-	private static function youtube_id( string $url ): string {
-		if ( preg_match( '/(?:v=|\.be\/|embed\/|shorts\/)([\w-]{11})/', $url, $m ) ) {
-			return $m[1];
-		}
-		return '';
 	}
 
 	/**

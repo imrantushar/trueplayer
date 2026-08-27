@@ -98,7 +98,7 @@ export default function Dashboard( { onNavigate, onCreate } ) {
 							const meta = sourceMeta( src );
 							return (
 								<button key={ v.id } onClick={ () => onNavigate( 'editor', { id: v.id } ) } className="flex items-center gap-3 w-full text-left rounded-lg p-2 hover:bg-gray-50">
-									<Thumb poster={ src.poster } type={ src.mediaType === 'audio' ? 'audio' : src.type } />
+									<Thumb source={ src } type={ src.mediaType === 'audio' ? 'audio' : src.type } />
 									<span className="flex-1 min-w-0">
 										<span className="block font-medium text-sm text-ink truncate">{ v.title }</span>
 										<span className="inline-flex mt-1"><Badge tone={ meta.tone }>{ meta.label }</Badge></span>

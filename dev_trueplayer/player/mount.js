@@ -71,6 +71,41 @@ function bootPlayer( node, data, videoId, autoStart ) {
 }
 
 /**
+ * Step a facade poster through its remaining candidates when one 404s.
+ *
+ * A derived provider poster asks for the widest size first; YouTube only
+ * renders `maxresdefault`/`hq720` for HD uploads and 404s them otherwise, so
+ * PHP ships the rest of the chain on the tag. The error may already have fired
+ * before this bundle ran, hence the `complete && !naturalWidth` check as well
+ * as the listener.
+ */
+function attachPosterFallback( facade ) {
+	const img = facade.querySelector( 'img.tp-facade-poster[data-tp-poster-fallback]' );
+	if ( ! img ) {
+		return;
+	}
+	const next = () => {
+		let queue = [];
+		try {
+			queue = JSON.parse( img.dataset.tpPosterFallback || '[]' );
+		} catch ( e ) {
+			queue = [];
+		}
+		if ( ! queue.length ) {
+			// Nothing left to try — the bare facade reads better than a broken image.
+			img.remove();
+			return;
+		}
+		img.dataset.tpPosterFallback = JSON.stringify( queue.slice( 1 ) );
+		img.src = queue[ 0 ];
+	};
+	img.addEventListener( 'error', next );
+	if ( img.complete && ! img.naturalWidth ) {
+		next();
+	}
+}
+
+/**
  * Muted, looped inline preview while hovering the poster facade — Presto-style
  * "muted autoplay preview". Direct-file sources only (no iframe/hls machinery);
  * starts after a short intent delay and is torn down on pointer-leave.
@@ -141,6 +176,9 @@ export function mountPlayers() {
 		}
 
 		const facade = node.querySelector( '.tp-facade' );
+		if ( facade ) {
+			attachPosterFallback( facade );
+		}
 		const autoplay = node.dataset.tpAutoplay === '1';
 		const strategy = node.dataset.tpLoad || ( facade ? 'facade' : 'eager' );
 		const type = data.config && data.config.source && data.config.source.type;

@@ -366,10 +366,10 @@ function RowThumb( { row, byId } ) {
 	if ( 'playlist' === row.kind ) {
 		const first = ( row.item.config?.videos || [] ).map( ( id ) => byId[ id ] ).find( Boolean );
 		const src = first?.config?.source || {};
-		return <Thumb poster={ src.poster } type={ 'audio' === src.mediaType ? 'audio' : src.type } />;
+		return <Thumb source={ src } type={ 'audio' === src.mediaType ? 'audio' : src.type } />;
 	}
 	const src = row.item.config?.source || {};
-	return <Thumb poster={ src.poster } type={ 'audio' === src.mediaType ? 'audio' : src.type } />;
+	return <Thumb source={ src } type={ 'audio' === src.mediaType ? 'audio' : src.type } />;
 }
 
 function RowBadges( { row } ) {

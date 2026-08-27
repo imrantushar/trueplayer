@@ -66,7 +66,7 @@ class Playlist {
 		if ( get_post_type( $video_id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
 			return null;
 		}
-		$config = Shortcode::strip_answer_keys( Helper::apply_preset( Helper::get_video_config( $video_id ) ) );
+		$config = Shortcode::strip_answer_keys( Helper::with_derived_poster( Helper::apply_preset( Helper::get_video_config( $video_id ) ) ) );
 		return [
 			'videoId' => $video_id,
 			'title'   => get_the_title( $video_id ),

@@ -143,6 +143,145 @@ class Helper {
 		return $config;
 	}
 
+	/** Extract an 11-char YouTube id from a watch/share/embed/shorts URL. */
+	public static function youtube_id( string $url ): string {
+		if ( preg_match( '/(?:v=|\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/', $url, $m ) ) {
+			return $m[1];
+		}
+		return '';
+	}
+
+	/** Extract the numeric id from a Vimeo URL. */
+	public static function vimeo_id( string $url ): string {
+		if ( preg_match( '/vimeo\.com\/(?:video\/)?(\d+)/', $url, $m ) ) {
+			return $m[1];
+		}
+		return '';
+	}
+
+	/**
+	 * The ordered YouTube thumbnail candidates for an id, widest first.
+	 *
+	 * `maxresdefault` / `hq720` are true 16:9 at 1280x720; `hqdefault` is only
+	 * 480x360 with letterbox bars baked in, so it is the last resort — it was
+	 * the sole poster before, which is why derived posters looked upscaled and
+	 * boxed inside a 16:9 stage. Not every video has the HD variants (YouTube
+	 * 404s them), hence the chain: the client walks it on error.
+	 */
+	public static function youtube_poster_candidates( string $yid ): array {
+		if ( '' === $yid ) {
+			return [];
+		}
+		$base = 'https://i.ytimg.com/vi/' . $yid . '/';
+		return [ $base . 'maxresdefault.jpg', $base . 'hq720.jpg', $base . 'sddefault.jpg', $base . 'hqdefault.jpg' ];
+	}
+
+	/**
+	 * Re-request a Vimeo CDN thumbnail at a given width.
+	 *
+	 * oEmbed hands back a small render (…-d_960), and the size lives in a
+	 * mandatory `-d_<width>` path suffix — strip it and the URL 404s, so this
+	 * rewrites the suffix rather than removing it. Width alone (no `x<height>`)
+	 * keeps the frame's own aspect ratio; the stage crops via CSS.
+	 *
+	 * @param string $url   Thumbnail URL from oEmbed.
+	 * @param int    $width Desired width in pixels.
+	 */
+	private static function vimeo_thumb_width( string $url, int $width ): string {
+		if ( ! preg_match( '#^https://[\w.-]*vimeocdn\.com/#', $url ) ) {
+			return $url;
+		}
+		$parts = explode( '?', $url, 2 );
+		$path  = preg_replace( '/-d_\d+(x\d+)?$/', '', $parts[0] ) . '-d_' . $width;
+		return isset( $parts[1] ) ? $path . '?' . $parts[1] : $path;
+	}
+
+	/**
+	 * Vimeo's own thumbnail for a video, at the largest size oEmbed offers.
+	 *
+	 * Unlike YouTube, Vimeo publishes no guessable thumbnail URL, so this costs
+	 * a remote call — and that call sits on a page render, so it is fenced: the
+	 * result is cached for a day, the miss is claimed before the request goes
+	 * out (a slow Vimeo delays one render, not every concurrent one), and a
+	 * failure is remembered briefly so a broken video does not re-fetch on
+	 * every view. Saving a video warms this ahead of the first render.
+	 */
+	public static function vimeo_poster( string $vid ): string {
+		if ( '' === $vid ) {
+			return '';
+		}
+		$key    = 'tp_vimeo_poster_' . $vid;
+		$cached = get_transient( $key );
+		if ( is_string( $cached ) ) {
+			return $cached;
+		}
+		// Claim the miss first — concurrent renders skip the call and paint
+		// posterless instead of queueing behind the same request.
+		set_transient( $key, '', 15 * MINUTE_IN_SECONDS );
+
+		$poster = '';
+		$res    = wp_safe_remote_get(
+			'https://vimeo.com/api/oembed.json?url=' . rawurlencode( 'https://vimeo.com/' . $vid ),
+			[ 'timeout' => 3 ]
+		);
+		if ( ! is_wp_error( $res ) && 200 === wp_remote_retrieve_response_code( $res ) ) {
+			$body = json_decode( wp_remote_retrieve_body( $res ), true );
+			if ( is_array( $body ) && ! empty( $body['thumbnail_url'] ) ) {
+				$poster = self::vimeo_thumb_width( (string) $body['thumbnail_url'], 1280 );
+			}
+		}
+		if ( '' !== $poster ) {
+			set_transient( $key, $poster, DAY_IN_SECONDS );
+		}
+		return $poster;
+	}
+
+	/**
+	 * The poster to paint for a source when the author set none: the provider's
+	 * own thumbnail, at the best resolution it publishes.
+	 *
+	 * Returns [ url, fallbacks ] — `fallbacks` is the rest of the candidate
+	 * chain for providers (YouTube) that 404 their HD sizes on some videos.
+	 */
+	public static function derive_poster( array $source ): array {
+		$type = (string) ( $source['type'] ?? '' );
+		$src  = (string) ( $source['src'] ?? '' );
+
+		if ( 'youtube' === $type ) {
+			$candidates = self::youtube_poster_candidates( self::youtube_id( $src ) );
+			if ( $candidates ) {
+				return [ array_shift( $candidates ), $candidates ];
+			}
+		} elseif ( 'vimeo' === $type ) {
+			$poster = self::vimeo_poster( self::vimeo_id( $src ) );
+			if ( '' !== $poster ) {
+				return [ $poster, [] ];
+			}
+		}
+		return [ '', [] ];
+	}
+
+	/**
+	 * Fill `source.poster` from the provider when the author left it empty, so
+	 * every frontend consumer (facade, player, playlist, SEO schema, ambient
+	 * skin) paints the same image. Render-time only — the admin editor reads
+	 * raw meta, so a derived poster is never written back as an author choice.
+	 */
+	public static function with_derived_poster( array $config ): array {
+		$source = is_array( $config['source'] ?? null ) ? $config['source'] : [];
+		if ( ! empty( $source['poster'] ) && is_string( $source['poster'] ) ) {
+			return $config;
+		}
+		list( $poster, $fallbacks ) = self::derive_poster( $source );
+		if ( '' === $poster ) {
+			return $config;
+		}
+		$config['source']['poster']          = $poster;
+		$config['source']['posterFallbacks'] = $fallbacks;
+		$config['source']['posterDerived']   = true;
+		return $config;
+	}
+
 	/**
 	 * The product name shown in the admin and any attribution. White-label (pro)
 	 * hooks `trueplayer/brand_name` to override it.

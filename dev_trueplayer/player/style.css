@@ -39,6 +39,13 @@
 	object-fit: contain;
 	background: #000;
 }
+/* Provider-derived posters (YouTube/Vimeo) are already framed for the stage,
+   and YouTube's smaller sizes bake letterbox bars into the pixels — cover
+   fills the frame and crops those away. Author-uploaded posters stay
+   `contain` so an off-ratio image is never cut. */
+.tp-facade-poster.is-cover {
+	object-fit: cover;
+}
 .tp-hover-preview {
 	object-fit: cover;
 	animation: tp-preview-in 0.25s ease;
@@ -288,6 +295,9 @@
 	background-repeat: no-repeat;
 	background-color: #000;
 	z-index: 3;
+}
+.tp-poster.is-cover {
+	background-size: cover;
 }
 
 .tp-logo {

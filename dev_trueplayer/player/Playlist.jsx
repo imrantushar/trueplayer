@@ -48,7 +48,15 @@ function Facade( { config, onPlay } ) {
 
 	return (
 		<button type="button" className={ `tp-facade${ isAudio ? ' is-audio' : '' }` } style={ style } aria-label="Play video" onClick={ onPlay }>
-			{ poster && <img className="tp-facade-poster" src={ poster } alt="" loading="lazy" decoding="async" /> }
+			{ poster && (
+				<img
+					className={ `tp-facade-poster${ source.posterDerived ? ' is-cover' : '' }` }
+					src={ poster }
+					alt=""
+					loading="lazy"
+					decoding="async"
+				/>
+			) }
 			<span className="tp-facade-btn">
 				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
 			</span>
