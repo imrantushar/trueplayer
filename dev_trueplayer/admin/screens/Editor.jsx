@@ -186,7 +186,11 @@ export default function Editor( { id, onEditState } ) {
 					directly so they hold position while the taller middle column scrolls;
 					items-start keeps grid tracks from stretching, which is what gives the
 					sticky children room to stick. */ }
-				<div className="flex flex-col gap-4 xl:grid xl:grid-cols-[2fr_5fr_3fr] xl:items-start">
+				{ /* The preview column carries a scaled-down copy of the real player,
+					 so its width is what decides whether the skin is legible — it gets
+					 the extra track. The settings column keeps enough room for its
+					 two-across field rows. */ }
+				<div className="flex flex-col gap-4 xl:grid xl:grid-cols-[2fr_5fr_4fr] xl:items-start">
 					{ /* Column 1 — the video editor's own step menu. */ }
 					<aside className="w-full bg-white border border-line rounded-card xl:sticky xl:top-[104px]">
 						<nav className="p-1.5 space-y-1">

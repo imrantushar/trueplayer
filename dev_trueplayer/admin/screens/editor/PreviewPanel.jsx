@@ -26,10 +26,20 @@ import { withDerivedPoster } from '../../utils/poster';
  */
 
 /**
- * The width the preview pretends to be: a typical single-column content width,
- * comfortably above the player's 480px compact breakpoint.
+ * The width the preview pretends to be.
+ *
+ * Every pixel of reference width above the panel's real width is paid for in
+ * shrinkage: the miniature renders at `panelWidth / REFERENCE_WIDTH`, so a 760
+ * reference in a ~380px column drew the whole player — control bar, time,
+ * skin — at 50%, which is where the skins stopped being legible enough to
+ * choose between.
+ *
+ * The only thing the reference has to buy is staying clear of the player's
+ * compact control bar, which is a `@container (max-width: 480px)` rule in
+ * player/style.css. So sit just above that and no higher: same full-size bar,
+ * ~1.5x more of it on screen. Raising this again re-shrinks the preview.
  */
-const REFERENCE_WIDTH = 760;
+const REFERENCE_WIDTH = 520;
 export default function PreviewPanel( { id, config, onDuration, previewCue = null } ) {
 	const [ bump, setBump ] = useState( 0 );
 	const hasSource = hasVideoSource( config.source || {} );
