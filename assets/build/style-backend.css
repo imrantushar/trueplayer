@@ -1731,8 +1731,8 @@ body[class*="page_trueplayer"] #wpbody-content {
 		.xl\:w-\[400px\] {
 				width: 400px;
 		}
-		.xl\:grid-cols-\[2fr_5fr_3fr\] {
-				grid-template-columns: 2fr 5fr 3fr;
+		.xl\:grid-cols-\[2fr_5fr_4fr\] {
+				grid-template-columns: 2fr 5fr 4fr;
 		}
 		.xl\:flex-row {
 				flex-direction: row;
