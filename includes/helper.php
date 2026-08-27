@@ -290,6 +290,35 @@ class Helper {
 		return (string) apply_filters( 'trueplayer/brand_name', 'TruePlayer' );
 	}
 
+	/**
+	 * The site owner's own mark, when white-label is on (pro). Empty otherwise —
+	 * the admin then falls back to TruePlayer's built-in play glyph.
+	 */
+	public static function brand_logo(): string {
+		return (string) apply_filters( 'trueplayer/brand_logo', '' );
+	}
+
+	/**
+	 * The site-wide watch-verification policy, with every key present.
+	 *
+	 * One source of truth for three consumers that used to keep their own copy:
+	 * the settings screen, a video's gating config, and the per-video editor.
+	 * The editor's copy was the damaging one — it wrote its hardcoded `false`
+	 * for `requireLogin` into every video the moment anyone opened the Questions
+	 * & gating tab, so the site-wide toggle silently stopped applying.
+	 */
+	public static function enforcement_defaults(): array {
+		$saved = self::get_settings_section( 'enforcement' );
+		return [
+			'completionThreshold' => isset( $saved['completionThreshold'] ) ? (int) $saved['completionThreshold'] : 90,
+			'antiSkip'            => array_key_exists( 'antiSkip', $saved ) ? (bool) $saved['antiSkip'] : true,
+			'maxAttempts'         => isset( $saved['maxAttempts'] ) ? (int) $saved['maxAttempts'] : 3,
+			'requireLogin'        => array_key_exists( 'requireLogin', $saved ) ? (bool) $saved['requireLogin'] : false,
+			'strict'              => array_key_exists( 'strict', $saved ) ? (bool) $saved['strict'] : false,
+			'trackGuests'         => array_key_exists( 'trackGuests', $saved ) ? (bool) $saved['trackGuests'] : true,
+		];
+	}
+
 	/** Recursive array merge where $over wins; list (numeric) arrays are replaced. */
 	private static function deep_merge( array $base, array $over ): array {
 		foreach ( $over as $k => $v ) {

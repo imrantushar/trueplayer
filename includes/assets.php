@@ -183,7 +183,26 @@ class Assets {
 			'is_admin'         => (bool) current_user_can( 'manage_options' ),
 			'addons'           => $trueplayer_addons,
 			'is_pro_active'    => \TruePlayer\Pro::active(),
+			// Whether the pro plugin is *installed*, which is a different
+			// question from whether it is licensed. Someone with Pro running on
+			// an unactivated key must be asked to activate, not to buy again.
+			'is_pro_installed' => (bool) trueplayer_is_pro_active(),
+			// Distinct from is_pro_active: the pro plugin can be running on the
+			// permissive pre-license default, and the settings screen must not
+			// call that "your license is valid". See Pro::license_status().
+			'license_status'   => \TruePlayer\Pro::license_status(),
+			'license_url'      => \TruePlayer\Pro::license_page_url(),
 			'feature_flags'    => \TruePlayer\Pro::feature_flags(),
+			// The site's own name/mark when white-label is on, so the React
+			// admin matches the WP menu instead of always saying "TruePlayer".
+			'brand'            => [
+				'name' => \TruePlayer\Helper::brand_name(),
+				'logo' => \TruePlayer\Helper::brand_logo(),
+			],
+			// The site-wide watch-verification policy. The per-video gating tab
+			// seeds from this so opening it can't silently overwrite the site
+			// setting with a hardcoded default (see Helper::enforcement_defaults).
+			'enforcement'      => \TruePlayer\Helper::enforcement_defaults(),
 			// Site-wide player customization defaults. Per-video config is
 			// layered over this on the client (resolveCustomize).
 			'player_defaults'  => self::player_defaults(),

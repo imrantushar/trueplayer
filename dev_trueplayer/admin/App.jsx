@@ -174,7 +174,19 @@ export default function App() {
 							) }
 							{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library' ) } /> }
 							{ route.name === 'presets' && <Presets onEditState={ setEditState } /> }
-							{ route.name === 'settings' && <Settings onEditState={ setEditState } /> }
+							{ /* The settings section rides in the URL, so a reload keeps it —
+							     replaceState, not push, so switching sections doesn't bury the
+							     page the user arrived from under a stack of back-button steps. */ }
+							{ route.name === 'settings' && (
+								<Settings
+									tab={ route.tab || 'general' }
+									onTabChange={ ( tab ) => {
+										window.history.replaceState( {}, '', routeUrl( 'settings', { tab } ) );
+										setRoute( ( r ) => ( { ...r, tab } ) );
+									} }
+									onEditState={ setEditState }
+								/>
+							) }
 						</div>
 					</main>
 				) }

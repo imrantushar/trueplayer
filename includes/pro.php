@@ -49,6 +49,30 @@ class Pro {
 		return (bool) apply_filters( 'trueplayer/license_valid', true );
 	}
 
+	/**
+	 * What to *tell* an admin about the licence — which is not the same question
+	 * as license_valid(), whose permissive default (see above) made the settings
+	 * screen claim "your license is valid" to someone who had never entered a
+	 * key. One of:
+	 *   active       — a key is entered and the store validated it
+	 *   inactive     — a license server is configured but there is no valid key
+	 *   unconfigured — this build has no license server; nothing to activate
+	 */
+	public static function license_status(): string {
+		$status = (string) apply_filters( 'trueplayer/license_status', 'unconfigured' );
+		return in_array( $status, [ 'active', 'inactive', 'unconfigured' ], true ) ? $status : 'unconfigured';
+	}
+
+	/**
+	 * Where an admin actually manages the key. The pro plugin's SDK registers
+	 * its own page and points this at it; empty means there is nowhere to go
+	 * (no license server for this build), which the settings screen honours by
+	 * not offering a dead link.
+	 */
+	public static function license_page_url(): string {
+		return (string) apply_filters( 'trueplayer/license_page_url', '' );
+	}
+
 	/** Per-feature gate (room to refine per-addon later). */
 	public static function can( string $feature ): bool {
 		return self::active();

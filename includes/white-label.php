@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * across the admin with the site owner's brand and hides the player's
  * "Powered by" attribution. Gated on Pro::active().
  *
- * Settings shape: settings.whiteLabel = { enabled: bool, brand: string }.
+ * Settings shape: settings.whiteLabel = { enabled: bool, brand: string, logo: string }.
  */
 class WhiteLabel {
 
@@ -29,6 +29,16 @@ class WhiteLabel {
 		if ( '' !== $brand ) {
 			add_filter( 'trueplayer/brand_name', static function () use ( $brand ) {
 				return $brand;
+			} );
+		}
+
+		// The mark that goes with the name — the WP menu icon and the React
+		// admin's own header both read it, so a rebranded install doesn't keep
+		// showing TruePlayer's play glyph next to the owner's name.
+		$logo = trim( (string) ( $wl['logo'] ?? '' ) );
+		if ( '' !== $logo ) {
+			add_filter( 'trueplayer/brand_logo', static function () use ( $logo ) {
+				return $logo;
 			} );
 		}
 

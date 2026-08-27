@@ -349,19 +349,21 @@ class ProgressService {
 		$gating = isset( $config['gating'] ) && is_array( $config['gating'] ) ? $config['gating'] : [];
 
 		// Site-wide enforcement policy provides the defaults; a video's own
-		// gating config overrides any of them.
-		$enf = Helper::get_settings_section( 'enforcement' );
+		// gating config overrides any of them. The editor only persists a key
+		// once the author moves it off the site value (GatingTab), so anything
+		// missing here is a genuine "inherit", not an accident.
+		$enf = Helper::enforcement_defaults();
 		$gating = wp_parse_args(
 			$gating,
 			[
-				'completionThreshold' => isset( $enf['completionThreshold'] ) ? (int) $enf['completionThreshold'] : 90,
-				'antiSkip'            => array_key_exists( 'antiSkip', $enf ) ? (bool) $enf['antiSkip'] : true,
-				'maxAttempts'         => isset( $enf['maxAttempts'] ) ? (int) $enf['maxAttempts'] : 3,
+				'completionThreshold' => $enf['completionThreshold'],
+				'antiSkip'            => $enf['antiSkip'],
+				'maxAttempts'         => $enf['maxAttempts'],
 				'onFail'              => 'lock_retry_after_rewatch',
 				'checkpoints'         => [],
 				'finalQuiz'           => null,
-				'requireLoginForGate' => array_key_exists( 'requireLogin', $enf ) ? (bool) $enf['requireLogin'] : false,
-				'strict'              => array_key_exists( 'strict', $enf ) ? (bool) $enf['strict'] : false, // must-watch: 100% coverage, no skipping
+				'requireLoginForGate' => $enf['requireLogin'],
+				'strict'              => $enf['strict'], // must-watch: 100% coverage, no skipping
 				'availableFrom'       => '', // drip: ISO/date string; empty = always available
 			]
 		);

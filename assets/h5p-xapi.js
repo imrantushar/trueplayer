@@ -54,6 +54,116 @@
 		} catch ( e ) {}
 	}
 
+	/**
+	 * Persist the answer state as soon as it changes, and again on the way out.
+	 *
+	 * H5P core already autosaves, but only on two triggers, and neither covers
+	 * the obvious case of answering a question and reloading:
+	 *   - a timer every `saveFreq` seconds (30 by default), and
+	 *   - a save three seconds after an xAPI `completed` or `progressed` verb —
+	 *     which question types don't emit; MultiChoice reports `answered`.
+	 * Its own leaving-the-page fallback uses a synchronous XHR, which browsers
+	 * now block during page dismissal, so it silently loses the state too.
+	 *
+	 * So: debounce a save off any interaction, and use sendBeacon on the way out
+	 * (the one transport designed to survive dismissal). H5P.setUserData
+	 * de-duplicates identical payloads itself, so the extra calls are cheap.
+	 */
+	( function attachStateSaving() {
+		var I = window.H5PIntegration;
+		// No signed-in user (or saving switched off) means H5P stores nothing —
+		// there is no identity to resume a logged-out visitor against.
+		if ( ! I || ! I.user || I.saveFreq === false || ! H5P.setUserData ) {
+			return;
+		}
+
+		var DEBOUNCE_MS = 1200;
+		var timer = null;
+
+		function statefulInstances() {
+			return ( H5P.instances || [] ).filter( function ( inst ) {
+				return inst && typeof inst.getCurrentState === 'function';
+			} );
+		}
+
+		function saveNow() {
+			statefulInstances().forEach( function ( inst ) {
+				var state;
+				try {
+					state = inst.getCurrentState();
+				} catch ( e ) {
+					return;
+				}
+				if ( state === undefined ) {
+					return;
+				}
+				// `async` is left alone: H5P uses jQuery.ajax here, and the
+				// dismissal case is covered by the beacon below instead.
+				H5P.setUserData( inst.contentId, 'state', state, { deleteOnChange: true } );
+			} );
+		}
+
+		function scheduleSave() {
+			clearTimeout( timer );
+			timer = setTimeout( saveNow, DEBOUNCE_MS );
+		}
+
+		H5P.externalDispatcher.on( 'xAPI', function ( event ) {
+			var st = event && event.data && event.data.statement;
+			var id = st && st.verb && st.verb.id ? st.verb.id : '';
+			if ( id.indexOf( 'interacted' ) !== -1 || id.indexOf( 'answered' ) !== -1 ) {
+				scheduleSave();
+			}
+		} );
+
+		/**
+		 * Leaving the page: flush whatever the debounce is still holding.
+		 * `pagehide` fires where `beforeunload` does not (bfcache, mobile tab
+		 * switches), and a beacon is not cancelled by the navigation.
+		 */
+		function flushOnExit() {
+			clearTimeout( timer );
+			if ( ! navigator.sendBeacon || ! I.ajax || ! I.ajax.contentUserData ) {
+				saveNow();
+				return;
+			}
+			statefulInstances().forEach( function ( inst ) {
+				var state;
+				try {
+					state = inst.getCurrentState();
+				} catch ( e ) {
+					return;
+				}
+				if ( state === undefined ) {
+					return;
+				}
+				var url = I.ajax.contentUserData
+					.replace( ':contentId', inst.contentId )
+					.replace( ':dataType', 'state' )
+					.replace( ':subContentId', 0 );
+				var body = new URLSearchParams( {
+					data: JSON.stringify( state ),
+					preload: '1',
+					invalidate: '1',
+					contentHash: 0,
+				} );
+				try {
+					navigator.sendBeacon(
+						url,
+						new Blob( [ body.toString() ], { type: 'application/x-www-form-urlencoded' } )
+					);
+				} catch ( e ) {}
+			} );
+		}
+
+		window.addEventListener( 'pagehide', flushOnExit );
+		document.addEventListener( 'visibilitychange', function () {
+			if ( document.visibilityState === 'hidden' ) {
+				flushOnExit();
+			}
+		} );
+	} )();
+
 	H5P.externalDispatcher.on( 'xAPI', function ( event ) {
 		var s = event && event.data && event.data.statement;
 		if ( ! s || ! s.verb ) {

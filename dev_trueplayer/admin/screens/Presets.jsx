@@ -161,12 +161,12 @@ export default function Presets( { onEditState } ) {
 
 			{ adding && (
 				<Modal
-					title="Add preset"
+					title="Create preset"
 					onClose={ () => setAdding( false ) }
 					footer={
 						<>
 							<Button variant="ghost" onClick={ () => setAdding( false ) }>Cancel</Button>
-							<Button onClick={ create } disabled={ busy }>{ busy ? 'Creating…' : 'Create & edit' }</Button>
+							<Button onClick={ create } disabled={ busy }>{ busy ? 'Creating…' : 'Create preset' }</Button>
 						</>
 					}
 				>

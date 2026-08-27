@@ -60,7 +60,7 @@ class Menu {
 			'manage_options',
 			TRUEPLAYER_PLUGIN_SLUG,
 			[ $this, 'render_app' ],
-			'dashicons-format-video',
+			self::menu_icon(),
 			30
 		);
 
@@ -76,6 +76,16 @@ class Menu {
 		foreach ( $subs as $page_slug => $label ) {
 			add_submenu_page( $slug, $label . ' – ' . $brand, $label, 'manage_options', $page_slug, [ $this, 'render_app' ] );
 		}
+	}
+
+	/**
+	 * The menu mark: the owner's own logo when white-label supplies one,
+	 * otherwise WordPress's video dashicon. add_menu_page takes a URL here as
+	 * happily as a dashicon name, so a custom logo needs no extra plumbing.
+	 */
+	private static function menu_icon(): string {
+		$logo = \TruePlayer\Helper::brand_logo();
+		return $logo ? esc_url_raw( $logo ) : 'dashicons-format-video';
 	}
 
 	public function render_app() {

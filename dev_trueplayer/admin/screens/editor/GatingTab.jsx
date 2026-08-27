@@ -144,17 +144,52 @@ function QuestionList( { questions, onChange } ) {
 	);
 }
 
+/**
+ * The site-wide watch-verification policy (Settings → Enforcement), which this
+ * tab inherits from. Localized by PHP so both sides agree on one set of
+ * defaults — see Helper::enforcement_defaults().
+ */
+function sitePolicy() {
+	const e = ( window.TruePlayerGlobal && window.TruePlayerGlobal.enforcement ) || {};
+	return {
+		completionThreshold: typeof e.completionThreshold === 'number' ? e.completionThreshold : 90,
+		antiSkip: e.antiSkip !== undefined ? !! e.antiSkip : true,
+		maxAttempts: typeof e.maxAttempts === 'number' ? e.maxAttempts : 3,
+		requireLoginForGate: !! e.requireLogin,
+	};
+}
+
+// Keys this tab inherits from the site policy. Everything else on `gating`
+// (checkpoints, finalQuiz, …) is this video's own content and always persists.
+const POLICY_KEYS = [ 'completionThreshold', 'antiSkip', 'maxAttempts', 'requireLoginForGate' ];
+
 export default function GatingTab( { config, patch } ) {
+	const policy = sitePolicy();
 	const gating = {
-		completionThreshold: 90,
-		antiSkip: true,
-		maxAttempts: 3,
-		requireLoginForGate: false,
+		...policy,
 		checkpoints: [],
 		finalQuiz: null,
 		...( config.gating || {} ),
 	};
-	const set = ( partial ) => patch( { gating: { ...gating, ...partial } } );
+
+	/**
+	 * Persist only genuine overrides.
+	 *
+	 * This tab used to seed hardcoded defaults and write the whole object back,
+	 * so merely opening it stamped `requireLoginForGate: false` onto the video —
+	 * which then shadowed the site-wide "Require login to watch" for good, with
+	 * nothing in the UI to say so. A policy key that still matches the site
+	 * value is dropped instead, leaving the video to inherit it.
+	 */
+	const set = ( partial ) => {
+		const next = { ...gating, ...partial };
+		POLICY_KEYS.forEach( ( key ) => {
+			if ( next[ key ] === policy[ key ] ) {
+				delete next[ key ];
+			}
+		} );
+		patch( { gating: next } );
+	};
 
 	const addCheckpoint = () =>
 		set( { checkpoints: [ ...gating.checkpoints, { id: uid(), at: 30, title: '', passPercent: 70, questions: [] } ] } );
@@ -179,6 +214,7 @@ export default function GatingTab( { config, patch } ) {
 				</div>
 				<Toggle className="mb-6" checked={ gating.antiSkip } onChange={ ( v ) => set( { antiSkip: v } ) } label="Anti-skip (block seeking past unwatched parts)" />
 				<Toggle checked={ gating.requireLoginForGate } onChange={ ( v ) => set( { requireLoginForGate: v } ) } label="Require login to watch (reliable per-person tracking)" />
+				<p className="text-xs text-muted mt-4">These start from your site-wide policy (Settings → Enforcement). Change one here and this video keeps your value; leave it and it follows the site.</p>
 			</Card>
 
 			<Card className="p-6 max-w-2xl">

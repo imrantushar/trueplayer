@@ -1,16 +1,29 @@
 import { Card, Button, Badge } from './UI';
 import { Icon } from './icons';
+import { isProInstalled } from '../pro';
 
 /**
- * Shown in place of a pro-only screen/tab when no license is active.
+ * Shown in place of a pro-only screen/tab when the feature isn't available.
+ *
+ * Two different reasons land here, and they need opposite calls to action: no
+ * Pro plugin at all (buy it), or Pro installed on a license that isn't active
+ * (activate it). Sending the second group to the store tells someone to
+ * purchase what they already own.
  */
-export default function UpsellPanel( { title, features = [] } ) {
+export default function UpsellPanel( { title, features = [], onNavigate } ) {
 	const purchase = ( window.TruePlayerGlobal && window.TruePlayerGlobal.purchase_url ) || 'https://kodezen.com/trueplayer';
+	const licenseUrl = ( window.TruePlayerGlobal && window.TruePlayerGlobal.license_url ) || '';
+	const needsLicense = isProInstalled();
+
 	return (
 		<Card className="p-8 max-w-xl mx-auto text-center">
 			<Badge tone="brand">TruePlayer Pro</Badge>
 			<h3 className="text-lg font-semibold text-ink mt-3 mb-1">{ title }</h3>
-			<p className="text-sm text-gray-500 mb-4">This is a Pro feature. Unlock the intelligence layer of TruePlayer.</p>
+			<p className="text-sm text-gray-500 mb-4">
+				{ needsLicense
+					? 'TruePlayer Pro is installed, but its license isn’t active — activate it to switch this on.'
+					: 'This is a Pro feature. Unlock the intelligence layer of TruePlayer.' }
+			</p>
 			{ features.length > 0 && (
 				<ul className="text-sm text-gray-600 text-left inline-block mb-5 space-y-1">
 					{ features.map( ( f ) => (
@@ -19,9 +32,21 @@ export default function UpsellPanel( { title, features = [] } ) {
 				</ul>
 			) }
 			<div className="flex gap-2 justify-center">
-				<a href={ purchase } target="_blank" rel="noreferrer">
-					<Button>Upgrade to Pro</Button>
-				</a>
+				{ needsLicense ? (
+					<Button onClick={ () => {
+						if ( onNavigate ) {
+							onNavigate();
+						} else if ( licenseUrl ) {
+							window.location.href = licenseUrl;
+						}
+					} }>
+						Activate license
+					</Button>
+				) : (
+					<a href={ purchase } target="_blank" rel="noreferrer">
+						<Button>Upgrade to Pro</Button>
+					</a>
+				) }
 			</div>
 		</Card>
 	);

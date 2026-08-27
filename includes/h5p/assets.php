@@ -173,12 +173,40 @@ class Assets {
 			'resizeCode'      => '',
 			'url'             => site_url(),
 			'title'           => $content['title'] ?? '',
-			'displayOptions'  => $core->getDisplayOptionsForView( $content['disable'], (int) ( $content['user_id'] ?? 0 ) ),
+			'displayOptions'  => self::display_options( $content ),
 			'metadata'        => $content['metadata'] ?? [],
 			'contentUserData' => isset( self::$settings['user'] )
 				? UserData::preloaded( (int) $content['id'], get_current_user_id() )
 				: [ 0 => [] ],
 		];
+	}
+
+	/**
+	 * Which frame buttons the H5P footer may show.
+	 *
+	 * H5P decides this from the content's `disable` bitmask plus its own site
+	 * options, which left Reuse and Embed switched on for every item — but the
+	 * things behind them are not wired here: `exportUrl` and `embedCode` are
+	 * empty, and .h5p export is off by default (Core::core), so Download
+	 * silently did nothing and Embed offered an empty snippet. TruePlayer's
+	 * embed story is the video's own Embed tab (a shortcode/iframe that keeps
+	 * gating and analytics), so the honest thing is not to advertise these
+	 * until they exist. Filterable for a build that does wire them up.
+	 *
+	 * @param array $content A content array from H5PCore::loadContent().
+	 * @return array
+	 */
+	private static function display_options( array $content ): array {
+		$core    = Core::core();
+		$options = $core->getDisplayOptionsForView( $content['disable'], (int) ( $content['user_id'] ?? 0 ) );
+
+		// Export → the .h5p download behind "Reuse"; copy → its clipboard entry,
+		// which only means anything to an H5P editor that can paste.
+		$options[ \H5PCore::DISPLAY_OPTION_DOWNLOAD ] = false;
+		$options[ \H5PCore::DISPLAY_OPTION_EMBED ]    = false;
+		$options[ \H5PCore::DISPLAY_OPTION_COPY ]     = false;
+
+		return (array) apply_filters( 'trueplayer/h5p/display_options', $options, $content );
 	}
 
 	/**
