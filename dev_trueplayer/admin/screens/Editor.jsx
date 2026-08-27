@@ -109,8 +109,15 @@ export default function Editor( { id, onEditState } ) {
 		return () => clearTimeout( t );
 	}, [ toast ] );
 
+	// `partial` may be a function of the current config, for callers whose patch
+	// lands after an await (the poster capture): a plain object would carry the
+	// snapshot they closed over and undo anything edited in the meantime.
 	const patchConfig = useCallback( ( partial ) => {
-		setVideo( ( v ) => ( { ...v, config: { ...( v.config || {} ), ...partial } } ) );
+		setVideo( ( v ) => {
+			const config = v.config || {};
+			const next = typeof partial === 'function' ? partial( config ) : partial;
+			return { ...v, config: { ...config, ...next } };
+		} );
 		setDirty( true );
 	}, [] );
 
@@ -249,7 +256,7 @@ export default function Editor( { id, onEditState } ) {
 							<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
 						) : (
 							<>
-								{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } /> }
+								{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } videoId={ id } /> }
 								{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } sub={ activeSub.player } /> }
 								{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
 								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } previewingId={ previewCue?.overlayId || null } /> }

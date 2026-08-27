@@ -6,6 +6,24 @@ export const api = {
 	createVideo: ( title, config = {} ) => rest.post( 'videos', { title, config } ),
 	updateVideo: ( id, data ) => rest.put( `videos/${ id }`, data ),
 	deleteVideo: ( id ) => rest.del( `videos/${ id }` ),
+
+	/**
+	 * Store a frame captured from a self-hosted video as that video's poster.
+	 *
+	 * The pixels come from the browser (see admin/utils/frameCapture.js) — the
+	 * server can't decode video — and come back as a media-library attachment
+	 * URL, so the poster behaves like any other image the author picked.
+	 *
+	 * `src` names the file the frame came from, so the poster can be named
+	 * after it — the capture runs before the editor is saved, so the server's
+	 * copy of the config still points at whatever file was there before.
+	 *
+	 * @param {number} id   Video id.
+	 * @param {Blob}   blob The captured frame.
+	 * @param {string} src  The video file the frame was captured from.
+	 * @return {Promise<{id: number, url: string}>} The stored attachment.
+	 */
+	savePoster: ( id, blob, src ) => rest.upload( `videos/${ id }/poster?src=${ encodeURIComponent( src ) }`, blob ),
 	getSettings: () => rest.get( 'settings' ),
 	saveSettings: ( data ) => rest.post( 'settings', data ),
 	listViewers: ( id ) => rest.get( `viewers?video=${ id }` ),
@@ -27,8 +45,10 @@ export const api = {
 
 	// Attestation (pro)
 	getAttestations: ( id ) => rest.get( `attestation?video=${ id }` ),
-	attestationExportUrl: ( id ) => `${ rest.base() }attestation/export?video=${ id }&_wpnonce=${ nonce() }`,
-	certificateUrl: ( code ) => `${ rest.base() }attestation/certificate?code=${ encodeURIComponent( code ) }`,
+	// rest.url, not rest.base + '?': the REST root carries a query string of
+	// its own on a site running plain permalinks.
+	attestationExportUrl: ( id ) => rest.url( `attestation/export?video=${ id }&_wpnonce=${ nonce() }` ),
+	certificateUrl: ( code ) => rest.url( `attestation/certificate?code=${ encodeURIComponent( code ) }` ),
 
 	// LMS course/lesson options (pro)
 	getLmsOptions: () => rest.get( 'lms/options' ),
