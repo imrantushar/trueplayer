@@ -5,6 +5,11 @@
 	--tp-accent: #4f46e5;
 	--tp-bg: #000;
 	--tp-fg: #fff;
+	/* The player's own type stack. Declared as a variable and re-applied to the
+	   text-bearing children below: a theme rule on a generic selector beats
+	   plain inheritance from the stage, which is why the same video rendered
+	   with the theme's font on a page and the player's font in the editor. */
+	--tp-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 	width: 100%;
 	max-width: 100%;
 }
@@ -32,22 +37,20 @@
 	height: 120px;
 	background: #111827;
 }
+/* A poster is a cover image for the frame, so it fills it — the convention
+   every video platform uses. `contain` was letterboxing author-uploaded
+   posters inside the stage, and it also left YouTube's smaller sizes showing
+   the black bars baked into their pixels. Off-ratio art is cropped, centred. */
 .tp-facade-poster {
 	position: absolute;
 	inset: 0;
 	width: 100%;
 	height: 100%;
-	-o-object-fit: contain;
-	   object-fit: contain;
-	background: #000;
-}
-/* Provider-derived posters (YouTube/Vimeo) are already framed for the stage,
-   and YouTube's smaller sizes bake letterbox bars into the pixels — cover
-   fills the frame and crops those away. Author-uploaded posters stay
-   `contain` so an off-ratio image is never cut. */
-.tp-facade-poster.is-cover {
 	-o-object-fit: cover;
 	   object-fit: cover;
+	-o-object-position: center;
+	   object-position: center;
+	background: #000;
 }
 .tp-hover-preview {
 	-o-object-fit: cover;
@@ -92,11 +95,24 @@
 	color: var(--tp-fg);
 	overflow: hidden;
 	border-radius: var(--tp-radius, 10px);
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	font-family: var( --tp-font );
 	outline: none;
 	/* Size container so the control bar can adapt to the player's own width
 	   (narrow admin preview panel, small/mobile embeds) instead of the viewport. */
 	container-type: inline-size;
+}
+
+/* Re-assert the stack on everything that draws text, so a theme's own rules
+   can't win over inheritance (see --tp-font). */
+.tp-stage .tp-controls,
+.tp-stage .tp-time,
+.tp-stage .tp-info,
+.tp-stage .tp-menu,
+.tp-stage .tp-chapter-now,
+.tp-stage button,
+.tp-stage input,
+.tp-stage select {
+	font-family: var( --tp-font );
 }
 
 /* control-bar style variants */
@@ -296,14 +312,11 @@
 .tp-poster {
 	position: absolute;
 	inset: 0;
-	background-size: contain;
+	background-size: cover; /* see .tp-facade-poster — the poster fills the frame */
 	background-position: center;
 	background-repeat: no-repeat;
 	background-color: #000;
 	z-index: 3;
-}
-.tp-poster.is-cover {
-	background-size: cover;
 }
 
 .tp-logo {
@@ -582,6 +595,14 @@
 	z-index: 5;
 }
 .tp-stage.is-idle .tp-controls {
+	opacity: 0;
+	pointer-events: none;
+}
+/* Nothing has played yet: poster + play button only. Hover doesn't reveal the
+   bar either — there is no position to scrub and no sound to set, so the bar
+   would only be decoration over the poster. (Set by Player.jsx, which keeps
+   audio and big-play-less players out of it.) */
+.tp-stage.is-unstarted .tp-controls {
 	opacity: 0;
 	pointer-events: none;
 }
@@ -1381,8 +1402,9 @@
 /* ---- playlists ---- */
 .trueplayer-playlist {
 	--tp-accent: #4f46e5;
+	--tp-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 	width: 100%;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	font-family: var( --tp-font );
 }
 /* Query the playlist's own width, not the viewport — the video must stack the
    list below it whenever the container (not the screen) is narrow, e.g. inside

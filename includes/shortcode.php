@@ -270,11 +270,6 @@ class Shortcode {
 			$rules[] = 'aspect-ratio:' . str_replace( ':', ' / ', $ratio );
 		}
 		$style = $rules ? sprintf( ' style="%s"', esc_attr( implode( ';', $rules ) ) ) : '';
-		// Provider thumbnails are framed to fill the stage, and the smaller
-		// YouTube sizes carry letterbox bars in the pixels — cover crops those
-		// off. An author's own poster keeps `contain` so nothing is cut.
-		$fit = ! empty( $source['posterDerived'] ) ? ' is-cover' : '';
-
 		// A derived poster asks for the widest size first, which YouTube 404s
 		// on non-HD uploads — the rest of the chain rides on the tag for the
 		// runtime to step through (mount.js: attachPosterFallback).
@@ -284,8 +279,7 @@ class Shortcode {
 			: '';
 		$img = $poster
 			? sprintf(
-				'<img class="tp-facade-poster%s" src="%s" alt="" loading="lazy" decoding="async"%s />',
-				esc_attr( $fit ),
+				'<img class="tp-facade-poster" src="%s" alt="" loading="lazy" decoding="async"%s />',
 				esc_url( $poster ),
 				$chain
 			)

@@ -800,9 +800,16 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	}
 
 	const skin = appearance.skin || 'default';
+	// Before the first play, the stage shows its poster and the big play button
+	// and nothing else — the control bar has nothing to control yet, and every
+	// video platform reads this way. Only when the big play button is actually
+	// there, though: hiding the bar without it would leave no way to start.
+	// Audio is exempt — its control bar *is* the player.
+	const unstarted = ! started && appearance.bigPlay && source.mediaType !== 'audio';
 	const stageClass = [
 		'tp-stage',
 		`tp-skin-${ skin }`,
+		unstarted ? 'is-unstarted' : '',
 		idle && ui.playing ? 'is-idle' : '',
 		source.mediaType === 'audio' ? 'is-audio' : '',
 		`tp-bar-${ appearance.controlBarStyle }`,
@@ -854,14 +861,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			) }
 
 			{ /* Universal poster: works for every provider (not just html5's poster attr).
-			     Audio uses the compact art tile above instead of a full-bleed poster.
-			     A provider-derived poster is framed for the stage, so it covers;
-			     an author's own poster is contained so nothing is cropped. */ }
+			     Audio uses the compact art tile above instead of a full-bleed poster. */ }
 			{ source.poster && ! started && ! error && source.mediaType !== 'audio' && (
-				<div
-					className={ `tp-poster${ source.posterDerived ? ' is-cover' : '' }` }
-					style={ { backgroundImage: `url("${ source.poster }")` } }
-				/>
+				<div className="tp-poster" style={ { backgroundImage: `url("${ source.poster }")` } } />
 			) }
 
 			{ branding.logo && (
