@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-26T08:58:22+00:00\n"
+"POT-Creation-Date: 2026-08-27T15:24:05+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: trueplayer\n"
@@ -39,23 +39,129 @@ msgstr ""
 msgid "https://kodezen.com"
 msgstr ""
 
-#: includes/addons.php:98
+#: addons/interactive/api/controller.php:201
+msgid "A content type is required."
+msgstr ""
+
+#: addons/interactive/api/controller.php:224
+msgid "Content type is not installed."
+msgstr ""
+
+#: addons/interactive/api/controller.php:256
+msgid "Invalid content type."
+msgstr ""
+
+#: addons/interactive/api/controller.php:262
+msgid "That content type is not installed."
+msgstr ""
+
+#: addons/interactive/api/controller.php:266
+msgid "Untitled interactive"
+msgstr ""
+
+#: addons/interactive/api/controller.php:329
+#: addons/interactive/user-data.php:135
+#: addons/interactive/user-data.php:222
+msgid "Invalid request."
+msgstr ""
+
+#: addons/interactive/api/controller.php:335
+msgid "Not an interactive item."
+msgstr ""
+
+#: addons/interactive/api/controller.php:409
+msgid "Not found."
+msgstr ""
+
+#: addons/interactive/api/controller.php:418
+msgid "Content could not be loaded."
+msgstr ""
+
+#: addons/interactive/importer.php:36
+msgid "H5P package not found."
+msgstr ""
+
+#: addons/interactive/importer.php:46
+msgid "Could not stage the H5P package for import."
+msgstr ""
+
+#: addons/interactive/importer.php:52
+msgid "The file is not a valid H5P package."
+msgstr ""
+
+#: addons/interactive/importer.php:61
+msgid "Imported content"
+msgstr ""
+
+#: addons/interactive/interactive.php:117
+msgid "The interactive content runtime is not bundled in this build."
+msgstr ""
+
+#: addons/interactive/interactive.php:131
+msgid "Interactive content"
+msgstr ""
+
+#: addons/interactive/interactive.php:132
+msgid "Quizzes, flashcards, fill in the blanks and other interactive activities, embedded with a shortcode like any other player. Results feed the same analytics, webhooks and LMS pipeline as video."
+msgstr ""
+
+#: addons/interactive/interactive.php:136
+msgid "Enabling adds the interactive engine’s tables to your database. Turning it back off leaves anything you’ve built untouched."
+msgstr ""
+
+#: addons/interactive/preview.php:92
+msgid "Nothing to preview yet."
+msgstr ""
+
+#: addons/interactive/preview.php:92
+msgid "Fill in the required fields to preview."
+msgstr ""
+
+#: addons/interactive/renderer.php:34
+msgid "This interactive content has not been built yet."
+msgstr ""
+
+#: addons/interactive/renderer.php:40
+msgid "Interactive content could not be loaded."
+msgstr ""
+
+#: addons/interactive/renderer.php:55
+msgid "This is interactive content, and interactive content is turned off. Enable it under TruePlayer → Media → Interactive."
+msgstr ""
+
+#: addons/interactive/user-data.php:146
+msgid "Nothing to store."
+msgstr ""
+
+#: addons/interactive/user-data.php:190
+msgid "Unexpected payload."
+msgstr ""
+
+#: addons/interactive/user-data.php:195
+msgid "That state is too large to store."
+msgstr ""
+
+#: addons/interactive/user-data.php:236
+msgid "Nothing to record."
+msgstr ""
+
+#: includes/addons.php:112
 msgid "This addon cannot be activated right now."
 msgstr ""
 
-#: includes/admin/menu.php:71
+#: includes/admin/menu.php:72
 msgid "Dashboard"
 msgstr ""
 
-#: includes/admin/menu.php:72
+#: includes/admin/menu.php:73
 msgid "Media"
 msgstr ""
 
-#: includes/admin/menu.php:73
+#: includes/admin/menu.php:74
 msgid "Presets"
 msgstr ""
 
-#: includes/admin/menu.php:74
+#: includes/admin/menu.php:75
 msgid "Settings"
 msgstr ""
 
@@ -70,44 +176,6 @@ msgstr ""
 #: includes/api/gate-controller.php:75
 #, php-format
 msgid "Available on %s."
-msgstr ""
-
-#: includes/api/h5p-controller.php:194
-msgid "A content type is required."
-msgstr ""
-
-#: includes/api/h5p-controller.php:217
-msgid "Content type is not installed."
-msgstr ""
-
-#: includes/api/h5p-controller.php:249
-msgid "Invalid content type."
-msgstr ""
-
-#: includes/api/h5p-controller.php:255
-msgid "That content type is not installed."
-msgstr ""
-
-#: includes/api/h5p-controller.php:259
-msgid "Untitled interactive"
-msgstr ""
-
-#: includes/api/h5p-controller.php:322
-#: includes/h5p/user-data.php:135
-#: includes/h5p/user-data.php:222
-msgid "Invalid request."
-msgstr ""
-
-#: includes/api/h5p-controller.php:328
-msgid "Not an interactive item."
-msgstr ""
-
-#: includes/api/h5p-controller.php:402
-msgid "Not found."
-msgstr ""
-
-#: includes/api/h5p-controller.php:411
-msgid "Content could not be loaded."
 msgstr ""
 
 #: includes/api/optin-controller.php:41
@@ -150,8 +218,22 @@ msgstr ""
 msgid "Captions could not be parsed."
 msgstr ""
 
-#: includes/api/videos-controller.php:146
+#: includes/api/videos-controller.php:172
 msgid "Untitled video"
+msgstr ""
+
+#: includes/api/videos-controller.php:244
+msgid "The captured frame was empty or too large to store."
+msgstr ""
+
+#: includes/api/videos-controller.php:255
+msgid "That frame was not a readable image."
+msgstr ""
+
+#. translators: %s: video title.
+#: includes/api/videos-controller.php:269
+#, php-format
+msgid "%s poster"
 msgstr ""
 
 #: includes/api/webhooks-controller.php:46
@@ -172,54 +254,6 @@ msgstr ""
 
 #: includes/database/post-type.php:64
 msgid "Player Presets"
-msgstr ""
-
-#: includes/h5p/importer.php:36
-msgid "H5P package not found."
-msgstr ""
-
-#: includes/h5p/importer.php:46
-msgid "Could not stage the H5P package for import."
-msgstr ""
-
-#: includes/h5p/importer.php:52
-msgid "The file is not a valid H5P package."
-msgstr ""
-
-#: includes/h5p/importer.php:61
-msgid "Imported content"
-msgstr ""
-
-#: includes/h5p/preview.php:92
-msgid "Nothing to preview yet."
-msgstr ""
-
-#: includes/h5p/preview.php:92
-msgid "Fill in the required fields to preview."
-msgstr ""
-
-#: includes/h5p/renderer.php:34
-msgid "This interactive content has not been built yet."
-msgstr ""
-
-#: includes/h5p/renderer.php:40
-msgid "Interactive content could not be loaded."
-msgstr ""
-
-#: includes/h5p/user-data.php:146
-msgid "Nothing to store."
-msgstr ""
-
-#: includes/h5p/user-data.php:190
-msgid "Unexpected payload."
-msgstr ""
-
-#: includes/h5p/user-data.php:195
-msgid "That state is too large to store."
-msgstr ""
-
-#: includes/h5p/user-data.php:236
-msgid "Nothing to record."
 msgstr ""
 
 #: includes/integrations.php:78
@@ -259,6 +293,6 @@ msgstr ""
 msgid "Watch video"
 msgstr ""
 
-#: includes/shortcode.php:291
+#: includes/shortcode.php:294
 msgid "Play video"
 msgstr ""
