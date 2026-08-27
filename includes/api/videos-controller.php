@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use TruePlayer\Helper;
 use WP_REST_Controller;
 use WP_REST_Server;
 
@@ -156,6 +157,9 @@ class VideosController extends WP_REST_Controller {
 		}
 		if ( isset( $body['config'] ) ) {
 			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $body['config'] ) );
+			// Resolve the provider poster now (Vimeo needs a remote call) so the
+			// first page render reads a warm cache instead of paying for it.
+			Helper::with_derived_poster( (array) $body['config'] );
 		}
 		if ( array_key_exists( 'tags', $body ) ) {
 			$this->set_tags( $id, $body['tags'] );
@@ -174,6 +178,9 @@ class VideosController extends WP_REST_Controller {
 		}
 		if ( array_key_exists( 'config', $body ) ) {
 			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $body['config'] ) );
+			// Resolve the provider poster now (Vimeo needs a remote call) so the
+			// first page render reads a warm cache instead of paying for it.
+			Helper::with_derived_poster( (array) $body['config'] );
 		}
 		if ( array_key_exists( 'tags', $body ) ) {
 			$this->set_tags( $id, $body['tags'] );

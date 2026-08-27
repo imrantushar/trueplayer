@@ -2,6 +2,7 @@ import { useState } from '@wordpress/element';
 import Player from '@Player/Player';
 import { Card } from '../../components/UI';
 import { hasVideoSource, sourceKey } from '../../utils/videoSource';
+import { withDerivedPoster } from '../../utils/poster';
 // NOTE: the player CSS (style-frontend.css) is enqueued on admin pages by PHP.
 // Do NOT import it here — sharing that CSS module across the frontend + admin
 // entries makes webpack merge it into style-backend.css and stop emitting
@@ -39,7 +40,9 @@ export default function PreviewPanel( { id, config, onDuration, previewCue = nul
 				</div>
 			) : (
 				<div className="trueplayer-mount">
-					<Player key={ key } videoId={ id } config={ config } preview onDuration={ onDuration } previewCue={ previewCue } />
+					{ /* Preview the provider's own thumbnail when no poster is set,
+					     matching what PHP derives for the real embed. */ }
+					<Player key={ key } videoId={ id } config={ withDerivedPoster( config ) } preview onDuration={ onDuration } previewCue={ previewCue } />
 				</div>
 			) }
 

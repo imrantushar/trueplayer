@@ -1,7 +1,8 @@
 /** Shared Tailwind UI primitives — GemCRM design language (see gemcrm/ui_rule.md). */
-import { useState, useRef, useEffect, Children } from '@wordpress/element';
+import { useState, useRef, useEffect, useMemo, Children } from '@wordpress/element';
 import ReactSelect from 'react-select';
 import { Icon } from './icons';
+import { posterCandidates } from '../utils/poster';
 import { BsThreeDots } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
 
@@ -414,15 +415,40 @@ export function sourceMeta( source = {} ) {
 	return map[ type ] || { label: type || 'no source', tone: 'gray' };
 }
 
-/** 16:9 poster thumbnail with a graceful fallback tile keyed to the source type. */
-export function Thumb( { poster, type, className = '' } ) {
-	const [ broken, setBroken ] = useState( false );
+/**
+ * 16:9 poster thumbnail with a graceful fallback tile keyed to the source type.
+ *
+ * Pass `source` to let a provider thumbnail stand in when the author set no
+ * poster; the candidates are walked on error, since YouTube 404s its HD sizes
+ * for non-HD uploads. `poster` alone is still accepted for callers that have
+ * only the URL.
+ */
+export function Thumb( { poster, source, type, className = '' } ) {
+	// Keyed on the fields that decide the image, not the `source` object —
+	// callers rebuild that literal every render, so an identity dep would
+	// recompute the chain (and reset the index) forever.
+	const key = source ? `${ source.type || '' }|${ source.src || '' }|${ source.poster || '' }` : `|${ poster || '' }`;
+	const candidates = useMemo(
+		() => ( source ? posterCandidates( source ) : [ poster ].filter( Boolean ) ),
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ key ]
+	);
+	const [ index, setIndex ] = useState( 0 );
+	// A new source restarts the chain — otherwise the last video's failure
+	// count would blank out a perfectly good thumbnail.
+	useEffect( () => setIndex( 0 ), [ key ] );
 	const isAudio = type === 'audio';
-	const showPoster = poster && ! broken;
+	const current = candidates[ index ];
 	return (
 		<div className={ `relative shrink-0 w-24 aspect-video rounded-lg overflow-hidden border border-line bg-gray-100 ${ className }` }>
-			{ showPoster ? (
-				<img src={ poster } alt="" loading="lazy" onError={ () => setBroken( true ) } className="w-full h-full object-cover" />
+			{ current ? (
+				<img
+					src={ current }
+					alt=""
+					loading="lazy"
+					onError={ () => setIndex( ( i ) => i + 1 ) }
+					className="w-full h-full object-cover"
+				/>
 			) : (
 				<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 text-gray-400">
 					<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
