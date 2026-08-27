@@ -25,7 +25,11 @@ const SEEK_FRACTIONS = [ 0.1, 0.25, 0.5 ];
 // where the subject usually is, instead of ten minutes in.
 const FIRST_SEEK_CAP = 3;
 
-const LOAD_TIMEOUT = 20000;
+// A local file is ready almost at once; a big lesson video on a real host over
+// a real connection is not, so these are generous. Metadata is a small read at
+// the head of the file; a seek is a range request for one region of it.
+const METADATA_TIMEOUT = 45000;
+const SEEK_TIMEOUT = 30000;
 
 /** Whether a frame can be read from this source at all. */
 export function canCaptureFrame( source = {} ) {
@@ -73,13 +77,20 @@ function readError( err ) {
 	return err instanceof Error ? err : new Error( 'Could not read a frame from this video.' );
 }
 
-/** A <video> element loaded far enough to seek and draw, or a rejection. */
+/**
+ * A <video> element with its metadata read, ready to be seeked and drawn.
+ *
+ * `preload` is deliberately `metadata` rather than `auto`: one frame is all
+ * this needs, and `auto` would pull the entire file down to get it — barely
+ * noticeable against a local upload, but minutes of downloading a multi-gigabyte
+ * video on a real site. Seeking then range-requests only the region it lands in.
+ */
 function loadVideo( url ) {
 	return new Promise( ( resolve, reject ) => {
 		const video = document.createElement( 'video' );
 		video.muted = true;
 		video.playsInline = true;
-		video.preload = 'auto';
+		video.preload = 'metadata';
 		// Only ask for CORS when the file really is cross-origin: requesting it
 		// for a same-origin upload makes the browser demand headers the site
 		// has no reason to send, and the load fails before a frame decodes.
@@ -89,42 +100,59 @@ function loadVideo( url ) {
 
 		const done = ( fn, arg ) => {
 			clearTimeout( timer );
-			video.removeEventListener( 'loadeddata', ok );
+			video.removeEventListener( 'loadedmetadata', ok );
 			video.removeEventListener( 'error', fail );
 			fn( arg );
 		};
 		const ok = () => done( resolve, video );
-		const fail = () => done( reject, new Error( 'This video file could not be loaded.' ) );
-		const timer = setTimeout( () => done( reject, new Error( 'The video took too long to load.' ) ), LOAD_TIMEOUT );
+		const fail = () => done( reject, new Error(
+			isCrossOrigin( url )
+				? 'That video is on another domain and could not be read. Its host has to allow cross-origin requests, or the file can be uploaded to this site’s media library instead.'
+				: 'This video file could not be loaded.'
+		) );
+		const timer = setTimeout( () => done( reject, new Error( 'The video took too long to load. A very large file over a slow connection can outrun this — try again, or set a poster image yourself.' ) ), METADATA_TIMEOUT );
 
-		video.addEventListener( 'loadeddata', ok );
+		video.addEventListener( 'loadedmetadata', ok );
 		video.addEventListener( 'error', fail );
 		video.src = url;
 		video.load();
 	} );
 }
 
-/** Move to `time` and resolve once a frame for it is actually decoded. */
+/**
+ * Move to `time` and resolve once a frame for it is actually decoded.
+ *
+ * Being parked on the target already is not the same as having pixels for it:
+ * loading stops at metadata, so time 0 on a video of unknown duration reports
+ * the right position with nothing decoded yet, and drawing there would give a
+ * blank canvas. That case waits for the frame instead of for a seek that will
+ * never be requested.
+ */
 function seek( video, time ) {
 	return new Promise( ( resolve, reject ) => {
-		// Already there — no `seeked` event is coming, so don't wait for one.
-		if ( Math.abs( video.currentTime - time ) < 0.01 ) {
+		const atTarget = Math.abs( video.currentTime - time ) < 0.01;
+		if ( atTarget && video.readyState >= 2 /* HAVE_CURRENT_DATA */ ) {
 			resolve();
 			return;
 		}
+		const settles = atTarget ? 'loadeddata' : 'seeked';
 		const done = ( fn, arg ) => {
 			clearTimeout( timer );
-			video.removeEventListener( 'seeked', ok );
+			video.removeEventListener( settles, ok );
 			video.removeEventListener( 'error', fail );
 			fn( arg );
 		};
 		const ok = () => done( resolve );
 		const fail = () => done( reject, new Error( 'Could not seek this video.' ) );
-		const timer = setTimeout( () => done( reject, new Error( 'The video took too long to seek.' ) ), LOAD_TIMEOUT );
+		// Seeking needs the server to answer a byte-range request; a host that
+		// serves uploads without range support never reaches the frame.
+		const timer = setTimeout( () => done( reject, new Error( 'Could not read a frame from this video — the server may not support range requests for media files.' ) ), SEEK_TIMEOUT );
 
-		video.addEventListener( 'seeked', ok );
+		video.addEventListener( settles, ok );
 		video.addEventListener( 'error', fail );
-		video.currentTime = time;
+		if ( ! atTarget ) {
+			video.currentTime = time;
+		}
 	} );
 }
 
