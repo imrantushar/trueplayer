@@ -62,11 +62,13 @@ class Shortcode {
 			return '';
 		}
 
-		// Engine router — an H5P-authored item is rendered by the H5P runtime,
-		// not the native player. Dormant until the runtime is vendored (see
-		// H5P\Module::is_available), so native embeds are unaffected.
-		if ( H5P\Module::is_h5p( $video_id ) ) {
-			return H5P\Renderer::render( $video_id );
+		// Engine router. Core renders the native player; another engine can claim
+		// an item by returning markup from this filter (the interactive addon
+		// does, for items authored as H5P). Nothing registered means nothing
+		// changes — core carries no knowledge of the other engines.
+		$engine = apply_filters( 'trueplayer/render_engine', null, $video_id );
+		if ( null !== $engine ) {
+			return (string) $engine;
 		}
 
 		// Ensure the runtime is on the page.
@@ -270,11 +272,6 @@ class Shortcode {
 			$rules[] = 'aspect-ratio:' . str_replace( ':', ' / ', $ratio );
 		}
 		$style = $rules ? sprintf( ' style="%s"', esc_attr( implode( ';', $rules ) ) ) : '';
-		// Provider thumbnails are framed to fill the stage, and the smaller
-		// YouTube sizes carry letterbox bars in the pixels — cover crops those
-		// off. An author's own poster keeps `contain` so nothing is cut.
-		$fit = ! empty( $source['posterDerived'] ) ? ' is-cover' : '';
-
 		// A derived poster asks for the widest size first, which YouTube 404s
 		// on non-HD uploads — the rest of the chain rides on the tag for the
 		// runtime to step through (mount.js: attachPosterFallback).
@@ -284,8 +281,7 @@ class Shortcode {
 			: '';
 		$img = $poster
 			? sprintf(
-				'<img class="tp-facade-poster%s" src="%s" alt="" loading="lazy" decoding="async"%s />',
-				esc_attr( $fit ),
+				'<img class="tp-facade-poster" src="%s" alt="" loading="lazy" decoding="async"%s />',
 				esc_url( $poster ),
 				$chain
 			)

@@ -23,6 +23,8 @@ const P = {
 	webhook: <><circle cx="12" cy="7" r="3" /><path d="M12 10l-3.5 6" /><circle cx="7" cy="18" r="2.5" /><path d="M9.5 18H16" /><circle cx="17" cy="15" r="2.5" /></>,
 	tag: <><path d="M4 12V5a1 1 0 011-1h7l8 8-8 8-8-8z" /><circle cx="8.5" cy="8.5" r="1.2" /></>,
 	key: <><circle cx="8" cy="12" r="4" /><path d="M11 12h9M17 12v3M20 12v2" /></>,
+	link: <><path d="M10 13.5a4 4 0 006 .5l2.5-2.5a4 4 0 00-5.66-5.66L11.5 7.2" /><path d="M14 10.5a4 4 0 00-6-.5L5.5 12.5a4 4 0 005.66 5.66l1.3-1.3" /></>,
+	refresh: <><path d="M20 12a8 8 0 10-2.3 5.6" /><path d="M20 6v5h-5" /></>,
 	film: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M8 4v16M16 4v16M3 9h5M3 15h5M16 9h5M16 15h5" /></>,
 	bookmark: <path d="M7 4h10a1 1 0 011 1v15l-6-4-6 4V5a1 1 0 011-1z" />,
 	puzzle: <path d="M10 4h4a1 1 0 011 1v1.2a1.8 1.8 0 103.6 0V5a1 1 0 011-1H20v4.6a1.8 1.8 0 100 3.6V20a1 1 0 01-1 1h-4.4a1.8 1.8 0 10-3.6 0H6a1 1 0 01-1-1v-4.4a1.8 1.8 0 100-3.6V5a1 1 0 011-1z" />,

@@ -43,6 +43,39 @@ export const api = {
 
 	// Webhook delivery logs (pro)
 	getWebhookLogs: ( limit = 100 ) => rest.get( `webhook-logs?limit=${ limit }` ),
+
+	/**
+	 * Switch an addon on or off.
+	 *
+	 * Addons predate the REST controllers and live on admin-ajax with their own
+	 * `trueplayer_nonce` (see includes/addons.php), so this one call doesn't go
+	 * through `rest`. Activation runs the addon's own setup — for interactive
+	 * content that means creating its tables — so the caller should reload
+	 * rather than assume the UI can just re-render.
+	 *
+	 * @param {string}  slug   Addon slug, e.g. 'interactive'.
+	 * @param {boolean} status Desired state.
+	 */
+	setAddonStatus: async ( slug, status ) => {
+		const g = window.TruePlayerGlobal || {};
+		const body = new URLSearchParams( {
+			action: 'trueplayer/addons/save_addon_status',
+			security: g.trueplayer_nonce || '',
+			addon_slug: slug,
+			status: status ? '1' : '0',
+		} );
+		const res = await fetch( g.ajax_url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			credentials: 'same-origin',
+			body,
+		} );
+		const json = await res.json().catch( () => null );
+		if ( ! json || ! json.success ) {
+			throw new Error( ( json && json.data && json.data.message ) || 'Could not change the addon status.' );
+		}
+		return json.data;
+	},
 };
 
 function nonce() {

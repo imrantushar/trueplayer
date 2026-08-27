@@ -77,7 +77,7 @@ final class StoreLicense {
 			'init_insights'       => true,
 			'license_server'      => 'https://store.kodezen.com/',
 			'purchase_url'        => 'https://store.kodezen.com/product/trueplayer-pro/',
-			'product_logo'        => defined( 'TRUEPLAYER_ASSETS_URI' ) ? TRUEPLAYER_ASSETS_URI . 'images/logo.svg' : '',
+			'product_logo'        => self::product_logo(),
 			'store_dashboard_url' => 'https://store.kodezen.com/dashboard/license-keys/',
 			'terms_url'           => 'https://kodezen.com/terms-and-conditions/',
 			'privacy_policy_url'  => 'https://store.kodezen.com/privacy-policy/',
@@ -86,6 +86,21 @@ final class StoreLicense {
 			'first_install_time'  => self::first_install_time(),
 			'optin_notice_delay'  => 3 * DAY_IN_SECONDS,
 		] );
+	}
+
+	/**
+	 * The plugin mark the SDK shows on its opt-in notice and license screens.
+	 *
+	 * Returned empty when the file is missing rather than as a URL — the SDK
+	 * renders whatever it is handed, so a dead path becomes a broken-image icon
+	 * inside the notice.
+	 */
+	private static function product_logo(): string {
+		if ( ! defined( 'TRUEPLAYER_ASSETS_URI' ) || ! defined( 'TRUEPLAYER_ASSETS_DIR_PATH' ) ) {
+			return '';
+		}
+		$rel = 'images/logo.svg';
+		return file_exists( TRUEPLAYER_ASSETS_DIR_PATH . $rel ) ? TRUEPLAYER_ASSETS_URI . $rel : '';
 	}
 
 	/**

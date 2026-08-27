@@ -16,6 +16,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class MetaManager {
 
+	/**
+	 * Which engine renders an item. Core owns this key even though only addons
+	 * set anything other than the default: core has to be able to tell its own
+	 * players apart from items another engine authored.
+	 */
+	const ENGINE_META = '_trueplayer_engine';
+
+
 	public static function init() {
 		$self = new self();
 		add_action( 'init', [ $self, 'register_meta_fields' ] );

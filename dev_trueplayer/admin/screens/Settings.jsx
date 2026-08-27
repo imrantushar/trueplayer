@@ -4,8 +4,11 @@ import { Card, Button, Badge, Field, Input, Select, Textarea, Toggle } from '../
 import { Icon } from '../components/icons';
 import { EndpointList } from '../components/EndpointList';
 import UpsellPanel from '../components/UpsellPanel';
-import { isPro } from '../pro';
-import { pickMedia } from '../utils/media';
+import { isPro, licenseStatus, licensePageUrl } from '../pro';
+import { hasLicenseApi } from '../license';
+import LicensePanel from './settings/LicensePanel';
+import AddonsPanel from './settings/AddonsPanel';
+import MediaPicker from '../components/MediaPicker';
 import { PRESET_TEMPLATES, ASPECT_RATIOS } from '../data/preset-templates';
 
 // A mini player preview rendered in the template's style.
@@ -67,6 +70,7 @@ const NAV_GROUPS = [
 	},
 	{
 		label: 'Account', items: [
+			{ key: 'addons', label: 'Addons', icon: 'puzzle' },
 			{ key: 'license', label: 'License', icon: 'key' },
 		]
 	},
@@ -102,9 +106,9 @@ function WebhookLogs({ className }) {
 	);
 }
 
-export default function Settings({ onEditState }) {
+export default function Settings({ tab = 'general', onTabChange, onEditState }) {
 	const [settings, setSettings] = useState(null);
-	const [tab, setTab] = useState('general');
+	const setTab = (next) => onTabChange && onTabChange(next);
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
 	const [dirty, setDirty] = useState(false);
@@ -284,8 +288,8 @@ export default function Settings({ onEditState }) {
 												<Field label="Issuer name" hint="Defaults to your site name.">
 													<Input value={c.certIssuer} onChange={(e) => setC({ certIssuer: e.target.value })} placeholder={(window.TruePlayerGlobal && window.TruePlayerGlobal.site_name) || 'Your organization'} />
 												</Field>
-												<Field label="Logo URL">
-													<Input value={c.certLogo} onChange={(e) => setC({ certLogo: e.target.value })} placeholder="https://…/logo.png" />
+												<Field label="Logo">
+													<MediaPicker value={c.certLogo} onChange={(url) => setC({ certLogo: url })} accept="image" label="Upload a logo" />
 												</Field>
 												<Field label="Signature line" hint="e.g. a name / title printed under the certificate.">
 													<Input value={c.certSignature} onChange={(e) => setC({ certSignature: e.target.value })} placeholder="Jane Doe, Head of Training" />
@@ -455,11 +459,10 @@ export default function Settings({ onEditState }) {
 										<h3 className="font-semibold text-gray-900 !mb-1">Player logo</h3>
 										<p className="text-sm text-muted">A watermark logo shown on every player by default.</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
+											{ /* Upload-only: a pasted URL was never the point of a logo
+											     field, and MediaPicker shows what you actually picked. */ }
 											<Field label="Logo image" className='!mb-0'>
-												<div className="flex gap-2">
-													<Input value={brand.logo || ''} onChange={(e) => setBrand({ logo: e.target.value })} placeholder="https://…/logo.png" />
-													<Button variant="ghost" onClick={() => pickMedia('image', (url) => setBrand({ logo: url }))}>Media library</Button>
-												</div>
+												<MediaPicker value={brand.logo || ''} onChange={(url) => setBrand({ logo: url })} accept="image" label="Upload a logo" />
 											</Field>
 											{brand.logo && (
 												<div className="grid grid-cols-2 gap-4">
@@ -500,13 +503,26 @@ export default function Settings({ onEditState }) {
 														className="mb-6"
 													/>
 													{settings.whiteLabel?.enabled && (
-														<Field label="Brand name" hint="Shown in the admin menu &amp; titles.">
-															<Input
-																value={settings.whiteLabel?.brand || ''}
-																onChange={(e) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), brand: e.target.value } }))}
-																placeholder="Acme Video"
-															/>
-														</Field>
+														<>
+															<Field label="Brand name" hint="Shown in the admin menu &amp; titles.">
+																<Input
+																	value={settings.whiteLabel?.brand || ''}
+																	onChange={(e) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), brand: e.target.value } }))}
+																	placeholder="Acme Video"
+																/>
+															</Field>
+															{ /* The mark that goes with the name — without it a rebranded
+															     install still showed TruePlayer's play glyph beside the
+															     owner's own name in the WP menu and the admin header. */ }
+															<Field label="Brand logo" hint="Square works best (used at 20px in the WordPress menu). Leave empty to keep the default mark.">
+																<MediaPicker
+																	value={settings.whiteLabel?.logo || ''}
+																	onChange={(url) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), logo: url } }))}
+																	accept="image"
+																	label="Upload a mark"
+																/>
+															</Field>
+														</>
 													)}
 													<p className="text-xs text-muted mt-2">Takes effect on the next page load after saving.</p>
 												</>
@@ -518,10 +534,6 @@ export default function Settings({ onEditState }) {
 								</div>
 							);
 						})()
-					)}
-
-					{tab === 'logs' && (
-						isPro() ? <WebhookLogs className="mb-6" /> : <UpsellPanel title="Webhook delivery logs" features={['Every delivery attempt recorded', 'See failures &amp; status codes']} />
 					)}
 
 					{tab === 'logs' && (
@@ -545,20 +557,61 @@ export default function Settings({ onEditState }) {
 						)
 					)}
 
-					{tab === 'license' && (
-						<Card className="p-6">
-							<div className="flex items-center gap-3 mb-2">
-								<h3 className="font-semibold text-gray-900">License</h3>
-								<Badge tone={isPro() ? 'green' : 'gray'}>{isPro() ? 'Pro active' : 'Free'}</Badge>
-							</div>
-							{isPro() ? (
-								<p className="text-sm text-gray-500">TruePlayer Pro is active and your license is valid. Manage your key from the plugin’s license panel (Plugins → TruePlayer Pro).</p>
-							) : (
-								<p className="text-sm text-gray-500">
-									You’re on the free player. Install <strong>TruePlayer Pro</strong> and activate a license to unlock watch-verification, quiz-gating, analytics, automation, premium sources and playlists.
-								</p>
-							)}
-						</Card>
+					{tab === 'addons' && <AddonsPanel />}
+
+					{ /* With Pro active and a store product configured, the SDK's REST
+					     routes are reachable and this tab is the real activation
+					     screen. Without them there is nothing to activate, so it
+					     falls back to stating where things stand. */ }
+					{tab === 'license' && hasLicenseApi() && <LicensePanel />}
+
+					{tab === 'license' && !hasLicenseApi() && (
+						(() => {
+							// Two independent facts, and this card used to conflate them:
+							// the Pro plugin being active, and a license key being
+							// activated. Pro runs on a permissive default before a store
+							// is configured, so "Pro active" must not be reported as
+							// "your license is valid".
+							const status = licenseStatus();
+							const url = licensePageUrl();
+							return (
+								<Card className="p-6">
+									<div className="flex items-center gap-3 mb-2">
+										<h3 className="font-semibold text-gray-900">License</h3>
+										{!isPro() && <Badge tone="gray">Free</Badge>}
+										{isPro() && <Badge tone="brand">Pro plugin active</Badge>}
+										{isPro() && status === 'active' && <Badge tone="green">License activated</Badge>}
+										{isPro() && status === 'inactive' && <Badge tone="amber">License not activated</Badge>}
+									</div>
+									{!isPro() && (
+										<p className="text-sm text-gray-500">
+											You’re on the free player. Install <strong>TruePlayer Pro</strong> and activate a license to unlock watch-verification, quiz-gating, analytics, automation, premium sources and playlists.
+										</p>
+									)}
+									{isPro() && status === 'active' && (
+										<p className="text-sm text-gray-500">TruePlayer Pro is active and your license key is valid.</p>
+									)}
+									{isPro() && status === 'inactive' && (
+										<p className="text-sm text-gray-500">
+											TruePlayer Pro is running and every feature is available. Activating a license adds
+											automatic updates and priority support — it doesn’t unlock anything.
+										</p>
+									)}
+									{isPro() && status === 'unconfigured' && (
+										<p className="text-sm text-gray-500">
+											TruePlayer Pro is active. This build has no license server configured, so there’s no key to activate.
+										</p>
+									)}
+									{url && status !== 'unconfigured' && (
+										<div className="mt-4">
+											<Button variant="ghost" onClick={() => { window.location.href = url; }}>
+												{status === 'active' ? 'Manage license' : 'Activate license'}
+											</Button>
+										</div>
+									)}
+								</Card>
+							);
+						})()
 					)}
 				</div>
 			</div>

@@ -160,9 +160,11 @@ class Assets {
 			'trueplayer/assets/backend_scripts_data',
 			array_merge(
 				$this->get_common_scripts_data(),
-				// The library screen offers an "Interactive" filter + create
-				// option only when the H5P engine is actually present.
-				[ 'h5p_available' => \TruePlayer\H5P\Module::is_available() ]
+				// Each addon contributes its own state through this same filter
+				// (see TruePlayerInteractive\Interactive::expose_state), so core
+				// doesn't enumerate features it no longer owns. The registry is
+				// what the Settings → Addons screen lists.
+				[ 'addons_registry' => \TruePlayer\Addons::registry() ]
 			)
 		);
 	}
@@ -182,8 +184,26 @@ class Assets {
 			'is_login'         => (bool) is_user_logged_in(),
 			'is_admin'         => (bool) current_user_can( 'manage_options' ),
 			'addons'           => $trueplayer_addons,
+			// Installing Pro is what unlocks its features; the licence buys
+			// updates and support and is reported separately (license_status),
+			// so a missing key never reads as "you don't have Pro".
 			'is_pro_active'    => \TruePlayer\Pro::active(),
+			// Distinct from is_pro_active: the pro plugin can be running on the
+			// permissive pre-license default, and the settings screen must not
+			// call that "your license is valid". See Pro::license_status().
+			'license_status'   => \TruePlayer\Pro::license_status(),
+			'license_url'      => \TruePlayer\Pro::license_page_url(),
 			'feature_flags'    => \TruePlayer\Pro::feature_flags(),
+			// The site's own name/mark when white-label is on, so the React
+			// admin matches the WP menu instead of always saying "TruePlayer".
+			'brand'            => [
+				'name' => \TruePlayer\Helper::brand_name(),
+				'logo' => \TruePlayer\Helper::brand_logo(),
+			],
+			// The site-wide watch-verification policy. The per-video gating tab
+			// seeds from this so opening it can't silently overwrite the site
+			// setting with a hardcoded default (see Helper::enforcement_defaults).
+			'enforcement'      => \TruePlayer\Helper::enforcement_defaults(),
 			// Site-wide player customization defaults. Per-video config is
 			// layered over this on the client (resolveCustomize).
 			'player_defaults'  => self::player_defaults(),

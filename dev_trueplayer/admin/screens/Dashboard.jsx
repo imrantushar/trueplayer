@@ -1,4 +1,5 @@
 import { useEffect, useState } from '@wordpress/element';
+import { h5pEnabled } from '../h5p';
 import { api } from '../api';
 import { Card, Button, Thumb, Badge, sourceMeta } from '../components/UI';
 import { Icon } from '../components/icons';
@@ -33,7 +34,10 @@ function QuickLink( { icon, label, onClick } ) {
 	);
 }
 
-const h5pAvailable = () => !! ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.h5p_available );
+// Interactive content is an opt-in addon; until it is enabled there is nothing
+// to list or create, so the dashboard leaves it out entirely. Discovery lives
+// on the library's Interactive tab, which shows an activation teaser instead.
+const h5pAvailable = h5pEnabled;
 
 export default function Dashboard( { onNavigate, onCreate } ) {
 	const [ videos, setVideos ] = useState( null );

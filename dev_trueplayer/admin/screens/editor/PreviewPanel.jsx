@@ -1,4 +1,4 @@
-import { useState } from '@wordpress/element';
+import { useLayoutEffect, useRef, useState } from '@wordpress/element';
 import Player from '@Player/Player';
 import { Card } from '../../components/UI';
 import { hasVideoSource, sourceKey } from '../../utils/videoSource';
@@ -16,11 +16,69 @@ import { withDerivedPoster } from '../../utils/poster';
  * while appearance/controls/chapters edits update live via re-render (Player
  * recomputes its customization from props each render) — no video reload while
  * you tweak styles.
+ *
+ * It renders at a fixed reference width and is scaled down to fit the panel,
+ * rather than being laid out at the panel's own width. The player sizes its
+ * control bar with container queries, so a ~380px preview column was showing
+ * the compact bar (smaller buttons, smaller type) while the same video on a
+ * page got the full-size one — the preview disagreed with what it was
+ * previewing. Scaling keeps every proportion identical to the frontend.
  */
+
+/**
+ * The width the preview pretends to be.
+ *
+ * Every pixel of reference width above the panel's real width is paid for in
+ * shrinkage: the miniature renders at `panelWidth / REFERENCE_WIDTH`, so a 760
+ * reference in a ~380px column drew the whole player — control bar, time,
+ * skin — at 50%, which is where the skins stopped being legible enough to
+ * choose between.
+ *
+ * The only thing the reference has to buy is staying clear of the player's
+ * compact control bar, which is a `@container (max-width: 480px)` rule in
+ * player/style.css. So sit just above that and no higher: same full-size bar,
+ * ~1.5x more of it on screen. Raising this again re-shrinks the preview.
+ */
+const REFERENCE_WIDTH = 520;
 export default function PreviewPanel( { id, config, onDuration, previewCue = null } ) {
 	const [ bump, setBump ] = useState( 0 );
 	const hasSource = hasVideoSource( config.source || {} );
 	const key = `${ sourceKey( config.source || {} ) }:${ bump }`;
+
+	const frameRef = useRef( null );
+	const innerRef = useRef( null );
+	const [ scale, setScale ] = useState( 1 );
+	const [ height, setHeight ] = useState( 0 );
+
+	// Track the panel's width (it moves with the browser and the editor layout)
+	// and the scaled player's height, so the frame reserves exactly the room the
+	// miniature needs — a transform doesn't affect layout size on its own.
+	useLayoutEffect( () => {
+		const frame = frameRef.current;
+		if ( ! frame || ! hasSource ) {
+			return;
+		}
+		const measure = () => {
+			const w = frame.clientWidth;
+			if ( ! w ) {
+				return;
+			}
+			const next = Math.min( 1, w / REFERENCE_WIDTH );
+			setScale( next );
+			if ( innerRef.current ) {
+				setHeight( innerRef.current.offsetHeight * next );
+			}
+		};
+		measure();
+		const ro = new ResizeObserver( measure );
+		ro.observe( frame );
+		if ( innerRef.current ) {
+			// The player's own height changes with the aspect ratio and with
+			// chapters/description appearing, so watch it too.
+			ro.observe( innerRef.current );
+		}
+		return () => ro.disconnect();
+	}, [ hasSource, key ] );
 
 	return (
 		<Card className="p-4">
@@ -39,10 +97,19 @@ export default function PreviewPanel( { id, config, onDuration, previewCue = nul
 					Add a video under <strong>Source</strong> to preview it.
 				</div>
 			) : (
-				<div className="trueplayer-mount">
-					{ /* Preview the provider's own thumbnail when no poster is set,
-					     matching what PHP derives for the real embed. */ }
-					<Player key={ key } videoId={ id } config={ withDerivedPoster( config ) } preview onDuration={ onDuration } previewCue={ previewCue } />
+				<div ref={ frameRef } style={ { height: height || undefined } } className="overflow-hidden">
+					{ /* `maxWidth: none` matters: .trueplayer-mount is width:100%;max-width:100%,
+					     which would clamp the reference width back to the panel's own and put
+					     the container queries right back where they started. */ }
+					<div
+						ref={ innerRef }
+						className="trueplayer-mount"
+						style={ { width: REFERENCE_WIDTH, maxWidth: 'none', transform: `scale(${ scale })`, transformOrigin: 'top left' } }
+					>
+						{ /* Preview the provider's own thumbnail when no poster is set,
+						     matching what PHP derives for the real embed. */ }
+						<Player key={ key } videoId={ id } config={ withDerivedPoster( config ) } preview onDuration={ onDuration } previewCue={ previewCue } />
+					</div>
 				</div>
 			) }
 

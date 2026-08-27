@@ -22,6 +22,14 @@ const LEGACY_KIND = {
 
 const KINDS = [ 'all', 'media', 'playlist', 'interactive' ];
 
+/** Settings sections, in the order the screen lists them (see Settings.jsx). */
+export const SETTINGS_TABS = [
+	'general', 'branding', 'sources',
+	'enforcement', 'compliance', 'analytics',
+	'integrations', 'webhooks', 'logs',
+	'addons', 'license',
+];
+
 /** Resolve the active screen + params from the URL. */
 export function parseRoute() {
 	const q = new URLSearchParams( window.location.search );
@@ -48,7 +56,10 @@ export function parseRoute() {
 		return { name: 'presets' };
 	}
 	if ( page === SLUG + '-settings' ) {
-		return { name: 'settings' };
+		// The section is part of the address, so a reload (or a shared link)
+		// lands where you were instead of bouncing back to General.
+		const tab = q.get( 'tab' ) || '';
+		return { name: 'settings', tab: SETTINGS_TABS.includes( tab ) ? tab : 'general' };
 	}
 	return { name: 'dashboard' };
 }
@@ -68,6 +79,9 @@ export function routeUrl( name, params = {} ) {
 	}
 	if ( name === 'library' && params.kind && 'all' !== params.kind ) {
 		q.set( 'kind', params.kind );
+	}
+	if ( name === 'settings' && params.tab && 'general' !== params.tab ) {
+		q.set( 'tab', params.tab );
 	}
 	return 'admin.php?' + q.toString();
 }

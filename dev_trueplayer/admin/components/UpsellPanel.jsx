@@ -2,7 +2,11 @@ import { Card, Button, Badge } from './UI';
 import { Icon } from './icons';
 
 /**
- * Shown in place of a pro-only screen/tab when no license is active.
+ * Shown in place of a pro-only screen/tab when TruePlayer Pro isn't installed.
+ *
+ * Installing Pro is what unlocks its features — the licence buys updates and
+ * support — so anyone seeing this genuinely doesn't have the plugin yet, and
+ * the store is the right place to send them.
  */
 export default function UpsellPanel( { title, features = [] } ) {
 	const purchase = ( window.TruePlayerGlobal && window.TruePlayerGlobal.purchase_url ) || 'https://kodezen.com/trueplayer';

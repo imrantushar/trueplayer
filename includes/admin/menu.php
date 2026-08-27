@@ -20,6 +20,7 @@ class Menu {
 	public static function init() {
 		$self = new self();
 		add_action( 'admin_menu', [ $self, 'register_menu' ] );
+		add_action( 'admin_head', [ $self, 'brand_icon_style' ] );
 		// Must run before WP's own access check, which wp_die()s on a page slug
 		// that no longer exists — that check lives at the end of the same file
 		// that fires admin_menu, and admin_init is later still.
@@ -60,7 +61,7 @@ class Menu {
 			'manage_options',
 			TRUEPLAYER_PLUGIN_SLUG,
 			[ $this, 'render_app' ],
-			'dashicons-format-video',
+			self::menu_icon(),
 			30
 		);
 
@@ -76,6 +77,38 @@ class Menu {
 		foreach ( $subs as $page_slug => $label ) {
 			add_submenu_page( $slug, $label . ' – ' . $brand, $label, 'manage_options', $page_slug, [ $this, 'render_app' ] );
 		}
+	}
+
+	/**
+	 * The menu mark: the owner's own logo when white-label supplies one,
+	 * otherwise WordPress's video dashicon. add_menu_page takes a URL here as
+	 * happily as a dashicon name, so a custom logo needs no extra plumbing.
+	 */
+	private static function menu_icon(): string {
+		$logo = \TruePlayer\Helper::brand_logo();
+		return $logo ? esc_url_raw( $logo ) : 'dashicons-format-video';
+	}
+
+	/**
+	 * Keep a white-label logo the size of a menu icon.
+	 *
+	 * `add_menu_page()` renders whatever URL it is given as a plain <img>, and
+	 * WordPress constrains it to nothing — its own icons are 20px sprites, so a
+	 * real logo (or, worse, a photo someone picked from the media library)
+	 * painted at full natural size straight across the screen. WordPress sizes
+	 * dashicons but has no rule for image icons, so this supplies one.
+	 *
+	 * Only printed when a custom logo is actually in use; the default dashicon
+	 * needs nothing.
+	 */
+	public function brand_icon_style(): void {
+		if ( ! \TruePlayer\Helper::brand_logo() ) {
+			return;
+		}
+		printf(
+			'<style id="trueplayer-brand-icon">#adminmenu .toplevel_page_%1$s .wp-menu-image img{width:20px;height:20px;max-width:20px;object-fit:contain;}</style>',
+			esc_attr( TRUEPLAYER_PLUGIN_SLUG )
+		);
 	}
 
 	public function render_app() {

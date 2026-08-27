@@ -3,6 +3,23 @@ export function isPro() {
 	return !! ( window.TruePlayerGlobal && window.TruePlayerGlobal.is_pro_active );
 }
 
+/**
+ * Whether a license key is actually activated — deliberately separate from
+ * isPro(). The pro gate falls back to "allowed" before a store product is
+ * configured, so it cannot be used to tell an admin their license is valid.
+ *
+ * @return {'active'|'inactive'|'unconfigured'} License state.
+ */
+export function licenseStatus() {
+	const s = window.TruePlayerGlobal && window.TruePlayerGlobal.license_status;
+	return [ 'active', 'inactive', 'unconfigured' ].includes( s ) ? s : 'unconfigured';
+}
+
+/** Where the key is managed, or '' when this build has no license server. */
+export function licensePageUrl() {
+	return ( window.TruePlayerGlobal && window.TruePlayerGlobal.license_url ) || '';
+}
+
 export function proFlag( name ) {
 	const f = ( window.TruePlayerGlobal && window.TruePlayerGlobal.feature_flags ) || {};
 	return !! f[ name ];

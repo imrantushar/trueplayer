@@ -130,7 +130,13 @@ export default function App() {
 	};
 
 	const crumbsFor = ( name ) => {
-		const toMedia = { label: 'Media', onClick: () => go( 'library' ) };
+		// `go('library')` with no kind falls back to the All filter, so this crumb
+		// said "Media" and landed on All. The editor and the analytics screen are
+		// only ever reached from a media row — playlists and interactive items are
+		// edited inside the Library screen itself and come back through
+		// editState.onBack, which keeps its own filter — so the crumb names the
+		// filter it actually returns to.
+		const toMedia = { label: 'Media', onClick: () => go( 'library', { kind: 'media' } ) };
 		switch ( name ) {
 			case 'dashboard': return [ { label: 'Dashboard' } ];
 			case 'library': return editState
@@ -172,9 +178,23 @@ export default function App() {
 									onCreateHandled={ () => setCreateIntent( null ) }
 								/>
 							) }
-							{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library' ) } /> }
+							{ /* Back lands on the same filter the Media crumb does — analytics
+							     is reached from a media row, so All would drop the filter. */ }
+							{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library', { kind: 'media' } ) } /> }
 							{ route.name === 'presets' && <Presets onEditState={ setEditState } /> }
-							{ route.name === 'settings' && <Settings onEditState={ setEditState } /> }
+							{ /* The settings section rides in the URL, so a reload keeps it —
+							     replaceState, not push, so switching sections doesn't bury the
+							     page the user arrived from under a stack of back-button steps. */ }
+							{ route.name === 'settings' && (
+								<Settings
+									tab={ route.tab || 'general' }
+									onTabChange={ ( tab ) => {
+										window.history.replaceState( {}, '', routeUrl( 'settings', { tab } ) );
+										setRoute( ( r ) => ( { ...r, tab } ) );
+									} }
+									onEditState={ setEditState }
+								/>
+							) }
 						</div>
 					</main>
 				) }

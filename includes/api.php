@@ -32,9 +32,6 @@ class Api {
 		( new API\ImportController() )->register_routes();
 		( new API\RulesController() )->register_routes();
 		( new API\SubtitlesController() )->register_routes();
-		if ( \TruePlayer\H5P\Module::is_available() ) {
-			( new API\H5pController() )->register_routes();
-		}
 		do_action( 'trueplayer/api/register_routes' );
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace TruePlayer\Database;
+namespace TruePlayerInteractive\Database;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * NOTE: no SQL `--` comments inside CREATE TABLE (dbDelta parser); keep the two
  * spaces after `PRIMARY KEY` that dbDelta expects.
  */
-class CreateH5PTables {
+class CreateTables {
 
 	public static function up( $prefix, $charset_collate ) {
 		$p = $prefix . 'tp_h5p_';

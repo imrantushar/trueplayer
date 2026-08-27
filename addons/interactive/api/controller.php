@@ -1,6 +1,6 @@
 <?php
 
-namespace TruePlayer\API;
+namespace TruePlayerInteractive\API;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -9,10 +9,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 use WP_REST_Controller;
 use WP_REST_Server;
 use WP_Error;
-use TruePlayer\H5P\Core;
-use TruePlayer\H5P\Module;
-use TruePlayer\H5P\Importer;
-use TruePlayer\H5P\Preview;
+use TruePlayerInteractive\Core;
+use TruePlayerInteractive\Module;
+use TruePlayerInteractive\Importer;
+use TruePlayerInteractive\Preview;
 
 /**
  * Admin REST for the H5P engine — content-type management, semantics retrieval,
@@ -22,7 +22,7 @@ use TruePlayer\H5P\Preview;
  * `tp_video` post (engine = h5p), so H5P items live in the same Library as
  * native videos and reuse the same `[trueplayer id="N"]` embed.
  */
-class H5pController extends WP_REST_Controller {
+class Controller extends WP_REST_Controller {
 
 	/**
 	 * A curated set of field-based content types the semantics-driven builder
@@ -43,6 +43,13 @@ class H5pController extends WP_REST_Controller {
 		'H5P.Dialogcards'  => [ 'Dialog Cards', 'Two-sided cards for drilling terms and phrases.', 'study' ],
 		'H5P.Accordion'    => [ 'Accordion', 'Collapsible sections of rich text — good for long copy.', 'content' ],
 	];
+
+	/** Register this addon's routes when WP builds the REST API. */
+	public static function init(): void {
+		add_action( 'rest_api_init', static function () {
+			( new self() )->register_routes();
+		} );
+	}
 
 	public function __construct() {
 		$this->namespace = TRUEPLAYER_PLUGIN_SLUG . '/v1';

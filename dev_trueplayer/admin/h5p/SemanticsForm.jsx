@@ -264,7 +264,14 @@ function CollapsibleSection( { field, children, defaultOpen = false, hint = '' }
 function ListField( { field, value, onChange, depth = 0 } ) {
 	const items = Array.isArray( value ) ? value : [];
 	const item = field.field || {};
-	const min = field.min || 0;
+	// `min` hides the trash on the last rows, which is right for a list the
+	// content type genuinely needs (MultiChoice `answers` is min 1 — deleting
+	// the only option would break the question). An `optional` list is a
+	// different thing: the content is valid with none of it at all, and its
+	// `min: 1` only describes H5P's own widget keeping a row on screen. Reading
+	// that as a floor left the single row undeletable with no way to clear the
+	// list — the score-range feedback case. So: optional lists floor at 0.
+	const min = field.optional ? 0 : ( field.min || 0 );
 	const max = field.max || Infinity;
 	const entity = item.label || field.entity || 'Item';
 

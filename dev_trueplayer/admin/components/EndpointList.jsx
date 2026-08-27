@@ -58,10 +58,27 @@ export function EndpointList( { endpoints, onChange } ) {
 		<div className="space-y-4">
 			{ endpoints.map( ( e, i ) => (
 				<div key={ e.id || i } className="border border-line rounded-lg p-4">
+					{ /* Delete belongs to the endpoint, not to the URL field. Sitting
+					     in the URL row it read as "clear this input" while it actually
+					     removed the whole block, so it lives in the card's own header
+					     with a label saying what it deletes. */ }
+					<div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-line">
+						<span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+							Endpoint { i + 1 }
+						</span>
+						<button
+							type="button"
+							onClick={ () => remove( i ) }
+							title={ `Delete endpoint ${ i + 1 }` }
+							aria-label={ `Delete endpoint ${ i + 1 }` }
+							className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-gray-400 hover:text-danger hover:bg-danger-light transition-colors"
+						>
+							<BsTrash size={ 13 } /> Delete
+						</button>
+					</div>
 					<div className="flex gap-2 items-center mb-3">
 						<Input value={ e.url } onChange={ ( ev ) => set( i, { url: ev.target.value } ) } placeholder="https://your-endpoint.example/hook" />
 						<Button variant="ghost" onClick={ () => test( i ) }>Send test</Button>
-						<Button variant="danger" onClick={ () => remove( i ) }><BsTrash /></Button>
 					</div>
 					{ testing[ i ] && (
 						<p className={ `text-xs mb-2 ${ testing[ i ].ok === false ? 'text-red-600' : testing[ i ].ok ? 'text-green-600' : 'text-gray-500' }` }>

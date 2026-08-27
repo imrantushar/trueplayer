@@ -86,7 +86,6 @@ final class TruePlayer {
 		TruePlayer\Api::init();
 		TruePlayer\Database::init();
 		TruePlayer\Shortcode::init();
-		TruePlayer\H5P\Module::init();
 		TruePlayer\InstantPage::init();
 		TruePlayer\Playlist::init();
 		TruePlayer\Block::init();
@@ -94,6 +93,7 @@ final class TruePlayer {
 		TruePlayer\Webhook\Dispatcher::init();
 		TruePlayer\Integrations::init();
 		TruePlayer\WhiteLabel::init();
+		TruePlayer\Migrator::init();
 		TruePlayer\Services\Retention::init();
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
