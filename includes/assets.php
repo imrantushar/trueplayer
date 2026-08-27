@@ -184,11 +184,10 @@ class Assets {
 			'is_login'         => (bool) is_user_logged_in(),
 			'is_admin'         => (bool) current_user_can( 'manage_options' ),
 			'addons'           => $trueplayer_addons,
+			// Installing Pro is what unlocks its features; the licence buys
+			// updates and support and is reported separately (license_status),
+			// so a missing key never reads as "you don't have Pro".
 			'is_pro_active'    => \TruePlayer\Pro::active(),
-			// Whether the pro plugin is *installed*, which is a different
-			// question from whether it is licensed. Someone with Pro running on
-			// an unactivated key must be asked to activate, not to buy again.
-			'is_pro_installed' => (bool) trueplayer_is_pro_active(),
 			// Distinct from is_pro_active: the pro plugin can be running on the
 			// permissive pre-license default, and the settings screen must not
 			// call that "your license is valid". See Pro::license_status().

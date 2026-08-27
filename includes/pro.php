@@ -36,24 +36,32 @@ class Pro {
 	/** Skins available only with pro. */
 	const PREMIUM_SKINS = [ 'floating', 'ambient' ];
 
+	/**
+	 * The feature gate: is Pro installed?
+	 *
+	 * Deliberately not a licence check. Installing Pro is what unlocks its
+	 * features; the licence buys automatic updates and support, and a lapsed or
+	 * missing key must never switch a working site's features off underneath
+	 * it. `license_valid()` is still available for anything that genuinely needs
+	 * the store's verdict.
+	 */
 	public static function active(): bool {
-		return trueplayer_is_pro_active() && self::license_valid();
+		return (bool) trueplayer_is_pro_active();
 	}
 
+	/**
+	 * The store's verdict on the licence key, for the things a licence actually
+	 * governs — updates and support. Not the feature gate; see active().
+	 * Defaults to true so a build with no licence server behaves normally.
+	 */
 	public static function license_valid(): bool {
-		/**
-		 * The pro plugin's StoreLicense returns the SDK verdict here. Defaults
-		 * to true so the split works with just the pro plugin before a license
-		 * server is configured.
-		 */
 		return (bool) apply_filters( 'trueplayer/license_valid', true );
 	}
 
 	/**
-	 * What to *tell* an admin about the licence — which is not the same question
-	 * as license_valid(), whose permissive default (see above) made the settings
-	 * screen claim "your license is valid" to someone who had never entered a
-	 * key. One of:
+	 * What to tell an admin about the licence. Distinct from license_valid(),
+	 * whose permissive default would otherwise have the settings screen claim a
+	 * valid key to someone who never entered one. One of:
 	 *   active       — a key is entered and the store validated it
 	 *   inactive     — a license server is configured but there is no valid key
 	 *   unconfigured — this build has no license server; nothing to activate

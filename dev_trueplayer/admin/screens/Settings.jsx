@@ -8,7 +8,7 @@ import { isPro, licenseStatus, licensePageUrl } from '../pro';
 import { hasLicenseApi } from '../license';
 import LicensePanel from './settings/LicensePanel';
 import AddonsPanel from './settings/AddonsPanel';
-import { pickMedia } from '../utils/media';
+import MediaPicker from '../components/MediaPicker';
 import { PRESET_TEMPLATES, ASPECT_RATIOS } from '../data/preset-templates';
 
 // A mini player preview rendered in the template's style.
@@ -270,7 +270,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								})()}
 							</Card>
 						) : (
-							<UpsellPanel onNavigate={() => setTab('license')} title="Enforcement policy" features={['Site-wide watch-verification defaults', 'Anti-skip & must-watch (strict) mode', 'Quiz lock-on-fail & login gating']} />
+							<UpsellPanel title="Enforcement policy" features={['Site-wide watch-verification defaults', 'Anti-skip & must-watch (strict) mode', 'Quiz lock-on-fail & login gating']} />
 						)
 					)}
 
@@ -288,8 +288,8 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 												<Field label="Issuer name" hint="Defaults to your site name.">
 													<Input value={c.certIssuer} onChange={(e) => setC({ certIssuer: e.target.value })} placeholder={(window.TruePlayerGlobal && window.TruePlayerGlobal.site_name) || 'Your organization'} />
 												</Field>
-												<Field label="Logo URL">
-													<Input value={c.certLogo} onChange={(e) => setC({ certLogo: e.target.value })} placeholder="https://…/logo.png" />
+												<Field label="Logo">
+													<MediaPicker value={c.certLogo} onChange={(url) => setC({ certLogo: url })} accept="image" label="Upload a logo" />
 												</Field>
 												<Field label="Signature line" hint="e.g. a name / title printed under the certificate.">
 													<Input value={c.certSignature} onChange={(e) => setC({ certSignature: e.target.value })} placeholder="Jane Doe, Head of Training" />
@@ -324,7 +324,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</Card>
 							</div>
 						) : (
-							<UpsellPanel onNavigate={() => setTab('license')} title="Compliance &amp; privacy" features={['White-labelled completion certificates', 'Public verification page', 'Data-retention auto-purge (GDPR)']} />
+							<UpsellPanel title="Compliance &amp; privacy" features={['White-labelled completion certificates', 'Public verification page', 'Data-retention auto-purge (GDPR)']} />
 						)
 					)}
 
@@ -344,7 +344,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</div>
 							</Card>
 						) : (
-							<UpsellPanel onNavigate={() => setTab('license')} title="Video analytics" features={['Audience retention & replay heatmap', 'Completion funnel & per-viewer drill-down', 'Toggle collection site-wide']} />
+							<UpsellPanel title="Video analytics" features={['Audience retention & replay heatmap', 'Completion funnel & per-viewer drill-down', 'Toggle collection site-wide']} />
 						)
 					)}
 
@@ -380,7 +380,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 									</Card>
 								</>
 							) : (
-								<UpsellPanel onNavigate={() => setTab('license')} title="Private &amp; premium sources" features={['Bunny.net token authentication', 'Signed, expiring playback URLs', 'Mux & HLS streaming']} />
+								<UpsellPanel title="Private &amp; premium sources" features={['Bunny.net token authentication', 'Signed, expiring playback URLs', 'Mux & HLS streaming']} />
 							)}
 						</div>
 					)}
@@ -424,7 +424,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</Card>
 							</div>
 						) : (
-							<UpsellPanel onNavigate={() => setTab('license')} title="CRM &amp; email integrations" features={['Mailchimp audiences', 'Google Analytics events', 'GemCRM / FluentCRM opt-in capture']} />
+							<UpsellPanel title="CRM &amp; email integrations" features={['Mailchimp audiences', 'Google Analytics events', 'GemCRM / FluentCRM opt-in capture']} />
 						)
 					)}
 
@@ -459,11 +459,10 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 										<h3 className="font-semibold text-gray-900 !mb-1">Player logo</h3>
 										<p className="text-sm text-muted">A watermark logo shown on every player by default.</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
+											{ /* Upload-only: a pasted URL was never the point of a logo
+											     field, and MediaPicker shows what you actually picked. */ }
 											<Field label="Logo image" className='!mb-0'>
-												<div className="flex gap-2">
-													<Input value={brand.logo || ''} onChange={(e) => setBrand({ logo: e.target.value })} placeholder="https://…/logo.png" />
-													<Button variant="ghost" onClick={() => pickMedia('image', (url) => setBrand({ logo: url }))}>Media library</Button>
-												</div>
+												<MediaPicker value={brand.logo || ''} onChange={(url) => setBrand({ logo: url })} accept="image" label="Upload a logo" />
 											</Field>
 											{brand.logo && (
 												<div className="grid grid-cols-2 gap-4">
@@ -516,23 +515,13 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 															     install still showed TruePlayer's play glyph beside the
 															     owner's own name in the WP menu and the admin header. */ }
 															<Field label="Brand logo" hint="Square works best (used at 20px in the WordPress menu). Leave empty to keep the default mark.">
-																<div className="flex gap-2">
-																	<Input
-																		value={settings.whiteLabel?.logo || ''}
-																		onChange={(e) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), logo: e.target.value } }))}
-																		placeholder="https://…/mark.svg"
-																	/>
-																	<Button variant="ghost" onClick={() => pickMedia('image', (url) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), logo: url } })))}>Media library</Button>
-																</div>
+																<MediaPicker
+																	value={settings.whiteLabel?.logo || ''}
+																	onChange={(url) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), logo: url } }))}
+																	accept="image"
+																	label="Upload a mark"
+																/>
 															</Field>
-															{settings.whiteLabel?.logo && (
-																<div className="flex items-center gap-3 -mt-2 mb-4">
-																	<span className="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-900 p-1">
-																		<img src={settings.whiteLabel.logo} alt="" className="max-w-full max-h-full" />
-																	</span>
-																	<Button variant="clear" size="sm" onClick={() => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), logo: '' } }))}>Remove</Button>
-																</div>
-															)}
 														</>
 													)}
 													<p className="text-xs text-muted mt-2">Takes effect on the next page load after saving.</p>
@@ -548,7 +537,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 					)}
 
 					{tab === 'logs' && (
-						isPro() ? <WebhookLogs /> : <UpsellPanel onNavigate={() => setTab('license')} title="Webhook delivery logs" features={['Every delivery attempt recorded', 'See failures &amp; status codes']} />
+						isPro() ? <WebhookLogs /> : <UpsellPanel title="Webhook delivery logs" features={['Every delivery attempt recorded', 'See failures &amp; status codes']} />
 					)}
 
 					{tab === 'webhooks' && (
@@ -564,7 +553,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</div>
 							</Card>
 						) : (
-							<UpsellPanel onNavigate={() => setTab('license')} title="Automation & webhooks" features={['Signed webhooks on every player event', 'Site-wide + per-video endpoints']} />
+							<UpsellPanel title="Automation & webhooks" features={['Signed webhooks on every player event', 'Site-wide + per-video endpoints']} />
 						)
 					)}
 
@@ -604,7 +593,8 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 									)}
 									{isPro() && status === 'inactive' && (
 										<p className="text-sm text-gray-500">
-											TruePlayer Pro is running, but no license key has been activated — you won’t get automatic updates or support until one is.
+											TruePlayer Pro is running and every feature is available. Activating a license adds
+											automatic updates and priority support — it doesn’t unlock anything.
 										</p>
 									)}
 									{isPro() && status === 'unconfigured' && (

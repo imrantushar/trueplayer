@@ -4,15 +4,6 @@ export function isPro() {
 }
 
 /**
- * Whether the pro plugin is present, regardless of licensing. `isPro()` is the
- * capability gate (installed AND licensed); this one answers "do they already
- * own it", which is what decides between "buy" and "activate".
- */
-export function isProInstalled() {
-	return !! ( window.TruePlayerGlobal && window.TruePlayerGlobal.is_pro_installed );
-}
-
-/**
  * Whether a license key is actually activated — deliberately separate from
  * isPro(). The pro gate falls back to "allowed" before a store product is
  * configured, so it cannot be used to tell an admin their license is valid.
