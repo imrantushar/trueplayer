@@ -1,6 +1,7 @@
 # TruePlayer — Feature List (Free vs Pro)
 
-Audited against the code on 2026-08-26 (`trueplayer` 1.0-beta1 + `trueplayer-pro` 1.0-beta1).
+Audited against the code on 2026-08-26, version-stamped 1.0.0 on 2026-08-27
+(`trueplayer` 1.0.0 + `trueplayer-pro` 1.0.0).
 Positioning: **the player is free, the intelligence is Pro.** Everything that tracks, gates,
 analyses, automates or extends sits behind `TruePlayer\Pro::active()`.
 

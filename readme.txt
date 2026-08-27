@@ -4,7 +4,7 @@ Tags: video, player, lms, quiz, webhooks, watch tracking
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.0-beta1
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,8 +22,8 @@ Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources 
 
 == Changelog ==
 
-= 1.0-beta1 - 13/08/2026 =
-First public beta. TruePlayer ships as a native WordPress video & audio player built for enforcement and automation.
+= 1.0.0 - 27/08/2026 =
+First stable release. TruePlayer ships as a native WordPress video & audio player built for enforcement and automation.
 
 **Player**
 * Native React player with multiple skins (default, modern, simple, minimal, standard).
