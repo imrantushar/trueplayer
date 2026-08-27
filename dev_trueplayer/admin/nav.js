@@ -27,7 +27,7 @@ export const SETTINGS_TABS = [
 	'general', 'branding', 'sources',
 	'enforcement', 'compliance', 'analytics',
 	'integrations', 'webhooks', 'logs',
-	'license',
+	'addons', 'license',
 ];
 
 /** Resolve the active screen + params from the URL. */

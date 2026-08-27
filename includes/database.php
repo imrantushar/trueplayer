@@ -28,7 +28,17 @@ class Database {
 		Database\CreateQuizAttemptsTable::up( $prefix, $charset_collate );
 		Database\CreateEngagementTable::up( $prefix, $charset_collate );
 		Database\CreateDailyTable::up( $prefix, $charset_collate );
-		Database\CreateH5PTables::up( $prefix, $charset_collate );
+
+		/**
+		 * Addons own their own tables and sync them here, so core carries no
+		 * knowledge of schema it doesn't use. An addon that is switched off
+		 * simply doesn't respond, which is what keeps its tables off installs
+		 * that never wanted the feature.
+		 *
+		 * @param string $prefix          Table prefix.
+		 * @param string $charset_collate Charset/collation clause.
+		 */
+		do_action( 'trueplayer/database/sync_schema', $prefix, $charset_collate );
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 
-namespace TruePlayer\H5P;
+namespace TruePlayerInteractive;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -42,6 +42,18 @@ class Renderer {
 		$content['id'] = $content_id;
 
 		return '<div class="trueplayer-h5p tp-v' . (int) $video_id . '">' . Assets::add_content( $content, $video_id ) . '</div>';
+	}
+
+	/**
+	 * Shown where an interactive item is embedded while the engine is switched
+	 * off — visitors see nothing, authors see why.
+	 *
+	 * @return string
+	 */
+	public static function disabled_notice(): string {
+		return self::notice(
+			__( 'This is interactive content, and interactive content is turned off. Enable it under TruePlayer → Media → Interactive.', 'trueplayer' )
+		);
 	}
 
 	/**

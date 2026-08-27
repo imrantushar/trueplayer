@@ -1,6 +1,6 @@
 <?php
 
-namespace TruePlayer\H5P;
+namespace TruePlayerInteractive;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -46,7 +46,7 @@ class Assets {
 
 	/** Base URL of the vendored H5P core library. */
 	public static function core_base_url(): string {
-		return TRUEPLAYER_PLUGIN_ROOT_URI . 'includes/h5p/runtime/h5p-php-library/';
+		return TRUEPLAYER_INTERACTIVE_ADDON_URI . 'runtime/h5p-php-library/';
 	}
 
 	/**
@@ -130,9 +130,9 @@ class Assets {
 		// Version by mtime like the built assets do — this one has no build step,
 		// so a plugin-version bump is the only thing that would otherwise break
 		// the cache on a stale bridge.
-		$xapi_path = TRUEPLAYER_ASSETS_DIR_PATH . 'h5p-xapi.js';
+		$xapi_path = TRUEPLAYER_INTERACTIVE_ADDON_PATH . 'assets/xapi.js';
 		$xapi_ver  = file_exists( $xapi_path ) ? filemtime( $xapi_path ) : TRUEPLAYER_VERSION;
-		wp_enqueue_script( 'trueplayer-h5p-xapi', TRUEPLAYER_ASSETS_URI . 'h5p-xapi.js', [], $xapi_ver, true );
+		wp_enqueue_script( 'trueplayer-h5p-xapi', TRUEPLAYER_INTERACTIVE_ADDON_URI . 'assets/xapi.js', [], $xapi_ver, true );
 		self::$xapi_items[ (int) $content['id'] ] = $video_id;
 
 		if ( ! isset( self::$settings['contents'][ $cid ] ) ) {

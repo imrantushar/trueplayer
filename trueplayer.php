@@ -86,7 +86,6 @@ final class TruePlayer {
 		TruePlayer\Api::init();
 		TruePlayer\Database::init();
 		TruePlayer\Shortcode::init();
-		TruePlayer\H5P\Module::init();
 		TruePlayer\InstantPage::init();
 		TruePlayer\Playlist::init();
 		TruePlayer\Block::init();

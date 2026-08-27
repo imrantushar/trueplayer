@@ -160,9 +160,11 @@ class Assets {
 			'trueplayer/assets/backend_scripts_data',
 			array_merge(
 				$this->get_common_scripts_data(),
-				// The library screen offers an "Interactive" filter + create
-				// option only when the H5P engine is actually present.
-				[ 'h5p_available' => \TruePlayer\H5P\Module::is_available() ]
+				// Each addon contributes its own state through this same filter
+				// (see TruePlayerInteractive\Interactive::expose_state), so core
+				// doesn't enumerate features it no longer owns. The registry is
+				// what the Settings → Addons screen lists.
+				[ 'addons_registry' => \TruePlayer\Addons::registry() ]
 			)
 		);
 	}

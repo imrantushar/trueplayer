@@ -27,9 +27,12 @@ class Addons {
 		$addons = apply_filters(
 			'trueplayer/addons/loader_args',
 			[
-				// No core addons yet — watch verification, gating and basic
-				// webhooks live directly in core (they are the product). Kept
-				// as an empty registry so the filter surface exists for pro.
+				// Interactive content (the H5P engine). Opt-in: registered here
+				// so it can be described and switched on, but it gates its own
+				// features on being active — see TruePlayerInteractive\Interactive.
+				// Watch verification, gating and basic webhooks stay in core:
+				// they are the product, not an addon.
+				'interactive' => 'Interactive',
 			]
 		);
 
@@ -59,6 +62,17 @@ class Addons {
 				$class::init();
 			}
 		}
+	}
+
+	/**
+	 * Every registered addon's metadata, each contributed by the addon itself
+	 * through `trueplayer/addons/registry`, so the settings screen never needs a
+	 * hard-coded list. Entries are { slug, label, description, icon, active,
+	 * installed, note }.
+	 */
+	public static function registry(): array {
+		$addons = (array) apply_filters( 'trueplayer/addons/registry', [] );
+		return array_values( array_filter( $addons, static fn( $a ) => is_array( $a ) && ! empty( $a['slug'] ) ) );
 	}
 
 	public function get_all_addons() {

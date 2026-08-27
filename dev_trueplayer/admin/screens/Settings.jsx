@@ -7,6 +7,7 @@ import UpsellPanel from '../components/UpsellPanel';
 import { isPro, licenseStatus, licensePageUrl } from '../pro';
 import { hasLicenseApi } from '../license';
 import LicensePanel from './settings/LicensePanel';
+import AddonsPanel from './settings/AddonsPanel';
 import { pickMedia } from '../utils/media';
 import { PRESET_TEMPLATES, ASPECT_RATIOS } from '../data/preset-templates';
 
@@ -69,6 +70,7 @@ const NAV_GROUPS = [
 	},
 	{
 		label: 'Account', items: [
+			{ key: 'addons', label: 'Addons', icon: 'puzzle' },
 			{ key: 'license', label: 'License', icon: 'key' },
 		]
 	},
@@ -565,6 +567,8 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 							<UpsellPanel onNavigate={() => setTab('license')} title="Automation & webhooks" features={['Signed webhooks on every player event', 'Site-wide + per-video endpoints']} />
 						)
 					)}
+
+					{tab === 'addons' && <AddonsPanel />}
 
 					{ /* With Pro active and a store product configured, the SDK's REST
 					     routes are reachable and this tab is the real activation

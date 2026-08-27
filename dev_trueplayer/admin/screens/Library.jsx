@@ -5,6 +5,8 @@ import { Icon } from '../components/icons';
 import { PlaylistEditor } from './Playlists';
 import H5pEditor from './H5pEditor';
 import CreateModal from './CreateModal';
+import InteractiveTeaser from '../components/InteractiveTeaser';
+import { h5pEnabled, h5pInstalled } from '../h5p';
 
 /**
  * The library — one screen for every kind of thing TruePlayer can embed:
@@ -16,7 +18,10 @@ import CreateModal from './CreateModal';
 
 const PER_PAGE = 10;
 
-const h5pAvailable = () => !! ( window.TruePlayerGlobal && window.TruePlayerGlobal.h5p_available );
+// `h5pEnabled` gates anything that reads or writes interactive content;
+// `h5pInstalled` only says the engine could be switched on, which is what the
+// Interactive tab needs in order to offer the teaser instead of vanishing.
+const h5pAvailable = h5pEnabled;
 
 // Filter chips. All four are the one library route with a different ?kind=.
 const FILTERS = [
@@ -200,12 +205,16 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 	}
 
 	const byId = Object.fromEntries( ( videos || [] ).map( ( v ) => [ v.id, v ] ) );
-	const filters = FILTERS.filter( ( f ) => 'interactive' !== f.kind || h5pAvailable() );
-	const createKinds = [ 'media', 'playlist', ...( h5pAvailable() ? [ 'interactive' ] : [] ) ];
+	// The tab stays visible while the engine is merely installed, so the feature
+	// is discoverable; creating is gated on it actually being enabled.
+	const filters = FILTERS.filter( ( f ) => 'interactive' !== f.kind || h5pInstalled() );
+	const createKinds = [ 'media', 'playlist', ...( h5pEnabled() ? [ 'interactive' ] : [] ) ];
+	const teasing = 'interactive' === kind && h5pInstalled() && ! h5pEnabled();
 
 	// The split button's default is the kind you're looking at — so the filter
-	// you deep-linked to is also the thing you create in one click.
-	const defaultKind = 'all' === kind ? 'media' : kind;
+	// you deep-linked to is also the thing you create in one click. On the
+	// teaser there is nothing to create yet, so it falls back to media.
+	const defaultKind = ( 'all' === kind || ! createKinds.includes( kind ) ) ? 'media' : kind;
 	const menuKinds = createKinds.filter( ( k ) => k !== defaultKind );
 	const KIND_MENU = {
 		media: { label: 'Media', hint: 'A video or audio player' },
@@ -240,18 +249,24 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 				) ) }
 			</div>
 
-			<RowList
-				rows={ loading ? null : paged }
-				kind={ kind }
-				byId={ byId }
-				copied={ copied }
-				onCopy={ copy }
-				onEdit={ editRow }
-				onViewers={ onViewers }
-				onRemove={ setConfirming }
-				onAdd={ () => setCreate( defaultKind ) }
-			/>
-			{ ! loading && <Pagination page={ current } pages={ pages } onPage={ setPage } /> }
+			{ teasing ? (
+				<InteractiveTeaser onEnable={ () => onNavigate( 'settings', { tab: 'addons' } ) } />
+			) : (
+				<>
+					<RowList
+						rows={ loading ? null : paged }
+						kind={ kind }
+						byId={ byId }
+						copied={ copied }
+						onCopy={ copy }
+						onEdit={ editRow }
+						onViewers={ onViewers }
+						onRemove={ setConfirming }
+						onAdd={ () => setCreate( defaultKind ) }
+					/>
+					{ ! loading && <Pagination page={ current } pages={ pages } onPage={ setPage } /> }
+				</>
+			) }
 
 			{ create && (
 				<CreateModal

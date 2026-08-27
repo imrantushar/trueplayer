@@ -1,6 +1,8 @@
 <?php
 
-namespace TruePlayer\H5P;
+namespace TruePlayerInteractive;
+
+use TruePlayer\Helper;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -35,8 +37,8 @@ class Module {
 	const ENGINE_NATIVE = 'native';
 	const ENGINE_H5P    = 'h5p';
 
-	/** Post meta key mirroring MetaManager. */
-	const ENGINE_META = '_trueplayer_engine';
+	/** Post meta key; core owns it (see Database\MetaManager::ENGINE_META). */
+	const ENGINE_META = \TruePlayer\Database\MetaManager::ENGINE_META;
 
 	public static function init() {
 		$self = new self();
@@ -62,14 +64,32 @@ class Module {
 	}
 
 	/**
-	 * Is the H5P runtime bundled and usable? Gated on the presence of the
-	 * vendored H5P core directory. Filterable so pro / a future settings toggle
-	 * can force it off without deleting files.
+	 * Is the runtime present in this build? This is "could be switched on",
+	 * not "is on" — the admin needs the difference to offer activation rather
+	 * than hiding interactive content entirely.
+	 *
+	 * @return bool
+	 */
+	public static function is_installed(): bool {
+		return is_dir( self::runtime_dir() );
+	}
+
+	/** Has the site switched the addon on? */
+	public static function is_enabled(): bool {
+		return (bool) Helper::get_addon_active_status( Interactive::ADDON_SLUG );
+	}
+
+	/**
+	 * Is the H5P engine usable right now — runtime bundled *and* the addon
+	 * switched on? Everything that renders, routes or authors interactive
+	 * content hangs off this, so a site that never enables it behaves exactly
+	 * as if the engine did not exist. Filterable to force it off without
+	 * deleting files.
 	 *
 	 * @return bool
 	 */
 	public static function is_available(): bool {
-		$available = is_dir( self::runtime_dir() );
+		$available = self::is_installed() && self::is_enabled();
 		return (bool) apply_filters( 'trueplayer/h5p/available', $available );
 	}
 
@@ -81,7 +101,7 @@ class Module {
 	 * @return string
 	 */
 	public static function runtime_dir(): string {
-		return TRUEPLAYER_INCLUDES_DIR_PATH . 'h5p/runtime';
+		return TRUEPLAYER_INTERACTIVE_ADDON_PATH . 'runtime';
 	}
 
 	/**
@@ -107,5 +127,21 @@ class Module {
 	 */
 	public static function is_h5p( int $video_id ): bool {
 		return self::ENGINE_H5P === self::engine_of( $video_id );
+	}
+
+	/**
+	 * Was this item *authored* as interactive content, regardless of whether the
+	 * engine can run right now?
+	 *
+	 * `engine_of()` deliberately falls back to native when the engine is
+	 * unavailable, which is right for routing but wrong for an item that has no
+	 * video source at all — it would render as an empty, broken player. The
+	 * frontend uses this to say so instead.
+	 *
+	 * @param int $video_id
+	 * @return bool
+	 */
+	public static function is_h5p_authored( int $video_id ): bool {
+		return self::ENGINE_H5P === get_post_meta( $video_id, self::ENGINE_META, true );
 	}
 }

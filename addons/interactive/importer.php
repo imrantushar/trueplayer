@@ -1,6 +1,6 @@
 <?php
 
-namespace TruePlayer\H5P;
+namespace TruePlayerInteractive;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
