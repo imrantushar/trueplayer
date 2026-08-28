@@ -140,7 +140,13 @@ class Assets {
 		return is_array( $deps ) ? $deps : [ 'dependencies' => [], 'version' => TRUEPLAYER_VERSION ];
 	}
 
-	private function get_frontend_scripts_data(): array {
+	/**
+	 * Public because the block editor's live preview renders the real frontend
+	 * player and needs the same runtime state the front end gets — site-wide
+	 * player defaults above all, which are layered on the client, so a preview
+	 * without them would disagree with the page it is previewing.
+	 */
+	public function get_frontend_scripts_data(): array {
 		$data                     = $this->get_common_scripts_data();
 		$sources                  = \TruePlayer\Helper::get_settings_section( 'sources' );
 		$data['youtube_nocookie'] = ! empty( $sources['youtubeNoCookie'] );

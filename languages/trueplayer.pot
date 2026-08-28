@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-27T15:24:05+00:00\n"
+"POT-Creation-Date: 2026-08-28T05:28:27+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: trueplayer\n"
@@ -218,20 +218,43 @@ msgstr ""
 msgid "Captions could not be parsed."
 msgstr ""
 
-#: includes/api/videos-controller.php:172
+#: includes/api/videos-controller.php:237
+msgid "That source type cannot be created from the editor."
+msgstr ""
+
+#: includes/api/videos-controller.php:246
+#: includes/api/videos-controller.php:322
+msgid "Choose a file or paste a link first."
+msgstr ""
+
+#: includes/api/videos-controller.php:253
+#: includes/api/videos-controller.php:487
 msgid "Untitled video"
 msgstr ""
 
-#: includes/api/videos-controller.php:244
+#: includes/api/videos-controller.php:290
+#: includes/api/videos-controller.php:360
+msgid "Not found"
+msgstr ""
+
+#: includes/api/videos-controller.php:298
+msgid "That source type cannot be set from the editor."
+msgstr ""
+
+#: includes/api/videos-controller.php:313
+msgid "This video uses a source that is set up in the full editor."
+msgstr ""
+
+#: includes/api/videos-controller.php:559
 msgid "The captured frame was empty or too large to store."
 msgstr ""
 
-#: includes/api/videos-controller.php:255
+#: includes/api/videos-controller.php:570
 msgid "That frame was not a readable image."
 msgstr ""
 
 #. translators: %s: video title.
-#: includes/api/videos-controller.php:269
+#: includes/api/videos-controller.php:584
 #, php-format
 msgid "%s poster"
 msgstr ""

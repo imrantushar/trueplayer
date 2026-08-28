@@ -63,7 +63,26 @@ analyses, automates or extends sits behind `TruePlayer\Pro::active()`.
 
 ### Publishing & embedding
 - `[trueplayer id="N"]` shortcode.
-- Gutenberg block `trueplayer/player` (dynamic).
+- Gutenberg block `trueplayer/player` (dynamic) — the canvas renders the **real player at
+  full size**, not a placeholder: same component and same config pipeline the published
+  page uses, so the post is laid out around what visitors actually get. An unselected
+  block shields the player so a click selects it; selecting lifts the shield and the
+  preview plays.
+  - **Create new** and **Edit** (block toolbar + inspector) both open a dialog *inside the
+    editor* — no trip to wp-admin. Name + source type (self-hosted / YouTube / Vimeo /
+    external URL) + the source itself, so a video is finished when it is created, and
+    retargeting one keeps everything else in its config. Bunny/Mux/HLS and everything
+    beyond the source (gating, chapters, appearance) stay in the full editor, linked from
+    the dialog.
+  - Four narrow REST routes keep this below admin: `GET videos/options` and
+    `GET videos/{id}/preview` (need `edit_posts`), `POST videos/quick` and
+    `POST videos/{id}/quick` (need `edit_posts` + `upload_files`). The config is built
+    server-side from a whitelisted type + one URL — the caller can never write raw config
+    — so full config CRUD stays `manage_options`. Both capabilities are filterable:
+    `trueplayer/rest/can_browse_videos`, `trueplayer/rest/can_create_video`.
+  - `videos/{id}/preview` returns `Shortcode::resolved_config()` — presets applied, free
+    limits clamped, quiz answer keys stripped — so the preview can't drift from the embed.
+    A video already on a premium source refuses a downgrade from the block (409).
 - Site-wide player defaults (Settings → Player) layered under per-video overrides:
   built-in defaults → global → per-video.
 
