@@ -29,13 +29,37 @@ function loadYT() {
 	return ytReady;
 }
 
+/**
+ * The 11-character video id out of any URL YouTube hands out.
+ *
+ * `shorts/` and `live/` were missing, so those URLs fell through to the
+ * `source.src` fallback and the whole URL was passed as a video id — which the
+ * IFrame API answers by failing to load anything. The admin's own poster
+ * derivation (admin/utils/poster.js) already covered both, so a Shorts link
+ * would show its thumbnail and then refuse to play.
+ */
 function parseId( source ) {
 	if ( source.videoId ) {
 		return source.videoId;
 	}
-	const m = ( source.src || '' ).match( /(?:v=|\.be\/|embed\/)([\w-]{11})/ );
+	const m = ( source.src || '' ).match( /(?:v=|\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/ );
 	return m ? m[ 1 ] : source.src;
 }
+
+/**
+ * What actually went wrong, in words an author can act on.
+ *
+ * 101 and 150 are the common one and the important one to name: the video
+ * plays perfectly on youtube.com, and its owner has simply disallowed
+ * embedding — no amount of checking the URL will fix it.
+ */
+const ERRORS = {
+	2: 'That YouTube link doesn’t contain a valid video ID.',
+	5: 'YouTube couldn’t play this video in the browser.',
+	100: 'That YouTube video was removed, or is private.',
+	101: 'The owner of that YouTube video doesn’t allow it to be embedded.',
+	150: 'The owner of that YouTube video doesn’t allow it to be embedded.',
+};
 
 /**
  * YouTube provider with our own controls overlaid (controls=0, modestbranding).
@@ -78,7 +102,25 @@ export async function createYouTubeProvider( container, source, opts = {} ) {
 				emitter.emit( 'ready' );
 				emitter.emit( 'durationchange' );
 			},
+			// Nothing listened for this before, so a video that could never play
+			// — the embed-disabled case above all — left the player sitting on its
+			// poster at 0:00 with a play button that did nothing and said nothing.
+			onError: ( e ) => {
+				emitter.emit( 'error', {
+					code: e && e.data,
+					message: ( ERRORS[ e && e.data ] ) || 'This YouTube video could not be played.',
+				} );
+			},
 			onStateChange: ( e ) => {
+				// YouTube reports no duration until the video is actually cued, so
+				// the value read at ready is usually 0. Re-read it as the state
+				// moves and announce it the first time it is real, or the scrubber
+				// and the time readout stay stuck on 0:00.
+				const known = player.getDuration() || 0;
+				if ( known && known !== duration ) {
+					duration = known;
+					emitter.emit( 'durationchange' );
+				}
 				if ( e.data === YT.PlayerState.PLAYING ) {
 					emitter.emit( 'play' );
 					emitter.emit( 'playing' );

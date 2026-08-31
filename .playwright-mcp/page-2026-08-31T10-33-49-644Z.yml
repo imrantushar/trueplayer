@@ -1,0 +1,387 @@
+- generic [ref=f1e2]:
+  - navigation "Main menu":
+    - link "Skip to main content" [ref=f1e3] [cursor=pointer]:
+      - /url: "#wpbody-content"
+    - link "Skip to toolbar" [ref=f1e4] [cursor=pointer]:
+      - /url: "#wp-toolbar"
+    - list [ref=f1e7]:
+      - listitem [ref=f1e8]:
+        - link "Dashboard" [ref=f1e9] [cursor=pointer]:
+          - /url: index.php
+          - generic [ref=f1e10]: 
+        - list [ref=f1e12]:
+          - listitem [ref=f1e13]:
+            - link "Home" [ref=f1e14] [cursor=pointer]:
+              - /url: index.php
+          - listitem [ref=f1e15]:
+            - link "Updates 14" [ref=f1e16] [cursor=pointer]:
+              - /url: update-core.php
+              - text: Updates
+              - generic [ref=f1e17]: "14"
+      - listitem [ref=f1e18]:
+        - link "Academy LMS" [ref=f1e19] [cursor=pointer]:
+          - /url: admin.php?page=academy
+        - list [ref=f1e22]:
+          - listitem [ref=f1e23]:
+            - link "Dashboard" [ref=f1e24] [cursor=pointer]:
+              - /url: admin.php?page=academy
+          - listitem [ref=f1e25]:
+            - link "Courses" [ref=f1e26] [cursor=pointer]:
+              - /url: admin.php?page=academy-courses
+          - listitem [ref=f1e27]:
+            - link "Lessons" [ref=f1e28] [cursor=pointer]:
+              - /url: admin.php?page=academy-lessons
+          - listitem [ref=f1e29]:
+            - link "Announcements" [ref=f1e30] [cursor=pointer]:
+              - /url: admin.php?page=academy-announcements
+          - listitem [ref=f1e31]:
+            - link "Question & Answer" [ref=f1e32] [cursor=pointer]:
+              - /url: admin.php?page=academy-question_answer
+          - listitem [ref=f1e33]:
+            - link "Instructors" [ref=f1e34] [cursor=pointer]:
+              - /url: admin.php?page=academy-instructors
+          - listitem [ref=f1e35]:
+            - link "Students" [ref=f1e36] [cursor=pointer]:
+              - /url: admin.php?page=academy-students
+          - listitem [ref=f1e37]:
+            - link "Add-ons" [ref=f1e38] [cursor=pointer]:
+              - /url: admin.php?page=academy-addons
+          - listitem [ref=f1e39]:
+            - link "What’s new!" [ref=f1e40] [cursor=pointer]:
+              - /url: admin.php?page=academy-whats-new
+          - listitem [ref=f1e41]:
+            - link "Tools" [ref=f1e42] [cursor=pointer]:
+              - /url: admin.php?page=academy-tools
+          - listitem [ref=f1e43]:
+            - link "Settings" [ref=f1e44] [cursor=pointer]:
+              - /url: admin.php?page=academy-settings
+          - listitem [ref=f1e45]:
+            - link " Get Pro" [ref=f1e46] [cursor=pointer]:
+              - /url: admin.php?page=academy-get-pro
+              - generic [ref=f1e47]: 
+              - text: Get Pro
+      - listitem [ref=f1e48]
+      - listitem [ref=f1e50]:
+        - link "Posts" [ref=f1e51] [cursor=pointer]:
+          - /url: edit.php
+          - generic [ref=f1e52]: 
+        - list [ref=f1e54]:
+          - listitem [ref=f1e55]:
+            - link "All Posts" [ref=f1e56] [cursor=pointer]:
+              - /url: edit.php
+          - listitem [ref=f1e57]:
+            - link "Add Post" [ref=f1e58] [cursor=pointer]:
+              - /url: post-new.php
+          - listitem [ref=f1e59]:
+            - link "Categories" [ref=f1e60] [cursor=pointer]:
+              - /url: edit-tags.php?taxonomy=category
+          - listitem [ref=f1e61]:
+            - link "Tags" [ref=f1e62] [cursor=pointer]:
+              - /url: edit-tags.php?taxonomy=post_tag
+      - listitem [ref=f1e63]:
+        - link "Media" [ref=f1e64] [cursor=pointer]:
+          - /url: upload.php
+          - generic [ref=f1e65]: 
+        - list [ref=f1e67]:
+          - listitem [ref=f1e68]:
+            - link "Library" [ref=f1e69] [cursor=pointer]:
+              - /url: upload.php
+          - listitem [ref=f1e70]:
+            - link "Add Media File" [ref=f1e71] [cursor=pointer]:
+              - /url: media-new.php
+          - listitem [ref=f1e72]:
+            - link "EasyMedia" [ref=f1e73] [cursor=pointer]:
+              - /url: upload.php?page=easy_media
+      - listitem [ref=f1e74]:
+        - link "FluentPlayer" [ref=f1e75] [cursor=pointer]:
+          - /url: admin.php?page=fluent-player
+        - list [ref=f1e78]:
+          - listitem [ref=f1e79]:
+            - link "Media" [ref=f1e80] [cursor=pointer]:
+              - /url: admin.php?page=fluent-player
+          - listitem [ref=f1e81]:
+            - link "Settings" [ref=f1e82] [cursor=pointer]:
+              - /url: admin.php?page=fluent-player#/settings
+      - listitem [ref=f1e83]:
+        - link "Pages" [ref=f1e84] [cursor=pointer]:
+          - /url: edit.php?post_type=page
+          - generic [ref=f1e85]: 
+        - list [ref=f1e87]:
+          - listitem [ref=f1e88]:
+            - link "All Pages" [ref=f1e89] [cursor=pointer]:
+              - /url: edit.php?post_type=page
+          - listitem [ref=f1e90]:
+            - link "Add Page" [ref=f1e91] [cursor=pointer]:
+              - /url: post-new.php?post_type=page
+      - listitem [ref=f1e92]:
+        - link "Comments" [ref=f1e93] [cursor=pointer]:
+          - /url: edit-comments.php
+          - generic [ref=f1e94]: 
+      - listitem [ref=f1e96]:
+        - link "aBlocks" [ref=f1e97] [cursor=pointer]:
+          - /url: admin.php?page=ablocks
+        - list [ref=f1e100]:
+          - listitem [ref=f1e101]:
+            - link "Dashboard" [ref=f1e102] [cursor=pointer]:
+              - /url: admin.php?page=ablocks
+          - listitem [ref=f1e103]:
+            - link "Submissions" [ref=f1e104] [cursor=pointer]:
+              - /url: admin.php?page=ablocks-submissions
+          - listitem [ref=f1e105]:
+            - link "Add-ons" [ref=f1e106] [cursor=pointer]:
+              - /url: admin.php?page=ablocks-addons
+          - listitem [ref=f1e107]:
+            - link "Site Scanner" [ref=f1e108] [cursor=pointer]:
+              - /url: admin.php?page=ablocks-scanner
+          - listitem [ref=f1e109]:
+            - link "Settings" [ref=f1e110] [cursor=pointer]:
+              - /url: admin.php?page=ablocks-settings
+          - listitem [ref=f1e111]:
+            - link " Get Pro" [ref=f1e112] [cursor=pointer]:
+              - /url: admin.php?page=ablocks-get-pro
+              - generic [ref=f1e113]: 
+              - text: Get Pro
+      - listitem [ref=f1e114]:
+        - link "TruePlayer" [ref=f1e115] [cursor=pointer]:
+          - /url: admin.php?page=trueplayer
+          - generic [ref=f1e116]: 
+        - list [ref=f1e118]:
+          - listitem [ref=f1e119]:
+            - link "Dashboard" [ref=f1e120] [cursor=pointer]:
+              - /url: admin.php?page=trueplayer
+          - listitem [ref=f1e121]:
+            - link "Media" [ref=f1e122] [cursor=pointer]:
+              - /url: admin.php?page=trueplayer-videos
+          - listitem [ref=f1e123]:
+            - link "Presets" [ref=f1e124] [cursor=pointer]:
+              - /url: admin.php?page=trueplayer-presets
+          - listitem [ref=f1e125]:
+            - link "Settings" [ref=f1e126] [cursor=pointer]:
+              - /url: admin.php?page=trueplayer-settings
+      - listitem [ref=f1e127]:
+        - link "Presto Player" [ref=f1e128] [cursor=pointer]:
+          - /url: admin.php?page=presto-dashboard
+        - list [ref=f1e131]:
+          - listitem [ref=f1e132]:
+            - link "Dashboard" [ref=f1e133] [cursor=pointer]:
+              - /url: admin.php?page=presto-dashboard
+          - listitem [ref=f1e134]:
+            - link "Media Hub" [ref=f1e135] [cursor=pointer]:
+              - /url: admin.php?page=presto-dashboard&tab=MediaHub
+          - listitem [ref=f1e136]:
+            - link "Analytics" [ref=f1e137] [cursor=pointer]:
+              - /url: admin.php?page=presto-dashboard&tab=Analytics
+          - listitem [ref=f1e138]:
+            - link "Emails" [ref=f1e139] [cursor=pointer]:
+              - /url: admin.php?page=presto-dashboard&tab=Emails
+          - listitem [ref=f1e140]:
+            - link "AI Abilities New" [ref=f1e141] [cursor=pointer]:
+              - /url: admin.php?page=presto-dashboard&tab=Settings&section=mcp
+              - text: AI Abilities
+              - generic [ref=f1e142]: New
+          - listitem [ref=f1e143]:
+            - link "Settings" [ref=f1e144] [cursor=pointer]:
+              - /url: admin.php?page=presto-dashboard&tab=Settings
+          - listitem [ref=f1e145]:
+            - link "Learn" [ref=f1e146] [cursor=pointer]:
+              - /url: admin.php?page=presto-dashboard&tab=Learn
+          - listitem [ref=f1e147]:
+            - link "Upgrade to Pro" [ref=f1e148] [cursor=pointer]:
+              - /url: https://prestoplayer.com/pricing/
+      - listitem [ref=f1e149]:
+        - link "GemCRM" [ref=f1e150] [cursor=pointer]:
+          - /url: admin.php?page=gemcrm
+        - list [ref=f1e153]:
+          - listitem [ref=f1e154]:
+            - link "Dashboard" [ref=f1e155] [cursor=pointer]:
+              - /url: admin.php?page=gemcrm
+          - listitem [ref=f1e156]:
+            - link "Contacts" [ref=f1e157] [cursor=pointer]:
+              - /url: admin.php?page=gemcrm-contacts
+          - listitem [ref=f1e158]:
+            - link "Campaigns" [ref=f1e159] [cursor=pointer]:
+              - /url: admin.php?page=gemcrm-campaigns
+          - listitem [ref=f1e160]:
+            - link "Forms" [ref=f1e161] [cursor=pointer]:
+              - /url: admin.php?page=gemcrm-forms
+          - listitem [ref=f1e162]:
+            - link "Automations" [ref=f1e163] [cursor=pointer]:
+              - /url: admin.php?page=gemcrm-automations
+          - listitem [ref=f1e164]:
+            - link "Settings" [ref=f1e165] [cursor=pointer]:
+              - /url: admin.php?page=gemcrm-settings
+          - listitem [ref=f1e166]:
+            - link "Addons" [ref=f1e167] [cursor=pointer]:
+              - /url: admin.php?page=gemcrm-addons
+      - listitem [ref=f1e168]
+      - listitem [ref=f1e170]:
+        - link "Appearance" [ref=f1e171] [cursor=pointer]:
+          - /url: themes.php
+          - generic [ref=f1e172]: 
+        - list [ref=f1e174]:
+          - listitem [ref=f1e175]:
+            - link "Themes 3" [ref=f1e176] [cursor=pointer]:
+              - /url: themes.php
+              - text: Themes
+              - generic [ref=f1e177]: "3"
+          - listitem [ref=f1e178]:
+            - link "Editor" [ref=f1e179] [cursor=pointer]:
+              - /url: site-editor.php
+          - listitem [ref=f1e180]:
+            - link "Customize" [ref=f1e181] [cursor=pointer]:
+              - /url: customize.php?return=%2Fwp-admin%2Fadmin.php%3Fpage%3Dtrueplayer-videos%26view%3Deditor%26id%3D226
+          - listitem [ref=f1e182]:
+            - link "Fonts" [ref=f1e183] [cursor=pointer]:
+              - /url: font-library.php
+          - listitem [ref=f1e184]:
+            - link "aBlocks Templates" [ref=f1e185] [cursor=pointer]:
+              - /url: themes.php?page=ablocks-demo-import
+      - listitem [ref=f1e186]:
+        - link "Plugins 11" [ref=f1e187] [cursor=pointer]:
+          - /url: plugins.php
+          - generic [ref=f1e188]: 
+          - generic [ref=f1e189]:
+            - text: Plugins
+            - generic [ref=f1e190]: "11"
+        - list [ref=f1e191]:
+          - listitem [ref=f1e192]:
+            - link "Installed Plugins" [ref=f1e193] [cursor=pointer]:
+              - /url: plugins.php
+          - listitem [ref=f1e194]:
+            - link "Add Plugin" [ref=f1e195] [cursor=pointer]:
+              - /url: plugin-install.php
+      - listitem [ref=f1e196]:
+        - link "Users" [ref=f1e197] [cursor=pointer]:
+          - /url: users.php
+          - generic [ref=f1e198]: 
+        - list [ref=f1e200]:
+          - listitem [ref=f1e201]:
+            - link "All Users" [ref=f1e202] [cursor=pointer]:
+              - /url: users.php
+          - listitem [ref=f1e203]:
+            - link "Add User" [ref=f1e204] [cursor=pointer]:
+              - /url: user-new.php
+          - listitem [ref=f1e205]:
+            - link "Profile" [ref=f1e206] [cursor=pointer]:
+              - /url: profile.php
+      - listitem [ref=f1e207]:
+        - link "Tools" [ref=f1e208] [cursor=pointer]:
+          - /url: tools.php
+          - generic [ref=f1e209]: 
+        - list [ref=f1e211]:
+          - listitem [ref=f1e212]:
+            - link "Available Tools" [ref=f1e213] [cursor=pointer]:
+              - /url: tools.php
+          - listitem [ref=f1e214]:
+            - link "Import" [ref=f1e215] [cursor=pointer]:
+              - /url: import.php
+          - listitem [ref=f1e216]:
+            - link "Export" [ref=f1e217] [cursor=pointer]:
+              - /url: export.php
+          - listitem [ref=f1e218]:
+            - link "Site Health 1" [ref=f1e219] [cursor=pointer]:
+              - /url: site-health.php
+              - text: Site Health
+              - generic [ref=f1e220]: "1"
+          - listitem [ref=f1e221]:
+            - link "Export Personal Data" [ref=f1e222] [cursor=pointer]:
+              - /url: export-personal-data.php
+          - listitem [ref=f1e223]:
+            - link "Erase Personal Data" [ref=f1e224] [cursor=pointer]:
+              - /url: erase-personal-data.php
+          - listitem [ref=f1e225]:
+            - link "WP Reset" [ref=f1e226] [cursor=pointer]:
+              - /url: tools.php?page=wp-reset
+          - listitem [ref=f1e227]:
+            - link "Scheduled Actions" [ref=f1e228] [cursor=pointer]:
+              - /url: tools.php?page=action-scheduler
+          - listitem [ref=f1e229]:
+            - link "Theme File Editor" [ref=f1e230] [cursor=pointer]:
+              - /url: theme-editor.php
+          - listitem [ref=f1e231]:
+            - link "Plugin File Editor" [ref=f1e232] [cursor=pointer]:
+              - /url: plugin-editor.php
+      - listitem [ref=f1e233]:
+        - link "Settings" [ref=f1e234] [cursor=pointer]:
+          - /url: options-general.php
+          - generic [ref=f1e235]: 
+        - list [ref=f1e237]:
+          - listitem [ref=f1e238]:
+            - link "General" [ref=f1e239] [cursor=pointer]:
+              - /url: options-general.php
+          - listitem [ref=f1e240]:
+            - link "Connectors" [ref=f1e241] [cursor=pointer]:
+              - /url: options-connectors.php
+          - listitem [ref=f1e242]:
+            - link "Writing" [ref=f1e243] [cursor=pointer]:
+              - /url: options-writing.php
+          - listitem [ref=f1e244]:
+            - link "Reading" [ref=f1e245] [cursor=pointer]:
+              - /url: options-reading.php
+          - listitem [ref=f1e246]:
+            - link "Discussion" [ref=f1e247] [cursor=pointer]:
+              - /url: options-discussion.php
+          - listitem [ref=f1e248]:
+            - link "Media" [ref=f1e249] [cursor=pointer]:
+              - /url: options-media.php
+          - listitem [ref=f1e250]:
+            - link "Permalinks" [ref=f1e251] [cursor=pointer]:
+              - /url: options-permalink.php
+          - listitem [ref=f1e252]:
+            - link "Privacy" [ref=f1e253] [cursor=pointer]:
+              - /url: options-privacy.php
+      - listitem [ref=f1e254]:
+        - button "Collapse Main menu" [expanded] [ref=f1e255] [cursor=pointer]:
+          - generic [ref=f1e257]: Collapse Menu
+  - generic [ref=f1e258]:
+    - generic [ref=f1e259]:
+      - navigation "Toolbar":
+        - menu:
+          - group [ref=f1e260]:
+            - menuitem "About WordPress" [ref=f1e261] [cursor=pointer]
+          - group [ref=f1e264]:
+            - menuitem "Kodezen pr test" [ref=f1e265] [cursor=pointer]
+          - group [ref=f1e266]:
+            - menuitem "14 updates available" [ref=f1e267] [cursor=pointer]:
+              - generic [ref=f1e269]: "14"
+          - group [ref=f1e271]:
+            - menuitem "Ctrl+K Open command palette" [ref=f1e272] [cursor=pointer]:
+              - generic [ref=f1e274]:
+                - text: Ctrl+K
+                - generic [ref=f1e275]: Open command palette
+          - group [ref=f1e276]:
+            - menuitem "0 Comments in moderation" [ref=f1e277] [cursor=pointer]:
+              - generic [ref=f1e279]: "0"
+          - group [ref=f1e281]:
+            - menuitem "New" [ref=f1e282] [cursor=pointer]
+        - menu [ref=f1e285]:
+          - group [ref=f1e286]:
+            - menuitem "Howdy, admin" [ref=f1e287] [cursor=pointer]
+    - main [ref=f1e288]:
+      - generic [ref=f1e291]:
+        - generic [ref=f1e292]:
+          - button [ref=f1e293] [cursor=pointer]
+          - button "TruePlayer" [ref=f1e296] [cursor=pointer]
+          - generic [ref=f1e297]: Media
+        - main [ref=f1e302]:
+          - generic [ref=f1e304]:
+            - generic [ref=f1e305]:
+              - generic [ref=f1e306]:
+                - heading "Media" [level=1] [ref=f1e307]
+                - paragraph [ref=f1e308]: Watch-verified players, playlists, and interactive content.
+              - generic [ref=f1e309]:
+                - button "Add media" [ref=f1e310] [cursor=pointer]
+                - button "More create options" [ref=f1e313] [cursor=pointer]
+            - generic [ref=f1e316]:
+              - button "All" [ref=f1e317] [cursor=pointer]
+              - button "Media" [ref=f1e318] [cursor=pointer]
+              - button "Playlists" [ref=f1e319] [cursor=pointer]
+              - button "Interactive" [ref=f1e320] [cursor=pointer]
+  - contentinfo [ref=f1e337]:
+    - paragraph [ref=f1e338]:
+      - generic [ref=f1e339]:
+        - text: Thank you for creating with
+        - link "WordPress" [ref=f1e340] [cursor=pointer]:
+          - /url: https://wordpress.org/
+        - text: .
+    - paragraph [ref=f1e341]: Version 7.1

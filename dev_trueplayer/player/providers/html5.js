@@ -137,8 +137,30 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 				hls.currentLevel = id === 'auto' ? -1 : parseInt( id, 10 );
 			}
 		},
-		getTextTracks: () =>
-			Array.from( el.textTracks || [] ).map( ( t, i ) => ( { id: String( i ), label: t.label } ) ),
+		getTextTracks: () => {
+			// `default` lives on the <track> element, not on the TextTrack the
+			// browser derives from it; the two lists are in the same order.
+			const els = Array.from( el.querySelectorAll( 'track' ) );
+			return Array.from( el.textTracks || [] ).map( ( t, i ) => ( {
+				id: String( i ),
+				// A track saved without a label would otherwise be a blank row in
+				// the menu, with nothing to tell it from its neighbours.
+				label: t.label || t.language || `Track ${ i + 1 }`,
+				isDefault: !! ( els[ i ] && els[ i ].default ),
+			} ) );
+		},
+		/**
+		 * Which track is on screen right now, or 'off'.
+		 *
+		 * The browser starts a `default` track showing on its own, without anyone
+		 * calling setTextTrack — so the UI has to read the element rather than
+		 * assume its own initial state, or it reports captions off while they are
+		 * being rendered.
+		 */
+		getActiveTextTrack: () => {
+			const i = Array.from( el.textTracks || [] ).findIndex( ( t ) => 'showing' === t.mode );
+			return -1 === i ? 'off' : String( i );
+		},
 		setTextTrack: ( id ) => {
 			Array.from( el.textTracks || [] ).forEach( ( t, i ) => {
 				t.mode = String( i ) === String( id ) ? 'showing' : 'hidden';

@@ -259,6 +259,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 			provider.on( 'ready', () => {
 				setReady( true );
+				// A track the author marked default is shown by the browser itself,
+				// so read back what is actually on screen instead of trusting the
+				// 'off' this state started on — otherwise the caption button and the
+				// menu both report captions off while they are being rendered.
+				const active = provider.getActiveTextTrack?.();
+				if ( active ) {
+					setUi( ( s ) => ( { ...s, track: active } ) );
+				}
 				if ( resumeAt && resumeAt < provider.getDuration() - 2 ) {
 					provider.seek( resumeAt );
 				}
@@ -327,7 +335,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			provider.on( 'ratechange', sync );
 			provider.on( 'volumechange', sync );
 			provider.on( 'ended', onEnded );
-			provider.on( 'error', () => setError( 'Playback error.' ) );
+			// Providers that know why they failed say so — YouTube's embed-disabled
+			// case is the one an author most needs named, since the video plays
+			// perfectly on youtube.com and nothing about the URL is wrong.
+			provider.on( 'error', ( detail ) => setError(
+				( detail && detail.message ) || 'Playback error.'
+			) );
 		} )();
 
 		return () => {
