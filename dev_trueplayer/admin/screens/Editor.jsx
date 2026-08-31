@@ -268,7 +268,7 @@ export default function Editor( { id, onEditState } ) {
 					{ /* Column 3 — live preview, pinned so the author sees changes as
 						they edit. */ }
 					<div className="w-full min-w-0 xl:sticky xl:top-[104px]">
-						<PreviewPanel id={ id } config={ config } onDuration={ setDuration } previewCue={ previewCue } />
+						<PreviewPanel id={ id } config={ config } presets={ presets } onDuration={ setDuration } previewCue={ previewCue } />
 					</div>
 				</div>
 			</div>
