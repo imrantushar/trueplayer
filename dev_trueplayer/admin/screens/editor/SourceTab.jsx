@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
-import { Card, Field, Input, Select, Toggle, Button } from '../../components/UI';
-import MediaPicker from '../../components/MediaPicker';
+import { Card, Field, FieldGroup, Input, Select, SectionTitle, Toggle } from '../../components/UI';
+import MediaFileCard from '../../components/MediaFileCard';
+import PosterField from '../../components/PosterField';
 import { isPro } from '../../pro';
 import { api } from '../../api';
 import { canAutoCaptureFrame, canCaptureFrame, captureVideoFrame } from '../../utils/frameCapture';
@@ -19,6 +20,12 @@ const TYPES = [
 export default function SourceTab( { config, patch, videoId } ) {
 	const source = config.source || { type: 'self' };
 	const set = ( partial ) => patch( { source: { ...source, ...partial } } );
+	const audio = source.mediaType === 'audio';
+	// Audio-only describes a file the browser plays without a picture, so it is
+	// only meaningful for the file-backed types — a YouTube or Vimeo source is an
+	// iframe either way. Still shown when it is already on, so a setting made
+	// before a source change never gets stranded somewhere it can't be undone.
+	const canBeAudio = [ 'self', 'url', 'bunnyStorage' ].includes( source.type ) || audio;
 
 	const [ capture, setCapture ] = useState( { busy: false, error: '' } );
 	// The src the auto-capture below has already dealt with, so it fires once
@@ -75,6 +82,8 @@ export default function SourceTab( { config, patch, videoId } ) {
 
 	return (
 		<Card className="p-6 max-w-2xl">
+			<SectionTitle>Source Configuration</SectionTitle>
+
 			<Field label="Source type" hint={ ! isPro() ? 'Bunny.net & HLS streaming require TruePlayer Pro.' : undefined }>
 				<Select value={ source.type || 'self' } onChange={ ( e ) => set( { type: e.target.value } ) }>
 					{ TYPES.map( ( t ) => (
@@ -86,9 +95,20 @@ export default function SourceTab( { config, patch, videoId } ) {
 			</Field>
 
 			{ source.type === 'self' && (
-				<Field label="Video file" required hint="Pick an uploaded video from the media library. A thumbnail is grabbed from it automatically.">
-					<MediaPicker value={ source.src || '' } onChange={ ( url ) => set( { src: url } ) } accept="video" label="Upload a video" />
-				</Field>
+				<FieldGroup
+					label={ audio ? 'Audio file' : 'Video file' }
+					required
+					hint={ audio
+						? 'Pick an uploaded audio file from the media library.'
+						: 'Pick an uploaded video from the media library. A thumbnail is grabbed from it automatically.' }
+				>
+					<MediaFileCard
+						source={ source }
+						audio={ audio }
+						onPick={ ( url ) => set( { src: url } ) }
+						onRemove={ () => set( { src: '' } ) }
+					/>
+				</FieldGroup>
 			) }
 
 			{ source.type === 'bunny' && (
@@ -123,31 +143,31 @@ export default function SourceTab( { config, patch, videoId } ) {
 				</Field>
 			) }
 
-			{ /* The capture controls sit outside the Field: it renders a <label>,
-			     and a button nested in one folds its text into the picker's
-			     accessible name. */ }
-			<Field label="Poster image" hint="Shown before playback (optional)." className={ canGrab ? 'mb-2.5' : undefined }>
-				<MediaPicker value={ source.poster || '' } onChange={ ( url ) => set( { poster: url, posterAuto: false } ) } accept="image" label="Upload an image" />
-			</Field>
-			{ canGrab && (
-				<div className="mb-5">
-					<div className="flex items-center gap-3">
-						<Button variant="ghost" size="sm" disabled={ capture.busy } onClick={ () => grabPoster( source.src ) }>
-							{ capture.busy ? 'Grabbing a frame…' : `${ source.poster ? 'Regenerate' : 'Generate' } from video` }
-						</Button>
-						{ ! capture.busy && ! capture.error && source.posterAuto && (
-							<span className="text-xs text-muted">Grabbed from the video.</span>
-						) }
+			<FieldGroup label={ audio ? 'Cover art' : 'Poster image' } hint="Shown before playback (optional).">
+				<PosterField
+					source={ source }
+					audio={ audio }
+					canGrab={ canGrab }
+					capture={ capture }
+					onPick={ ( url ) => set( { poster: url, posterAuto: false } ) }
+					onRemove={ () => set( { poster: '', posterAuto: false } ) }
+					onGrab={ () => grabPoster( source.src ) }
+				/>
+			</FieldGroup>
+
+			{ canBeAudio && (
+				<div className="flex items-center justify-between gap-4 pt-5 border-t border-line">
+					<div className="min-w-0">
+						<p className="text-[13px] font-medium text-ink">Audio-only (podcast) player</p>
+						<p className="text-xs text-muted mt-0.5">Hide video screen and switch to audio player mode.</p>
 					</div>
-					{ capture.error && <span className="block text-xs text-danger mt-2">{ capture.error }</span> }
+					<Toggle
+						checked={ audio }
+						onChange={ ( v ) => set( { mediaType: v ? 'audio' : 'video' } ) }
+						className="shrink-0"
+					/>
 				</div>
 			) }
-
-			<Toggle
-				checked={ source.mediaType === 'audio' }
-				onChange={ ( v ) => set( { mediaType: v ? 'audio' : 'video' } ) }
-				label="Audio-only (podcast) player"
-			/>
 		</Card>
 	);
 }

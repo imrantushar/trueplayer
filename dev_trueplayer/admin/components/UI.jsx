@@ -16,6 +16,9 @@ export function Button( { children, variant = 'primary', size = 'md', className 
 		subtle: 'bg-brand-100 hover:opacity-90 text-brand-500 border border-transparent',
 		clear: 'bg-transparent hover:bg-brand-50 text-brand-500 border border-transparent',
 		danger: 'bg-danger-light hover:opacity-90 text-danger border border-transparent',
+		// Destructive, but secondary to the action beside it — a bordered
+		// Remove reads as equal in weight to the Replace it sits next to.
+		dangerClear: 'bg-transparent hover:bg-danger-light text-danger border border-transparent',
 	};
 	// Compact, medium-weight sizing (md is the comfortable default).
 	const sizes = {
@@ -45,6 +48,26 @@ export function Field( { label, hint, required = false, children, className = ''
 			{ children }
 			{ hint && <span className="block text-xs text-gray-400 mt-1.5">{ hint }</span> }
 		</label>
+	);
+}
+
+/**
+ * A labelled block for controls that are themselves buttons — media pickers,
+ * action rows — where `Field` is the wrong element: it renders a <label>, and
+ * a label wrapping buttons folds their text into its accessible name and
+ * forwards stray clicks into the first one. Same look, plain <div>.
+ */
+export function FieldGroup( { label, hint, required = false, children, className = '' } ) {
+	return (
+		<div className={ `block mb-5 ${ className }` }>
+			{ label && (
+				<span className="block text-[13px] font-medium text-ink mb-1.5">
+					{ label }{ required && <span className="text-danger"> *</span> }
+				</span>
+			) }
+			{ children }
+			{ hint && <span className="block text-xs text-gray-400 mt-1.5">{ hint }</span> }
+		</div>
 	);
 }
 
