@@ -74,9 +74,9 @@ export default function PosterField( { source, audio = false, canGrab, capture, 
 			     frame we grabbed is safe to replace, an uploaded one is the
 			     author's own work. */ }
 			{ ! busy && ! capture.error && poster && source.posterAuto && (
-				<p className="text-xs text-muted mt-1.5">Grabbed from the video.</p>
+				<p className="text-xs text-muted pt-2">Grabbed from the video.</p>
 			) }
-			{ capture.error && <p className="text-xs text-danger mt-1.5">{ capture.error }</p> }
+			{ capture.error && <p className="text-xs text-danger pt-2">{ capture.error }</p> }
 		</div>
 	);
 }

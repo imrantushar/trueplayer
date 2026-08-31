@@ -143,7 +143,7 @@ export default function SourceTab( { config, patch, videoId } ) {
 				</Field>
 			) }
 
-			<FieldGroup label={ audio ? 'Cover art' : 'Poster image' } hint="Shown before playback (optional).">
+			<FieldGroup label={ audio ? 'Cover art' : 'Poster image' }>
 				<PosterField
 					source={ source }
 					audio={ audio }

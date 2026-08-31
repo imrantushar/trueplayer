@@ -71,15 +71,17 @@ export function FieldGroup( { label, hint, required = false, children, className
 	);
 }
 
+// `hover:` and `focus:` name the same colour on purpose — pointing at a field
+// and landing on it are one continuous gesture, so they read as one state.
 const controlBase =
-	'w-full h-10 rounded border border-line px-3 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none';
+	'w-full h-10 rounded border border-line px-3 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder hover:border-brand-500 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none';
 
 export function Input( { className = '', ...props } ) {
 	return <input { ...props } className={ `${ controlBase } ${ className }` } />;
 }
 
 export function Textarea( { className = '', ...props } ) {
-	return <textarea { ...props } className={ `w-full rounded border border-line px-3 py-2 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none ${ className }` } />;
+	return <textarea { ...props } className={ `w-full rounded border border-line px-3 py-2 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder hover:border-brand-500 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none ${ className }` } />;
 }
 
 /** Flatten a React children tree to its text (for react-select option labels). */
@@ -101,16 +103,19 @@ function nodeText( node ) {
 
 const RS_STYLES = {
 	control: ( base, s ) => ( {
-		...base, minHeight: 40, borderRadius: 4, fontSize: 14, backgroundColor: '#fff',
+		...base, minHeight: 40, borderRadius: 4, fontSize: 14, backgroundColor: '#fff', cursor: 'pointer',
 		borderColor: s.isFocused ? '#006BFF' : '#e5e7eb',
 		boxShadow: s.isFocused ? '0 0 0 2px #E3E7FF' : 'none',
-		'&:hover': { borderColor: s.isFocused ? '#006BFF' : '#cbd1d7' },
+		// Hover previews the focus colour rather than a grey step towards it, so
+		// pointing at a field and landing on it read as the same state.
+		'&:hover': { borderColor: '#006BFF' },
 	} ),
 	valueContainer: ( base ) => ( { ...base, padding: '0 4px 0 10px' } ),
+	input: ( base ) => ( { ...base, cursor: 'inherit' } ),
 	placeholder: ( base ) => ( { ...base, color: '#A2ADB9' } ),
 	singleValue: ( base ) => ( { ...base, color: '#1f2937' } ),
 	indicatorSeparator: () => ( { display: 'none' } ),
-	dropdownIndicator: ( base ) => ( { ...base, color: '#738496', padding: 6 } ),
+	dropdownIndicator: ( base ) => ( { ...base, color: '#738496', padding: 6, cursor: 'pointer' } ),
 	menu: ( base ) => ( { ...base, borderRadius: 6, overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 8px 28px rgba(16,24,40,0.12)' } ),
 	menuPortal: ( base ) => ( { ...base, zIndex: 100000 } ),
 	option: ( base, s ) => ( {
