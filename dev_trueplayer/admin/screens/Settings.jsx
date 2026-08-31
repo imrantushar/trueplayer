@@ -11,11 +11,35 @@ import AddonsPanel from './settings/AddonsPanel';
 import MediaPicker from '../components/MediaPicker';
 import { PRESET_TEMPLATES, ASPECT_RATIOS } from '../data/preset-templates';
 
-// A mini player preview rendered in the template's style.
+/**
+ * A mini player preview rendered in the template's own style.
+ *
+ * Every tile used to draw the same picture — one accent play button over one
+ * progress bar — so the six looks were indistinguishable and the names carried
+ * the whole explanation. Each trait below mirrors a real rule in
+ * player/style.css, so the tile shows the difference and the caption states it.
+ */
 function TemplateCard({ template, selected, disabled, accent, onSelect }) {
 	const a = template.appearance;
-	const barStyle = { gradient: 'bg-gradient-to-t from-black/70 to-transparent', solid: 'bg-black/70', minimal: 'bg-transparent' }[a.controlBarStyle] || 'bg-black/70';
-	const playRadius = { circle: '9999px', soft: '8px', square: '3px' }[a.playButtonStyle] || '9999px';
+	const skin = a.skin;
+	const playRadius = { circle: '9999px', soft: '7px', square: '2px' }[a.playButtonStyle] || '9999px';
+	// Big-play sizes track the skin's own overrides (modern 84px, simple 64px).
+	const playSize = skin === 'modern' ? 34 : skin === 'simple' ? 24 : 29;
+	// Modern thickens the scrubber; standard squares off every one of its parts.
+	const trackH = skin === 'modern' ? 5 : 3;
+	const trackRadius = skin === 'standard' ? 0 : 9999;
+	// How the bar meets the picture: a wash, a solid deck, a pill, or a panel
+	// that lifts off the edge entirely.
+	const floating = skin === 'floating';
+	const minimal = skin === 'minimal';
+	const barBg = floating || minimal
+		? 'transparent'
+		: skin === 'standard'
+			? 'rgba(12,14,18,0.96)'
+			: skin === 'simple'
+				? 'rgba(0,0,0,0.6)'
+				: 'linear-gradient(transparent, rgba(10,12,20,0.9))';
+
 	return (
 		<button
 			type="button"
@@ -24,24 +48,54 @@ function TemplateCard({ template, selected, disabled, accent, onSelect }) {
 		>
 			<div
 				className={`relative aspect-video overflow-hidden border-2 ${selected ? 'border-brand-500' : 'border-line'}`}
-				style={{ borderRadius: 8, background: '#111318' }}
+				style={{ borderRadius: Math.max(4, a.roundness ?? 8), background: '#111318' }}
 			>
+				{/* Ambient's whole point is light escaping the frame; at tile size
+				    that reads as a soft accent bloom behind the picture. */}
+				{skin === 'ambient' && (
+					<span
+						className="absolute inset-0"
+						style={{ background: `radial-gradient(120% 90% at 50% 55%, ${accent}55, transparent 70%)`, filter: 'blur(6px)' }}
+					/>
+				)}
+
 				<span className="absolute inset-0 flex items-center justify-center">
-					<span className="flex items-center justify-center w-8 h-8" style={{ background: accent, borderRadius: playRadius }}>
-						<svg viewBox="0 0 24 24" width="13" height="13" fill="#fff"><path d="M8 5v14l11-7z" /></svg>
+					<span className="flex items-center justify-center" style={{ width: playSize, height: playSize, background: accent, borderRadius: playRadius }}>
+						<svg viewBox="0 0 24 24" width={Math.round(playSize * 0.42)} height={Math.round(playSize * 0.42)} fill="#fff"><path d="M8 5v14l11-7z" /></svg>
 					</span>
 				</span>
-				<span className={`absolute left-0 right-0 bottom-0 h-6 ${barStyle}`}>
-					<span className="absolute left-2 right-2 bottom-2 h-1 rounded-full bg-white/30">
-						<span className="absolute left-0 top-0 h-1 rounded-full" style={{ width: '45%', background: accent }} />
+
+				<span
+					className="absolute flex flex-col justify-end"
+					style={ floating
+						? { left: 8, right: 8, bottom: 8, borderRadius: 9, background: 'rgba(15,17,26,0.82)', boxShadow: '0 4px 14px rgba(0,0,0,0.45)', padding: '5px 7px' }
+						: { left: 0, right: 0, bottom: 0, background: barBg, padding: minimal ? '0 8px 7px' : '10px 7px 6px' } }
+				>
+					{/* Minimal parks its controls in a rounded pill and drops the
+					    time and volume readouts entirely. */}
+					<span style={ minimal ? { background: 'rgba(0,0,0,0.5)', borderRadius: 7, padding: '4px 6px' } : undefined }>
+						<span className="block relative" style={{ height: trackH, borderRadius: trackRadius, background: 'rgba(255,255,255,0.3)' }}>
+							<span className="absolute left-0 top-0" style={{ width: '45%', height: trackH, borderRadius: trackRadius, background: accent }} />
+						</span>
+						{!minimal && (
+							<span className="flex items-center gap-1 mt-1.5">
+								<span className="block rounded-sm bg-white/70" style={{ width: 5, height: 5 }} />
+								<span className="block rounded-sm bg-white/40" style={{ width: 14, height: 3 }} />
+								<span className="flex-1" />
+								<span className="block rounded-sm bg-white/40" style={{ width: 5, height: 5 }} />
+							</span>
+						)}
 					</span>
 				</span>
+
 				{template.pro && <span className="absolute top-1.5 right-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white/90 text-brand-500">PRO</span>}
 			</div>
+
 			<div className="flex items-center gap-1.5 mt-2">
-				{selected && <Icon name="check" className="w-4 h-4 text-brand-500" />}
+				{selected && <Icon name="check" className="w-4 h-4 text-brand-500 shrink-0" />}
 				<span className={`text-sm font-medium ${selected ? 'text-brand-500' : 'text-ink'}`}>{template.label}</span>
 			</div>
+			{template.description && <p className="text-xs text-muted mt-0.5 leading-snug">{template.description}</p>}
 		</button>
 	);
 }
