@@ -140,6 +140,58 @@ class VideosController extends WP_REST_Controller {
 	/** Ceiling for a captured frame. A 1280px JPEG lands far under this. */
 	const POSTER_MAX_BYTES = 4194304;
 
+	/** A title is a label, not a document. Long enough for any real one. */
+	const TITLE_MAX_CHARS = 200;
+
+	/**
+	 * Reduce a submitted title to the plain text a title actually is, or refuse
+	 * it.
+	 *
+	 * `sanitize_text_field()` alone is not enough here on two counts. It answers
+	 * an array or object with an empty string, so a JSON body that sends a
+	 * structure where a name belongs is silently accepted as "no title" instead
+	 * of being reported as wrong. And it strips tags without decoding first, so
+	 * `&lt;script&gt;` passes through intact and is markup again the moment
+	 * anything unescapes it — which is exactly what a consumer of the title
+	 * outside HTML (a feed, a webhook payload, a certificate) may do.
+	 *
+	 * Anything that survives is plain, single-line text, capped in length. Input
+	 * that was entirely markup or code is rejected rather than quietly saved as
+	 * an empty name, so the author finds out.
+	 *
+	 * @param mixed $raw Whatever the request body carried.
+	 * @return string|\WP_Error Clean title (possibly ''), or an error.
+	 */
+	private function clean_title( $raw ) {
+		if ( ! is_scalar( $raw ) || is_bool( $raw ) ) {
+			return new \WP_Error(
+				'tp_title_invalid',
+				__( 'The title has to be plain text.', 'trueplayer' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$text = html_entity_decode( (string) $raw, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		// `true` also collapses the line breaks a title has no use for.
+		$text = wp_strip_all_tags( $text, true );
+		$text = trim( sanitize_text_field( $text ) );
+
+		// Something was sent, and nothing survived: it was markup or code all the
+		// way down. Saying so beats storing a nameless video.
+		if ( '' === $text && '' !== trim( (string) $raw ) ) {
+			return new \WP_Error(
+				'tp_title_invalid',
+				__( 'The title has to be plain text — markup and code are not accepted.', 'trueplayer' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		if ( function_exists( 'mb_substr' ) ) {
+			return mb_substr( $text, 0, self::TITLE_MAX_CHARS );
+		}
+		return substr( $text, 0, self::TITLE_MAX_CHARS );
+	}
+
 	public function admin() {
 		return current_user_can( 'manage_options' );
 	}
@@ -255,8 +307,11 @@ class VideosController extends WP_REST_Controller {
 			);
 		}
 
-		$title = isset( $body['title'] ) ? sanitize_text_field( (string) $body['title'] ) : '';
-		if ( '' === trim( $title ) ) {
+		$title = $this->clean_title( $body['title'] ?? '' );
+		if ( is_wp_error( $title ) ) {
+			return $title;
+		}
+		if ( '' === $title ) {
 			$title = __( 'Untitled video', 'trueplayer' );
 		}
 
@@ -344,8 +399,11 @@ class VideosController extends WP_REST_Controller {
 
 		update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
 
-		$title = isset( $body['title'] ) ? sanitize_text_field( (string) $body['title'] ) : '';
-		if ( '' !== trim( $title ) ) {
+		$title = $this->clean_title( $body['title'] ?? '' );
+		if ( is_wp_error( $title ) ) {
+			return $title;
+		}
+		if ( '' !== $title ) {
 			wp_update_post( [ 'ID' => $id, 'post_title' => $title ] );
 		}
 
@@ -491,7 +549,13 @@ class VideosController extends WP_REST_Controller {
 
 	public function create( $request ) {
 		$body  = $request->get_json_params();
-		$title = isset( $body['title'] ) ? sanitize_text_field( $body['title'] ) : __( 'Untitled video', 'trueplayer' );
+		$title = $this->clean_title( $body['title'] ?? '' );
+		if ( is_wp_error( $title ) ) {
+			return $title;
+		}
+		if ( '' === $title ) {
+			$title = __( 'Untitled video', 'trueplayer' );
+		}
 		$id    = wp_insert_post(
 			[
 				'post_type'   => TRUEPLAYER_VIDEO_POST_TYPE,
@@ -521,7 +585,13 @@ class VideosController extends WP_REST_Controller {
 		}
 		$body = $request->get_json_params();
 		if ( isset( $body['title'] ) ) {
-			wp_update_post( [ 'ID' => $id, 'post_title' => sanitize_text_field( $body['title'] ) ] );
+			$title = $this->clean_title( $body['title'] );
+			if ( is_wp_error( $title ) ) {
+				return $title;
+			}
+			// An author who clears the field is renaming it to nothing, which is
+			// worse than a placeholder in every list that shows the name.
+			wp_update_post( [ 'ID' => $id, 'post_title' => '' !== $title ? $title : __( 'Untitled video', 'trueplayer' ) ] );
 		}
 		if ( array_key_exists( 'config', $body ) ) {
 			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $body['config'] ) );

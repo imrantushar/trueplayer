@@ -17,7 +17,7 @@ const TYPES = [
 	{ value: 'hls', label: 'HLS stream (.m3u8)', pro: true },
 ];
 
-export default function SourceTab( { config, patch, videoId } ) {
+export default function SourceTab( { config, patch, videoId, title = '', onTitleChange } ) {
 	const source = config.source || { type: 'self' };
 	const set = ( partial ) => patch( { source: { ...source, ...partial } } );
 	const audio = source.mediaType === 'audio';
@@ -109,8 +109,24 @@ export default function SourceTab( { config, patch, videoId } ) {
 	const canGrab = canCaptureFrame( source ) && !! videoId;
 
 	return (
-		<Card className="p-6 max-w-2xl">
+		<div className="w-full max-w-2xl space-y-6">
+		<Card className="p-6">
 			<SectionTitle>Source Configuration</SectionTitle>
+
+			{ /* The title leads, rather than being typed into the breadcrumb it
+			     used to live in: a crumb is a place indicator, so an editable one
+			     is invisible as a form field — nothing marks it required, it can't
+			     carry a hint, and an author who never hovers it never learns the
+			     name is theirs to set. */ }
+			{ onTitleChange && (
+				<Field label="Title" required hint="Names this media in your library, and labels it in the player.">
+					<Input
+						value={ title }
+						onChange={ ( e ) => onTitleChange( e.target.value ) }
+						placeholder="Untitled"
+					/>
+				</Field>
+			) }
 
 			<Field label="Source type" hint={ ! isPro() ? 'Bunny.net & HLS streaming require TruePlayer Pro.' : undefined }>
 				<Select value={ source.type || 'self' } onChange={ ( e ) => set( { type: e.target.value } ) }>
@@ -197,5 +213,6 @@ export default function SourceTab( { config, patch, videoId } ) {
 				</div>
 			) }
 		</Card>
+		</div>
 	);
 }

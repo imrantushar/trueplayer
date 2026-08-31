@@ -126,9 +126,9 @@ export default function Editor( { id, onEditState } ) {
 		setDirty( true );
 	};
 
-	// Report title/dirty state up to the app shell — it drives the breadcrumb
-	// (the title is edited right in the crumb trail) and the unsaved-changes
-	// guard when leaving.
+	// Report title/dirty state up to the app shell — it names the breadcrumb and
+	// drives the unsaved-changes guard when leaving. The title is edited in the
+	// Source step (see SourceTab), not in the crumb.
 	useEffect( () => {
 		onEditState && onEditState( { title: video?.title, dirty, onTitleChange: setTitle } );
 	}, [ video?.title, dirty ] );
@@ -256,7 +256,7 @@ export default function Editor( { id, onEditState } ) {
 							<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
 						) : (
 							<>
-								{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } videoId={ id } /> }
+								{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } videoId={ id } title={ video?.title || '' } onTitleChange={ setTitle } /> }
 								{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } sub={ activeSub.player } /> }
 								{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
 								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } previewingId={ previewCue?.overlayId || null } /> }

@@ -142,7 +142,9 @@ export default function App() {
 			case 'library': return editState
 				? [ { label: 'Media', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
 				: [ { label: 'Media' } ];
-			case 'editor': return [ toMedia, { label: editState?.title || '', editable: true, onChange: editState?.onTitleChange } ];
+			// Not editable: the title is a field in the editor's Source step now,
+			// so the crumb is purely where-you-are, like every other crumb.
+			case 'editor': return [ toMedia, { label: editState?.title || '' } ];
 			case 'analytics': return [ toMedia, { label: 'Analytics' } ];
 			case 'presets': return editState
 				? [ { label: 'Presets', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
