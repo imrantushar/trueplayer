@@ -72,11 +72,7 @@ export default function EmailForm( { layer, videoId, className = '', preview = f
 
 	return (
 		<form className={ classes } style={ formStyleVars( layer ) } onSubmit={ submit }>
-			{ /* `title` is the layer's field; `headline` is the pre-merge name,
-			     still honoured for a config the migration has not reached. */ }
-			{ ( layer.title || layer.headline ) && (
-				<p className="tp-emailform-title">{ layer.title || layer.headline }</p>
-			) }
+			{ layer.title && <p className="tp-emailform-title">{ layer.title }</p> }
 			{ layer.description && <p className="tp-emailform-desc">{ layer.description }</p> }
 
 			{ layer.collectName && (
@@ -101,7 +97,7 @@ export default function EmailForm( { layer, videoId, className = '', preview = f
 					aria-label="Email"
 				/>
 				<button className="tp-emailform-submit" type="submit" disabled={ busy }>
-					{ busy ? 'Subscribing…' : ( layer.buttonLabel || layer.buttonText || 'Subscribe' ) }
+					{ busy ? 'Subscribing…' : ( layer.buttonLabel || 'Subscribe' ) }
 				</button>
 			</div>
 

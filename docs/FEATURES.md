@@ -52,7 +52,8 @@ analyses, automates or extends sits behind `TruePlayer\Pro::active()`.
   skippable; and **inline**, a panel beside the picture that doesn't interrupt. Optional
   name field, per-viewer dedupe, and a **Email notification** provider that needs no CRM,
   so capture works out of the box. Choosing *who* sees it (display rules) needs Pro.
-  Replaces the separate "Email capture" section; existing `config.optin` is migrated.
+  There is no separate "Email capture" section — it merged into this layer, and any
+  old `config.optin` is converted to a gate layer on upgrade and then removed.
 - **Info panel** and end-screen behaviour.
 
 ### Content types
@@ -157,12 +158,12 @@ analyses, automates or extends sits behind `TruePlayer\Pro::active()`.
 - **Timed content** — a content region below the player that swaps with the timeline
   (time-synced text, buttons, forms).
 
-### Email capture & CRM
-- **CRM providers** — integration registry with pluggable providers: **GemCRM** (verified
-  live) and **Mailchimp** built in, plus a generic `trueplayer/subscribe` seam.
-- **Conditional display rules** on the email form (and every other layer) — see
-  Interactive layers above. Deciding *who* is asked is the Pro half of email capture.
-- The email form itself is **free** — see the free column.
+### CRM providers
+- Integration registry with pluggable providers: **GemCRM** (verified live) and
+  **Mailchimp** built in, plus a generic `trueplayer/subscribe` seam. The free
+  **Email notification** provider needs no CRM.
+- **Conditional display rules** on the Email form layer (and every other layer) — see
+  Interactive layers above. Deciding *who* is asked is the Pro half; the form is free.
 
 ### Analytics
 - All collection **and** the dashboard are Pro (free installs write no rows).

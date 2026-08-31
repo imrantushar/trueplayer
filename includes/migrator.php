@@ -42,6 +42,10 @@ class Migrator {
 		self::unstamp_inherited_gating();
 		self::adopt_existing_interactive_content();
 		self::fold_optin_into_layers();
+		// Its own pass, not nested in the one above: that returns early once its
+		// flag is set, so a site already migrated by an earlier build would never
+		// have reached this.
+		self::drop_orphaned_optin();
 	}
 
 	/**
@@ -141,10 +145,9 @@ class Migrator {
 	 * layer stack, so every video configured with the old gate gets an
 	 * equivalent `mode: 'gate'` layer.
 	 *
-	 * `config.optin` is deliberately left where it is. The endpoint still reads
-	 * it as a fallback, so a video this pass misses — or one whose config is
-	 * being served from a cache written before the upgrade — keeps working
-	 * instead of losing its gate.
+	 * The old object is removed once its layer exists: nothing reads it any more,
+	 * and leaving it behind would mean a video carrying two descriptions of the
+	 * same gate with no way to tell which one is live.
 	 */
 	private static function fold_optin_into_layers(): void {
 		$done = 'trueplayer_migrated_optin_to_layer';
@@ -205,6 +208,40 @@ class Migrator {
 			];
 
 			$config['layers'] = $layers;
+			unset( $config['optin'] );
+			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
+		}
+	}
+
+	/**
+	 * Clear `config.optin` from videos the fold above didn't rewrite.
+	 *
+	 * Two cases reach here: a video whose capture was configured but switched
+	 * off, and one migrated by an earlier build that kept the object as a
+	 * fallback. Neither has anything reading it now, so the stale copy is
+	 * removed rather than left to contradict the layer beside it.
+	 */
+	private static function drop_orphaned_optin(): void {
+		$done = 'trueplayer_dropped_legacy_optin';
+		if ( get_option( $done ) ) {
+			return;
+		}
+		update_option( $done, 1 );
+
+		$ids = get_posts( [
+			'post_type'      => TRUEPLAYER_VIDEO_POST_TYPE,
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+		] );
+
+		foreach ( $ids as $id ) {
+			$raw    = get_post_meta( $id, '_trueplayer_config', true );
+			$config = is_string( $raw ) && '' !== $raw ? json_decode( $raw, true ) : null;
+			if ( ! is_array( $config ) || ! array_key_exists( 'optin', $config ) ) {
+				continue;
+			}
+			unset( $config['optin'] );
 			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
 		}
 	}

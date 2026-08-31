@@ -88,7 +88,6 @@ class OptinController extends WP_REST_Controller {
 	 *
 	 * Resolved from the STORED config rather than the request, so the client can
 	 * never redirect a subscription somewhere the author didn't choose.
-	 * `config.optin` remains the fallback for videos not yet migrated.
 	 *
 	 * @param array  $config   The video's stored config.
 	 * @param string $layer_id Layer that submitted, if any.
@@ -108,19 +107,12 @@ class OptinController extends WP_REST_Controller {
 			}
 		}
 
-		$optin = isset( $config['optin'] ) && is_array( $config['optin'] ) ? $config['optin'] : [];
-
-		// The layer's own choice wins. Falling through to the video-level value
-		// keeps the forms that predate the merge working: they had no provider
-		// field, and every submission used to be routed with `config.optin`.
-		foreach ( [ $from_layer, $optin ] as $candidate ) {
-			if ( is_array( $candidate ) && '' !== (string) ( $candidate['provider'] ?? '' ) ) {
-				return [
-					'provider' => (string) $candidate['provider'],
-					'lists'    => (array) ( $candidate['lists'] ?? [] ),
-					'tags'     => (array) ( $candidate['tags'] ?? [] ),
-				];
-			}
+		if ( is_array( $from_layer ) && '' !== (string) ( $from_layer['provider'] ?? '' ) ) {
+			return [
+				'provider' => (string) $from_layer['provider'],
+				'lists'    => (array) ( $from_layer['lists'] ?? [] ),
+				'tags'     => (array) ( $from_layer['tags'] ?? [] ),
+			];
 		}
 
 		// Nothing configured anywhere. Notifying the site beats discarding a

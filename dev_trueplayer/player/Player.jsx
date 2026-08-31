@@ -18,35 +18,6 @@ const containerPipSupported = supportsContainerPiP();
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
-/**
- * The pre-merge `config.optin` object in the shape the Email form layer uses.
- *
- * Email capture and the Layers email form became one feature; videos migrate to
- * a `mode: 'gate'` layer, but the old object is still served for anything the
- * migration has not reached and for configs cached before the upgrade. Adapting
- * it here means the player has exactly one shape to reason about.
- *
- * @param {Object} optin Legacy `config.optin`.
- * @return {Object} A gate-shaped layer.
- */
-function legacyGate( optin ) {
-	return {
-		id: 'optin',
-		type: 'form',
-		mode: 'gate',
-		trigger: optin.position || 'pre',
-		start: 'time' === optin.position ? ( optin.at || 0 ) : 0,
-		required: optin.required !== false,
-		collectName: !! optin.collectName,
-		dedupe: true,
-		title: optin.headline || '',
-		description: optin.description || '',
-		buttonLabel: optin.buttonText || '',
-		provider: optin.provider || '',
-		lists: optin.lists || [],
-	};
-}
-
 /** Best-effort filename for the download button — from the title, else the URL. */
 function downloadFilename( url, title ) {
 	let base = 'video';
@@ -112,13 +83,11 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	 *
 	 * Capture used to be a second feature with its own `config.optin` object and
 	 * its own player path, so a video could carry two ways of asking for the
-	 * same address and only one of them had a provider. There is one source now.
-	 * `config.optin` is still read as a fallback: the server keeps serving it for
-	 * videos the migration has not reached, and a config cached before the
-	 * upgrade must not lose its gate.
+	 * same address and only one of them had a provider. There is exactly one
+	 * source now; the old object is converted to a layer on upgrade and then
+	 * removed (see Migrator).
 	 */
-	const optinGate = allLayers.find( ( l ) => 'form' === l.type && 'gate' === l.mode )
-		|| ( config.optin && config.optin.enabled ? legacyGate( config.optin ) : null );
+	const optinGate = allLayers.find( ( l ) => 'form' === l.type && 'gate' === l.mode ) || null;
 	// The gate is rendered by the player itself (it has to pause playback), so
 	// the layer stack must not draw it a second time as an inline panel.
 	const layers = optinGate ? allLayers.filter( ( l ) => l.id !== optinGate.id ) : allLayers;

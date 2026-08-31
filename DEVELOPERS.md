@@ -87,8 +87,8 @@ Handle in-player opt-ins, or register a full provider:
 add_filter( 'trueplayer/subscribe', function ( $result, $data ) {
     // $data = [ email, name, video_id, layer_id, provider, lists, tags ]
     // `layer_id` names the Email form layer that was submitted; the provider and
-    // lists are resolved from that layer, falling back to the video's and then
-    // to the built-in `wp_mail` notification provider.
+    // lists are resolved from that layer, falling back to the built-in
+    // `wp_mail` notification provider so a capture is never simply dropped.
     return [ 'ok' => true ];
 }, 10, 2 );
 

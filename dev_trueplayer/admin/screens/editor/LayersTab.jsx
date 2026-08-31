@@ -36,6 +36,20 @@ const BOOL_FIELDS = [ 'logged_in', 'crm_contact', 'email_submitted' ];
 
 // Compact per-layer conditional-rules builder (pro). Shows the layer only to
 // viewers matching the rules — mirrors TruePlayer\Services\Rules.
+/**
+ * The section's own PRO mark. Shown whether or not the licence is present: on
+ * free it says why the editor is missing, and on Pro it says which part of the
+ * feature the licence is paying for — the form beside it is free either way,
+ * and without the mark the split isn't visible from the panel.
+ */
+function ProBadge() {
+	return (
+		<span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1.5 py-0.5 leading-none shrink-0">
+			PRO
+		</span>
+	);
+}
+
 function ConditionsEditor( { value, onChange } ) {
 	const group = value && value.rules ? value : { match: 'all', rules: [] };
 	const set = ( partial ) => onChange( { ...group, ...partial } );
@@ -47,7 +61,10 @@ function ConditionsEditor( { value, onChange } ) {
 	return (
 		<div className="mt-4 border-t border-line pt-4">
 			<div className="flex items-center justify-between mb-2">
-				<span className="text-xs font-semibold text-ink uppercase tracking-wide">Display rules</span>
+				<span className="flex items-center gap-2">
+					<span className="text-xs font-semibold text-ink uppercase tracking-wide">Display rules</span>
+					<ProBadge />
+				</span>
 				{ group.rules.length > 1 && (
 					<Select value={ group.match } onChange={ ( e ) => set( { match: e.target.value } ) } className="w-36">
 						<option value="all">Match all</option>
@@ -394,7 +411,10 @@ function EmailFormContent( { layer, set } ) {
 function RulesUpsell() {
 	return (
 		<div className="mt-4 border-t border-line pt-4">
-			<span className="text-xs font-semibold text-ink uppercase tracking-wide">Display rules</span>
+			<span className="flex items-center gap-2">
+				<span className="text-xs font-semibold text-ink uppercase tracking-wide">Display rules</span>
+				<ProBadge />
+			</span>
 			<p className="text-xs text-muted mt-1.5">
 				Showing a layer only to certain viewers — logged in, a CRM contact, carrying a URL parameter —
 				needs TruePlayer Pro. Without it the layer is shown to everyone.
