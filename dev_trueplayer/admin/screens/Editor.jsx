@@ -235,7 +235,7 @@ export default function Editor( { id, onEditState } ) {
 														key={ subKey }
 														onClick={ () => selectSub( t.key, subKey ) }
 														className={ `flex items-center justify-between gap-2 w-full px-3 py-1.5 rounded-md text-[13px] text-left transition ${
-															active && activeSub[ t.key ] === subKey ? 'bg-white text-brand-700 font-semibold shadow-sm' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+															active && activeSub[ t.key ] === subKey ? 'text-brand-700 font-semibold' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
 														}` }
 													>
 														<span className="truncate">{ subLabel }</span>
