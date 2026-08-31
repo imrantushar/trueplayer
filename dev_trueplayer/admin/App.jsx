@@ -89,6 +89,16 @@ export default function App() {
 	// render_app callback for all of them), so every in-app navigation, same
 	// section or not, is safely client-side — no reload needed.
 	const go = ( name, params = {} ) => requestNav( () => {
+		// Some screens keep their own sub-editor in internal state rather than in
+		// the route — Presets edits a preset inside the Presets screen, Library
+		// edits a playlist inside Library. Navigating to the section such an
+		// editor already lives in leaves `route` unchanged, so nothing remounts
+		// and the author stays in the editor with the guard dismissed and the
+		// edits they just chose to discard still on screen. Ask the screen to
+		// close it, which is what "go to Presets" means from inside a preset.
+		if ( name === route.name && editState?.onBack ) {
+			editState.onBack();
+		}
 		window.history.pushState( {}, '', routeUrl( name, params ) );
 		setRoute( { name, ...params } );
 		syncAdminMenuHighlight( name );
