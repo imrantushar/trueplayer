@@ -223,7 +223,7 @@ function EmailFormStyle( { layer, set } ) {
  * using the video's `config.optin`, so a form on a video that never configured
  * capture had nowhere to send anyone. The destination lives on the layer now.
  */
-function EmailFormFields( { layer, set } ) {
+function EmailFormFields( { layer, set, rules } ) {
 	const [ tab, setTab ] = useState( 'content' );
 
 	return (
@@ -247,9 +247,18 @@ function EmailFormFields( { layer, set } ) {
 				) ) }
 			</div>
 
-			{ 'content' === tab
-				? <EmailFormContent layer={ layer } set={ set } />
-				: <EmailFormStyle layer={ layer } set={ set } /> }
+			{ /* Display rules belong to the Content side: who sees the form is
+			     part of what it does, not how it looks. They are passed in rather
+			     than built here because every other layer type shows the same
+			     editor without any tabs around it. */ }
+			{ 'content' === tab ? (
+				<>
+					<EmailFormContent layer={ layer } set={ set } />
+					{ rules }
+				</>
+			) : (
+				<EmailFormStyle layer={ layer } set={ set } />
+			) }
 		</>
 	);
 }
@@ -535,13 +544,23 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 						</Field>
 					) }
 
-					{ l.type === 'form' && <EmailFormFields layer={ l } set={ ( p ) => setOne( i, p ) } /> }
+					{ l.type === 'form' && (
+						<EmailFormFields
+							layer={ l }
+							set={ ( p ) => setOne( i, p ) }
+							rules={ isPro()
+								? <ConditionsEditor value={ l.conditions } onChange={ ( c ) => setOne( i, { conditions: c } ) } />
+								: <RulesUpsell /> }
+						/>
+					) }
 
 					{ /* Who sees a layer is the Pro half of this feature; that a free
-					     install can capture an address at all is not. */ }
-					{ isPro()
+					     install can capture an address at all is not. The email form
+					     renders these inside its Content tab instead, so they don't
+					     also show up under Style. */ }
+					{ 'form' !== l.type && ( isPro()
 						? <ConditionsEditor value={ l.conditions } onChange={ ( c ) => setOne( i, { conditions: c } ) } />
-						: <RulesUpsell /> }
+						: <RulesUpsell /> ) }
 					<div className="text-right mt-2"><Button variant="danger" size="sm" onClick={ () => remove( i ) }><BsTrash /></Button></div>
 					</div>
 					) }
