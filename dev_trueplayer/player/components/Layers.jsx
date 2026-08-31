@@ -99,7 +99,7 @@ function FormLayer( { layer, videoId, onSubmit } ) {
 }
 
 
-export default function Layers( { layers, current, videoId, onOptin, viewer, preview } ) {
+export default function Layers( { layers, current, videoId, onOptin, viewer, preview, forcedId = null, hiddenId = null } ) {
 	// Per-viewer facts for conditional rules (loggedIn / CRM / etc.). Fetched
 	// once; falls back to the localized login flag so URL/login rules still work.
 	const [ facts, setFacts ] = useState(
@@ -123,6 +123,15 @@ export default function Layers( { layers, current, videoId, onOptin, viewer, pre
 	const ctx = { viewer: facts, url: new URLSearchParams( window.location.search ), layerState: stateRef.current };
 
 	const due = ( layers || [] ).filter( ( l ) => {
+		// The editor's eye overrides both the window and the rules: an author
+		// asking to see a layer has asked to see it, whether or not this viewer
+		// would qualify or the playhead happens to be inside its window.
+		if ( hiddenId && l.id === hiddenId ) {
+			return false;
+		}
+		if ( forcedId && l.id === forcedId ) {
+			return true;
+		}
 		if ( ! active( l, current ) ) {
 			return false;
 		}

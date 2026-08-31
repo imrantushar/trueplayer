@@ -520,6 +520,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// this either way.
 	const cueRef = useRef( null );
 	const cuedTextRef = useRef( null ); // text overlay the eye currently has up
+	const cuedLayerRef = useRef( null ); // layer the eye currently has up
+	// Preview-only overrides for the layer stack: one layer forced on screen
+	// regardless of its window, and one suppressed after the eye let it go.
+	// Without these the eye did nothing visible for an inline form — the default
+	// window starts at 0, so the panel was already up, and nothing took it down.
+	const [ forcedLayerId, setForcedLayerId ] = useState( null );
+	const [ hiddenLayerId, setHiddenLayerId ] = useState( null );
 	useEffect( () => {
 		if ( ! preview || ! previewCue || ! ready || cueRef.current === previewCue.token ) {
 			return;
@@ -537,9 +544,18 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		if ( undefined !== previewCue.layerId ) {
 			const l = previewCue.layerId ? allLayers.find( ( x ) => x.id === previewCue.layerId ) : null;
 			if ( ! l ) {
-				setActiveOptin( false ); // toggled off, or the layer was deleted
+				// Toggled off, or the layer is gone — take down whatever the eye
+				// put up. An inline panel has to be suppressed rather than merely
+				// released: we are paused inside its window, so the normal rule
+				// would simply draw it again.
+				setActiveOptin( false );
+				setHiddenLayerId( cuedLayerRef.current );
+				setForcedLayerId( null );
+				cuedLayerRef.current = null;
 				return;
 			}
+			cuedLayerRef.current = l.id;
+			setHiddenLayerId( null ); // a new cue releases any earlier suppression
 			setStarted( true );
 			const gateMode = 'inline' !== l.mode;
 			// Where the layer is due. A gate on 'pre' or 'end' has no timestamp of
@@ -555,10 +571,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				// preview must not make it un-showable.
 				optinDoneRef.current = false;
 				setActiveOptin( true );
+				setForcedLayerId( null );
 			} else {
-				// Inline layers are drawn by their time window, so landing inside
-				// it is all it takes.
+				// Forced rather than left to the time window: `seek` resolves
+				// asynchronously, so the position the window is tested against is
+				// still the old one when this returns.
 				setActiveOptin( false );
+				setForcedLayerId( l.id );
 			}
 			sync();
 			return;
@@ -1006,6 +1025,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				<Layers
 					layers={ layers }
 					current={ ui.current }
+					forcedId={ forcedLayerId }
+					hiddenId={ hiddenLayerId }
 					videoId={ videoId }
 					preview={ preview }
 					onOptin={ ( { email, name, layerId } ) => ( preview
