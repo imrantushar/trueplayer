@@ -96,6 +96,14 @@ export default function SourceTab( { config, patch, videoId } ) {
 			? { src: '', poster: '', posterAuto: false, posterDerived: false, posterFallbacks: undefined }
 			: { src: '' }
 		);
+		// And take the generated image out of the media library, so capturing,
+		// removing and capturing again doesn't leave a trail of near-identical
+		// posters behind. Fire-and-forget: this is cleanup, and failing it must
+		// not block the removal the author already made. The server keeps
+		// whichever poster the saved config still uses.
+		if ( ours && videoId ) {
+			api.discardPosters( videoId ).catch( () => {} );
+		}
 	};
 
 	const canGrab = canCaptureFrame( source ) && !! videoId;

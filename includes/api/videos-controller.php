@@ -95,9 +95,16 @@ class VideosController extends WP_REST_Controller {
 			$this->namespace,
 			'/' . $this->rest_base . '/(?P<id>\d+)/poster',
 			[
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => [ $this, 'save_poster' ],
-				'permission_callback' => [ $this, 'can_upload' ],
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'save_poster' ],
+					'permission_callback' => [ $this, 'can_upload' ],
+				],
+				[
+					'methods'             => WP_REST_Server::DELETABLE,
+					'callback'            => [ $this, 'discard_posters' ],
+					'permission_callback' => [ $this, 'admin' ],
+				],
 			]
 		);
 		register_rest_route(
@@ -604,6 +611,31 @@ class VideosController extends WP_REST_Controller {
 				'url' => wp_get_attachment_url( $attachment ),
 			]
 		);
+	}
+
+	/**
+	 * Discard the frames captured for this video that no saved config uses.
+	 *
+	 * The editor calls this the moment the author removes the video file, so a
+	 * poster that was only ever generated for a file now gone doesn't sit in the
+	 * media library waiting for a save that may never come — capture, remove,
+	 * capture again is how duplicates pile up.
+	 *
+	 * The poster the *saved* config still points at is deliberately kept: the
+	 * removal lives only in the open editor until Update is pressed, and
+	 * discarding those changes has to leave the published page with the
+	 * thumbnail it is still rendering. That one is swept by the save itself
+	 * (see update()).
+	 */
+	public function discard_posters( $request ) {
+		$id = (int) $request['id'];
+		if ( get_post_type( $id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
+			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+		}
+		$saved  = $this->config_of( $id );
+		$in_use = (string) ( $saved['source']['poster'] ?? '' );
+		$this->prune_generated_posters( $id, $in_use ? attachment_url_to_postid( $in_use ) : 0 );
+		return rest_ensure_response( [ 'discarded' => true ] );
 	}
 
 	/**
