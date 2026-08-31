@@ -17,6 +17,22 @@ const TYPES = [
 	{ value: 'hls', label: 'HLS stream (.m3u8)', pro: true },
 ];
 
+/**
+ * The fields that say *where the media is*, as opposed to how it is presented.
+ * They belong to one kind of source: a media-library URL is meaningless in
+ * YouTube's field, and a Bunny pull zone is meaningless everywhere else. Set
+ * together when the type changes, so no field keeps another type's value.
+ */
+const SOURCE_FIELDS = [ 'src', 'pullZone', 'videoId', 'playbackId' ];
+
+/** Just the source-locating fields of a source, with absent ones as ''. */
+function locatorOf( source = {} ) {
+	return SOURCE_FIELDS.reduce( ( out, key ) => {
+		out[ key ] = source[ key ] || '';
+		return out;
+	}, {} );
+}
+
 export default function SourceTab( { config, patch, videoId, title = '', onTitleChange } ) {
 	const source = config.source || { type: 'self' };
 	const set = ( partial ) => patch( { source: { ...source, ...partial } } );
@@ -31,6 +47,11 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 	// The src the auto-capture below has already dealt with, so it fires once
 	// per newly chosen file rather than on every keystroke or re-render.
 	const captured = useRef( null );
+	// What each source type held, so switching away and back returns the author
+	// to what they had rather than to an empty field. Filled as types are left,
+	// which means the type the video was loaded on is stashed the first time it
+	// is switched away from — so coming back restores the saved source.
+	const stashed = useRef( {} );
 
 	/**
 	 * Read a frame out of the video and store it as the poster.
@@ -79,31 +100,56 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 	}, [ source, videoId, grabPoster ] );
 
 	/**
-	 * Drop the file — and with it the poster that came from it.
-	 *
-	 * A poster we produced (a captured frame, or a provider thumbnail) describes
-	 * the file that is going away, so leaving it behind shows the removed video
-	 * still sitting in the poster field and on the front end. One the author
-	 * chose is their own work and outlives the file, which is the same rule the
-	 * server applies when a source is retargeted (VideosController::quick_update).
+	 * Whether the poster on screen is one we produced — a frame captured from
+	 * the file, or a thumbnail derived from the provider — rather than one the
+	 * author picked. Ours describes a particular piece of media and dies with
+	 * it; theirs is their own work and outlives it. Same rule the server applies
+	 * when a source is retargeted (VideosController::quick_update).
 	 */
+	const ourPoster = () => !! ( source.posterAuto || source.posterDerived );
+
+	/**
+	 * Clear the poster we generated, in the config and in the media library, and
+	 * hand back the config patch for the caller to merge with its own change.
+	 *
+	 * The cleanup call is fire-and-forget: it must not block the edit the author
+	 * already made. The server keeps whichever poster the *saved* config still
+	 * points at, so backing out of an unsaved change can't leave the published
+	 * page with a missing thumbnail.
+	 */
+	const clearOurPoster = () => {
+		if ( videoId ) {
+			api.discardPosters( videoId ).catch( () => {} );
+		}
+		return { poster: '', posterAuto: false, posterDerived: false, posterFallbacks: undefined };
+	};
+
+	/** Drop the file — and with it the poster that came from it. */
 	const removeFile = () => {
 		// Re-picking the very same file has to capture again, and the auto-capture
 		// guard keys on the last src it handled.
 		captured.current = '';
-		const ours = source.posterAuto || source.posterDerived;
-		set( ours
-			? { src: '', poster: '', posterAuto: false, posterDerived: false, posterFallbacks: undefined }
-			: { src: '' }
-		);
-		// And take the generated image out of the media library, so capturing,
-		// removing and capturing again doesn't leave a trail of near-identical
-		// posters behind. Fire-and-forget: this is cleanup, and failing it must
-		// not block the removal the author already made. The server keeps
-		// whichever poster the saved config still uses.
-		if ( ours && videoId ) {
-			api.discardPosters( videoId ).catch( () => {} );
+		set( { src: '', ...( ourPoster() ? clearOurPoster() : {} ) } );
+	};
+
+	/**
+	 * Switch the kind of source — carrying nothing of the old one over.
+	 *
+	 * The locating fields are swapped, not kept: the uploaded file's URL used to
+	 * stay behind in YouTube's field, where it reads as a value the author
+	 * entered and fails to load as one. A poster made for the old source goes
+	 * too — a frame captured from an upload says nothing about the YouTube video
+	 * replacing it, and while it sits there it also blocks the provider
+	 * thumbnail that should take over (posters are only derived when empty).
+	 */
+	const changeType = ( type ) => {
+		if ( type === source.type ) {
+			return;
 		}
+		captured.current = '';
+		stashed.current[ source.type || 'self' ] = locatorOf( source );
+		const restored = stashed.current[ type ] || locatorOf( {} );
+		set( { type, ...restored, ...( ourPoster() ? clearOurPoster() : {} ) } );
 	};
 
 	const canGrab = canCaptureFrame( source ) && !! videoId;
@@ -129,7 +175,7 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 			) }
 
 			<Field label="Source type" hint={ ! isPro() ? 'Bunny.net & HLS streaming require TruePlayer Pro.' : undefined }>
-				<Select value={ source.type || 'self' } onChange={ ( e ) => set( { type: e.target.value } ) }>
+				<Select value={ source.type || 'self' } onChange={ ( e ) => changeType( e.target.value ) }>
 					{ TYPES.map( ( t ) => (
 						<option key={ t.value } value={ t.value } disabled={ t.pro && ! isPro() }>
 							{ t.label }{ t.pro && ! isPro() ? ' (Pro)' : '' }
