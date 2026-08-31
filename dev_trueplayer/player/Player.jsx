@@ -800,16 +800,16 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	}
 
 	const skin = appearance.skin || 'default';
-	// Before the first play, the stage shows its poster and the big play button
-	// and nothing else — the control bar has nothing to control yet, and every
-	// video platform reads this way. Only when the big play button is actually
-	// there, though: hiding the bar without it would leave no way to start.
-	// Audio is exempt — its control bar *is* the player.
-	const unstarted = ! started && appearance.bigPlay && source.mediaType !== 'audio';
+	// The control bar is shown from the moment the media is ready, before the
+	// first play as well as after it. It used to be held back until playback
+	// started, on the grounds that there is nothing to scrub yet — but that
+	// leaves the player looking inert, hides the duration and the volume and
+	// captions controls that are perfectly meaningful on a paused video, and
+	// gives an author no way to see their own control-bar styling without
+	// starting the video. Auto-hide-while-playing (is-idle) is unaffected.
 	const stageClass = [
 		'tp-stage',
 		`tp-skin-${ skin }`,
-		unstarted ? 'is-unstarted' : '',
 		idle && ui.playing ? 'is-idle' : '',
 		source.mediaType === 'audio' ? 'is-audio' : '',
 		`tp-bar-${ appearance.controlBarStyle }`,

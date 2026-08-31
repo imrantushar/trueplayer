@@ -592,15 +592,6 @@
 	opacity: 0;
 	pointer-events: none;
 }
-/* Nothing has played yet: poster + play button only. Hover doesn't reveal the
-   bar either — there is no position to scrub and no sound to set, so the bar
-   would only be decoration over the poster. (Set by Player.jsx, which keeps
-   audio and big-play-less players out of it.) */
-.tp-stage.is-unstarted .tp-controls {
-	opacity: 0;
-	pointer-events: none;
-}
-
 .tp-controls-row {
 	display: flex;
 	align-items: center;
