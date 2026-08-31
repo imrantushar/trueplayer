@@ -139,8 +139,42 @@ class Helper {
 			$config['customize']['appearance']['skin'] = 'default';
 		}
 		// Pro-only config never reaches the free frontend.
-		unset( $config['layers'], $config['protection'], $config['timedContent'] );
+		unset( $config['protection'], $config['timedContent'] );
+		$config['layers'] = self::free_layers( $config['layers'] ?? [] );
+		if ( ! $config['layers'] ) {
+			unset( $config['layers'] );
+		}
 		return $config;
+	}
+
+	/**
+	 * The layers a free install may render.
+	 *
+	 * Email capture is free, and it lives in the layer stack — so the stack can
+	 * no longer be dropped wholesale. Form layers survive; hotspots, banners and
+	 * shortcode layers stay Pro as before.
+	 *
+	 * Display rules are Pro in their own right, so they are stripped from the
+	 * layers that do survive. Stripping the rule rather than the layer is
+	 * deliberate: a rule that cannot be evaluated must fail open, or a free
+	 * install would silently stop showing a capture form it is entitled to.
+	 *
+	 * @param mixed $layers Raw `config.layers`.
+	 * @return array Layers safe to render without Pro.
+	 */
+	private static function free_layers( $layers ): array {
+		if ( ! is_array( $layers ) ) {
+			return [];
+		}
+		$kept = [];
+		foreach ( $layers as $layer ) {
+			if ( ! is_array( $layer ) || 'form' !== ( $layer['type'] ?? '' ) ) {
+				continue;
+			}
+			unset( $layer['conditions'] );
+			$kept[] = $layer;
+		}
+		return array_values( $kept );
 	}
 
 	/** Extract an 11-char YouTube id from a watch/share/embed/shorts URL. */

@@ -35,13 +35,17 @@ class IntegrationsController extends WP_REST_Controller {
 	}
 
 	public function admin() {
-		return current_user_can( 'manage_options' ) && \TruePlayer\Pro::active();
+		// Not Pro-gated: the provider picker also serves free email capture, and
+		// an empty list there would read as "no providers exist" rather than
+		// "this one needs Pro". Availability per provider is reported instead.
+		return current_user_can( 'manage_options' );
 	}
 
 	public function index() {
+		$pro = \TruePlayer\Pro::active();
 		$out = array_map(
-			function ( $integration ) {
-				return method_exists( $integration, 'to_array' )
+			function ( $integration ) use ( $pro ) {
+				$item = method_exists( $integration, 'to_array' )
 					? $integration->to_array()
 					: [
 						'id'        => $integration->id(),
@@ -49,6 +53,12 @@ class IntegrationsController extends WP_REST_Controller {
 						'available' => $integration->is_available(),
 						'lists'     => $integration->is_available() ? $integration->lists() : [],
 					];
+				// Two different reasons a provider can't be picked, and the admin
+				// has to tell them apart: `available` means its dependency is
+				// missing, `requiresPro` means the licence is. A CRM on a free
+				// install is the second, not the first.
+				$item['requiresPro'] = ! $pro && ! Integrations::is_free_provider( $integration->id() );
+				return $item;
 			},
 			Integrations::all()
 		);

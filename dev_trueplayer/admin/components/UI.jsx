@@ -110,10 +110,15 @@ const RS_STYLES = {
 		// pointing at a field and landing on it read as the same state.
 		'&:hover': { borderColor: '#006BFF' },
 	} ),
-	valueContainer: ( base ) => ( { ...base, padding: '0 4px 0 10px' } ),
-	input: ( base ) => ( { ...base, cursor: 'inherit' } ),
-	placeholder: ( base ) => ( { ...base, color: '#A2ADB9' } ),
-	singleValue: ( base ) => ( { ...base, color: '#1f2937' } ),
+	// Text starts exactly where an <Input>'s does (px-3 = 12px). react-select
+	// reaches that total by adding its own 2px margins to whatever the value
+	// container pads, so the two only lined up by coincidence — the margins are
+	// zeroed here and the padding states the full 12px, which is what keeps a
+	// select and an input stacked in a column reading as one field.
+	valueContainer: ( base ) => ( { ...base, padding: '0 4px 0 12px' } ),
+	input: ( base ) => ( { ...base, cursor: 'inherit', margin: 0, paddingTop: 0, paddingBottom: 0 } ),
+	placeholder: ( base ) => ( { ...base, color: '#A2ADB9', margin: 0 } ),
+	singleValue: ( base ) => ( { ...base, color: '#1f2937', margin: 0 } ),
 	indicatorSeparator: () => ( { display: 'none' } ),
 	dropdownIndicator: ( base ) => ( { ...base, color: '#738496', padding: 6, cursor: 'pointer' } ),
 	menu: ( base ) => ( { ...base, borderRadius: 6, overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 8px 28px rgba(16,24,40,0.12)' } ),

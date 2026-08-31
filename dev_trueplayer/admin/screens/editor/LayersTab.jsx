@@ -1,7 +1,11 @@
-import { useState } from '@wordpress/element';
-import { Card, Field, Input, Select, Button, Textarea } from '../../components/UI';
+import { useEffect, useRef, useState } from '@wordpress/element';
+import { Card, Field, FieldGroup, Input, Select, Button, Textarea, Toggle, ColorInput } from '../../components/UI';
 import MediaPicker from '../../components/MediaPicker';
+import { api } from '../../api';
+import { isPro } from '../../pro';
 import { BsTrash } from 'react-icons/bs';
+import { Icon } from '../../components/icons';
+import { IoClose } from 'react-icons/io5';
 
 const uid = () => 'ly_' + Math.random().toString( 36 ).slice( 2, 8 );
 
@@ -45,7 +49,7 @@ function ConditionsEditor( { value, onChange } ) {
 			<div className="flex items-center justify-between mb-2">
 				<span className="text-xs font-semibold text-ink uppercase tracking-wide">Display rules</span>
 				{ group.rules.length > 1 && (
-					<Select value={ group.match } onChange={ ( e ) => set( { match: e.target.value } ) } className="w-auto text-xs">
+					<Select value={ group.match } onChange={ ( e ) => set( { match: e.target.value } ) } className="w-36">
 						<option value="all">Match all</option>
 						<option value="any">Match any</option>
 					</Select>
@@ -55,27 +59,41 @@ function ConditionsEditor( { value, onChange } ) {
 			{ group.rules.map( ( r, idx ) => {
 				const isBool = BOOL_FIELDS.includes( r.field );
 				return (
-					<div key={ idx } className="flex flex-wrap gap-2 mb-2 items-center">
-						<Select value={ r.field } onChange={ ( e ) => setRule( idx, { field: e.target.value } ) } className="w-auto">
+					// One rule, one line. The controls share the width rather than
+					// each sizing to its own longest option (`w-auto`, which left no
+					// two rules aligned) and rather than wrapping onto a second line,
+					// which broke the rule apart mid-sentence. Each keeps a floor so
+					// it stays readable, and the field name — the longest label —
+					// takes whatever is left over. The remove control is a 40px
+					// square, matching the height of everything beside it.
+					<div key={ idx } className="flex items-center gap-2 mb-2">
+						<Select value={ r.field } onChange={ ( e ) => setRule( idx, { field: e.target.value } ) } className="flex-[2] min-w-[90px]">
 							{ RULE_FIELDS.map( ( [ v, label ] ) => <option key={ v } value={ v }>{ label }</option> ) }
 						</Select>
-						<Select value={ r.operator } onChange={ ( e ) => setRule( idx, { operator: e.target.value } ) } className="w-auto">
+						<Select value={ r.operator } onChange={ ( e ) => setRule( idx, { operator: e.target.value } ) } className="w-[104px] shrink-0">
 							<option value="is">is</option>
 							<option value="is_not">is not</option>
 							{ ! isBool && <option value="contains">contains</option> }
 						</Select>
 						{ r.field === 'url_param' && (
-							<Input value={ r.key || '' } onChange={ ( e ) => setRule( idx, { key: e.target.value } ) } placeholder="param key" className="w-28" />
+							<Input value={ r.key || '' } onChange={ ( e ) => setRule( idx, { key: e.target.value } ) } placeholder="param key" className="flex-1 min-w-[80px]" />
 						) }
 						{ isBool ? (
-							<Select value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } className="w-auto">
+							<Select value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } className="w-[92px] shrink-0">
 								<option value="yes">yes</option>
 								<option value="no">no</option>
 							</Select>
 						) : (
-							<Input value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } placeholder="value" className="w-32" />
+							<Input value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } placeholder="value" className="flex-1 min-w-[80px]" />
 						) }
-						<Button variant="ghost" size="sm" onClick={ () => removeRule( idx ) }>×</Button>
+						<button
+							type="button"
+							onClick={ () => removeRule( idx ) }
+							aria-label="Remove rule"
+							className="shrink-0 w-10 h-10 inline-flex items-center justify-center rounded border border-line bg-white text-muted hover:border-danger hover:text-danger transition-colors"
+						>
+							<IoClose className="w-4 h-4" />
+						</button>
 					</div>
 				);
 			} ) }
@@ -94,18 +112,321 @@ const newLayer = ( type ) => {
 		case 'shortcode':
 			return { ...base, shortcode: '', position: 'middle-center' };
 		case 'form':
-			return { ...base, title: '', buttonLabel: 'Subscribe', position: 'middle-center' };
+			// `gate` by default: asking for an address is the point of this
+			// layer, and a blocking panel is what actually gets it. An author who
+			// wants the quieter version switches Mode to inline.
+			return {
+				...base,
+				mode: 'gate',
+				trigger: 'time',
+				position: 'middle-center',
+				required: true,
+				collectName: false,
+				dedupe: true,
+				title: 'Subscribe to keep watching',
+				description: '',
+				buttonLabel: 'Subscribe',
+				placeholder: 'you@email.com',
+				thanks: '',
+				provider: '',
+				lists: [],
+			};
 		default:
 			return base;
 	}
 };
 
-export default function LayersTab( { config, patch } ) {
+/**
+ * A moment in the video, entered as hours, minutes and seconds.
+ *
+ * The value is still stored as a plain second count — this only changes how it
+ * is typed. A bare seconds box is fine for "show at 15", and unusable for a
+ * timestamp partway through a lesson: nobody knows 1:07:30 as 4050.
+ */
+function TimeParts( { seconds = 0, onChange } ) {
+	const total = Math.max( 0, parseInt( seconds, 10 ) || 0 );
+	const parts = { h: Math.floor( total / 3600 ), m: Math.floor( ( total % 3600 ) / 60 ), s: total % 60 };
+
+	const setPart = ( key, raw ) => {
+		const next = { ...parts, [ key ]: Math.max( 0, parseInt( raw, 10 ) || 0 ) };
+		onChange( next.h * 3600 + next.m * 60 + next.s );
+	};
+
+	// Labelled by hand rather than with `Field`, which hardcodes `mb-5` that a
+	// className cannot override — three of those would push the group apart.
+	return (
+		<div className="grid grid-cols-3 gap-3">
+			{ [ [ 'h', 'Hours' ], [ 'm', 'Minutes' ], [ 's', 'Seconds' ] ].map( ( [ key, label ] ) => (
+				<label key={ key } className="block">
+					<Input type="number" min="0" value={ parts[ key ] } onChange={ ( e ) => setPart( key, e.target.value ) } />
+					<span className="block text-xs text-gray-400 mt-1.5">{ label }</span>
+				</label>
+			) ) }
+		</div>
+	);
+}
+
+/**
+ * The Style tab: colours for the form, stored under `layer.style`.
+ *
+ * Each field is empty by default and stays out of the saved object until it is
+ * set, so the player's stylesheet keeps supplying its own value — the form only
+ * takes on a colour an author actually chose. That is why "reset" here is
+ * simply clearing the field.
+ */
+function EmailFormStyle( { layer, set } ) {
+	const style = layer.style || {};
+	const setStyle = ( partial ) => set( { style: { ...style, ...partial } } );
+
+	// The placeholder is the value the player uses when the field is left empty,
+	// so "the default" is something an author can read rather than guess. One
+	// set for both modes: the form looks the same either way, so a colour here
+	// means the same thing whichever Mode is selected.
+	const colors = [
+		[ 'bg', 'Background', '#ffffff' ],
+		[ 'title', 'Headline colour', '#111827' ],
+		[ 'muted', 'Description colour', '#6b7280' ],
+		[ 'buttonBg', 'Button background', 'player accent' ],
+		[ 'buttonText', 'Button text colour', '#ffffff' ],
+	];
+
+	return (
+		<>
+			<p className="text-sm text-muted mb-4">Leave a field empty to keep the player’s own.</p>
+			<div className="grid md:grid-cols-2 gap-x-6">
+				{ colors.map( ( [ key, label, fallback ] ) => (
+					<Field key={ key } label={ label }>
+						<ColorInput value={ style[ key ] || '' } onChange={ ( v ) => setStyle( { [ key ]: v } ) } placeholder={ fallback } />
+					</Field>
+				) ) }
+				<Field label="Button corner radius (px)">
+					<Input
+						type="number"
+						min="0"
+						max="60"
+						value={ style.buttonRadius ?? '' }
+						onChange={ ( e ) => setStyle( { buttonRadius: '' === e.target.value ? '' : parseInt( e.target.value, 10 ) } ) }
+						placeholder="8"
+					/>
+				</Field>
+			</div>
+		</>
+	);
+}
+
+/**
+ * Everything an Email form layer needs — the merged replacement for the old
+ * Interactions → Email capture screen.
+ *
+ * Capture and the Layers email form were two features asking for the same
+ * address, and only the former ever had a provider: every submission was routed
+ * using the video's `config.optin`, so a form on a video that never configured
+ * capture had nowhere to send anyone. The destination lives on the layer now.
+ */
+function EmailFormFields( { layer, set } ) {
+	const [ tab, setTab ] = useState( 'content' );
+
+	return (
+		<>
+			{ /* What the form says versus how it looks. Splitting them keeps the
+			     panel scannable: the colours are set once and rarely touched,
+			     while the copy and destination are what an author comes back to. */ }
+			<div className="inline-flex p-1 mb-5 rounded bg-subtle border border-line">
+				{ [ [ 'content', 'Content' ], [ 'style', 'Style' ] ].map( ( [ key, label ] ) => (
+					<button
+						key={ key }
+						type="button"
+						onClick={ () => setTab( key ) }
+						aria-pressed={ tab === key }
+						className={ `px-4 py-1.5 rounded text-[13px] font-medium transition-colors ${
+							tab === key ? 'bg-white text-brand-500 shadow-sm' : 'text-muted hover:text-ink'
+						}` }
+					>
+						{ label }
+					</button>
+				) ) }
+			</div>
+
+			{ 'content' === tab
+				? <EmailFormContent layer={ layer } set={ set } />
+				: <EmailFormStyle layer={ layer } set={ set } /> }
+		</>
+	);
+}
+
+/** The Content tab — what the form asks, when, and where the answer goes. */
+function EmailFormContent( { layer, set } ) {
+	const [ providers, setProviders ] = useState( null );
+
+	useEffect( () => {
+		api.getIntegrations().then( setProviders ).catch( () => setProviders( [] ) );
+	}, [] );
+
+	const gate = 'inline' !== layer.mode;
+	const chosen = ( providers || [] ).find( ( p ) => p.id === layer.provider );
+	const lists = chosen ? chosen.lists || [] : [];
+
+	const toggleList = ( id ) => {
+		const has = ( layer.lists || [] ).includes( id );
+		set( { lists: has ? layer.lists.filter( ( x ) => x !== id ) : [ ...( layer.lists || [] ), id ] } );
+	};
+
+	return (
+		<>
+			<div className="grid md:grid-cols-2 gap-x-6">
+				<Field label="Mode" hint={ gate ? 'Covers the video and pauses it.' : 'A panel beside the picture; the video keeps playing.' }>
+					<Select value={ layer.mode || 'gate' } onChange={ ( e ) => set( { mode: e.target.value } ) }>
+						<option value="gate">Gate — pause and ask</option>
+						<option value="inline">Inline — alongside the video</option>
+					</Select>
+				</Field>
+				{ gate && (
+					<Field label="When to show">
+						<Select value={ layer.trigger || 'time' } onChange={ ( e ) => set( { trigger: e.target.value } ) }>
+							<option value="pre">Before playback</option>
+							<option value="time">At a timestamp</option>
+							<option value="end">When the video ends</option>
+						</Select>
+					</Field>
+				) }
+			</div>
+
+			<Field
+				label="Position"
+				hint={ gate ? 'A gate covers the video; position applies to the inline mode.' : 'Where the panel sits over the picture.' }
+			>
+				<Select value={ layer.position || 'middle-center' } onChange={ ( e ) => set( { position: e.target.value } ) }>
+					{ POSITIONS.map( ( [ v, lab ] ) => <option key={ v } value={ v }>{ lab }</option> ) }
+				</Select>
+			</Field>
+
+			{ /* A gate fires once at a moment; an inline panel is shown across a
+			     window. Two different questions, so two different controls. */ }
+			{ gate && 'time' === ( layer.trigger || 'time' ) && (
+				<FieldGroup label="Show at" hint="How far into the video the gate appears.">
+					<TimeParts seconds={ layer.start } onChange={ ( v ) => set( { start: v } ) } />
+				</FieldGroup>
+			) }
+			{ ! gate && (
+				<FieldGroup label="Show from" hint="The form stays until the video ends.">
+					<TimeParts seconds={ layer.start } onChange={ ( v ) => set( { start: v } ) } />
+				</FieldGroup>
+			) }
+
+			<div className="grid md:grid-cols-2 gap-x-6">
+				<Field label="Headline"><Input value={ layer.title || '' } onChange={ ( e ) => set( { title: e.target.value } ) } placeholder="Subscribe to keep watching" /></Field>
+				<Field label="Button label"><Input value={ layer.buttonLabel || '' } onChange={ ( e ) => set( { buttonLabel: e.target.value } ) } placeholder="Subscribe" /></Field>
+			</div>
+			<div className="grid md:grid-cols-2 gap-x-6">
+				<Field label="Description" hint="Optional line under the headline."><Input value={ layer.description || '' } onChange={ ( e ) => set( { description: e.target.value } ) } placeholder="Enter your email to continue." /></Field>
+				<Field label="Email placeholder"><Input value={ layer.placeholder || '' } onChange={ ( e ) => set( { placeholder: e.target.value } ) } placeholder="you@email.com" /></Field>
+			</div>
+			{ ! gate && (
+				<Field label="Thank-you message" hint="Shown in place of the form once someone subscribes.">
+					<Input value={ layer.thanks || '' } onChange={ ( e ) => set( { thanks: e.target.value } ) } placeholder="Thanks — you’re in!" />
+				</Field>
+			) }
+
+			<FieldGroup label="Send contacts to" hint="Where a submitted address goes.">
+				<Select value={ layer.provider || '' } onChange={ ( e ) => set( { provider: e.target.value, lists: [] } ) }>
+					<option value="">— Select a provider —</option>
+					{ ( providers || [] ).map( ( p ) => (
+						<option key={ p.id } value={ p.id } disabled={ ! p.available || p.requiresPro }>
+							{ p.name }{ p.requiresPro ? ' (Pro)' : ( ! p.available ? ' (not installed)' : '' ) }
+						</option>
+					) ) }
+				</Select>
+			</FieldGroup>
+
+			{ lists.length > 0 && (
+				<FieldGroup label="Lists" hint="The contact is added to the selected lists.">
+					<div className="flex flex-wrap gap-2">
+						{ lists.map( ( li ) => {
+							const on = ( layer.lists || [] ).includes( li.id );
+							return (
+								<button
+									key={ li.id }
+									type="button"
+									onClick={ () => toggleList( li.id ) }
+									className={ `text-sm px-2.5 py-1 rounded-full border transition-colors ${ on ? 'bg-brand-500 text-white border-brand-500' : 'bg-white text-gray-600 border-line hover:border-brand-400' }` }
+								>
+									{ li.title }
+								</button>
+							);
+						} ) }
+					</div>
+				</FieldGroup>
+			) }
+
+			<div className="space-y-3 mb-5">
+				{ /* Shown for both modes: it is what decides whether a way out is
+				     offered at all. Turned off, the gate gets its skip link and the
+				     inline panel gets a dismiss — turned on, neither can be waved
+				     away. The consequence differs by mode, so the label does too. */ }
+				<Toggle
+					checked={ layer.required !== false }
+					onChange={ ( v ) => set( { required: v } ) }
+					label={ gate
+						? 'Required — the viewer can’t continue without subscribing'
+						: 'Required — the viewer can’t dismiss the form' }
+				/>
+				<Toggle checked={ !! layer.collectName } onChange={ ( v ) => set( { collectName: v } ) } label="Also ask for a name" />
+				<Toggle
+					checked={ layer.dedupe !== false }
+					onChange={ ( v ) => set( { dedupe: v } ) }
+					label="Ask only once per viewer"
+				/>
+			</div>
+		</>
+	);
+}
+
+/** What the rules editor is replaced with when the licence doesn't cover it. */
+function RulesUpsell() {
+	return (
+		<div className="mt-4 border-t border-line pt-4">
+			<span className="text-xs font-semibold text-ink uppercase tracking-wide">Display rules</span>
+			<p className="text-xs text-muted mt-1.5">
+				Showing a layer only to certain viewers — logged in, a CRM contact, carrying a URL parameter —
+				needs TruePlayer Pro. Without it the layer is shown to everyone.
+			</p>
+		</div>
+	);
+}
+
+export default function LayersTab( { config, patch, onPreviewLayer, previewingLayerId = null } ) {
 	const layers = config.layers || [];
 	const setOne = ( i, partial ) => patch( { layers: layers.map( ( l, idx ) => ( idx === i ? { ...l, ...partial } : l ) ) } );
 	const remove = ( i ) => patch( { layers: layers.filter( ( _, idx ) => idx !== i ) } );
 	const [ menu, setMenu ] = useState( false );
+	// Where the type menu opens, measured each time rather than assumed. It used
+	// to be pinned above the button, which put it behind the sticky header on a
+	// short viewport and cut "Hotspot" — the first type — out of reach.
+	const [ menuPos, setMenuPos ] = useState( { up: false, maxHeight: null } );
+	const addBtnRef = useRef( null );
+
 	const [ openId, setOpenId ] = useState( null );
+
+	const toggleMenu = () => {
+		// Measured before opening, not inside the updater — an updater can be
+		// invoked more than once and must stay free of side effects.
+		if ( ! menu && addBtnRef.current ) {
+			const GAP = 8;
+			const rect = addBtnRef.current.getBoundingClientRect();
+			// The app header is sticky and opaque, so the room above the button
+			// starts below it, not at the top of the window.
+			const header = document.querySelector( '.tp-admin header' );
+			const ceiling = header ? header.getBoundingClientRect().bottom : 0;
+			const below = window.innerHeight - rect.bottom - GAP;
+			const above = rect.top - ceiling - GAP;
+			const up = above > below;
+			// Whichever side has more room wins, and the menu is capped to it and
+			// scrolls — on a short window the four types don't fit either way, and
+			// a menu that runs off the screen hides the option it starts with.
+			setMenuPos( { up, maxHeight: Math.max( 160, Math.round( up ? above : below ) ) } );
+		}
+		setMenu( ( m ) => ! m );
+	};
 	const add = ( type ) => { const l = newLayer( type ); patch( { layers: [ ...layers, l ] } ); setOpenId( l.id ); setMenu( false ); };
 
 	return (
@@ -129,15 +450,44 @@ export default function LayersTab( { config, patch } ) {
 				const heading = l.title || l.tooltip || TYPE_META[ l.type ]?.label || l.type;
 				return (
 				<Card key={ l.id } className="overflow-hidden">
-					<button type="button" onClick={ () => setOpenId( open ? null : l.id ) } className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50">
-						<div className="flex-1 min-w-0">
-							<div className="font-medium text-ink truncate">{ heading }</div>
-							<div className="text-xs text-muted">{ summary }</div>
-						</div>
-						<span className="text-muted text-xs">{ open ? '▲' : '▼' }</span>
-					</button>
+					{ /* The row is the accordion toggle, stretched under the eye so
+					     the eye stays its own target on top of it — same
+					     arrangement as the CTA overlay rows. */ }
+					<div className={ `relative flex items-center gap-3 px-4 py-3 ${ open ? '' : 'hover:bg-gray-50' }` }>
+						<button
+							type="button"
+							onClick={ () => setOpenId( open ? null : l.id ) }
+							aria-expanded={ open }
+							className="flex-1 min-w-0 text-left after:absolute after:inset-0 after:content-['']"
+						>
+							<span className="block font-medium text-ink truncate">{ heading }</span>
+							<span className="block text-xs text-muted">{ summary }</span>
+						</button>
+
+						{ 'form' === l.type && onPreviewLayer && (
+							<button
+								type="button"
+								onClick={ () => onPreviewLayer( l.id ) }
+								title={ previewingLayerId === l.id ? 'Hide it from the live preview' : 'Show this in the live preview' }
+								aria-label={ previewingLayerId === l.id ? 'Hide it from the live preview' : 'Show this in the live preview' }
+								aria-pressed={ previewingLayerId === l.id }
+								className={ `relative z-10 w-8 h-8 shrink-0 inline-flex items-center justify-center rounded border transition-colors ${
+									previewingLayerId === l.id ? 'border-brand-500 bg-brand-50 text-brand-500' : 'border-line text-muted hover:text-ink hover:bg-gray-100'
+								}` }
+							>
+								<Icon name="eye" className="w-4 h-4" />
+							</button>
+						) }
+
+						<span className="text-muted text-xs shrink-0">{ open ? '▲' : '▼' }</span>
+					</div>
 					{ open && (
 					<div className="px-6 pb-6 pt-4 border-t border-line">
+					{ /* Every other layer is a timed window with a place on screen.
+					     The email form is not: a gate has a trigger rather than a
+					     window, and its position only means anything inline — so it
+					     lays these out itself, below Mode. */ }
+					{ l.type !== 'form' && (
 					<div className="grid md:grid-cols-3 gap-x-6">
 						<Field label="Show from (seconds)">
 							<Input type="number" min="0" value={ l.start ?? 0 } onChange={ ( e ) => setOne( i, { start: parseInt( e.target.value, 10 ) || 0 } ) } />
@@ -153,6 +503,7 @@ export default function LayersTab( { config, patch } ) {
 							</Field>
 						) }
 					</div>
+					) }
 
 					{ l.type === 'hotspot' && (
 						<>
@@ -184,14 +535,13 @@ export default function LayersTab( { config, patch } ) {
 						</Field>
 					) }
 
-					{ l.type === 'form' && (
-						<div className="grid md:grid-cols-2 gap-x-6">
-							<Field label="Headline"><Input value={ l.title || '' } onChange={ ( e ) => setOne( i, { title: e.target.value } ) } placeholder="Get the bonus material" /></Field>
-							<Field label="Button label"><Input value={ l.buttonLabel || '' } onChange={ ( e ) => setOne( i, { buttonLabel: e.target.value } ) } placeholder="Subscribe" /></Field>
-						</div>
-					) }
+					{ l.type === 'form' && <EmailFormFields layer={ l } set={ ( p ) => setOne( i, p ) } /> }
 
-					<ConditionsEditor value={ l.conditions } onChange={ ( c ) => setOne( i, { conditions: c } ) } />
+					{ /* Who sees a layer is the Pro half of this feature; that a free
+					     install can capture an address at all is not. */ }
+					{ isPro()
+						? <ConditionsEditor value={ l.conditions } onChange={ ( c ) => setOne( i, { conditions: c } ) } />
+						: <RulesUpsell /> }
 					<div className="text-right mt-2"><Button variant="danger" size="sm" onClick={ () => remove( i ) }><BsTrash /></Button></div>
 					</div>
 					) }
@@ -200,12 +550,17 @@ export default function LayersTab( { config, patch } ) {
 			} ) }
 			</div>
 
-			<div className="relative inline-block">
-				<Button variant="secondary" onClick={ () => setMenu( ( m ) => ! m ) }>+ Add layer ▾</Button>
+			<div className="relative inline-block" ref={ addBtnRef }>
+				<Button variant="secondary" onClick={ toggleMenu }>+ Add layer ▾</Button>
 				{ menu && (
 					<>
-						<div className="fixed inset-0 z-10" onClick={ () => setMenu( false ) } />
-						<div className="absolute left-0 bottom-full mb-1 w-56 bg-white border border-line rounded-card shadow-pop z-20 py-1">
+						{ /* Above the sticky header (z-30), which is opaque and was
+						     painting straight over the menu. */ }
+						<div className="fixed inset-0 z-40" onClick={ () => setMenu( false ) } />
+						<div
+							className={ `absolute left-0 w-56 bg-white border border-line rounded-card shadow-pop z-50 py-1 overflow-y-auto ${ menuPos.up ? 'bottom-full mb-1' : 'top-full mt-1' }` }
+							style={ menuPos.maxHeight ? { maxHeight: menuPos.maxHeight } : undefined }
+						>
 							{ Object.keys( TYPE_META ).map( ( t ) => (
 								<button key={ t } type="button" onClick={ () => add( t ) } className="w-full text-left px-3 py-2 hover:bg-gray-100">
 									<div className="text-sm font-medium text-ink">{ TYPE_META[ t ].label }</div>

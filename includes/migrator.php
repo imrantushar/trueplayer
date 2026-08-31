@@ -41,6 +41,7 @@ class Migrator {
 	public static function run(): void {
 		self::unstamp_inherited_gating();
 		self::adopt_existing_interactive_content();
+		self::fold_optin_into_layers();
 	}
 
 	/**
@@ -127,6 +128,83 @@ class Migrator {
 				unset( $gating[ $key ] );
 			}
 			$config['gating'] = $gating;
+			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
+		}
+	}
+
+	/**
+	 * Carry the old Email capture gate over to the merged Email form layer.
+	 *
+	 * Email capture and the Layers email form were two ways to ask for the same
+	 * address, and only one of them ever had a provider — see
+	 * OptinController::destination(). They are one feature now, living in the
+	 * layer stack, so every video configured with the old gate gets an
+	 * equivalent `mode: 'gate'` layer.
+	 *
+	 * `config.optin` is deliberately left where it is. The endpoint still reads
+	 * it as a fallback, so a video this pass misses — or one whose config is
+	 * being served from a cache written before the upgrade — keeps working
+	 * instead of losing its gate.
+	 */
+	private static function fold_optin_into_layers(): void {
+		$done = 'trueplayer_migrated_optin_to_layer';
+		if ( get_option( $done ) ) {
+			return;
+		}
+		// Claim the flag first: this walks every video, and a second request
+		// arriving mid-pass must not start the same walk again.
+		update_option( $done, 1 );
+
+		$ids = get_posts( [
+			'post_type'      => TRUEPLAYER_VIDEO_POST_TYPE,
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+		] );
+
+		foreach ( $ids as $id ) {
+			$raw    = get_post_meta( $id, '_trueplayer_config', true );
+			$config = is_string( $raw ) && '' !== $raw ? json_decode( $raw, true ) : null;
+			if ( ! is_array( $config ) ) {
+				continue;
+			}
+
+			$optin = $config['optin'] ?? null;
+			if ( ! is_array( $optin ) || empty( $optin['enabled'] ) ) {
+				continue;
+			}
+
+			$layers = isset( $config['layers'] ) && is_array( $config['layers'] ) ? $config['layers'] : [];
+
+			// Idempotent even if the flag is cleared by hand: one gate per video
+			// is what the old feature allowed, so an existing one means done.
+			foreach ( $layers as $layer ) {
+				if ( is_array( $layer ) && 'form' === ( $layer['type'] ?? '' ) && 'gate' === ( $layer['mode'] ?? '' ) ) {
+					continue 2;
+				}
+			}
+
+			$position = (string) ( $optin['position'] ?? 'pre' );
+			$layers[] = [
+				'id'          => 'ly_' . substr( md5( 'optin' . $id ), 0, 6 ),
+				'type'        => 'form',
+				'mode'        => 'gate',
+				// The old `position` was a trigger, not a place on screen.
+				'trigger'     => in_array( $position, [ 'pre', 'time', 'end' ], true ) ? $position : 'pre',
+				'start'       => 'time' === $position ? (int) ( $optin['at'] ?? 0 ) : 0,
+				'end'         => '',
+				'position'    => 'middle-center',
+				'required'    => ! empty( $optin['required'] ),
+				'collectName' => ! empty( $optin['collectName'] ),
+				'dedupe'      => true,
+				'title'       => (string) ( $optin['headline'] ?? '' ),
+				'description' => (string) ( $optin['description'] ?? '' ),
+				'buttonLabel' => (string) ( $optin['buttonText'] ?? '' ),
+				'provider'    => (string) ( $optin['provider'] ?? '' ),
+				'lists'       => (array) ( $optin['lists'] ?? [] ),
+			];
+
+			$config['layers'] = $layers;
 			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
 		}
 	}

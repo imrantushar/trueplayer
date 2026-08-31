@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from '@wordpress/element';
 import { passesConditions } from '../rules';
+import EmailForm from './EmailForm';
 
 /**
  * Interactive layers (pro) — timed, positioned elements over the picture:
@@ -62,47 +63,41 @@ function ShortcodeLayer( { layer } ) {
 	);
 }
 
+/**
+ * The inline half of the Email form layer — a panel beside the picture that
+ * does not interrupt playback. The blocking half of the same layer is rendered
+ * by the player itself (see Optin.jsx), because only the player can pause.
+ *
+ * Both read the same layer object, so copy and destination cannot drift apart.
+ */
+/**
+ * The inline half of the Email form layer: the same form as the gate, in a
+ * panel beside the picture that does not interrupt playback.
+ *
+ * Only the wrapper lives here — see EmailForm. With no `onDone` the form keeps
+ * its own thank-you in place, which is the one behaviour that genuinely differs
+ * between the modes: nothing is waiting on it, so there is nothing to resume.
+ */
 function FormLayer( { layer, videoId, onSubmit } ) {
-	const [ email, setEmail ] = useState( '' );
-	const [ state, setState ] = useState( 'idle' ); // idle | busy | done | error
-	if ( state === 'done' ) {
-		return (
-			<div className={ `tp-layer tp-form-layer tp-pos-${ layer.position || 'middle-center' }` }>
-				<p className="tp-form-layer-thanks">{ layer.thanks || 'Thanks — you’re in!' }</p>
-			</div>
-		);
+	const [ dismissed, setDismissed ] = useState( false );
+
+	// A panel the viewer can't put away sits over the picture for the rest of
+	// the video. `required` is what says whether they may.
+	if ( dismissed ) {
+		return null;
 	}
-	const submit = async ( e ) => {
-		e.preventDefault();
-		if ( ! /.+@.+\..+/.test( email ) ) {
-			setState( 'error' );
-			return;
-		}
-		setState( 'busy' );
-		try {
-			await onSubmit( { email, layerId: layer.id } );
-			setState( 'done' );
-		} catch ( err ) {
-			setState( 'error' );
-		}
-	};
+
 	return (
-		<form className={ `tp-layer tp-form-layer tp-pos-${ layer.position || 'middle-center' }` } onSubmit={ submit }>
-			{ layer.title && <strong className="tp-form-layer-title">{ layer.title }</strong> }
-			<div className="tp-form-layer-row">
-				<input
-					type="email"
-					value={ email }
-					onChange={ ( e ) => setEmail( e.target.value ) }
-					placeholder={ layer.placeholder || 'you@email.com' }
-					aria-label="Email"
-				/>
-				<button type="submit" disabled={ state === 'busy' }>{ layer.buttonLabel || 'Subscribe' }</button>
-			</div>
-			{ state === 'error' && <span className="tp-form-layer-error">Please enter a valid email.</span> }
-		</form>
+		<EmailForm
+			layer={ layer }
+			videoId={ videoId }
+			className={ `tp-layer tp-emailform-panel tp-pos-${ layer.position || 'middle-center' }` }
+			preview={ ! onSubmit }
+			onDismiss={ () => setDismissed( true ) }
+		/>
 	);
 }
+
 
 export default function Layers( { layers, current, videoId, onOptin, viewer, preview } ) {
 	// Per-viewer facts for conditional rules (loggedIn / CRM / etc.). Fetched
@@ -151,8 +146,16 @@ export default function Layers( { layers, current, videoId, onOptin, viewer, pre
 		return onOptin ? onOptin( payload ) : undefined;
 	};
 
+	// An email form is a call to action, not decoration — it has to sit above the
+	// big play button, which is painted at a higher z-index than the layer stack.
+	// `.tp-layers` sets a z-index and so opens a stacking context, meaning no
+	// child of it can rise past the button on its own; the container is what has
+	// to lift. Only for a form, so hotspots and banners keep sitting behind the
+	// player's own furniture as before.
+	const blocking = due.some( ( l ) => 'form' === l.type );
+
 	return (
-		<div className="tp-layers">
+		<div className={ `tp-layers${ blocking ? ' is-blocking' : '' }` }>
 			{ due.map( ( l ) => {
 				switch ( l.type ) {
 					case 'hotspot':

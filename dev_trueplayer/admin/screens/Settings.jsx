@@ -160,6 +160,12 @@ function WebhookLogs({ className }) {
 	);
 }
 
+/** The address wp_mail falls back to, shown as the field's placeholder. */
+function TruePlayerGlobalAdminEmail() {
+	const g = window.TruePlayerGlobal || {};
+	return g.admin_email || 'admin@example.com';
+}
+
 export default function Settings({ tab = 'general', onTabChange, onEditState }) {
 	const [settings, setSettings] = useState(null);
 	const setTab = (next) => onTabChange && onTabChange(next);
@@ -440,8 +446,27 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 					)}
 
 					{tab === 'integrations' && (
-						isPro() ? (
-							<div className="space-y-6">
+						<div className="space-y-6">
+							{ /* Free, and first: this is the destination email capture falls back
+							     to when no CRM is connected, so it must be reachable without Pro
+							     — the rest of this section stays gated below. */ }
+							<Card className="p-6">
+								<h3 className="font-semibold text-gray-900 !mb-1">Email notification</h3>
+								<p className="text-sm text-muted mb-4">Where captured addresses are sent when a video's email form has no CRM provider selected.</p>
+								<div className='mt-4 pt-5 border-t border-solid border-line'>
+									<Field label="Send notifications to" hint="Leave empty to use this site's admin email address.">
+										<Input
+											type="email"
+											value={settings.integrations?.wp_mail?.to || ''}
+											onChange={(e) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), wp_mail: { ...(s.integrations?.wp_mail || {}), to: e.target.value } } }))}
+											placeholder={TruePlayerGlobalAdminEmail()}
+										/>
+									</Field>
+								</div>
+							</Card>
+
+						{ isPro() ? (
+							<>
 								<Card className="p-6">
 									<h3 className="font-semibold text-gray-900 !mb-1">Mailchimp</h3>
 									<p className="text-sm text-muted mb-4">Send in-player opt-ins to Mailchimp audiences. Paste your API key (Account → Extras → API keys).</p>
@@ -476,10 +501,11 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 										) : null}
 									</div>
 								</Card>
-							</div>
+							</>
 						) : (
 							<UpsellPanel title="CRM &amp; email integrations" features={['Mailchimp audiences', 'Google Analytics events', 'GemCRM / FluentCRM opt-in capture']} />
-						)
+						)}
+						</div>
 					)}
 
 					{tab === 'branding' && (

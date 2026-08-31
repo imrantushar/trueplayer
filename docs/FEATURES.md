@@ -47,6 +47,12 @@ analyses, automates or extends sits behind `TruePlayer\Pro::active()`.
 ### Interactions
 - **Call-to-action overlays** — text/CTA overlays at a timestamp, at the end, or persistent,
   with 9 positions and button styling.
+- **Email form** (Interactions → Layers) — one layer with two modes: **gate**, a blocking
+  panel that pauses the video before playback, at a timestamp or on end, required or
+  skippable; and **inline**, a panel beside the picture that doesn't interrupt. Optional
+  name field, per-viewer dedupe, and a **Email notification** provider that needs no CRM,
+  so capture works out of the box. Choosing *who* sees it (display rules) needs Pro.
+  Replaces the separate "Email capture" section; existing `config.optin` is migrated.
 - **Info panel** and end-screen behaviour.
 
 ### Content types
@@ -152,11 +158,11 @@ analyses, automates or extends sits behind `TruePlayer\Pro::active()`.
   (time-synced text, buttons, forms).
 
 ### Email capture & CRM
-- **In-player opt-in gate** — pre-roll, at a timestamp, or on end; required or skippable;
-  optional name field; per-viewer dedupe.
-- Integration registry with pluggable providers: **GemCRM** (verified live) and **Mailchimp**
-  built in, plus a generic `trueplayer/subscribe` seam.
-- Server decides provider + lists from the video config (client input is never trusted).
+- **CRM providers** — integration registry with pluggable providers: **GemCRM** (verified
+  live) and **Mailchimp** built in, plus a generic `trueplayer/subscribe` seam.
+- **Conditional display rules** on the email form (and every other layer) — see
+  Interactive layers above. Deciding *who* is asked is the Pro half of email capture.
+- The email form itself is **free** — see the free column.
 
 ### Analytics
 - All collection **and** the dashboard are Pro (free installs write no rows).

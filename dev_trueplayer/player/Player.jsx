@@ -18,6 +18,35 @@ const containerPipSupported = supportsContainerPiP();
 
 const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
+/**
+ * The pre-merge `config.optin` object in the shape the Email form layer uses.
+ *
+ * Email capture and the Layers email form became one feature; videos migrate to
+ * a `mode: 'gate'` layer, but the old object is still served for anything the
+ * migration has not reached and for configs cached before the upgrade. Adapting
+ * it here means the player has exactly one shape to reason about.
+ *
+ * @param {Object} optin Legacy `config.optin`.
+ * @return {Object} A gate-shaped layer.
+ */
+function legacyGate( optin ) {
+	return {
+		id: 'optin',
+		type: 'form',
+		mode: 'gate',
+		trigger: optin.position || 'pre',
+		start: 'time' === optin.position ? ( optin.at || 0 ) : 0,
+		required: optin.required !== false,
+		collectName: !! optin.collectName,
+		dedupe: true,
+		title: optin.headline || '',
+		description: optin.description || '',
+		buttonLabel: optin.buttonText || '',
+		provider: optin.provider || '',
+		lists: optin.lists || [],
+	};
+}
+
 /** Best-effort filename for the download button — from the title, else the URL. */
 function downloadFilename( url, title ) {
 	let base = 'video';
@@ -69,7 +98,6 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	}
 	const source = config.source || {};
 	const branding = config.branding || {};
-	const optin = config.optin || {};
 	const optinDoneRef = useRef( false );
 	const allOverlays = Array.isArray( config.overlays ) ? config.overlays : [];
 	// CTA cards use the fire-once modal engine; text overlays are non-blocking
@@ -78,7 +106,23 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const textOverlays = allOverlays.filter( ( o ) => o.type === 'text' );
 	const actionBar = config.actionBar || {};
 	// Pro: interactive layers + protection (server strips both when free).
-	const layers = Array.isArray( config.layers ) ? config.layers : [];
+	const allLayers = Array.isArray( config.layers ) ? config.layers : [];
+	/**
+	 * The email-capture gate, which is an Email form layer in `mode: 'gate'`.
+	 *
+	 * Capture used to be a second feature with its own `config.optin` object and
+	 * its own player path, so a video could carry two ways of asking for the
+	 * same address and only one of them had a provider. There is one source now.
+	 * `config.optin` is still read as a fallback: the server keeps serving it for
+	 * videos the migration has not reached, and a config cached before the
+	 * upgrade must not lose its gate.
+	 */
+	const optinGate = allLayers.find( ( l ) => 'form' === l.type && 'gate' === l.mode )
+		|| ( config.optin && config.optin.enabled ? legacyGate( config.optin ) : null );
+	// The gate is rendered by the player itself (it has to pause playback), so
+	// the layer stack must not draw it a second time as an inline panel.
+	const layers = optinGate ? allLayers.filter( ( l ) => l.id !== optinGate.id ) : allLayers;
+	const optinKey = `tp_optin_${ videoId }_${ optinGate ? optinGate.id : 'none' }`;
 	const watermark = { ...( ( config.protection && config.protection.dynamicWatermark ) || {} ) };
 	if ( preview && watermark.enabled && ! watermark.text ) {
 		watermark.text = 'viewer@example.com'; // live text is resolved server-side
@@ -255,7 +299,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				setFrontier( resumeAt );
 			}
 
-			optinDoneRef.current = gatingOn ? !! window.localStorage.getItem( `tp_optin_${ videoId }` ) : true;
+			// Keyed per gate now that a video can carry more than one form, but the
+			// pre-merge key still counts — someone who already subscribed must not
+			// be asked again just because the feature moved.
+			optinDoneRef.current = optinGate
+				? !! ( window.localStorage.getItem( optinKey ) || window.localStorage.getItem( `tp_optin_${ videoId }` ) )
+				: true;
 
 			provider.on( 'ready', () => {
 				setReady( true );
@@ -271,7 +320,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					provider.seek( resumeAt );
 				}
 				// Pre-roll opt-in gate.
-				if ( optin.enabled && optin.position === 'pre' && ! optinDoneRef.current ) {
+				if ( optinGate && 'pre' === optinGate.trigger && ! optinDoneRef.current ) {
 					setActiveOptin( true );
 				} else if ( autoStart && ! gateState.locked ) {
 					// Booted from a click-to-load poster or autoplay: begin playing
@@ -309,7 +358,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					if ( behavior.savePosition ) {
 						window.localStorage.setItem( `tp_pos_${ videoId }`, String( Math.floor( t ) ) );
 					}
-					if ( gatingOn && ! maybeOptin( t ) ) {
+					if ( ! maybeOptin( t ) ) {
 						maybeCheckpoint( t );
 					}
 					maybeOverlay( t );
@@ -401,7 +450,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		if ( activeOptin || activeQuiz || optinDoneRef.current ) {
 			return false;
 		}
-		if ( optin.enabled && optin.position === 'time' && t >= ( optin.at || 0 ) ) {
+		if ( optinGate && 'time' === ( optinGate.trigger || 'time' ) && t >= ( optinGate.start || 0 ) ) {
 			providerRef.current.pause();
 			setActiveOptin( true );
 			return true;
@@ -481,6 +530,40 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 		cueRef.current = previewCue.token;
 
+		// The eye on an Email form row. A layer cue and an overlay cue are the
+		// same gesture — "show me this one now" — but a form has to be raised
+		// differently depending on its mode, so it branches out here before the
+		// overlay path.
+		if ( undefined !== previewCue.layerId ) {
+			const l = previewCue.layerId ? allLayers.find( ( x ) => x.id === previewCue.layerId ) : null;
+			if ( ! l ) {
+				setActiveOptin( false ); // toggled off, or the layer was deleted
+				return;
+			}
+			setStarted( true );
+			const gateMode = 'inline' !== l.mode;
+			// Where the layer is due. A gate on 'pre' or 'end' has no timestamp of
+			// its own, so preview it at the edge it actually fires on.
+			const at = gateMode
+				? ( 'end' === l.trigger ? Math.max( 0, p.getDuration() - 0.25 ) : ( 'pre' === l.trigger ? 0 : parseFloat( l.start ) || 0 ) )
+				: ( parseFloat( l.start ) || 0 );
+			p.seek( at );
+			p.pause();
+			if ( gateMode ) {
+				// Ignore the once-per-viewer rule while previewing: an author
+				// asking to see the gate has asked to see it, and a previous
+				// preview must not make it un-showable.
+				optinDoneRef.current = false;
+				setActiveOptin( true );
+			} else {
+				// Inline layers are drawn by their time window, so landing inside
+				// it is all it takes.
+				setActiveOptin( false );
+			}
+			sync();
+			return;
+		}
+
 		const o = previewCue.overlayId ? allOverlays.find( ( x ) => x.id === previewCue.overlayId ) : null;
 		if ( ! o ) {
 			// Toggled off (or the overlay is gone) — take down whatever the eye
@@ -542,7 +625,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		if ( gatingOn && gating.finalQuiz && gating.finalQuiz.questions && gating.finalQuiz.questions.length ) {
 			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || 'Final quiz' } );
 			gated = true;
-		} else if ( gatingOn && optin.enabled && optin.position === 'end' && ! optinDoneRef.current ) {
+		} else if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
 			setActiveOptin( true );
 			gated = true;
 		} else if ( behavior.resetOnEnd ) {
@@ -565,10 +648,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	};
 
 	const finishOptin = () => {
-		window.localStorage.setItem( `tp_optin_${ videoId }`, '1' );
+		// Only remembered when the author asked for it; a gate set to show every
+		// time is a deliberate choice, not something to quietly suppress.
+		if ( ! optinGate || false !== optinGate.dedupe ) {
+			window.localStorage.setItem( optinKey, '1' );
+		}
 		optinDoneRef.current = true;
 		setActiveOptin( false );
-		if ( optin.position !== 'end' && providerRef.current ) {
+		if ( optinGate && 'end' !== optinGate.trigger && providerRef.current ) {
 			providerRef.current.play();
 		}
 	};
@@ -767,7 +854,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			providerRef.current.play();
 		} else {
 			setGate( ( g ) => ( { ...( g || {} ), completed: true } ) );
-			if ( optin.enabled && optin.position === 'end' && ! optinDoneRef.current ) {
+			if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
 				setActiveOptin( true );
 			} else if ( behavior.resetOnEnd ) {
 				providerRef.current.seek( 0 );
@@ -921,7 +1008,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					current={ ui.current }
 					videoId={ videoId }
 					preview={ preview }
-					onOptin={ ( { email } ) => ( preview ? Promise.resolve() : rest.post( 'optin', { video: videoId, email } ) ) }
+					onOptin={ ( { email, name, layerId } ) => ( preview
+						? Promise.resolve()
+						: rest.post( 'optin', { video: videoId, email, name, layer: layerId } ) ) }
 				/>
 			) }
 
@@ -956,10 +1045,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 			{ ready && ! ui.playing && ! locked && ! activeQuiz && ! activeOptin && ! error && appearance.bigPlay && source.mediaType !== 'audio' && <BigPlay onPlay={ playPause } /> }
 
-			{ activeOptin && (
+			{ activeOptin && optinGate && (
 				<Optin
 					videoId={ videoId }
-					optin={ optin }
+					optin={ optinGate }
 					preview={ preview }
 					onDone={ finishOptin }
 					onSkip={ finishOptin }
