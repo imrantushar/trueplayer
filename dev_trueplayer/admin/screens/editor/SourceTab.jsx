@@ -78,6 +78,26 @@ export default function SourceTab( { config, patch, videoId } ) {
 		grabPoster( src );
 	}, [ source, videoId, grabPoster ] );
 
+	/**
+	 * Drop the file — and with it the poster that came from it.
+	 *
+	 * A poster we produced (a captured frame, or a provider thumbnail) describes
+	 * the file that is going away, so leaving it behind shows the removed video
+	 * still sitting in the poster field and on the front end. One the author
+	 * chose is their own work and outlives the file, which is the same rule the
+	 * server applies when a source is retargeted (VideosController::quick_update).
+	 */
+	const removeFile = () => {
+		// Re-picking the very same file has to capture again, and the auto-capture
+		// guard keys on the last src it handled.
+		captured.current = '';
+		const ours = source.posterAuto || source.posterDerived;
+		set( ours
+			? { src: '', poster: '', posterAuto: false, posterDerived: false, posterFallbacks: undefined }
+			: { src: '' }
+		);
+	};
+
 	const canGrab = canCaptureFrame( source ) && !! videoId;
 
 	return (
@@ -106,7 +126,7 @@ export default function SourceTab( { config, patch, videoId } ) {
 						source={ source }
 						audio={ audio }
 						onPick={ ( url ) => set( { src: url } ) }
-						onRemove={ () => set( { src: '' } ) }
+						onRemove={ removeFile }
 					/>
 				</FieldGroup>
 			) }
@@ -150,7 +170,7 @@ export default function SourceTab( { config, patch, videoId } ) {
 					canGrab={ canGrab }
 					capture={ capture }
 					onPick={ ( url ) => set( { poster: url, posterAuto: false } ) }
-					onRemove={ () => set( { poster: '', posterAuto: false } ) }
+					onRemove={ () => set( { poster: '', posterAuto: false, posterDerived: false, posterFallbacks: undefined } ) }
 					onGrab={ () => grabPoster( source.src ) }
 				/>
 			</FieldGroup>
