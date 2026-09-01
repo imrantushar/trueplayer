@@ -148,6 +148,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ activeOverlay, setActiveOverlay ] = useState( null );
 	const [ activeTextIds, setActiveTextIds ] = useState( [] );
 	const [ infoOpen, setInfoOpen ] = useState( false );
+	// The media's real intrinsic ratio ('1920 / 1080'), once it can be read.
+	const [ nativeRatio, setNativeRatio ] = useState( null );
 
 	const getCues = useCallback( () => ( providerRef.current?.getCues ? providerRef.current.getCues() : [] ), [] );
 
@@ -170,6 +172,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 	useEffect( () => {
 		let disposed = false;
+		// Belongs to the media being torn down, not the one coming in.
+		setNativeRatio( null );
 
 		( async () => {
 			// Premium sources are pro-only.
@@ -275,8 +279,39 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				? !! ( window.localStorage.getItem( optinKey ) || window.localStorage.getItem( `tp_optin_${ videoId }` ) )
 				: true;
 
+			// The media element only when it is a real <video>/<audio> — YouTube
+			// and Vimeo hand back a host <div> wrapping an iframe, which has no
+			// intrinsic size to read.
+			const mediaEl = () => {
+				const el = provider.element;
+				return el && typeof el.videoWidth === 'number' ? el : null;
+			};
+			// Measured unconditionally rather than only when the ratio is set to
+			// `auto`: the author can switch to Auto in the editor long after the
+			// provider is up, and this effect only re-runs on videoId.
+			const measureNative = () => {
+				const el = mediaEl();
+				if ( el && el.videoWidth > 0 && el.videoHeight > 0 ) {
+					setNativeRatio( `${ el.videoWidth } / ${ el.videoHeight }` );
+					return true;
+				}
+				return false;
+			};
+
 			provider.on( 'ready', () => {
 				setReady( true );
+				// `loadedmetadata` usually already carries the dimensions, but an
+				// HLS level can land later; <video> fires `resize` exactly when its
+				// intrinsic size becomes known, so fall back to that.
+				const el = mediaEl();
+				if ( ! measureNative() && el ) {
+					const onResize = () => {
+						if ( measureNative() ) {
+							el.removeEventListener( 'resize', onResize );
+						}
+					};
+					el.addEventListener( 'resize', onResize );
+				}
 				// A track the author marked default is shown by the browser itself,
 				// so read back what is actually on screen instead of trusting the
 				// 'off' this state started on — otherwise the caption button and the
@@ -884,7 +919,15 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// Aspect ratio (audio keeps its compact bar; sticky keeps the ratio too so
 	// the mini player matches the video's shape).
 	if ( source.mediaType !== 'audio' && appearance.aspectRatio && appearance.aspectRatio !== '16:9' ) {
-		stageStyle.aspectRatio = appearance.aspectRatio === 'auto' ? 'auto' : appearance.aspectRatio.replace( ':', ' / ' );
+		// `auto` must never reach CSS as-is. `aspect-ratio: auto` on a plain
+		// <div> resolves to no ratio at all, and every child of the stage is
+		// absolutely positioned, so the box collapsed to zero height and the
+		// player vanished. Use the measured intrinsic ratio instead, holding
+		// the 16:9 default until it is known — and permanently for iframe
+		// embeds, which expose no intrinsic size to measure.
+		stageStyle.aspectRatio = appearance.aspectRatio === 'auto'
+			? ( nativeRatio || '16 / 9' )
+			: appearance.aspectRatio.replace( ':', ' / ' );
 	}
 
 	const skin = appearance.skin || 'default';
