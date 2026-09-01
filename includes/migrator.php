@@ -132,7 +132,7 @@ class Migrator {
 				unset( $gating[ $key ] );
 			}
 			$config['gating'] = $gating;
-			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
+			Helper::update_json_meta( $id, '_trueplayer_config', $config );
 		}
 	}
 
@@ -209,7 +209,7 @@ class Migrator {
 
 			$config['layers'] = $layers;
 			unset( $config['optin'] );
-			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
+			Helper::update_json_meta( $id, '_trueplayer_config', $config );
 		}
 	}
 
@@ -242,7 +242,7 @@ class Migrator {
 				continue;
 			}
 			unset( $config['optin'] );
-			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
+			Helper::update_json_meta( $id, '_trueplayer_config', $config );
 		}
 	}
 }

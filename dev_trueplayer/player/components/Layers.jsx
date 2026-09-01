@@ -49,16 +49,52 @@ function Banner( { layer } ) {
 	);
 }
 
-function ShortcodeLayer( { layer } ) {
+function ShortcodeLayer( { layer, preview } ) {
+	const hostRef = useRef( null );
+
+	// Injected by hand rather than with dangerouslySetInnerHTML because a
+	// <script> inserted through innerHTML never executes (HTML spec) — a
+	// shortcode that boots itself inline would paint its markup and then sit
+	// there dead. Re-creating each script as a real element runs it.
+	useEffect( () => {
+		const host = hostRef.current;
+		if ( ! host || ! layer.html ) {
+			return;
+		}
+		host.innerHTML = layer.html;
+		host.querySelectorAll( 'script' ).forEach( ( old ) => {
+			const run = document.createElement( 'script' );
+			Array.from( old.attributes ).forEach( ( a ) => run.setAttribute( a.name, a.value ) );
+			run.text = old.textContent || '';
+			old.parentNode.replaceChild( run, old );
+		} );
+		// A layer enters the DOM when the playhead reaches it — long after the
+		// page-load pass that most plugins initialize on. This is the seam for
+		// them: listen, then scan `detail.node`. Nothing generic can rescue a
+		// third-party script that only ever scans once at DOMContentLoaded.
+		document.dispatchEvent( new CustomEvent( 'trueplayer:layer-rendered', {
+			detail: { layerId: layer.id, node: host },
+		} ) );
+	}, [ layer.html, layer.id ] );
+
+	// No html means PHP has not rendered this shortcode: the editor preview
+	// builds its config client-side, so shortcode layers were simply invisible
+	// there and looked broken. Show what will run instead of nothing.
 	if ( ! layer.html ) {
-		return null;
+		return preview && layer.shortcode ? (
+			<div className={ `tp-layer tp-shortcode-layer is-placeholder tp-pos-${ layer.position || 'middle-center' }` }>
+				<code>{ layer.shortcode }</code>
+				<span>Runs on the page, not in this preview.</span>
+			</div>
+		) : null;
 	}
+
 	return (
 		<div
+			ref={ hostRef }
+			// Server-rendered from admin-authored shortcodes (same trust model
+			// as post content).
 			className={ `tp-layer tp-shortcode-layer tp-pos-${ layer.position || 'middle-center' }` }
-			// Rendered server-side from admin-authored shortcodes (same trust
-			// model as post content).
-			dangerouslySetInnerHTML={ { __html: layer.html } }
 		/>
 	);
 }
@@ -172,7 +208,7 @@ export default function Layers( { layers, current, videoId, onOptin, viewer, pre
 					case 'banner':
 						return <Banner key={ l.id } layer={ l } />;
 					case 'shortcode':
-						return <ShortcodeLayer key={ l.id } layer={ l } />;
+						return <ShortcodeLayer key={ l.id } layer={ l } preview={ preview } />;
 					case 'form':
 						return <FormLayer key={ l.id } layer={ l } videoId={ videoId } onSubmit={ handleOptin } />;
 					default:

@@ -1001,6 +1001,27 @@
 	border-radius: 10px;
 	padding: 14px 16px;
 }
+/* Editor preview only: PHP renders shortcodes, and the preview builds its
+   config in the browser, so there is no html to show. Naming the shortcode
+   beats an empty stage that reads as a broken feature. */
+.tp-shortcode-layer.is-placeholder {
+	background: rgba( 17, 24, 39, 0.88 );
+	color: #e5e7eb;
+	border: 1px dashed rgba( 229, 231, 235, 0.45 );
+	text-align: center;
+}
+.tp-shortcode-layer.is-placeholder code {
+	display: block;
+	font-size: 12px;
+	word-break: break-all;
+	color: #fff;
+}
+.tp-shortcode-layer.is-placeholder span {
+	display: block;
+	margin-top: 6px;
+	font-size: 11px;
+	opacity: 0.7;
+}
 /* ---- email form ----
    One form, one appearance. The mode decides only where it sits and whether it
    blocks: the gate is centred on the dimmed video, the inline panel is placed

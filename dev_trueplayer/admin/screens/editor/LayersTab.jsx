@@ -5,6 +5,7 @@ import { api } from '../../api';
 import { isPro } from '../../pro';
 import { BsTrash } from 'react-icons/bs';
 import { Icon } from '../../components/icons';
+import { formatTime } from '@Utils/format';
 import { IoClose } from 'react-icons/io5';
 
 const uid = () => 'ly_' + Math.random().toString( 36 ).slice( 2, 8 );
@@ -425,7 +426,19 @@ function RulesUpsell() {
 
 export default function LayersTab( { config, patch, onPreviewLayer, previewingLayerId = null } ) {
 	const layers = config.layers || [];
-	const setOne = ( i, partial ) => patch( { layers: layers.map( ( l, idx ) => ( idx === i ? { ...l, ...partial } : l ) ) } );
+	// Hotspot / banner / shortcode no longer expose an "Until" control — they
+	// always run to the end of the video. A layer saved earlier with a numeric
+	// `end` would still vanish part-way through with nothing in the editor to
+	// explain why, so it is cleared as soon as the layer is touched.
+	const setOne = ( i, partial ) => patch( {
+		layers: layers.map( ( l, idx ) => {
+			if ( idx !== i ) {
+				return l;
+			}
+			const next = { ...l, ...partial };
+			return 'form' === next.type ? next : { ...next, end: '' };
+		} ),
+	} );
 	const remove = ( i ) => patch( { layers: layers.filter( ( _, idx ) => idx !== i ) } );
 	const [ menu, setMenu ] = useState( false );
 	// Where the type menu opens, measured each time rather than assumed. It used
@@ -475,7 +488,7 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 			<div className="space-y-2">
 			{ layers.map( ( l, i ) => {
 				const open = openId === l.id;
-				const summary = `${ TYPE_META[ l.type ]?.label || l.type } · ${ l.start ?? 0 }s – ${ l.end === '' || l.end == null ? 'end' : l.end + 's' }`;
+				const summary = `${ TYPE_META[ l.type ]?.label || l.type } · ${ formatTime( l.start ?? 0 ) } – ${ l.end === '' || l.end == null ? 'end' : formatTime( l.end ) }`;
 				const heading = l.title || l.tooltip || TYPE_META[ l.type ]?.label || l.type;
 				return (
 				<Card key={ l.id } className="overflow-hidden">
@@ -517,21 +530,23 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 					     window, and its position only means anything inline — so it
 					     lays these out itself, below Mode. */ }
 					{ l.type !== 'form' && (
-					<div className="grid md:grid-cols-3 gap-x-6">
-						<Field label="Show from (seconds)">
-							<Input type="number" min="0" value={ l.start ?? 0 } onChange={ ( e ) => setOne( i, { start: parseInt( e.target.value, 10 ) || 0 } ) } />
-						</Field>
-						<Field label="Until (seconds)" hint="Empty = until the end.">
-							<Input type="number" min="0" value={ l.end ?? '' } onChange={ ( e ) => setOne( i, { end: e.target.value === '' ? '' : parseInt( e.target.value, 10 ) || 0 } ) } />
-						</Field>
+					<>
+						{ /* Hours/minutes/seconds rather than a raw seconds box, for
+						     the same reason the email gate uses them: nobody knows
+						     1:07:30 as 4050. These layers have no end control: they
+						     run from `start` to the end of the video, which is what
+						     `end: ''` means to the player. */ }
+						<FieldGroup label="Show from" hint="How far into the video this appears.">
+							<TimeParts seconds={ l.start } onChange={ ( v ) => setOne( i, { start: v } ) } />
+						</FieldGroup>
 						{ l.type !== 'hotspot' && (
-							<Field label="Position">
+							<Field label="Position" hint="Where it sits over the picture.">
 								<Select value={ l.position || 'middle-center' } onChange={ ( e ) => setOne( i, { position: e.target.value } ) }>
 									{ POSITIONS.map( ( [ v, lab ] ) => <option key={ v } value={ v }>{ lab }</option> ) }
 								</Select>
 							</Field>
 						) }
-					</div>
+					</>
 					) }
 
 					{ l.type === 'hotspot' && (
@@ -559,7 +574,10 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 					) }
 
 					{ l.type === 'shortcode' && (
-						<Field label="Shortcode" hint="Rendered on the server when the page loads.">
+						<Field
+								label="Shortcode"
+								hint="Rendered on the server when the page loads. Best for self-contained markup — a shortcode whose JavaScript starts up on page load (video players, sliders, some forms) will show its markup but not run, because the layer only enters the page when the playhead reaches it."
+							>
 							<Textarea rows={ 2 } className="font-mono text-xs" value={ l.shortcode || '' } onChange={ ( e ) => setOne( i, { shortcode: e.target.value } ) } placeholder='[contact-form-7 id="123"]' />
 						</Field>
 					) }

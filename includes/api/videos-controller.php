@@ -328,7 +328,7 @@ class VideosController extends WP_REST_Controller {
 		}
 
 		$config = [ 'source' => [ 'type' => $type, 'src' => $src ] ];
-		update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
+		Helper::update_json_meta( $id, '_trueplayer_config', $config );
 		// Records that this video was made from inside a post, so one abandoned
 		// with the draft that prompted it can be told apart later from a video
 		// deliberately built in the library. Nothing deletes on that basis —
@@ -397,7 +397,7 @@ class VideosController extends WP_REST_Controller {
 		$source['src']    = $src;
 		$config['source'] = $source;
 
-		update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
+		Helper::update_json_meta( $id, '_trueplayer_config', $config );
 
 		$title = $this->clean_title( $body['title'] ?? '' );
 		if ( is_wp_error( $title ) ) {
@@ -567,7 +567,7 @@ class VideosController extends WP_REST_Controller {
 			return $id;
 		}
 		if ( isset( $body['config'] ) ) {
-			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $body['config'] ) );
+			Helper::update_json_meta( $id, '_trueplayer_config', $body['config'] );
 			// Resolve the provider poster now (Vimeo needs a remote call) so the
 			// first page render reads a warm cache instead of paying for it.
 			Helper::with_derived_poster( (array) $body['config'] );
@@ -594,7 +594,7 @@ class VideosController extends WP_REST_Controller {
 			wp_update_post( [ 'ID' => $id, 'post_title' => '' !== $title ? $title : __( 'Untitled video', 'trueplayer' ) ] );
 		}
 		if ( array_key_exists( 'config', $body ) ) {
-			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $body['config'] ) );
+			Helper::update_json_meta( $id, '_trueplayer_config', $body['config'] );
 			// Resolve the provider poster now (Vimeo needs a remote call) so the
 			// first page render reads a warm cache instead of paying for it.
 			Helper::with_derived_poster( (array) $body['config'] );

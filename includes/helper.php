@@ -74,6 +74,28 @@ class Helper {
 	}
 
 	/**
+	 * Store an array as JSON in post meta.
+	 *
+	 * The wp_slash() is not optional. update_post_meta() runs wp_unslash() on
+	 * its value — WP meta functions expect slashed input — which eats the
+	 * backslashes wp_json_encode() puts in front of every double quote inside a
+	 * string. A layer holding `[contact-form-7 id="123"]` was written as
+	 * `"shortcode":"[contact-form-7 id="123"]"`: invalid JSON, so the next
+	 * json_decode() returned null and the WHOLE config read back as empty —
+	 * source, layers and all silently lost on save. Any value with a quote or a
+	 * backslash in it did the same. Slashing first means the unslash restores
+	 * exactly what was encoded.
+	 *
+	 * @param int    $post_id Post to write to.
+	 * @param string $key     Meta key.
+	 * @param mixed  $data    Data to encode.
+	 * @return bool|int
+	 */
+	public static function update_json_meta( $post_id, $key, $data ) {
+		return update_post_meta( (int) $post_id, $key, wp_slash( wp_json_encode( $data ) ) );
+	}
+
+	/**
 	 * Decode a video's `_trueplayer_config` JSON meta into an array.
 	 */
 	public static function get_video_config( $video_id ) {
