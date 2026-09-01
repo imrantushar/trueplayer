@@ -56,6 +56,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const coverageRef = useRef( null );
 	const passedCheckpoints = useRef( new Set() );
 	const furthestRef = useRef( 0 ); // furthest naturally-watched second (for no-skip)
+	// Scopes this player's ::cue rule to its own stage — several players can
+	// share a page with different caption styling.
+	const cueUid = useRef( Math.random().toString( 36 ).slice( 2, 9 ) ).current;
 
 	const gating = { ...DEFAULT_GATING, ...( config.gating || {} ) };
 	// Anti-skip is an opt-in restriction the admin sets per video (Questions &
@@ -930,6 +933,20 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			: appearance.aspectRatio.replace( ':', ' / ' );
 	}
 
+	// Caption cues are styled by a real rule carrying literal values, not by
+	// the custom properties above. Chromium does not reliably resolve `var()`
+	// inside `::cue` — the declaration is dropped and the cue silently falls
+	// back to the UA default, which is why the background colour and opacity
+	// controls appeared to do nothing. The properties are still set on the
+	// stage so Custom CSS can read them.
+	const cueCss = [
+		`.tp-cap-${ cueUid } video::cue{`,
+		`color:${ appearance.captionColor || '#ffffff' };`,
+		`background-color:${ hexToRgba( appearance.captionBackground || '#000000', ( appearance.captionOpacity ?? 75 ) / 100 ) };`,
+		`font-size:calc(1em * ${ ( appearance.captionSize || 100 ) / 100 });`,
+		'}',
+	].join( '' );
+
 	const skin = appearance.skin || 'default';
 	// The control bar is shown from the moment the media is ready, before the
 	// first play as well as after it. It used to be held back until playback
@@ -940,6 +957,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// starting the video. Auto-hide-while-playing (is-idle) is unaffected.
 	const stageClass = [
 		'tp-stage',
+		`tp-cap-${ cueUid }`,
 		`tp-skin-${ skin }`,
 		idle && ui.playing ? 'is-idle' : '',
 		source.mediaType === 'audio' ? 'is-audio' : '',
@@ -958,6 +976,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const stage = (
 		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
 		<div ref={ stageRef } className={ stageClass } style={ stageStyle } tabIndex={ 0 } onKeyDown={ onKeyDown }>
+			<style>{ cueCss }</style>
 			{ sticky && ! pipWin && (
 				<button
 					className="tp-sticky-close"
