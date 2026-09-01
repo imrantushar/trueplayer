@@ -271,12 +271,14 @@ export default function Controls( props ) {
 						<Icon d={ playing ? P.pause : P.play } />
 					</button>
 				) }
-				{ show( 'rewind' ) && (
+				{ /* Hidden, not merely inert, when the timeline is locked: a button
+				     that visibly does nothing reads as a broken player. */ }
+				{ show( 'rewind' ) && ! scrubDisabled && (
 					<button className="tp-btn" aria-label="Rewind" onClick={ () => onSkip( -skipSeconds ) }>
 						<Icon d={ P.rewind } />
 					</button>
 				) }
-				{ show( 'forward' ) && (
+				{ show( 'forward' ) && ! scrubDisabled && (
 					<button className="tp-btn" aria-label="Fast forward" onClick={ () => onSkip( skipSeconds ) }>
 						<Icon d={ P.forward } />
 					</button>

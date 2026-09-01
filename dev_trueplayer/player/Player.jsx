@@ -261,7 +261,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 			// Resume position: server value wins, else localStorage (savePosition).
 			let resumeAt = gateState.resumeAt || 0;
-			if ( ! resumeAt && behavior.savePosition ) {
+			// Not in the editor preview: it shares the `tp_pos_` key with the
+			// real front end, so the preview would open part-way through the
+			// video — easy to misread as reset-on-end being broken.
+			if ( ! resumeAt && behavior.savePosition && ! preview ) {
 				const saved = parseInt( window.localStorage.getItem( `tp_pos_${ videoId }` ) || '0', 10 );
 				if ( saved > 0 ) {
 					resumeAt = saved;
@@ -362,7 +365,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 							setFrontier( tracker.frontier );
 						}
 					}
-					if ( behavior.savePosition ) {
+					if ( behavior.savePosition && ! preview ) {
 						window.localStorage.setItem( `tp_pos_${ videoId }`, String( Math.floor( t ) ) );
 					}
 					if ( ! maybeOptin( t ) ) {
@@ -654,7 +657,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		} else if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
 			setActiveOptin( true );
 			gated = true;
-		} else if ( behavior.resetOnEnd ) {
+		} else if ( behavior.resetOnEnd && ! behavior.loop ) {
+			// Loop supersedes reset-on-end — both rewind, but only loop keeps
+			// playing, and it is applied below once nothing has claimed the end.
 			providerRef.current.seek( 0 );
 			setStarted( false );
 		}
@@ -667,6 +672,19 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			gated = true;
 		}
 		sync();
+		// Loop, once the quiz / opt-in / end screen have all declined the end.
+		// Deliberately not the media element's own `loop` attribute: a looping
+		// element never fires `ended`, so every branch above would be dead. An
+		// explicit per-video Loop also wins over playlist auto-advance — an
+		// author who wanted the next item would have left Loop off.
+		if ( ! gated && behavior.loop ) {
+			providerRef.current.seek( 0 );
+			if ( coverageRef.current ) {
+				coverageRef.current.newSession();
+			}
+			providerRef.current.play();
+			return;
+		}
 		// Playlist autoplay-next: only when nothing is gating the end.
 		if ( ! gated && onEndedProp ) {
 			onEndedProp();
@@ -738,6 +756,11 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const skip = ( delta ) => {
 		const p = providerRef.current;
 		if ( ! p ) {
+			return;
+		}
+		// "Disable the timeline entirely" has to mean the keyboard and the
+		// rewind/forward buttons too, not just the scrubber — both land here.
+		if ( behavior.disableSeek ) {
 			return;
 		}
 		let t = p.getCurrentTime() + delta;

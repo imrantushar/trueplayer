@@ -94,6 +94,12 @@ export async function createYouTubeProvider( container, source, opts = {} ) {
 			iv_load_policy: 3,
 			// Booted from a click → begin playing as soon as the player is ready.
 			autoplay: opts.autoStart ? 1 : 0,
+			// "Start muted" reached html5 only; this provider ignored
+			// opts.behavior entirely, so the toggle silently did nothing on a
+			// YouTube video. `loop` is NOT set here on purpose — Player.jsx
+			// loops from its own `ended` handler so end-of-video gating keeps
+			// working, and YT's native loop would suppress that event.
+			mute: ( opts.behavior && opts.behavior.muted ) ? 1 : 0,
 			origin: window.location.origin,
 		},
 		events: {

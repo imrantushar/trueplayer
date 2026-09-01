@@ -13,9 +13,11 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 	el.playsInline = true;
 	const behavior = opts.behavior || {};
 	el.preload = behavior.preload || 'metadata';
-	if ( behavior.loop ) {
-		el.loop = true;
-	}
+	// Looping is deliberately NOT the native `loop` attribute: a looping
+	// media element never fires `ended`, and `ended` is the single trigger
+	// for the final quiz, the end-screen overlay, the end email gate,
+	// reset-on-end and playlist auto-advance. Player.jsx restarts playback
+	// itself once those have had their turn (see onEnded).
 	if ( behavior.muted || ( behavior.autoplay && ! behavior.autoplaySound ) ) {
 		el.muted = true; // autoplay only works muted (unless sound mode, which retries muted on rejection)
 	}
