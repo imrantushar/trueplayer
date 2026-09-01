@@ -668,6 +668,9 @@
 		   -moz-user-select: none;
 		        user-select: none;
 }
+.resize {
+		resize: both;
+}
 .list-none {
 		list-style-type: none;
 }
@@ -1281,6 +1284,9 @@
 }
 .capitalize {
 		text-transform: capitalize;
+}
+.not-italic {
+		font-style: normal;
 }
 .ordinal {
 		--tw-ordinal: ordinal;
