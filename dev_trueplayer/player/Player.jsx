@@ -112,6 +112,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 	const [ ready, setReady ] = useState( false );
 	const [ error, setError ] = useState( null );
+	// The media's own width/height, once it reports one — what "Auto (native)"
+	// actually means. Only an html5 <video> has an intrinsic size to read; an
+	// iframe embed has none, so it stays null and the stage keeps 16:9.
+	const [ naturalRatio, setNaturalRatio ] = useState( null );
 	const [ started, setStarted ] = useState( false );
 	const [ ui, setUi ] = useState( {
 		playing: false, current: 0, duration: 0, buffered: 0,
@@ -259,6 +263,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 			provider.on( 'ready', () => {
 				setReady( true );
+				// Metadata has landed, so a self-hosted/HLS video can now say how
+				// tall it is. Embeds expose their host element here instead, which
+				// has no videoWidth — the guard leaves those on 16:9.
+				const media = provider.element;
+				if ( media && media.videoWidth > 0 && media.videoHeight > 0 ) {
+					setNaturalRatio( `${ media.videoWidth } / ${ media.videoHeight }` );
+				}
 				if ( resumeAt && resumeAt < provider.getDuration() - 2 ) {
 					provider.seek( resumeAt );
 				}
@@ -795,8 +806,17 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	stageStyle[ '--tp-cap-bg' ] = hexToRgba( appearance.captionBackground || '#000000', ( appearance.captionOpacity ?? 75 ) / 100 );
 	// Aspect ratio (audio keeps its compact bar; sticky keeps the ratio too so
 	// the mini player matches the video's shape).
+	//
+	// "Auto (native)" must resolve to a real ratio, never the CSS keyword
+	// `auto`. The stage is sized purely by `aspect-ratio` — every child of it
+	// (.tp-media-container, .tp-media) is `position: absolute; inset: 0` and
+	// contributes no height — so `aspect-ratio: auto` on a <div>, which has no
+	// intrinsic ratio of its own, collapsed the whole player to 0px and left a
+	// blank page with the video playing invisibly inside it.
 	if ( source.mediaType !== 'audio' && appearance.aspectRatio && appearance.aspectRatio !== '16:9' ) {
-		stageStyle.aspectRatio = appearance.aspectRatio === 'auto' ? 'auto' : appearance.aspectRatio.replace( ':', ' / ' );
+		stageStyle.aspectRatio = appearance.aspectRatio === 'auto'
+			? ( naturalRatio || '16 / 9' )
+			: appearance.aspectRatio.replace( ':', ' / ' );
 	}
 
 	const skin = appearance.skin || 'default';
