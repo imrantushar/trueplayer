@@ -5,7 +5,7 @@ import { Card, Button, Thumb, Badge, sourceMeta } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
 
-const PURCHASE = ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.purchase_url ) || 'https://kodezen.com/trueplayer';
+const PURCHASE = ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.purchase_url ) || 'https://true-player.net/';
 
 function Stat( { icon, label, value, tone = 'brand' } ) {
 	const tones = {
@@ -126,8 +126,16 @@ export default function Dashboard( { onNavigate, onCreate } ) {
 					{ ! isPro() && (
 						<Card className="p-6 border-brand-100 bg-gradient-to-br from-brand-50 to-white">
 							<div className="flex items-center gap-1.5 font-semibold text-ink"><Icon name="spark" className="w-4 h-4 text-brand-500" /> Unlock Pro</div>
-							<p className="text-[13px] text-gray-600 mt-1.5 mb-3 leading-snug">Prove students watched, gate with quizzes, and see deep analytics.</p>
-							<a href={ PURCHASE } target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 rounded-md px-4 py-2">See Pro features</a>
+							{ /* `!mb-` because admin/style.css zeroes UA spacing with `.tp-admin p
+							     { margin: 0 }`, which outranks a plain `.mb-*` utility on both
+							     specificity and source order — a bare `mb-2.5` here does nothing
+							     at all. Same escape hatch the other screens use. */ }
+							<p className="text-[13px] text-gray-600 mt-1.5 !mb-2.5 leading-snug">Prove students watched, gate with quizzes, and see deep analytics.</p>
+							{ /* `hover:`/`focus:text-white` are load-bearing: WP admin styles every
+							     anchor (`a:hover` → #135e96, `a:focus` → #043959), and those beat a
+							     bare `.text-white`, so this button's label turned blue on the blue
+							     fill the moment you pointed at it. */ }
+							<a href={ PURCHASE } target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-white hover:text-white focus:text-white bg-brand-500 hover:bg-brand-600 rounded-md px-4 py-2">See Pro features</a>
 						</Card>
 					) }
 				</div>
