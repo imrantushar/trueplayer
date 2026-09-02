@@ -84,6 +84,11 @@ export default function Editor( { id, onEditState } ) {
 	const [ presets, setPresets ] = useState( [] );
 	const [ toolbarSlot, setToolbarSlot ] = useState( null );
 	const [ embedOpen, setEmbedOpen ] = useState( false );
+	// Whether the instant page is *published*, as opposed to switched on in the
+	// editor. The Embed dialog hands out a URL, so it has to know the
+	// difference: the toggle is an ordinary config edit and the page 404s until
+	// the video is saved.
+	const [ instantLive, setInstantLive ] = useState( false );
 	const [ duration, setDuration ] = useState( 0 );
 	const [ toast, setToast ] = useState( null );
 	// The overlay list's eye button: a cue the preview player acts on. Clicking
@@ -96,7 +101,10 @@ export default function Editor( { id, onEditState } ) {
 	} ) ), [] );
 
 	useEffect( () => {
-		api.getVideo( id ).then( ( v ) => setVideo( v ) );
+		api.getVideo( id ).then( ( v ) => {
+			setVideo( v );
+			setInstantLive( !! v.config?.instantPage );
+		} );
 		api.listPresets().then( setPresets ).catch( () => {} );
 		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
 	}, [ id ] );
@@ -149,6 +157,7 @@ export default function Editor( { id, onEditState } ) {
 		try {
 			const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
 			setVideo( updated );
+			setInstantLive( !! updated.config?.instantPage );
 			setDirty( false );
 			setToast( { message: 'Saved', tone: 'success' } );
 		} finally {
@@ -183,7 +192,14 @@ export default function Editor( { id, onEditState } ) {
 
 				{ embedOpen && (
 					<Modal title="Embed this media" onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
-						<EmbedTab video={ video } config={ config } patch={ patchConfig } />
+						<EmbedTab
+							video={ video }
+							config={ config }
+							patch={ patchConfig }
+							instantLive={ instantLive }
+							saving={ saving }
+							onSave={ save }
+						/>
 					</Modal>
 				) }
 
