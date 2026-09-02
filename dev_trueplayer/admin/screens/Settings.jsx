@@ -76,6 +76,31 @@ const NAV_GROUPS = [
 	},
 ];
 
+/**
+ * Push the values that were just saved back into TruePlayerGlobal.
+ *
+ * PHP localizes those once per page load (Assets::get_common_scripts_data), but
+ * the admin is a pushState SPA — Settings, the library and the video editor all
+ * live inside a single load. Without this, choosing a default player template,
+ * saving, and then creating a video hands that editor the snapshot from *before*
+ * the save: its Skin dropdown (and its live preview) keep showing the previous
+ * template until a hard reload.
+ *
+ * Mirrors what PHP sends, key for key: `player_defaults` is `settings.customize`
+ * (Assets::player_defaults) and `enforcement` is the enforcement section, whose
+ * gaps both Helper::enforcement_defaults and sitePolicy() fill themselves.
+ *
+ * @param {Object} saved The settings object the save endpoint echoed back.
+ */
+function syncGlobalDefaults(saved) {
+	const g = window.TruePlayerGlobal;
+	if (!g || !saved) {
+		return;
+	}
+	g.player_defaults = saved.customize && typeof saved.customize === 'object' ? saved.customize : {};
+	g.enforcement = { ...(g.enforcement || {}), ...(saved.enforcement || {}) };
+}
+
 // Global defaults so a control is never uncontrolled before first save.
 const ENFORCEMENT_DEFAULTS = { completionThreshold: 90, antiSkip: true, strict: false, maxAttempts: 3, requireLogin: false, trackGuests: true };
 const COMPLIANCE_DEFAULTS = { certIssuer: '', certLogo: '', certSignature: '', certFooter: '', retentionEnabled: false, retentionDays: 365 };
@@ -143,7 +168,8 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 	const save = async () => {
 		setSaving(true);
 		try {
-			await api.saveSettings(settings);
+			const res = await api.saveSettings(settings);
+			syncGlobalDefaults((res && res.settings) || settings);
 			setDirty(false);
 			setSaved(true);
 			setTimeout(() => setSaved(false), 2000);

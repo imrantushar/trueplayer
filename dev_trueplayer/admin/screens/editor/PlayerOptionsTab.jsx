@@ -1,5 +1,6 @@
 import { Card, Field, Input, Select, Toggle, Textarea, ColorInput } from '../../components/UI';
 import { isPro, PRO_SKINS } from '../../pro';
+import { resolveCustomize, CUSTOMIZE_DEFAULTS } from '@Player/customize';
 
 // Player sub-sections. Exported so the editor's left-nav accordion (Editor.jsx)
 // can drive which one is shown — this tab renders the active section only.
@@ -47,25 +48,22 @@ const CONTROL_LABELS = {
 	download: 'Download button',
 };
 
-const DEFAULTS = {
-	controls: { play: true, rewind: true, forward: true, progress: true, currentTime: true, duration: true, mute: true, volume: true, captions: true, settings: true, pip: true, fullscreen: true, download: false },
-	behavior: { autoplay: false, autoplayMode: '', muted: false, loop: false, resetOnEnd: false, savePosition: true, hideControls: true, sticky: false, stickyPosition: 'bottom-right', preload: 'metadata', loadStrategy: 'facade', noSkip: false, disableSeek: false, hoverPreview: false },
-	appearance: { skin: 'default', accent: '#4f46e5', hoverColor: '', bigPlay: true, playButtonStyle: 'circle', playButtonSize: 0, roundness: 10, controlBarStyle: 'gradient', aspectRatio: '16:9', captionSize: 100, captionColor: '#ffffff', captionBackground: '#000000', captionOpacity: 75 },
-	speeds: [0.5, 0.75, 1, 1.25, 1.5, 2],
-	skipSeconds: 10,
-};
-
 export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'appearance' }) {
-	const cz = {
-		controls: { ...DEFAULTS.controls, ...(config.customize?.controls || {}) },
-		behavior: { ...DEFAULTS.behavior, ...(config.customize?.behavior || {}) },
-		appearance: { ...DEFAULTS.appearance, accent: config.branding?.accent || DEFAULTS.appearance.accent, ...(config.customize?.appearance || {}) },
-		speeds: config.customize?.speeds || DEFAULTS.speeds,
-		skipSeconds: config.customize?.skipSeconds || DEFAULTS.skipSeconds,
-	};
+	// Resolved exactly the way the player resolves it — built-in defaults, then
+	// the site-wide look from Settings → Default player template, then this
+	// video's own overrides. This form used to resolve against a second copy of
+	// the built-in defaults kept in this file, which never saw the site-wide
+	// layer: a freshly created video read "Default" here while the preview
+	// beside it, and every visitor, got the template chosen in Settings.
+	const cz = resolveCustomize(config);
 
+	// Write only the keys the author actually touched. Writing the whole
+	// resolved section would stamp today's site-wide template into the video
+	// the moment anyone opens this tab and changes one field, and the site
+	// setting would silently stop reaching it from then on — the same trap
+	// Helper::enforcement_defaults documents for the gating tab.
 	const setSection = (section, partial) =>
-		patch({ customize: { ...(config.customize || {}), [section]: { ...cz[section], ...partial } } });
+		patch({ customize: { ...(config.customize || {}), [section]: { ...(config.customize?.[section] || {}), ...partial } } });
 	const setRoot = (partial) => patch({ customize: { ...(config.customize || {}), ...partial } });
 
 	const appearance = cz.appearance;
@@ -294,7 +292,7 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 											value={cz.speeds.join(', ')}
 											onChange={(e) => {
 												const speeds = e.target.value.split(',').map((s) => parseFloat(s.trim())).filter((n) => !isNaN(n) && n > 0);
-												setRoot({ speeds: speeds.length ? speeds : DEFAULTS.speeds });
+												setRoot({ speeds: speeds.length ? speeds : CUSTOMIZE_DEFAULTS.speeds });
 											}}
 										/>
 									</Field>
