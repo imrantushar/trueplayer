@@ -4,6 +4,7 @@ import { api } from '../api';
 import { Card, Button, Thumb, Badge, sourceMeta } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
+import { __ } from '@Utils/translation';
 
 const PURCHASE = ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.purchase_url ) || 'https://true-player.net/';
 
@@ -64,36 +65,36 @@ export default function Dashboard( { onNavigate, onCreate } ) {
 		<div className="space-y-8">
 			<div className="flex items-center justify-between gap-4 flex-wrap">
 				<div>
-					<h1 className="text-2xl font-bold text-ink">Dashboard</h1>
-					<p className="text-sm text-gray-500">Your watch-verified media library at a glance.</p>
+					<h1 className="text-2xl font-bold text-ink">{ __( 'Dashboard' ) }</h1>
+					<p className="text-sm text-gray-500">{ __( 'Your watch-verified media library at a glance.' ) }</p>
 				</div>
 				<div className="flex gap-2">
-					<Button variant="ghost" onClick={ () => onCreate( 'playlist' ) }>New playlist</Button>
-					<Button onClick={ () => onCreate( 'media' ) }><Icon name="plus" className="w-4 h-4" /> New media</Button>
+					<Button variant="ghost" onClick={ () => onCreate( 'playlist' ) }>{ __( 'New playlist' ) }</Button>
+					<Button onClick={ () => onCreate( 'media' ) }><Icon name="plus" className="w-4 h-4" /> { __( 'New media' ) }</Button>
 				</div>
 			</div>
 
 			<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-				<Stat icon="video" label="Videos" value={ videos === null ? '—' : vids.length } tone="brand" />
-				<Stat icon="playlist" label="Playlists" value={ playlists.length } tone="gray" />
+				<Stat icon="video" label={ __( 'Videos' ) } value={ videos === null ? '—' : vids.length } tone="brand" />
+				<Stat icon="playlist" label={ __( 'Playlists' ) } value={ playlists.length } tone="gray" />
 				{ h5pAvailable()
-					? <Stat icon="spark" label="Interactive" value={ interactive.length } tone="green" />
-					: <Stat icon="check" label="Quiz-gated" value={ quizzed } tone="green" /> }
-				<Stat icon="book" label="With chapters" value={ withChapters } tone="amber" />
+					? <Stat icon="spark" label={ __( 'Interactive' ) } value={ interactive.length } tone="green" />
+					: <Stat icon="check" label={ __( 'Quiz-gated' ) } value={ quizzed } tone="green" /> }
+				<Stat icon="book" label={ __( 'With chapters' ) } value={ withChapters } tone="amber" />
 			</div>
 
 			<div className="grid lg:grid-cols-3 gap-6 items-start">
 				<Card className="lg:col-span-2 p-6">
 					<div className="flex items-center justify-between mb-4">
-						<h3 className="font-semibold text-ink">Recent media</h3>
-						<button className="text-sm text-brand-600 font-medium hover:text-brand-700" onClick={ () => onNavigate( 'library' ) }>View all →</button>
+						<h3 className="font-semibold text-ink">{ __( 'Recent media' ) }</h3>
+						<button className="text-sm text-brand-600 font-medium hover:text-brand-700" onClick={ () => onNavigate( 'library' ) }>{ __( 'View all →' ) }</button>
 					</div>
-					{ videos === null && <p className="text-gray-400 text-sm">Loading…</p> }
+					{ videos === null && <p className="text-gray-400 text-sm">{ __( 'Loading…' ) }</p> }
 					{ videos && recent.length === 0 && (
 						<div className="text-center py-10 border border-dashed border-line rounded-lg">
 							<div className="mx-auto mb-3 w-11 h-11 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="video" className="w-5 h-5" /></div>
-							<p className="text-sm text-gray-500 mb-3">No media yet — add your first one.</p>
-							<Button className='mt-6' onClick={ () => onCreate( 'media' ) }>Create media</Button>
+							<p className="text-sm text-gray-500 mb-3">{ __( 'No media yet — add your first one.' ) }</p>
+							<Button className='mt-6' onClick={ () => onCreate( 'media' ) }>{ __( 'Create media' ) }</Button>
 						</div>
 					) }
 					<div className="space-y-2">
@@ -115,27 +116,27 @@ export default function Dashboard( { onNavigate, onCreate } ) {
 
 				<div className="space-y-6">
 					<Card className="p-6">
-						<h3 className="font-semibold text-ink mb-3">Quick start</h3>
+						<h3 className="font-semibold text-ink mb-3">{ __( 'Quick start' ) }</h3>
 						<div className="space-y-1">
-							<QuickLink icon="video" label="Add a video" onClick={ () => onCreate( 'media' ) } />
-							<QuickLink icon="playlist" label="Build a playlist" onClick={ () => onCreate( 'playlist' ) } />
-							{ h5pAvailable() && <QuickLink icon="spark" label="Create interactive content" onClick={ () => onCreate( 'interactive' ) } /> }
-							<QuickLink icon="settings" label="Player defaults" onClick={ () => onNavigate( 'settings' ) } />
+							<QuickLink icon="video" label={ __( 'Add a video' ) } onClick={ () => onCreate( 'media' ) } />
+							<QuickLink icon="playlist" label={ __( 'Build a playlist' ) } onClick={ () => onCreate( 'playlist' ) } />
+							{ h5pAvailable() && <QuickLink icon="spark" label={ __( 'Create interactive content' ) } onClick={ () => onCreate( 'interactive' ) } /> }
+							<QuickLink icon="settings" label={ __( 'Player defaults' ) } onClick={ () => onNavigate( 'settings' ) } />
 						</div>
 					</Card>
 					{ ! isPro() && (
 						<Card className="p-6 border-brand-100 bg-gradient-to-br from-brand-50 to-white">
-							<div className="flex items-center gap-1.5 font-semibold text-ink"><Icon name="spark" className="w-4 h-4 text-brand-500" /> Unlock Pro</div>
+							<div className="flex items-center gap-1.5 font-semibold text-ink"><Icon name="spark" className="w-4 h-4 text-brand-500" /> { __( 'Unlock Pro' ) }</div>
 							{ /* `!mb-` because admin/style.css zeroes UA spacing with `.tp-admin p
 							     { margin: 0 }`, which outranks a plain `.mb-*` utility on both
 							     specificity and source order — a bare `mb-2.5` here does nothing
 							     at all. Same escape hatch the other screens use. */ }
-							<p className="text-[13px] text-gray-600 mt-1.5 !mb-2.5 leading-snug">Prove students watched, gate with quizzes, and see deep analytics.</p>
+							<p className="text-[13px] text-gray-600 mt-1.5 !mb-2.5 leading-snug">{ __( 'Prove students watched, gate with quizzes, and see deep analytics.' ) }</p>
 							{ /* `hover:`/`focus:text-white` are load-bearing: WP admin styles every
 							     anchor (`a:hover` → #135e96, `a:focus` → #043959), and those beat a
 							     bare `.text-white`, so this button's label turned blue on the blue
 							     fill the moment you pointed at it. */ }
-							<a href={ PURCHASE } target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-white hover:text-white focus:text-white bg-brand-500 hover:bg-brand-600 rounded-md px-4 py-2">See Pro features</a>
+							<a href={ PURCHASE } target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-white hover:text-white focus:text-white bg-brand-500 hover:bg-brand-600 rounded-md px-4 py-2">{ __( 'See Pro features' ) }</a>
 						</Card>
 					) }
 				</div>

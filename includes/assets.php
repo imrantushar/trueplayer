@@ -54,6 +54,7 @@ class Assets {
 		);
 
 		wp_localize_script( self::FRONTEND_SCRIPT_HANDLE, self::GLOBAL_OBJECT, $this->get_frontend_scripts_data() );
+		wp_set_script_translations( self::FRONTEND_SCRIPT_HANDLE, 'trueplayer', TRUEPLAYER_ROOT_DIR_PATH . 'languages/' );
 	}
 
 	public function enqueue_app_assets( string $hook ): void {

@@ -2,6 +2,7 @@ import { useState } from '@wordpress/element';
 import { Card, Button, Toggle, Badge } from '../../components/UI';
 import { isPro } from '../../pro';
 import { Icon } from '../../components/icons';
+import { __ } from '@Utils/translation';
 
 // navigator.clipboard.writeText needs a secure context; fall back to the
 // classic textarea + execCommand trick (e.g. plain-http local dev sites).
@@ -59,32 +60,32 @@ export default function EmbedTab( { video, config = {}, patch, instantLive = fal
 	return (
 		<Card className="max-w-2xl space-y-6 !border-none">
 			<div>
-				<h3 className="font-semibold text-gray-900 !mb-2">Shortcode</h3>
+				<h3 className="font-semibold text-gray-900 !mb-2">{ __( 'Shortcode' ) }</h3>
 				<div className="flex gap-2 items-center">
 					<code className="flex-1 bg-gray-100 rounded px-3 py-2 text-sm">{ shortcode }</code>
-					<Button variant="ghost" onClick={ () => copy( shortcode, 'sc' ) }>{ copied === 'sc' ? <><Icon name="checkmark" className="w-4 h-4" /> Copied</> : 'Copy' }</Button>
+					<Button variant="ghost" onClick={ () => copy( shortcode, 'sc' ) }>{ copied === 'sc' ? <><Icon name="checkmark" className="w-4 h-4" /> { __( 'Copied' ) }</> : __( 'Copy' ) }</Button>
 				</div>
 			</div>
 			<div>
-				<h3 className="font-semibold text-gray-900 !mb-2">Block (paste into any post)</h3>
+				<h3 className="font-semibold text-gray-900 !mb-2">{ __( 'Block (paste into any post)' ) }</h3>
 				<div className="flex gap-2 items-center">
 					<code className="flex-1 bg-gray-100 rounded px-3 py-2 text-sm break-all">{ block }</code>
-					<Button variant="ghost" onClick={ () => copy( block, 'bl' ) }>{ copied === 'bl' ? <><Icon name="checkmark" className="w-4 h-4" /> Copied</> : 'Copy' }</Button>
+					<Button variant="ghost" onClick={ () => copy( block, 'bl' ) }>{ copied === 'bl' ? <><Icon name="checkmark" className="w-4 h-4" /> { __( 'Copied' ) }</> : __( 'Copy' ) }</Button>
 				</div>
-				<p className="text-xs text-gray-400 mt-1">Or search “TruePlayer” in the block inserter.</p>
+				<p className="text-xs text-gray-400 mt-1">{ __( 'Or search “TruePlayer” in the block inserter.' ) }</p>
 			</div>
 			<div>
 				<div className="flex items-center gap-2 mb-2">
-					<h3 className="font-semibold text-gray-900">Instant video page</h3>
-					{ ! isPro() && <Badge tone="gray">Pro</Badge> }
+					<h3 className="font-semibold text-gray-900">{ __( 'Instant video page' ) }</h3>
+					{ ! isPro() && <Badge tone="gray">{ __( 'Pro' ) }</Badge> }
 				</div>
-				<p className="text-sm text-gray-500 mb-2">A clean, shareable standalone page for this video — no post needed.</p>
+				<p className="text-sm text-gray-500 mb-2">{ __( 'A clean, shareable standalone page for this video — no post needed.' ) }</p>
 				{ isPro() && patch ? (
 					<>
 						<Toggle
 							checked={ !! config.instantPage }
 							onChange={ ( v ) => patch( { instantPage: v } ) }
-							label="Enable the instant page"
+							label={ __( 'Enable the instant page' ) }
 							className="my-4"
 						/>
 						{ /* Saving from in here rather than pointing at the topbar's
@@ -93,12 +94,12 @@ export default function EmbedTab( { video, config = {}, patch, instantLive = fal
 							<div className="flex items-center gap-3 text-sm text-warning bg-warning-light rounded-card px-4 py-3">
 								<span className="flex-1">
 									{ config.instantPage
-										? 'Save this video to publish its page.'
-										: 'Save this video to take its page down.' }
+										? __( 'Save this video to publish its page.' )
+										: __( 'Save this video to take its page down.' ) }
 								</span>
 								{ onSave && (
 									<Button onClick={ onSave } disabled={ saving }>
-										{ saving ? 'Saving…' : 'Save' }
+										{ saving ? __( 'Saving…' ) : __( 'Save' ) }
 									</Button>
 								) }
 							</div>
@@ -106,12 +107,12 @@ export default function EmbedTab( { video, config = {}, patch, instantLive = fal
 						{ ! pending && config.instantPage && (
 							<div className="flex gap-2 items-center">
 								<code className="flex-1 bg-gray-100 rounded px-3 py-2 text-sm break-all">{ instantUrl }</code>
-								<Button variant="ghost" onClick={ () => copy( instantUrl, 'ip' ) }>{ copied === 'ip' ? <><Icon name="checkmark" className="w-4 h-4" /> Copied</> : 'Copy' }</Button>
+								<Button variant="ghost" onClick={ () => copy( instantUrl, 'ip' ) }>{ copied === 'ip' ? <><Icon name="checkmark" className="w-4 h-4" /> { __( 'Copied' ) }</> : __( 'Copy' ) }</Button>
 							</div>
 						) }
 					</>
 				) : (
-					<p className="text-xs text-gray-400">Available with TruePlayer Pro.</p>
+					<p className="text-xs text-gray-400">{ __( 'Available with TruePlayer Pro.' ) }</p>
 				) }
 			</div>
 		</Card>

@@ -9,7 +9,7 @@
  * all. `@wordpress/api-fetch` already resolves both correctly here.
  */
 import apiFetch from '@wordpress/api-fetch';
-import { __ } from '@wordpress/i18n';
+import { __ } from '@Utils/translation';
 
 const G = () => window.TruePlayerBlock || {};
 
@@ -31,14 +31,14 @@ export const libraryUrl = () => G().libraryUrl || '';
  * library, so a video set up as Bunny or Mux still has to read properly.
  */
 const TYPE_LABELS = {
-	self: __( 'Self-hosted', 'trueplayer' ),
-	youtube: __( 'YouTube', 'trueplayer' ),
-	vimeo: __( 'Vimeo', 'trueplayer' ),
-	url: __( 'External URL', 'trueplayer' ),
-	hls: __( 'HLS stream', 'trueplayer' ),
-	mux: __( 'Mux', 'trueplayer' ),
-	bunny: __( 'Bunny.net Stream', 'trueplayer' ),
-	bunnyStorage: __( 'Bunny.net Storage', 'trueplayer' ),
+	self: __( 'Self-hosted' ),
+	youtube: __( 'YouTube' ),
+	vimeo: __( 'Vimeo' ),
+	url: __( 'External URL' ),
+	hls: __( 'HLS stream' ),
+	mux: __( 'Mux' ),
+	bunny: __( 'Bunny.net Stream' ),
+	bunnyStorage: __( 'Bunny.net Storage' ),
 };
 
 /** A source type as a person reads it, falling back to the raw key. */
@@ -59,17 +59,17 @@ export const SOURCE_TYPES = [
 	},
 	{
 		value: 'youtube',
-		field: __( 'YouTube URL or video ID', 'trueplayer' ),
+		field: __( 'YouTube URL or video ID' ),
 		placeholder: 'https://www.youtube.com/watch?v=…',
 	},
 	{
 		value: 'vimeo',
-		field: __( 'Vimeo URL or video ID', 'trueplayer' ),
+		field: __( 'Vimeo URL or video ID' ),
 		placeholder: 'https://vimeo.com/…',
 	},
 	{
 		value: 'url',
-		field: __( 'Media URL', 'trueplayer' ),
+		field: __( 'Media URL' ),
 		placeholder: 'https://example.com/video.mp4',
 	},
 ].map( ( t ) => ( { ...t, label: typeLabel( t.value ) } ) );

@@ -15,35 +15,43 @@ import PreviewPanel from './editor/PreviewPanel';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
 import { hasVideoSource } from '../utils/videoSource';
+import { __ } from '@Utils/translation';
 
 // Interactions sub-sections. The 3rd tuple item flags a pro-gated sub so the
 // nav can badge it. Overlays (Call to action) is free; the rest are pro.
 const INTERACTIONS_SUBS = [
-	[ 'overlays', 'Call to action' ],
+	[ 'overlays', __( 'Call to action' ) ],
 	// Not Pro-flagged: the Email form layer (formerly its own "Email capture"
 	// section) is free. The Pro half is the display-rules editor inside it, and
 	// LayersTab gates that itself.
-	[ 'layers', 'Layers' ],
-	[ 'timed', 'Timed content', true ],
+	[ 'layers', __( 'Layers' ) ],
+	[ 'timed', __( 'Timed content' ), true ],
 ];
 
 // Access & gating sub-sections. No per-sub pro flag: the whole tab is pro, so
 // the parent nav item already carries the badge.
 const ACCESS_SUBS = [
-	[ 'gating', 'Verification & quiz' ],
-	[ 'protection', 'Protection' ],
+	[ 'gating', __( 'Verification & quiz' ) ],
+	[ 'protection', __( 'Protection' ) ],
 ];
 
 const TABS = [
-	{ key: 'source', label: 'Source', icon: 'film' },
-	{ key: 'player', label: 'Player', icon: 'sliders', subs: PLAYER_SUBS },
-	{ key: 'appearance', label: 'Chapters & branding', icon: 'bookmark' },
-	{ key: 'interactions', label: 'Interactions', icon: 'puzzle', subs: INTERACTIONS_SUBS },
-	{ key: 'access', label: 'Access & gating', icon: 'shield', pro: true, subs: ACCESS_SUBS },
+	{ key: 'source', label: __( 'Source' ), icon: 'film' },
+	{ key: 'player', label: __( 'Player' ), icon: 'sliders', subs: PLAYER_SUBS },
+	{ key: 'appearance', label: __( 'Chapters & branding' ), icon: 'bookmark' },
+	{ key: 'interactions', label: __( 'Interactions' ), icon: 'puzzle', subs: INTERACTIONS_SUBS },
+	{ key: 'access', label: __( 'Access & gating' ), icon: 'shield', pro: true, subs: ACCESS_SUBS },
 ];
 
 const PRO_TAB_INFO = {
-	access: { title: 'Access & gating', features: [ 'Watch-verification (prove they watched, anti-skip)', 'Checkpoint & final quizzes, lock on failure', 'Private video with signed, expiring links' ] },
+	access: {
+		title: __( 'Access & gating' ),
+		features: [
+			__( 'Watch-verification (prove they watched, anti-skip)' ),
+			__( 'Checkpoint & final quizzes, lock on failure' ),
+			__( 'Private video with signed, expiring links' ),
+		],
+	},
 };
 
 // Interactions = everything shown on/around the video. Overlays are free;
@@ -58,7 +66,13 @@ function InteractionsTab( { config, patch, pro, sub = 'overlays', onPreviewOverl
 			     that do need Pro are stripped server-side, and the rules editor
 			     gates itself. */ }
 			{ sub === 'layers' && <LayersTab config={ config } patch={ patch } onPreviewLayer={ onPreviewLayer } previewingLayerId={ previewingLayerId } /> }
-			{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, { title: 'Timed content', features: [ 'A content region below the player that changes with the video', 'Time-synced forms, buttons & text' ] } ) }
+			{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, {
+				title: __( 'Timed content' ),
+				features: [
+					__( 'A content region below the player that changes with the video' ),
+					__( 'Time-synced forms, buttons & text' ),
+				],
+			} ) }
 		</div>
 	);
 }
@@ -189,7 +203,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 	// never advances the step for you.
 	const save = async () => {
 		if ( ! hasVideoSource( video.config?.source || {} ) ) {
-			setToast( { message: 'Add a video before saving.', tone: 'danger' } );
+			setToast( { message: __( 'Add a video before saving.' ), tone: 'danger' } );
 			return;
 		}
 		if ( ! dirty ) {
@@ -201,14 +215,14 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 			setVideo( updated );
 			setInstantLive( !! updated.config?.instantPage );
 			setDirty( false );
-			setToast( { message: 'Saved', tone: 'success' } );
+			setToast( { message: __( 'Saved' ), tone: 'success' } );
 		} finally {
 			setSaving( false );
 		}
 	};
 
 	if ( ! video ) {
-		return <main className="flex-1 p-8 text-gray-400">Loading…</main>;
+		return <main className="flex-1 p-8 text-gray-400">{ __( 'Loading…' ) }</main>;
 	}
 
 	const config = video.config || {};
@@ -221,10 +235,10 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 				{ /* Toolbar actions live in the topbar (portaled). */ }
 				{ toolbarSlot && createPortal(
 					<>
-						{ dirty && <Badge tone="amber">Unsaved</Badge> }
-						<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>Embed</Button>
+						{ dirty && <Badge tone="amber">{ __( 'Unsaved' ) }</Badge> }
+						<Button variant="ghost" onClick={ () => setEmbedOpen( true ) }>{ __( 'Embed' ) }</Button>
 						<Button onClick={ save } disabled={ saving || ! dirty }>
-							{ saving ? 'Saving…' : 'Update' }
+							{ saving ? __( 'Saving…' ) : __( 'Update' ) }
 						</Button>
 					</>,
 					toolbarSlot
@@ -233,7 +247,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 				<Toast message={ toast?.message } tone={ toast?.tone } onDismiss={ () => setToast( null ) } />
 
 				{ embedOpen && (
-					<Modal title="Embed this media" onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
+					<Modal title={ __( 'Embed this media' ) } onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
 						<EmbedTab
 							video={ video }
 							config={ config }
@@ -281,7 +295,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 											{ t.subs && (
 												<svg className={ `w-3.5 h-3.5 shrink-0 transition-transform ${ open ? 'rotate-90' : '' }` } viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M9 6l6 6-6 6" /></svg>
 											) }
-											{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">PRO</span> }
+											{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">{ __( 'PRO' ) }</span> }
 										</button>
 
 										{ /* Sub-sections live inline in the nav (accordion), so the
@@ -297,7 +311,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 														}` }
 													>
 														<span className="truncate">{ subLabel }</span>
-														{ subPro && ! pro && <span className="text-[10px] font-semibold text-brand-600 shrink-0">PRO</span> }
+														{ subPro && ! pro && <span className="text-[10px] font-semibold text-brand-600 shrink-0">{ __( 'PRO' ) }</span> }
 													</button>
 												) ) }
 											</div>

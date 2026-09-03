@@ -1,5 +1,6 @@
 import { useState } from '@wordpress/element';
 import { rest } from '@Utils/rest';
+import { __ } from '@Utils/translation';
 import { formStyleVars } from '../formStyle';
 
 /**
@@ -37,7 +38,7 @@ export default function EmailForm( { layer, videoId, className = '', preview = f
 	if ( done ) {
 		return (
 			<div className={ classes } style={ formStyleVars( layer ) }>
-				<p className="tp-emailform-thanks">{ layer.thanks || 'Thanks — you’re in!' }</p>
+				<p className="tp-emailform-thanks">{ layer.thanks || __( 'Thanks — you’re in!' ) }</p>
 			</div>
 		);
 	}
@@ -49,7 +50,7 @@ export default function EmailForm( { layer, videoId, className = '', preview = f
 		// Same check both modes used to make separately, and the looser of the
 		// two: a missing @ is a typo worth catching before a round trip.
 		if ( ! /.+@.+\..+/.test( email ) ) {
-			setError( 'Please enter a valid email address.' );
+			setError( __( 'Please enter a valid email address.' ) );
 			return;
 		}
 		setBusy( true );
@@ -64,7 +65,7 @@ export default function EmailForm( { layer, videoId, className = '', preview = f
 				setDone( true );
 			}
 		} catch ( err ) {
-			setError( err.message || 'Something went wrong.' );
+			setError( err.message || __( 'Something went wrong.' ) );
 		} finally {
 			setBusy( false );
 		}
@@ -81,8 +82,8 @@ export default function EmailForm( { layer, videoId, className = '', preview = f
 					type="text"
 					value={ name }
 					onChange={ ( ev ) => setName( ev.target.value ) }
-					placeholder="Your name"
-					aria-label="Name"
+					placeholder={ __( 'Your name' ) }
+					aria-label={ __( 'Name' ) }
 				/>
 			) }
 
@@ -93,11 +94,11 @@ export default function EmailForm( { layer, videoId, className = '', preview = f
 					type="email"
 					value={ email }
 					onChange={ ( ev ) => setEmail( ev.target.value ) }
-					placeholder={ layer.placeholder || 'you@email.com' }
-					aria-label="Email"
+					placeholder={ layer.placeholder || __( 'you@email.com' ) }
+					aria-label={ __( 'Email' ) }
 				/>
 				<button className="tp-emailform-submit" type="submit" disabled={ busy }>
-					{ busy ? 'Subscribing…' : ( layer.buttonLabel || 'Subscribe' ) }
+					{ busy ? __( 'Subscribing…' ) : ( layer.buttonLabel || __( 'Subscribe' ) ) }
 				</button>
 			</div>
 
@@ -108,7 +109,7 @@ export default function EmailForm( { layer, videoId, className = '', preview = f
 			     written by hand behaves one way in the editor and another here. */ }
 			{ false === layer.required && (
 				<button className="tp-emailform-skip" type="button" onClick={ onDismiss }>
-					{ layer.skipLabel || 'No thanks' }
+					{ layer.skipLabel || __( 'No thanks' ) }
 				</button>
 			) }
 		</form>

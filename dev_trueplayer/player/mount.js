@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import Player from './Player';
 import Playlist from './Playlist';
+import { __ } from '@Utils/translation';
 
 // Domains to warm (DNS + TLS) so an embed starts fast once clicked.
 const WARM_HOSTS = {
@@ -263,7 +264,10 @@ function openPopup( videoId, config ) {
 	const backdrop = document.createElement( 'div' );
 	backdrop.className = 'tp-popup-backdrop';
 	backdrop.innerHTML =
-		'<div class="tp-popup-dialog"><button class="tp-popup-close" aria-label="Close">×</button><div class="tp-popup-player"></div></div>';
+		'<div class="tp-popup-dialog"><button class="tp-popup-close">×</button><div class="tp-popup-player"></div></div>';
+	// Set as a property rather than interpolated into the markup above, so a
+	// translation carrying a quote can't break out of the attribute.
+	backdrop.querySelector( '.tp-popup-close' ).setAttribute( 'aria-label', __( 'Close' ) );
 	document.body.appendChild( backdrop );
 	document.body.style.overflow = 'hidden';
 

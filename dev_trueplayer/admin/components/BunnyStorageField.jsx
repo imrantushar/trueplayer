@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from '@wordpress/element';
+import { createInterpolateElement, useEffect, useRef, useState } from '@wordpress/element';
+import { __, __sprintf } from '@Utils/translation';
 import { Button, Modal, Input } from './UI';
 import { Icon } from './icons';
 import { api } from '../api';
@@ -66,7 +67,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 			}
 		} catch ( e ) {
 			if ( ! token.current.cancelled ) {
-				setError( e.message || 'That file could not be uploaded.' );
+				setError( e.message || __( 'That file could not be uploaded.' ) );
 			}
 		} finally {
 			setUpload( null );
@@ -86,7 +87,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 			<div className="border border-line rounded-card p-4">
 				<div className="flex items-center gap-3">
 					<span className="text-sm text-ink truncate flex-1">{ upload.name }</span>
-					<span className="text-sm tabular-nums text-muted">{ upload.percent }%</span>
+					<span className="text-sm tabular-nums text-muted">{ __sprintf( '%d%%', upload.percent ) }</span>
 					<Button
 						variant="ghost"
 						size="sm"
@@ -94,14 +95,14 @@ export default function BunnyStorageField( { value, onChange } ) {
 							token.current.cancelled = true;
 						} }
 					>
-						Cancel
+						{ __( 'Cancel' ) }
 					</Button>
 				</div>
 				<div className="mt-2.5 h-1.5 rounded-full bg-gray-100 overflow-hidden">
 					<div className="h-full bg-brand-500 transition-[width] duration-200" style={ { width: `${ upload.percent }%` } } />
 				</div>
 				<p className="text-xs text-muted !mt-2">
-					{ upload.percent < 100 ? 'Sending to your storage zone — keep this tab open.' : 'Finishing up…' }
+					{ upload.percent < 100 ? __( 'Sending to your storage zone — keep this tab open.' ) : __( 'Finishing up…' ) }
 				</p>
 			</div>
 		);
@@ -118,9 +119,9 @@ export default function BunnyStorageField( { value, onChange } ) {
 						<span className="block text-xs text-muted truncate">{ value }</span>
 					</span>
 					{ status?.configured && (
-						<Button variant="ghost" size="sm" onClick={ () => inputRef.current?.click() }>Replace</Button>
+						<Button variant="ghost" size="sm" onClick={ () => inputRef.current?.click() }>{ __( 'Replace' ) }</Button>
 					) }
-					<Button variant="ghost" size="sm" onClick={ () => onChange( '' ) }>Remove</Button>
+					<Button variant="ghost" size="sm" onClick={ () => onChange( '' ) }>{ __( 'Remove' ) }</Button>
 				</div>
 				<FilePicker inputRef={ inputRef } onPick={ send } />
 				{ error && <p className="text-xs text-danger !mt-1.5">{ error }</p> }
@@ -133,7 +134,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 	// hold the space until the answer arrives rather than offering an upload
 	// button that turns into a URL box a moment later.
 	if ( ! status ) {
-		return <div className="border border-dashed border-line rounded-card py-6 text-center text-sm text-placeholder">Checking your storage zone…</div>;
+		return <div className="border border-dashed border-line rounded-card py-6 text-center text-sm text-placeholder">{ __( 'Checking your storage zone…' ) }</div>;
 	}
 
 	// Not configured yet — a URL is the only thing that can work, so lead with it.
@@ -146,7 +147,10 @@ export default function BunnyStorageField( { value, onChange } ) {
 					placeholder="https://your-zone.b-cdn.net/path/video.mp4"
 				/>
 				<p className="text-xs text-muted !mt-1.5">
-					Connect your storage zone under <strong>Settings → Sources &amp; CDN</strong> to upload files straight from here.
+					{ createInterpolateElement(
+						__( 'Connect your storage zone under <b>Settings → Sources & CDN</b> to upload files straight from here.' ),
+						{ b: <strong /> }
+					) }
 				</p>
 			</>
 		);
@@ -162,19 +166,21 @@ export default function BunnyStorageField( { value, onChange } ) {
 				className="w-full border border-dashed border-line rounded-card py-6 text-center text-sm text-muted hover:border-brand-400 hover:text-brand-500 transition-colors"
 			>
 				<span className="block text-xl leading-none mb-1">+</span>
-				Upload a video to Bunny.net
+				{ __( 'Upload a video to Bunny.net' ) }
 				<span className="block text-xs text-gray-400 mt-1">
-					or drop it here{ status?.maxBytes ? ` · up to ${ formatBytes( status.maxBytes ) }` : '' }
+					{ status?.maxBytes
+						? __sprintf( 'or drop it here · up to %s', formatBytes( status.maxBytes ) )
+						: __( 'or drop it here' ) }
 				</span>
 			</button>
 
 			<div className="flex items-center gap-3 mt-2 text-xs">
 				<button type="button" className="text-brand-500 hover:underline" onClick={ () => setBrowsing( true ) }>
-					Browse your zone
+					{ __( 'Browse your zone' ) }
 				</button>
 				<span className="text-gray-300">·</span>
 				<button type="button" className="text-muted hover:text-ink" onClick={ () => setPasting( ( p ) => ! p ) }>
-					Paste a URL instead
+					{ __( 'Paste a URL instead' ) }
 				</button>
 			</div>
 
@@ -191,7 +197,10 @@ export default function BunnyStorageField( { value, onChange } ) {
 			<FilePicker inputRef={ inputRef } onPick={ send } />
 			{ error && <p className="text-xs text-danger !mt-1.5">{ error }</p> }
 			{ status.streamHost && (
-				<Warning text={ `${ status.pullZone } is a Bunny Stream pull zone, not a storage one — files uploaded here will not play from it. Fix the pull-zone hostname under Settings → Sources & CDN first.` } />
+				<Warning text={ __sprintf(
+					'%s is a Bunny Stream pull zone, not a storage one — files uploaded here will not play from it. Fix the pull-zone hostname under Settings → Sources & CDN first.',
+					status.pullZone
+				) } />
 			) }
 
 			{ browsing && (
@@ -255,26 +264,26 @@ function ZoneBrowser( { onClose, onPick } ) {
 	useEffect( () => {
 		api.bunnyFiles()
 			.then( ( r ) => setFiles( r.files || [] ) )
-			.catch( ( e ) => setError( e.message || 'Your storage zone could not be listed.' ) );
+			.catch( ( e ) => setError( e.message || __( 'Your storage zone could not be listed.' ) ) );
 	}, [] );
 
 	const q = query.trim().toLowerCase();
 	const shown = ( files || [] ).filter( ( f ) => ! q || f.name.toLowerCase().includes( q ) );
 
 	return (
-		<Modal title="Files in your storage zone" onClose={ onClose } className="max-w-lg">
+		<Modal title={ __( 'Files in your storage zone' ) } onClose={ onClose } className="max-w-lg">
 			<div className="relative mb-3">
 				<Icon name="search" className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-placeholder" />
-				<Input value={ query } onChange={ ( e ) => setQuery( e.target.value ) } placeholder="Search files" className="!pl-8" />
+				<Input value={ query } onChange={ ( e ) => setQuery( e.target.value ) } placeholder={ __( 'Search files' ) } className="!pl-8" />
 			</div>
 
 			{ error && <p className="text-sm text-danger">{ error }</p> }
-			{ ! files && ! error && <p className="text-sm text-muted py-8 text-center">Loading…</p> }
+			{ ! files && ! error && <p className="text-sm text-muted py-8 text-center">{ __( 'Loading…' ) }</p> }
 			{ files && 0 === files.length && (
-				<p className="text-sm text-muted py-8 text-center">Nothing here yet — upload a video and it will appear.</p>
+				<p className="text-sm text-muted py-8 text-center">{ __( 'Nothing here yet — upload a video and it will appear.' ) }</p>
 			) }
 			{ files && files.length > 0 && 0 === shown.length && (
-				<p className="text-sm text-muted py-8 text-center">No file matches “{ query }”.</p>
+				<p className="text-sm text-muted py-8 text-center">{ __sprintf( 'No file matches “%s”.', query ) }</p>
 			) }
 
 			<div className="max-h-80 overflow-y-auto -mx-1 px-1">

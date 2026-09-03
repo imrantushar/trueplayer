@@ -1,6 +1,7 @@
 import { Button, Thumb } from './UI';
 import { Icon } from './icons';
 import { pickMedia } from '../utils/media';
+import { __, __sprintf } from '@Utils/translation';
 
 /**
  * The poster image, with every way of setting one in a single panel.
@@ -14,13 +15,13 @@ import { pickMedia } from '../utils/media';
 export default function PosterField( { source, audio = false, canGrab, capture, onPick, onRemove, onGrab } ) {
 	const poster = source.poster || '';
 	const busy = capture.busy;
-	const noun = audio ? 'cover art' : 'poster';
+	const noun = audio ? __( 'cover art' ) : __( 'poster' );
 
 	const choose = () => pickMedia( 'image', ( url ) => onPick( url ) );
 
 	const grabLabel = busy
-		? 'Grabbing a frame…'
-		: `${ poster ? 'Regenerate' : 'Generate' } from video`;
+		? __( 'Grabbing a frame…' )
+		: ( poster ? __( 'Regenerate from video' ) : __( 'Generate from video' ) );
 
 	return (
 		<div>
@@ -38,7 +39,7 @@ export default function PosterField( { source, audio = false, canGrab, capture, 
 					<button
 						type="button"
 						onClick={ choose }
-						aria-label={ `Choose ${ noun }` }
+						aria-label={ __sprintf( 'Choose %s', noun ) }
 						className="shrink-0 w-24 aspect-video rounded-lg border border-dashed border-line bg-white flex items-center justify-center text-gray-400 hover:border-brand-400 hover:text-brand-500 transition-colors"
 					>
 						<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
@@ -53,11 +54,11 @@ export default function PosterField( { source, audio = false, canGrab, capture, 
 				<div className="flex flex-col items-start gap-2 min-w-0">
 					<div className="flex items-center gap-1.5">
 						<Button variant="ghost" size="sm" onClick={ choose } disabled={ busy }>
-							{ poster ? 'Replace' : 'Choose image' }
+							{ poster ? __( 'Replace' ) : __( 'Choose image' ) }
 						</Button>
 						{ poster && (
 							<Button variant="dangerClear" size="sm" onClick={ onRemove } disabled={ busy }>
-								Remove
+								{ __( 'Remove' ) }
 							</Button>
 						) }
 					</div>
@@ -74,7 +75,7 @@ export default function PosterField( { source, audio = false, canGrab, capture, 
 			     frame we grabbed is safe to replace, an uploaded one is the
 			     author's own work. */ }
 			{ ! busy && ! capture.error && poster && source.posterAuto && (
-				<p className="text-xs text-muted pt-2">Grabbed from the video.</p>
+				<p className="text-xs text-muted pt-2">{ __( 'Grabbed from the video.' ) }</p>
 			) }
 			{ capture.error && <p className="text-xs text-danger pt-2">{ capture.error }</p> }
 		</div>

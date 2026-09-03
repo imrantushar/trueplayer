@@ -1,6 +1,7 @@
 import { Icon } from './icons';
 import { brand } from '../brand';
 import WhatsNew from './WhatsNew';
+import { __ } from '@Utils/translation';
 
 /**
  * Top bar — brand + breadcrumb + a slot screens portal their toolbar into.
@@ -33,9 +34,9 @@ export default function Header( { crumbs = [], onHome } ) {
 						<input
 							value={ c.label || '' }
 							onChange={ ( e ) => c.onChange && c.onChange( e.target.value ) }
-							placeholder="Untitled"
+							placeholder={ __( 'Untitled' ) }
 							size={ Math.max( ( c.label || '' ).length, 6 ) }
-							aria-label="Title"
+							aria-label={ __( 'Title' ) }
 							className="text-sm font-semibold text-ink bg-transparent outline-none border-b border-transparent focus:border-brand-500 min-w-0 max-w-[40vw]"
 						/>
 					) : c.onClick ? (

@@ -25,7 +25,7 @@ import {
 	ToolbarButton,
 	ToolbarGroup,
 } from '@wordpress/components';
-import { __, sprintf } from '@wordpress/i18n';
+import { __, sprintf } from '@Utils/translation';
 import Player from '@Player/Player';
 import VideoModal from './VideoModal';
 import { brand, canCreate, editUrl, fetchPreview, fetchVideos } from './data';
@@ -53,7 +53,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 			.catch( ( e ) => {
 				if ( live ) {
 					setVideos( [] );
-					setLoadError( e.message || __( 'The video library could not be loaded.', 'trueplayer' ) );
+					setLoadError( e.message || __( 'The video library could not be loaded.' ) );
 				}
 			} );
 		return () => {
@@ -81,7 +81,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 			} )
 			.catch( ( e ) => {
 				if ( live ) {
-					setItemError( e.message || __( 'That video could not be loaded.', 'trueplayer' ) );
+					setItemError( e.message || __( 'That video could not be loaded.' ) );
 				}
 			} );
 		return () => {
@@ -115,13 +115,13 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 	const missing = ! loading && !! videoId && ! listed && !! itemError;
 
 	const options = [
-		{ label: __( '— Select a video —', 'trueplayer' ), value: 0 },
+		{ label: __( '— Select a video —' ), value: 0 },
 	].concat( ( videos || [] ).map( ( v ) => ( { label: v.title, value: v.id } ) ) );
 
 	const picker = (
 		<SelectControl
 			__nextHasNoMarginBottom
-			label={ __( 'Video', 'trueplayer' ) }
+			label={ __( 'Video' ) }
 			value={ videoId }
 			options={ options }
 			onChange={ select }
@@ -130,7 +130,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 
 	const createButton = canCreate() && (
 		<Button variant={ videoId ? 'secondary' : 'primary' } onClick={ () => setEditing( 'create' ) }>
-			{ __( 'Create new', 'trueplayer' ) }
+			{ __( 'Create new' ) }
 		</Button>
 	);
 
@@ -140,11 +140,11 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 				<BlockControls>
 					<ToolbarGroup>
 						<ToolbarButton onClick={ () => select( 0 ) }>
-							{ __( 'Replace', 'trueplayer' ) }
+							{ __( 'Replace' ) }
 						</ToolbarButton>
 						{ canCreate() && !! item && (
 							<ToolbarButton onClick={ () => setEditing( 'edit' ) }>
-								{ __( 'Edit', 'trueplayer' ) }
+								{ __( 'Edit' ) }
 							</ToolbarButton>
 						) }
 					</ToolbarGroup>
@@ -159,7 +159,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 						{ canCreate() && !! item && (
 							<FlexItem>
 								<Button variant="secondary" onClick={ () => setEditing( 'edit' ) }>
-									{ __( 'Edit', 'trueplayer' ) }
+									{ __( 'Edit' ) }
 								</Button>
 							</FlexItem>
 						) }
@@ -169,12 +169,12 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 							<a href={ editUrl( item.id ) } target="_blank" rel="noreferrer">
 								{ sprintf(
 									/* translators: %s: product name, e.g. TruePlayer. */
-									__( 'Open in %s', 'trueplayer' ),
+									__( 'Open in %s' ),
 									brand()
 								) }
 							</a>
 							{ ' — ' }
-							{ __( 'gating, chapters, appearance and more.', 'trueplayer' ) }
+							{ __( 'gating, chapters, appearance and more.' ) }
 						</p>
 					) }
 				</PanelBody>
@@ -223,7 +223,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 				<Placeholder
 					icon="format-video"
 					label={ brand() }
-					instructions={ __( 'Show a video from your library, or add a new one.', 'trueplayer' ) }
+					instructions={ __( 'Show a video from your library, or add a new one.' ) }
 				>
 					{ loading && <Spinner /> }
 
@@ -235,7 +235,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 
 					{ missing && (
 						<Notice status="warning" isDismissible={ false }>
-							{ __( 'That video is no longer in your library. Choose another one.', 'trueplayer' ) }
+							{ __( 'That video is no longer in your library. Choose another one.' ) }
 						</Notice>
 					) }
 
@@ -248,7 +248,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 
 					{ ! loading && 0 === ( videos || [] ).length && ! canCreate() && ! loadError && (
 						<Notice status="info" isDismissible={ false }>
-							{ __( 'There are no videos yet. An administrator can add one.', 'trueplayer' ) }
+							{ __( 'There are no videos yet. An administrator can add one.' ) }
 						</Notice>
 					) }
 				</Placeholder>

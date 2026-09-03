@@ -4,6 +4,7 @@ import { CoverageTracker } from './coverage';
 import { resolveCustomize, autoplayMode } from './customize';
 import { gaEvent } from './ga';
 import { rest } from '@Utils/rest';
+import { __ } from '@Utils/translation';
 import { supportsContainerPiP, cloneStylesInto } from './pip';
 import Controls from './components/Controls';
 import InfoPanel from './components/InfoPanel';
@@ -193,7 +194,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		( async () => {
 			// Premium sources are pro-only.
 			if ( [ 'bunny', 'mux', 'hls' ].includes( source.type ) && ! gatingOn ) {
-				setError( 'This video source requires TruePlayer Pro.' );
+				setError( __( 'This video source requires TruePlayer Pro.' ) );
 				return;
 			}
 
@@ -214,11 +215,11 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			setGate( gateState );
 			if ( gateState.canPlay === false ) {
 				const messages = {
-					login_required: 'Please log in to watch this video.',
-					enroll_required: 'Enroll in this course to watch.',
-					purchase_required: 'Purchase this course to watch.',
+					login_required: __( 'Please log in to watch this video.' ),
+					enroll_required: __( 'Enroll in this course to watch.' ),
+					purchase_required: __( 'Purchase this course to watch.' ),
 				};
-				setError( gateState.message || messages[ gateState.reason ] || 'This video is not available.' );
+				setError( gateState.message || messages[ gateState.reason ] || __( 'This video is not available.' ) );
 				return;
 			}
 			if ( gateState.locked ) {
@@ -242,7 +243,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				// identical once this message is all the author sees.
 				// eslint-disable-next-line no-console
 				console.error( '[TruePlayer] provider failed to load', source.type, e );
-				setError( 'Unable to load the player.' );
+				setError( __( 'Unable to load the player.' ) );
 				return;
 			}
 			if ( disposed ) {
@@ -410,7 +411,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			// case is the one an author most needs named, since the video plays
 			// perfectly on youtube.com and nothing about the URL is wrong.
 			provider.on( 'error', ( detail ) => setError(
-				( detail && detail.message ) || 'Playback error.'
+				( detail && detail.message ) || __( 'Playback error.' )
 			) );
 		} )();
 
@@ -493,7 +494,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			}
 			if ( t >= cp.at ) {
 				providerRef.current.pause();
-				setActiveQuiz( { gateId: `checkpoint:${ cp.id }`, quiz: cp, title: cp.title || 'Checkpoint question' } );
+				setActiveQuiz( { gateId: `checkpoint:${ cp.id }`, quiz: cp, title: cp.title || __( 'Checkpoint question' ) } );
 				break;
 			}
 		}
@@ -664,7 +665,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		gaEvent( 'video_complete', { video_id: videoId, video_title: title } );
 		let gated = false;
 		if ( gatingOn && hasQuizContent( gating.finalQuiz ) ) {
-			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || 'Final quiz' } );
+			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || __( 'Final quiz' ) } );
 			gated = true;
 		} else if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
 			setActiveOptin( true );
@@ -1026,7 +1027,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			{ sticky && ! pipWin && (
 				<button
 					className="tp-sticky-close"
-					aria-label="Close"
+					aria-label={ __( 'Close' ) }
 					onClick={ () => {
 						stickyDismissedRef.current = true;
 						setSticky( false );
@@ -1236,8 +1237,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			<span ref={ stickySentinelRef } className="tp-stage-sentinel" aria-hidden="true" />
 			{ pipWin ? (
 				<div className="tp-pip-placeholder">
-					<p>Playing in a floating window</p>
-					<button type="button" className="tp-pip-return" onClick={ closePiP }>Bring back</button>
+					<p>{ __( 'Playing in a floating window' ) }</p>
+					<button type="button" className="tp-pip-return" onClick={ closePiP }>{ __( 'Bring back' ) }</button>
 				</div>
 			) : stage }
 		</div>

@@ -3,6 +3,7 @@ import { Card, Field, Input, Button, Select, Textarea } from '../../components/U
 import { pickMedia } from '../../utils/media';
 import { parseChapters, secToClock, clockToSec } from '../../utils/chapters';
 import { BsTrash } from 'react-icons/bs';
+import { __, __sprintf, _nSprintf } from '@Utils/translation';
 
 /** mm:ss input with ± steppers, clamped to [0, max]. Commits seconds on blur/Enter. */
 function TimeInput( { seconds, onCommit, max = 0 } ) {
@@ -21,7 +22,7 @@ function TimeInput( { seconds, onCommit, max = 0 } ) {
 	const step = 'w-7 h-10 flex items-center justify-center text-muted hover:text-brand-500 hover:bg-gray-100 border border-line disabled:opacity-40 disabled:pointer-events-none';
 	return (
 		<div className="flex items-stretch shrink-0">
-			<button type="button" className={ `${ step } rounded-l border-r-0` } onClick={ () => nudge( -1 ) } aria-label="−1 second">−</button>
+			<button type="button" className={ `${ step } rounded-l border-r-0` } onClick={ () => nudge( -1 ) } aria-label={ __( '−1 second' ) }>−</button>
 			<Input
 				className="w-16 text-center tabular-nums rounded-none"
 				value={ v }
@@ -30,7 +31,7 @@ function TimeInput( { seconds, onCommit, max = 0 } ) {
 				onKeyDown={ ( e ) => e.key === 'Enter' && commit() }
 				placeholder="0:00"
 			/>
-			<button type="button" className={ `${ step } rounded-r border-l-0` } disabled={ max > 0 && ( clockToSec( v ) ?? 0 ) >= Math.floor( max ) } onClick={ () => nudge( 1 ) } aria-label="+1 second">+</button>
+			<button type="button" className={ `${ step } rounded-r border-l-0` } disabled={ max > 0 && ( clockToSec( v ) ?? 0 ) >= Math.floor( max ) } onClick={ () => nudge( 1 ) } aria-label={ __( '+1 second' ) }>+</button>
 		</div>
 	);
 }
@@ -51,7 +52,7 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 
 	const setCaptions = ( url ) => {
 		const next = url
-			? [ { label: subtitles[ 0 ]?.label || 'English', srclang: subtitles[ 0 ]?.srclang || 'en', src: url, default: true } ]
+			? [ { label: subtitles[ 0 ]?.label || __( 'English' ), srclang: subtitles[ 0 ]?.srclang || 'en', src: url, default: true } ]
 			: [];
 		patch( { source: { ...source, subtitles: next } } );
 	};
@@ -59,7 +60,7 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 	// Multi-track subtitle editing.
 	const setTracks = ( next ) => patch( { source: { ...source, subtitles: next } } );
 	const setTrack = ( i, partial ) => setTracks( subtitles.map( ( t, idx ) => ( idx === i ? { ...t, ...partial } : t ) ) );
-	const addTrack = () => setTracks( [ ...subtitles, { label: 'English', srclang: 'en', src: '', default: subtitles.length === 0 } ] );
+	const addTrack = () => setTracks( [ ...subtitles, { label: __( 'English' ), srclang: 'en', src: '', default: subtitles.length === 0 } ] );
 	const removeTrack = ( i ) => setTracks( subtitles.filter( ( _, idx ) => idx !== i ) );
 	const makeDefault = ( i ) => setTracks( subtitles.map( ( t, idx ) => ( { ...t, default: idx === i } ) ) );
 
@@ -76,13 +77,13 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 			} );
 			const data = await res.json();
 			if ( data && data.url ) {
-				setTracks( [ ...subtitles, { label: data.label || 'English (YouTube)', srclang: data.srclang || 'en', src: data.url, default: subtitles.length === 0 } ] );
-				setNote( 'Imported captions from YouTube.' );
+				setTracks( [ ...subtitles, { label: data.label || __( 'English (YouTube)' ), srclang: data.srclang || 'en', src: data.url, default: subtitles.length === 0 } ] );
+				setNote( __( 'Imported captions from YouTube.' ) );
 			} else {
-				setNote( data && data.message ? data.message : 'No captions available for this video.' );
+				setNote( data && data.message ? data.message : __( 'No captions available for this video.' ) );
 			}
 		} catch ( e ) {
-			setNote( 'Import failed.' );
+			setNote( __( 'Import failed.' ) );
 		}
 		setYtImporting( false );
 	};
@@ -94,12 +95,12 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 
 	const applyImport = ( parsed, mode ) => {
 		if ( ! parsed.length ) {
-			setNote( 'No timestamps found. Use lines like "1:30 Chapter title" or paste a WebVTT file.' );
+			setNote( __( 'No timestamps found. Use lines like "1:30 Chapter title" or paste a WebVTT file.' ) );
 			return;
 		}
 		const merged = mode === 'replace' ? parsed : sortChapters( [ ...chapters, ...parsed ] );
 		patch( { chapters: sortChapters( merged ) } );
-		setNote( `Imported ${ parsed.length } chapter${ parsed.length === 1 ? '' : 's' }.` );
+		setNote( _nSprintf( 'Imported %d chapter.', 'Imported %d chapters.', parsed.length ) );
 		setImportText( '' );
 		setImportOpen( false );
 	};
@@ -117,7 +118,7 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 			const text = await res.text();
 			applyImport( parseChapters( text ), 'replace' );
 		} catch ( e ) {
-			setNote( "Couldn't read the caption file (it may block cross-origin requests). Paste its contents instead." );
+			setNote( __( "Couldn't read the caption file (it may block cross-origin requests). Paste its contents instead." ) );
 		} finally {
 			setLoadingCaps( false );
 		}
@@ -126,15 +127,15 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 	return (
 		<div className="space-y-6 max-w-2xl">
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900">Logo / watermark</h3>
+				<h3 className="font-semibold text-gray-900">{ __( 'Logo / watermark' ) }</h3>
 				<div className='mt-4 pt-5 border-t border-solid border-line'>
 					{ branding.logo ? (
 						<div className="flex items-center gap-3 mb-4">
 							<div className="p-2 bg-gray-900 rounded-card shrink-0">
 								<img src={ branding.logo } alt="" className="max-h-10 max-w-[120px] block" style={ { opacity: branding.logoOpacity ?? 0.9 } } />
 							</div>
-							<Button variant="ghost" size="sm" onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }>Replace</Button>
-							<Button variant="ghost" size="sm" onClick={ () => setBranding( { logo: '' } ) }>Remove</Button>
+							<Button variant="ghost" size="sm" onClick={ () => pickMedia( 'image', ( url ) => setBranding( { logo: url } ) ) }>{ __( 'Replace' ) }</Button>
+							<Button variant="ghost" size="sm" onClick={ () => setBranding( { logo: '' } ) }>{ __( 'Remove' ) }</Button>
 						</div>
 					) : (
 						<button
@@ -143,25 +144,25 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 							className="w-full border border-dashed border-line rounded-card py-8 text-center text-sm text-muted hover:border-brand-400 hover:text-brand-500 transition-colors"
 						>
 							<span className="block text-2xl leading-none mb-1">+</span>
-							Upload a logo
+							{ __( 'Upload a logo' ) }
 						</button>
 					) }
 					{ branding.logo && (
 						<>
 							<div className="grid grid-cols-2 gap-x-4">
-								<Field label="Position">
+								<Field label={ __( 'Position' ) }>
 									<Select value={ branding.logoPosition || 'top-right' } onChange={ ( e ) => setBranding( { logoPosition: e.target.value } ) }>
-										<option value="top-right">Top right</option>
-										<option value="top-left">Top left</option>
-										<option value="bottom-right">Bottom right</option>
-										<option value="bottom-left">Bottom left</option>
+										<option value="top-right">{ __( 'Top right' ) }</option>
+										<option value="top-left">{ __( 'Top left' ) }</option>
+										<option value="bottom-right">{ __( 'Bottom right' ) }</option>
+										<option value="bottom-left">{ __( 'Bottom left' ) }</option>
 									</Select>
 								</Field>
-								<Field label={ `Opacity (${ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) }%)` }>
+								<Field label={ __sprintf( 'Opacity (%d%%)', Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) ) }>
 									<input type="range" min="10" max="100" step="5" value={ Math.round( ( branding.logoOpacity ?? 0.9 ) * 100 ) } onChange={ ( e ) => setBranding( { logoOpacity: parseInt( e.target.value, 10 ) / 100 } ) } className="w-full accent-brand-500 cursor-pointer" />
 								</Field>
 							</div>
-							<Field label="Click-through link" hint="Optional — makes the logo clickable.">
+							<Field label={ __( 'Click-through link' ) } hint={ __( 'Optional — makes the logo clickable.' ) }>
 								<Input value={ branding.logoUrl || '' } onChange={ ( e ) => setBranding( { logoUrl: e.target.value } ) } placeholder="https://your-site.com" />
 							</Field>
 						</>
@@ -171,62 +172,62 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 
 			<Card className="p-6">
 				<div className="flex items-center justify-between pb-4 mb-5 border-b border-solid border-line">
-					<h3 className="font-semibold text-gray-900">Captions &amp; subtitles</h3>
+					<h3 className="font-semibold text-gray-900">{ __( 'Captions & subtitles' ) }</h3>
 					{ source.type === 'youtube' && (
 						<Button variant="ghost" size="sm" onClick={ importYoutube } disabled={ ytImporting }>
-							{ ytImporting ? 'Importing…' : 'Import from YouTube' }
+							{ ytImporting ? __( 'Importing…' ) : __( 'Import from YouTube' ) }
 						</Button>
 					) }
 				</div>
 
 				{ subtitles.length === 0 ? (
 					<div className="flex items-center justify-between gap-3">
-						<p className="text-sm text-muted">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
-						<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
+						<p className="text-sm text-muted">{ __( 'WebVTT tracks for self-hosted, HLS & Bunny video.' ) }</p>
+						<Button variant="secondary" size="sm" onClick={ addTrack }>{ __( '+ Add subtitle track' ) }</Button>
 					</div>
 				) : (
-					<p className="text-sm text-muted mb-4">WebVTT tracks for self-hosted, HLS &amp; Bunny video.</p>
+					<p className="text-sm text-muted mb-4">{ __( 'WebVTT tracks for self-hosted, HLS & Bunny video.' ) }</p>
 				) }
 
 				{ subtitles.map( ( t, i ) => (
 					<div key={ i } className="border border-line rounded-card p-4 my-6">
 						<div className="flex gap-2 mb-3">
 							{ ! t.src ? (
-								<Button variant="secondary" size="sm" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Upload .vtt file</Button>
+								<Button variant="secondary" size="sm" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>{ __( 'Upload .vtt file' ) }</Button>
 							) : (
 								<div className="flex items-center gap-2 text-sm text-muted min-w-0">
 									<span className="truncate max-w-[220px]">{ t.src.split( '/' ).pop() }</span>
-									<button className="text-brand-500 shrink-0" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>Change</button>
+									<button className="text-brand-500 shrink-0" onClick={ () => pickMedia( '', ( url ) => setTrack( i, { src: url } ) ) }>{ __( 'Change' ) }</button>
 								</div>
 							) }
 							<div className="flex-1" />
-							<Button variant="ghost" size="sm" onClick={ () => removeTrack( i ) }>Remove</Button>
+							<Button variant="ghost" size="sm" onClick={ () => removeTrack( i ) }>{ __( 'Remove' ) }</Button>
 						</div>
 						<div className="grid grid-cols-3 gap-x-3 items-end">
-							<Field label="Label" className="mb-0"><Input value={ t.label || '' } onChange={ ( e ) => setTrack( i, { label: e.target.value } ) } placeholder="English" /></Field>
-							<Field label="Lang" className="mb-0"><Input value={ t.srclang || '' } onChange={ ( e ) => setTrack( i, { srclang: e.target.value } ) } placeholder="en" /></Field>
+							<Field label={ __( 'Label' ) } className="mb-0"><Input value={ t.label || '' } onChange={ ( e ) => setTrack( i, { label: e.target.value } ) } placeholder={ __( 'English' ) } /></Field>
+							<Field label={ __( 'Lang' ) } className="mb-0"><Input value={ t.srclang || '' } onChange={ ( e ) => setTrack( i, { srclang: e.target.value } ) } placeholder="en" /></Field>
 							<label className="flex items-center gap-2 h-10 text-[13px] text-ink">
-								<input type="radio" name="tp-default-track" checked={ !! t.default } onChange={ () => makeDefault( i ) } /> Default
+								<input type="radio" name="tp-default-track" checked={ !! t.default } onChange={ () => makeDefault( i ) } /> { __( 'Default' ) }
 							</label>
 						</div>
 					</div>
 				) ) }
 
 				{ subtitles.length > 0 && (
-					<Button variant="secondary" size="sm" onClick={ addTrack }>+ Add subtitle track</Button>
+					<Button variant="secondary" size="sm" onClick={ addTrack }>{ __( '+ Add subtitle track' ) }</Button>
 				) }
 				{ note && <p className="text-xs text-brand-600 mt-2">{ note }</p> }
 			</Card>
 
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 !mb-1">Description below player</h3>
-				<p className="text-sm text-gray-500 mb-3">Shown directly under the player wherever it's embedded. Basic HTML allowed.</p>
+				<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Description below player' ) }</h3>
+				<p className="text-sm text-gray-500 mb-3">{ __( "Shown directly under the player wherever it's embedded. Basic HTML allowed." ) }</p>
 				<div className='mt-4 pt-5 border-t border-solid border-line'>
 					<Textarea
 						rows={ 4 }
 						value={ config.description || '' }
 						onChange={ ( e ) => patch( { description: e.target.value } ) }
-						placeholder="What this video covers, links, resources…"
+						placeholder={ __( 'What this video covers, links, resources…' ) }
 					/>
 				</div>
 			</Card>
@@ -234,31 +235,35 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 			<Card className="p-6">
 				<div className="flex items-center justify-between mb-1">
 					<div>
-						<h3 className="font-semibold text-gray-900 !mb-1">Chapters</h3>
-						<p className="text-sm text-gray-400">Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss{ duration > 0 ? ` · max ${ secToClock( duration ) }` : '' }.</p>
+						<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Chapters' ) }</h3>
+						<p className="text-sm text-gray-400">
+							{ duration > 0
+								? __sprintf( 'Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss · max %s.', secToClock( duration ) )
+								: __( 'Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss.' ) }
+						</p>
 					</div>
 					<div className="flex gap-2">
-						<Button variant="ghost" onClick={ () => { setImportOpen( ( o ) => ! o ); setNote( '' ); } }>Import</Button>
-						<Button variant="ghost" onClick={ addChapter }>+ Add</Button>
+						<Button variant="ghost" onClick={ () => { setImportOpen( ( o ) => ! o ); setNote( '' ); } }>{ __( 'Import' ) }</Button>
+						<Button variant="ghost" onClick={ addChapter }>{ __( '+ Add' ) }</Button>
 					</div>
 				</div>
 
 				{ importOpen && (
 					<div className="mt-6 p-4 bg-gray-50 rounded-md border border-line">
-						<p className="text-[13px] font-medium text-ink mb-2">Paste timestamps or a WebVTT file</p>
+						<p className="text-[13px] font-medium text-ink mb-2">{ __( 'Paste timestamps or a WebVTT file' ) }</p>
 						<Textarea
 							rows={ 5 }
 							value={ importText }
 							onChange={ ( e ) => setImportText( e.target.value ) }
-							placeholder={ '0:00 Intro\n1:30 Getting started\n4:05 Wrap up' }
+							placeholder={ __( '0:00 Intro\n1:30 Getting started\n4:05 Wrap up' ) }
 							className="font-mono text-xs"
 						/>
 						<div className="flex flex-wrap items-center gap-2 mt-3">
-							<Button onClick={ () => importPasted( 'replace' ) }>Replace chapters</Button>
-							<Button variant="ghost" onClick={ () => importPasted( 'append' ) }>Add to existing</Button>
+							<Button onClick={ () => importPasted( 'replace' ) }>{ __( 'Replace chapters' ) }</Button>
+							<Button variant="ghost" onClick={ () => importPasted( 'append' ) }>{ __( 'Add to existing' ) }</Button>
 							{ captionUrl && (
 								<Button variant="subtle" onClick={ fromCaptions } disabled={ loadingCaps }>
-									{ loadingCaps ? 'Reading…' : 'Generate from caption file' }
+									{ loadingCaps ? __( 'Reading…' ) : __( 'Generate from caption file' ) }
 								</Button>
 							) }
 						</div>
@@ -267,13 +272,13 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 
 				{ note && <p className="text-xs text-brand-600 mb-3">{ note }</p> }
 
-				{ chapters.length === 0 && ! importOpen && <p className="text-sm text-gray-400">No chapters yet — add one or import a list.</p> }
+				{ chapters.length === 0 && ! importOpen && <p className="text-sm text-gray-400">{ __( 'No chapters yet — add one or import a list.' ) }</p> }
 
 				<div className="space-y-2 mt-6">
 					{ chapters.map( ( c, i ) => (
 						<div key={ i } className="flex gap-2 items-center">
 							<TimeInput seconds={ c.at } onCommit={ ( s ) => setChapter( i, { at: s } ) } max={ duration } />
-							<Input value={ c.label } onChange={ ( e ) => setChapter( i, { label: e.target.value } ) } placeholder="Chapter title" />
+							<Input value={ c.label } onChange={ ( e ) => setChapter( i, { label: e.target.value } ) } placeholder={ __( 'Chapter title' ) } />
 							<Button variant="danger" onClick={ () => removeChapter( i ) }><BsTrash /></Button>
 						</div>
 					) ) }

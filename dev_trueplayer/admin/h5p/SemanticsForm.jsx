@@ -1,8 +1,9 @@
-import { useEffect, useState } from '@wordpress/element';
+import { createInterpolateElement, useEffect, useState } from '@wordpress/element';
 import { Field, Input, Textarea, Select, Toggle, Button, Badge } from '../components/UI';
 import MediaPicker from '../components/MediaPicker';
 import { api } from '../api';
 import { BsTrash, BsPlus, BsChevronDown, BsChevronRight } from 'react-icons/bs';
+import { __, __sprintf } from '@Utils/translation';
 
 /**
  * Renders an H5P content type's `semantics.json` as a native TruePlayer form.
@@ -153,7 +154,7 @@ function SemanticField( { field, value, onChange, depth = 0 } ) {
 				<Field { ...common }>
 					<MediaPicker
 						accept="image"
-						label="Upload"
+						label={ __( 'Upload' ) }
 						value={ value?.path || '' }
 						onChange={ ( media ) =>
 							onChange( media ? { path: media.url || media, mime: media.mime || 'image/jpeg', copyright: { license: 'U' } } : undefined )
@@ -168,7 +169,7 @@ function SemanticField( { field, value, onChange, depth = 0 } ) {
 				<Field { ...common }>
 					<MediaPicker
 						accept={ field.type }
-						label="Upload"
+						label={ __( 'Upload' ) }
 						value={ Array.isArray( value ) ? value[ 0 ]?.path : '' }
 						onChange={ ( media ) =>
 							onChange( media ? [ { path: media.url || media, mime: media.mime || `${ field.type }/mp4` } ] : undefined )
@@ -188,7 +189,7 @@ function SemanticField( { field, value, onChange, depth = 0 } ) {
 
 		default:
 			return (
-				<Field label={ label } hint={ `Unsupported field type: ${ field.type }` }>
+				<Field label={ label } hint={ __sprintf( 'Unsupported field type: %s', field.type ) }>
 					<Input disabled value={ typeof value === 'object' ? JSON.stringify( value ) : ( value ?? '' ) } />
 				</Field>
 			);
@@ -280,7 +281,7 @@ function ListField( { field, value, onChange, depth = 0 } ) {
 	// list — the score-range feedback case. So: optional lists floor at 0.
 	const min = field.optional ? 0 : ( field.min || 0 );
 	const max = field.max || Infinity;
-	const entity = item.label || field.entity || 'Item';
+	const entity = item.label || field.entity || __( 'Item' );
 
 	// -1 = every row closed. A fresh list opens its first item, since a lone
 	// collapsed row with nothing in it is just a dead end.
@@ -302,7 +303,7 @@ function ListField( { field, value, onChange, depth = 0 } ) {
 			{ items.map( ( it, i ) => {
 				const open = openIdx === i;
 				const summary = itemSummary( item, it );
-				const ordinal = `${ entity } ${ i + 1 }`;
+				const ordinal = __sprintf( '%1$s %2$d', entity, i + 1 );
 				return (
 					<div key={ i } className={ `rounded border mb-2 overflow-hidden transition-colors ${ open ? 'border-brand-500 bg-white' : 'border-line bg-white' }` }>
 						{ /* The whole header toggles the row — the title button is
@@ -327,8 +328,8 @@ function ListField( { field, value, onChange, depth = 0 } ) {
 									type="button"
 									className="relative z-10 w-7 h-7 shrink-0 inline-flex items-center justify-center rounded text-gray-400 hover:text-danger hover:bg-danger-light transition-colors"
 									onClick={ () => remove( i ) }
-									title={ `Remove ${ ordinal }` }
-									aria-label={ `Remove ${ ordinal }` }
+									title={ __sprintf( 'Remove %s', ordinal ) }
+									aria-label={ __sprintf( 'Remove %s', ordinal ) }
 								>
 									<BsTrash size={ 14 } />
 								</button>
@@ -347,7 +348,7 @@ function ListField( { field, value, onChange, depth = 0 } ) {
 			} ) }
 			{ items.length < max && (
 				<Button variant="ghost" size="sm" onClick={ add } className="!gap-1">
-					<BsPlus size={ 18 } /> Add { field.entity || 'item' }
+					<BsPlus size={ 18 } /> { __sprintf( 'Add %s', field.entity || __( 'item' ) ) }
 				</Button>
 			) }
 		</>
@@ -431,8 +432,13 @@ function LibraryField( { field, value, onChange, depth = 0 } ) {
 			     it beats an empty space where the fields should be. */ }
 			{ failed && (
 				<p className="text-[13px] text-muted border border-line rounded-card px-3 py-2.5">
-					<strong className="font-medium text-ink">{ failed.replace( 'H5P.', '' ) }</strong> isn’t installed
-					on this site yet, so it has no settings to show. Install it from the content-type list, then choose it here again.
+					{ createInterpolateElement(
+						__sprintf(
+							'<b>%s</b> isn’t installed on this site yet, so it has no settings to show. Install it from the content-type list, then choose it here again.',
+							failed.replace( 'H5P.', '' )
+						),
+						{ b: <strong className="font-medium text-ink" /> }
+					) }
 				</p>
 			) }
 			{ current && semantics && (

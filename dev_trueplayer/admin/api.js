@@ -1,4 +1,5 @@
 import { rest } from '@Utils/rest';
+import { __ } from '@Utils/translation';
 
 export const api = {
 	listVideos: () => rest.get( 'videos' ),
@@ -109,7 +110,7 @@ export const api = {
 		} );
 		const json = await res.json().catch( () => null );
 		if ( ! json || ! json.success ) {
-			throw new Error( ( json && json.data && json.data.message ) || 'Could not change the addon status.' );
+			throw new Error( ( json && json.data && json.data.message ) || __( 'Could not change the addon status.' ) );
 		}
 		return json.data;
 	},

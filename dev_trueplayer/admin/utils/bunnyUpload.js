@@ -1,4 +1,5 @@
 import { rest } from '@Utils/rest';
+import { __ } from '@Utils/translation';
 
 /**
  * Send a file to the site's Bunny.net Storage zone, through the server.
@@ -52,7 +53,7 @@ export async function uploadToBunny( file, { onProgress = () => {}, token = { ca
 		while ( offset < file.size ) {
 			if ( token.cancelled ) {
 				await giveUp();
-				throw new Error( 'Upload cancelled.' );
+				throw new Error( __( 'Upload cancelled.' ) );
 			}
 
 			const slice = file.slice( offset, Math.min( offset + chunkSize, file.size ) );

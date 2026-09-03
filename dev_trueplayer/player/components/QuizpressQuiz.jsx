@@ -1,5 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { applyFilters } from '@wordpress/hooks';
+import { __, __sprintf } from '@Utils/translation';
 
 const tpGlobal = () => window.TruePlayerGlobal || {};
 const qpGlobal = () => window.QuizPressGlobal || {};
@@ -17,7 +18,7 @@ function qpRest( path, { method = 'GET', body } = {} ) {
 	} ).then( ( res ) =>
 		res.json().then( ( json ) => {
 			if ( ! res.ok ) {
-				throw new Error( ( json && json.message ) || `Request failed (${ res.status })` );
+				throw new Error( ( json && json.message ) || __sprintf( 'Request failed (%d)', res.status ) );
 			}
 			return json;
 		} )
@@ -38,7 +39,7 @@ function qpAjax( action, payload ) {
 		.then( ( res ) => res.json() )
 		.then( ( json ) => {
 			if ( ! json || ! json.success ) {
-				throw new Error( ( json && json.data && json.data.message ) || 'Request failed' );
+				throw new Error( ( json && json.data && json.data.message ) || __( 'Request failed' ) );
 			}
 			return json.data;
 		} );
@@ -54,7 +55,7 @@ const canStartAttempt = ( feedbackMode, maxAttempts, totalAttempts ) => {
 };
 
 const AnswerWidgetFallback = () => (
-	<p className="tp-quiz-feedback tp-fail">This question type isn't available right now.</p>
+	<p className="tp-quiz-feedback tp-fail">{ __( "This question type isn't available right now." ) }</p>
 );
 
 /**
@@ -188,7 +189,7 @@ export default function QuizpressQuiz( { quizId, onAttemptFinished } ) {
 
 	const goNext = () => {
 		if ( isAnswerRequired && ! isAnswered ) {
-			setError( 'This question requires an answer.' );
+			setError( __( 'This question requires an answer.' ) );
 			return;
 		}
 		setError( '' );
@@ -206,13 +207,13 @@ export default function QuizpressQuiz( { quizId, onAttemptFinished } ) {
 	const goPrev = () => setStepIndex( ( i ) => Math.max( 0, i - 1 ) );
 
 	if ( 'login_required' === phase ) {
-		return <p className="tp-quiz-feedback tp-fail">Log in to take this quiz.</p>;
+		return <p className="tp-quiz-feedback tp-fail">{ __( 'Log in to take this quiz.' ) }</p>;
 	}
 	if ( 'loading' === phase ) {
-		return <p className="tp-quiz-feedback">Loading…</p>;
+		return <p className="tp-quiz-feedback">{ __( 'Loading…' ) }</p>;
 	}
 	if ( 'unavailable' === phase ) {
-		return <p className="tp-quiz-feedback tp-fail">This quiz isn't available right now.</p>;
+		return <p className="tp-quiz-feedback tp-fail">{ __( "This quiz isn't available right now." ) }</p>;
 	}
 
 	if ( 'start' === phase ) {
@@ -222,18 +223,19 @@ export default function QuizpressQuiz( { quizId, onAttemptFinished } ) {
 		const startable = canStartAttempt( feedbackMode, maxAttempts, attempts.length );
 		return (
 			<div className="tp-quiz-qp-start">
-				<p>Passing grade: { passingGrade }%</p>
+				<p>{ __sprintf( 'Passing grade: %d%%', passingGrade ) }</p>
 				<p>
-					Attempts used: { attempts.length }
-					{ maxAttempts ? `/${ maxAttempts }` : '' }
+					{ maxAttempts
+						? __sprintf( 'Attempts used: %1$d/%2$d', attempts.length, maxAttempts )
+						: __sprintf( 'Attempts used: %d', attempts.length ) }
 				</p>
 				{ error && <p className="tp-quiz-feedback tp-fail">{ error }</p> }
 				{ startable ? (
 					<button className="tp-quiz-submit" disabled={ busy } onClick={ startAttempt }>
-						{ busy ? 'Starting…' : attempts.length > 0 ? 'Retake quiz' : 'Start quiz' }
+						{ busy ? __( 'Starting…' ) : attempts.length > 0 ? __( 'Retake quiz' ) : __( 'Start quiz' ) }
 					</button>
 				) : (
-					<p className="tp-quiz-feedback tp-fail">No attempts remaining.</p>
+					<p className="tp-quiz-feedback tp-fail">{ __( 'No attempts remaining.' ) }</p>
 				) }
 			</div>
 		);
@@ -243,7 +245,7 @@ export default function QuizpressQuiz( { quizId, onAttemptFinished } ) {
 		return (
 			<div className="tp-quiz-qp-step">
 				<p className="tp-quiz-qp-progress">
-					Question { stepIndex + 1 } of { questions.length }
+					{ __sprintf( 'Question %1$d of %2$d', stepIndex + 1, questions.length ) }
 				</p>
 				<p className="tp-quiz-prompt">{ question.question_title }</p>
 				<div className="tp-quiz-qp-widget">
@@ -256,10 +258,10 @@ export default function QuizpressQuiz( { quizId, onAttemptFinished } ) {
 				{ error && <p className="tp-quiz-feedback tp-fail">{ error }</p> }
 				<div className="tp-quiz-qp-nav">
 					<button type="button" className="tp-quiz-qp-prev" disabled={ 0 === stepIndex || busy } onClick={ goPrev }>
-						Previous
+						{ __( 'Previous' ) }
 					</button>
 					<button type="button" className="tp-quiz-submit" disabled={ busy || 'finishing' === phase } onClick={ goNext }>
-						{ isLastStep ? 'Finish' : 'Next' }
+						{ isLastStep ? __( 'Finish' ) : __( 'Next' ) }
 					</button>
 				</div>
 			</div>

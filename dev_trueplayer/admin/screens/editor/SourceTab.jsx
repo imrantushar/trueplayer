@@ -6,16 +6,17 @@ import PosterField from '../../components/PosterField';
 import { isPro } from '../../pro';
 import { api } from '../../api';
 import { canAutoCaptureFrame, canCaptureFrame, captureVideoFrame } from '../../utils/frameCapture';
+import { __ } from '@Utils/translation';
 
 const TYPES = [
-	{ value: 'self', label: 'Self-hosted (media library)' },
-	{ value: 'youtube', label: 'YouTube' },
-	{ value: 'vimeo', label: 'Vimeo' },
-	{ value: 'url', label: 'External URL (mp4/webm)' },
-	{ value: 'bunny', label: 'Bunny.net Stream', pro: true },
-	{ value: 'bunnyStorage', label: 'Bunny.net Storage (file)', pro: true },
-	{ value: 'mux', label: 'Mux', pro: true },
-	{ value: 'hls', label: 'HLS stream (.m3u8)', pro: true },
+	{ value: 'self', label: __( 'Self-hosted (media library)' ) },
+	{ value: 'youtube', label: __( 'YouTube' ) },
+	{ value: 'vimeo', label: __( 'Vimeo' ) },
+	{ value: 'url', label: __( 'External URL (mp4/webm)' ) },
+	{ value: 'bunny', label: __( 'Bunny.net Stream' ), pro: true },
+	{ value: 'bunnyStorage', label: __( 'Bunny.net Storage (file)' ), pro: true },
+	{ value: 'mux', label: __( 'Mux' ), pro: true },
+	{ value: 'hls', label: __( 'HLS stream (.m3u8)' ), pro: true },
 ];
 
 /**
@@ -70,7 +71,7 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 			patch( ( current ) => ( { source: { ...( current.source || {} ), poster: url, posterAuto: true } } ) );
 			setCapture( { busy: false, error: '' } );
 		} catch ( e ) {
-			setCapture( { busy: false, error: e.message || 'Could not create a thumbnail from this video.' } );
+			setCapture( { busy: false, error: e.message || __( 'Could not create a thumbnail from this video.' ) } );
 		}
 	}, [ patch, videoId ] );
 
@@ -158,7 +159,7 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 	return (
 		<div className="w-full max-w-2xl space-y-6">
 		<Card className="p-6">
-			<SectionTitle>Source Configuration</SectionTitle>
+			<SectionTitle>{ __( 'Source Configuration' ) }</SectionTitle>
 
 			{ /* The title leads, rather than being typed into the breadcrumb it
 			     used to live in: a crumb is a place indicator, so an editable one
@@ -166,20 +167,20 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 			     carry a hint, and an author who never hovers it never learns the
 			     name is theirs to set. */ }
 			{ onTitleChange && (
-				<Field label="Title" required hint="Names this media in your library, and labels it in the player.">
+				<Field label={ __( 'Title' ) } required hint={ __( 'Names this media in your library, and labels it in the player.' ) }>
 					<Input
 						value={ title }
 						onChange={ ( e ) => onTitleChange( e.target.value ) }
-						placeholder="Untitled"
+						placeholder={ __( 'Untitled' ) }
 					/>
 				</Field>
 			) }
 
-			<Field label="Source type" hint={ ! isPro() ? 'Bunny.net & HLS streaming require TruePlayer Pro.' : undefined }>
+			<Field label={ __( 'Source type' ) } hint={ ! isPro() ? __( 'Bunny.net & HLS streaming require TruePlayer Pro.' ) : undefined }>
 				<Select value={ source.type || 'self' } onChange={ ( e ) => changeType( e.target.value ) }>
 					{ TYPES.map( ( t ) => (
 						<option key={ t.value } value={ t.value } disabled={ t.pro && ! isPro() }>
-							{ t.label }{ t.pro && ! isPro() ? ' (Pro)' : '' }
+							{ t.label }{ t.pro && ! isPro() ? __( ' (Pro)' ) : '' }
 						</option>
 					) ) }
 				</Select>
@@ -187,11 +188,11 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 
 			{ source.type === 'self' && (
 				<FieldGroup
-					label={ audio ? 'Audio file' : 'Video file' }
+					label={ audio ? __( 'Audio file' ) : __( 'Video file' ) }
 					required
 					hint={ audio
-						? 'Pick an uploaded audio file from the media library.'
-						: 'Pick an uploaded video from the media library. A thumbnail is grabbed from it automatically.' }
+						? __( 'Pick an uploaded audio file from the media library.' )
+						: __( 'Pick an uploaded video from the media library. A thumbnail is grabbed from it automatically.' ) }
 				>
 					<MediaFileCard
 						source={ source }
@@ -204,37 +205,37 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 
 			{ source.type === 'bunny' && (
 				<>
-					<Field label="Pull-zone hostname" required hint="Your Bunny Stream CDN hostname, e.g. vz-abc123.b-cdn.net">
+					<Field label={ __( 'Pull-zone hostname' ) } required hint={ __( 'Your Bunny Stream CDN hostname, e.g. vz-abc123.b-cdn.net' ) }>
 						<Input value={ source.pullZone || '' } onChange={ ( e ) => set( { pullZone: e.target.value.replace( /^https?:\/\//, '' ).replace( /\/$/, '' ) } ) } placeholder="vz-abc123.b-cdn.net" />
 					</Field>
-					<Field label="Video ID" required hint="The Bunny library video GUID. We build the HLS URL and play it with your custom controls.">
-						<Input value={ source.videoId || '' } onChange={ ( e ) => set( { videoId: e.target.value.trim() } ) } placeholder="e.g. 8f3b…-video-guid" />
+					<Field label={ __( 'Video ID' ) } required hint={ __( 'The Bunny library video GUID. We build the HLS URL and play it with your custom controls.' ) }>
+						<Input value={ source.videoId || '' } onChange={ ( e ) => set( { videoId: e.target.value.trim() } ) } placeholder={ __( 'e.g. 8f3b…-video-guid' ) } />
 					</Field>
 				</>
 			) }
 
 			{ source.type === 'mux' && (
-				<Field label="Mux playback ID" required hint="From your Mux asset. Or paste a full signed .m3u8 URL below.">
-					<Input value={ source.playbackId || '' } onChange={ ( e ) => set( { playbackId: e.target.value.trim() } ) } placeholder="e.g. a4nOgmxGWg6gULfcBbAa00…" />
+				<Field label={ __( 'Mux playback ID' ) } required hint={ __( 'From your Mux asset. Or paste a full signed .m3u8 URL below.' ) }>
+					<Input value={ source.playbackId || '' } onChange={ ( e ) => set( { playbackId: e.target.value.trim() } ) } placeholder={ __( 'e.g. a4nOgmxGWg6gULfcBbAa00…' ) } />
 				</Field>
 			) }
 
 			{ source.type === 'bunnyStorage' && (
-				<Field label="Video file" required hint="Upload straight to your storage zone, reuse a file already in it, or paste a URL.">
+				<Field label={ __( 'Video file' ) } required hint={ __( 'Upload straight to your storage zone, reuse a file already in it, or paste a URL.' ) }>
 					<BunnyStorageField value={ source.src || '' } onChange={ ( src ) => set( { src } ) } />
 				</Field>
 			) }
 
 			{ [ 'hls', 'youtube', 'vimeo', 'url', 'mux' ].includes( source.type ) && ! ( source.type === 'mux' && ! source.src ) && (
 				<Field
-					label={ source.type === 'youtube' || source.type === 'vimeo' ? 'Video URL or ID' : ( source.type === 'mux' ? 'Signed playlist URL (optional)' : 'Media URL' ) }
+					label={ source.type === 'youtube' || source.type === 'vimeo' ? __( 'Video URL or ID' ) : ( source.type === 'mux' ? __( 'Signed playlist URL (optional)' ) : __( 'Media URL' ) ) }
 					required={ source.type !== 'mux' }
 				>
 					<Input value={ source.src || '' } onChange={ ( e ) => set( { src: e.target.value } ) } placeholder={ source.type === 'youtube' ? 'https://youtube.com/watch?v=…' : 'https://…' } />
 				</Field>
 			) }
 
-			<FieldGroup label={ audio ? 'Cover art' : 'Poster image' }>
+			<FieldGroup label={ audio ? __( 'Cover art' ) : __( 'Poster image' ) }>
 				<PosterField
 					source={ source }
 					audio={ audio }
@@ -249,8 +250,8 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 			{ canBeAudio && (
 				<div className="flex items-center justify-between gap-4 pt-5 border-t border-line">
 					<div className="min-w-0">
-						<p className="text-[13px] font-medium text-ink">Audio-only (podcast) player</p>
-						<p className="text-xs text-muted mt-0.5">Hide video screen and switch to audio player mode.</p>
+						<p className="text-[13px] font-medium text-ink">{ __( 'Audio-only (podcast) player' ) }</p>
+						<p className="text-xs text-muted mt-0.5">{ __( 'Hide video screen and switch to audio player mode.' ) }</p>
 					</div>
 					<Toggle
 						checked={ audio }

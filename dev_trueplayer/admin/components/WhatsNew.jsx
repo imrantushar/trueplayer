@@ -1,6 +1,7 @@
 import { useEffect, useState } from '@wordpress/element';
 import { IoClose, IoMegaphoneOutline } from 'react-icons/io5';
 import { Button } from './UI';
+import { __, __sprintf, _nSprintf } from '@Utils/translation';
 import changelogRaw from '../../../changelog.md';
 import pkg from '../../../package.json';
 
@@ -17,11 +18,11 @@ const TAG_STYLES = {
 	Removed: 'bg-gray-100 text-gray-500',
 };
 const TAG_LABELS = {
-	Added: 'Feature',
-	Improved: 'Improvement',
-	Fixed: 'Fix',
-	Security: 'Security',
-	Removed: 'Removed',
+	Added: __( 'Feature' ),
+	Improved: __( 'Improvement' ),
+	Fixed: __( 'Fix' ),
+	Security: __( 'Security' ),
+	Removed: __( 'Removed' ),
 };
 
 function relativeAge( dateString ) {
@@ -30,24 +31,17 @@ function relativeAge( dateString ) {
 	}
 	const days = Math.floor( ( Date.now() - new Date( dateString ).getTime() ) / 86400000 );
 	if ( days <= 0 ) {
-		return 'today';
-	}
-	if ( 1 === days ) {
-		return '1 day ago';
+		return __( 'today' );
 	}
 	if ( days < 7 ) {
-		return `${ days } days ago`;
-	}
-	if ( days < 14 ) {
-		return '1 week ago';
+		return _nSprintf( '%d day ago', '%d days ago', days );
 	}
 	if ( days < 30 ) {
-		return `${ Math.floor( days / 7 ) } weeks ago`;
+		const weeks = Math.floor( days / 7 );
+		return _nSprintf( '%d week ago', '%d weeks ago', weeks );
 	}
-	if ( days < 60 ) {
-		return '1 month ago';
-	}
-	return `${ Math.floor( days / 30 ) } months ago`;
+	const months = Math.floor( days / 30 );
+	return _nSprintf( '%d month ago', '%d months ago', months );
 }
 
 /**
@@ -115,8 +109,8 @@ export default function WhatsNew() {
 			<Button
 				variant="ghost"
 				onClick={ () => setOpen( true ) }
-				title="What's New"
-				aria-label="What's New"
+				title={ __( "What's New" ) }
+				aria-label={ __( "What's New" ) }
 				className="!p-2.5"
 			>
 				<IoMegaphoneOutline size={ 16 } />
@@ -127,8 +121,8 @@ export default function WhatsNew() {
 					<div className="fixed top-8 inset-x-0 bottom-0 bg-black/40 z-[100000]" onClick={ () => setOpen( false ) } />
 					<div role="dialog" aria-modal="true" className="fixed top-8 right-0 bottom-0 w-full max-w-sm z-[100001] flex flex-col bg-white shadow-pop overflow-y-auto">
 						<div className="flex items-center justify-between px-5 py-4 border-b border-line">
-							<span className="text-base font-semibold text-ink">What's New</span>
-							<button type="button" aria-label="Close" onClick={ () => setOpen( false ) } className="text-muted hover:text-ink p-1">
+							<span className="text-base font-semibold text-ink">{ __( "What's New" ) }</span>
+							<button type="button" aria-label={ __( 'Close' ) } onClick={ () => setOpen( false ) } className="text-muted hover:text-ink p-1">
 								<IoClose size={ 18 } />
 							</button>
 						</div>
@@ -140,7 +134,7 @@ export default function WhatsNew() {
 										<span className="w-1 h-1 rounded-full bg-line" />
 									</>
 								) }
-								<span className="text-[11px] font-semibold text-brand-500">v{ version }</span>
+								<span className="text-[11px] font-semibold text-brand-500">{ __sprintf( 'v%s', version ) }</span>
 							</div>
 							{ release.sections.map( ( section, si ) => (
 								<div key={ si } className={ si > 0 ? 'mt-4' : '' }>

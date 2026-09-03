@@ -1,4 +1,5 @@
 /** Lock / big-play / message overlays for the player. */
+import { __ } from '@Utils/translation';
 
 export function LockScreen( { requireRewatch, onRewatch } ) {
 	return (
@@ -10,15 +11,15 @@ export function LockScreen( { requireRewatch, onRewatch } ) {
 						<path d="M8 11V8a4 4 0 018 0v3" />
 					</svg>
 				</div>
-				<h3>Video locked</h3>
+				<h3>{ __( 'Video locked' ) }</h3>
 				<p>
 					{ requireRewatch
-						? 'You used all your attempts. Re-watch the full video to earn another try.'
-						: 'This video is locked.' }
+						? __( 'You used all your attempts. Re-watch the full video to earn another try.' )
+						: __( 'This video is locked.' ) }
 				</p>
 				{ requireRewatch && (
 					<button className="tp-quiz-submit" onClick={ onRewatch }>
-						Re-watch to unlock
+						{ __( 'Re-watch to unlock' ) }
 					</button>
 				) }
 			</div>
@@ -28,7 +29,7 @@ export function LockScreen( { requireRewatch, onRewatch } ) {
 
 export function BigPlay( { onPlay } ) {
 	return (
-		<button className="tp-bigplay" aria-label="Play" onClick={ onPlay }>
+		<button className="tp-bigplay" aria-label={ __( 'Play' ) } onClick={ onPlay }>
 			<svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
 				<path d="M8 5v14l11-7z" />
 			</svg>
@@ -45,5 +46,5 @@ export function Message( { children } ) {
 }
 
 export function Spinner() {
-	return <div className="tp-spinner" aria-label="Loading" />;
+	return <div className="tp-spinner" aria-label={ __( 'Loading' ) } />;
 }

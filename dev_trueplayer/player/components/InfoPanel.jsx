@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import { formatTime } from '@Utils/format';
+import { __, __sprintf } from '@Utils/translation';
 
 /**
  * YouTube-style "In this video" drawer: Chapters + Transcript tabs that slide
@@ -83,21 +84,21 @@ export default function InfoPanel( { chapters = [], getCues, current, seekable, 
 	const blocked = ( at ) => seekable !== undefined && at > seekable + 0.5;
 
 	return (
-		<div className="tp-info" role="dialog" aria-label="Chapters and transcript">
+		<div className="tp-info" role="dialog" aria-label={ __( 'Chapters and transcript' ) }>
 			<div className="tp-info-head">
 				<div className="tp-info-tabs">
 					{ hasChapters && (
 						<button className={ `tp-info-tab ${ tab === 'chapters' ? 'is-active' : '' }` } onClick={ () => setTab( 'chapters' ) }>
-							Chapters
+							{ __( 'Chapters' ) }
 						</button>
 					) }
 					{ hasTranscript && (
 						<button className={ `tp-info-tab ${ tab === 'transcript' ? 'is-active' : '' }` } onClick={ () => setTab( 'transcript' ) }>
-							Transcript
+							{ __( 'Transcript' ) }
 						</button>
 					) }
 				</div>
-				<button className="tp-info-close" aria-label="Close" onClick={ onClose }>×</button>
+				<button className="tp-info-close" aria-label={ __( 'Close' ) } onClick={ onClose }>×</button>
 			</div>
 
 			<div className="tp-info-body" ref={ listRef }>
@@ -109,7 +110,7 @@ export default function InfoPanel( { chapters = [], getCues, current, seekable, 
 						onClick={ () => jump( c.at ) }
 					>
 						<span className="tp-info-time">{ formatTime( c.at ) }</span>
-						<span className="tp-info-label">{ c.label || `Chapter ${ i + 1 }` }</span>
+						<span className="tp-info-label">{ c.label || __sprintf( 'Chapter %d', i + 1 ) }</span>
 					</button>
 				) ) }
 
@@ -124,7 +125,7 @@ export default function InfoPanel( { chapters = [], getCues, current, seekable, 
 						<span className="tp-info-label">{ c.text }</span>
 					</button>
 				) ) : (
-					<p className="tp-info-empty">No transcript available for this video.</p>
+					<p className="tp-info-empty">{ __( 'No transcript available for this video.' ) }</p>
 				) ) }
 			</div>
 		</div>

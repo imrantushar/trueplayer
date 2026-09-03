@@ -1,19 +1,20 @@
 import { useState } from '@wordpress/element';
 import { rest } from '@Utils/rest';
+import { __, __sprintf } from '@Utils/translation';
 import { gradeLocal } from '../grade-local';
 import QuizpressQuiz from './QuizpressQuiz';
 
 // GradingService::grade_quizpress returns these as raw internal codes — map
 // the ones a viewer can actually hit to plain language instead of surfacing
 // e.g. "login_required" verbatim.
-const QUIZPRESS_ERROR_MESSAGES = {
-	login_required: 'Log in to have this attempt count.',
-	quiz_not_completed: 'Finish the quiz above first.',
-	quizpress_unavailable: "This quiz isn't available right now.",
-	quiz_not_found: "This quiz isn't set up correctly — contact the site owner.",
-	pro_required: 'This feature requires TruePlayer Pro.',
-};
-const quizpressErrorMessage = ( code ) => QUIZPRESS_ERROR_MESSAGES[ code ] || code;
+const quizpressErrorMessages = () => ( {
+	login_required: __( 'Log in to have this attempt count.' ),
+	quiz_not_completed: __( 'Finish the quiz above first.' ),
+	quizpress_unavailable: __( "This quiz isn't available right now." ),
+	quiz_not_found: __( "This quiz isn't set up correctly — contact the site owner." ),
+	pro_required: __( 'This feature requires TruePlayer Pro.' ),
+} );
+const quizpressErrorMessage = ( code ) => quizpressErrorMessages()[ code ] || code;
 
 /**
  * In-player quiz layer used for both checkpoints and the final gate. Renders
@@ -88,32 +89,32 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 				<div className="tp-quiz-card">
 					<h3 className="tp-quiz-title">{ title }</h3>
 					<QuizpressQuiz key={ resetKey } quizId={ quiz.quizpressId } onAttemptFinished={ submit } />
-					{ busy && <p className="tp-quiz-feedback">Checking your result…</p> }
+					{ busy && <p className="tp-quiz-feedback">{ __( 'Checking your result…' ) }</p> }
 					{ result && result.passed && (
 						<p className="tp-quiz-feedback tp-pass tp-quiz-verdict">
 							<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-							You passed! ({ result.score }%)
+							{ __sprintf( 'You passed! (%d%%)', result.score ) }
 						</p>
 					) }
 					{ result && result.pending && (
 						<p className="tp-quiz-feedback tp-quiz-verdict">
-							Your answers are awaiting manual review. You'll be able to continue once they're graded.
+							{ __( "Your answers are awaiting manual review. You'll be able to continue once they're graded." ) }
 						</p>
 					) }
 					{ result && ! result.passed && ! result.pending && ! result.error && (
 						<>
 							<p className="tp-quiz-feedback tp-fail tp-quiz-verdict">
 								{ result.locked
-									? `You didn't pass (${ result.score }%) — locked. Re-watch the video to try again.`
+									? __sprintf( "You didn't pass (%d%%) — locked. Re-watch the video to try again.", result.score )
 									: result.preview
-										? `You didn't pass this attempt (${ result.score }%).`
-										: `You didn't pass this attempt (${ result.score }%). Attempts left: ${ result.attemptsLeft }.` }
+										? __sprintf( "You didn't pass this attempt (%d%%).", result.score )
+										: __sprintf( "You didn't pass this attempt (%1$d%%). Attempts left: %2$d.", result.score, result.attemptsLeft ) }
 							</p>
 							{ /* Locked already swaps this whole overlay for the re-watch
 							     screen (Player.jsx's onQuizLocked) — nothing to retry here. */ }
 							{ ! result.locked && (
 								<button type="button" className="tp-quiz-submit" onClick={ retryQuizpress }>
-									Try again
+									{ __( 'Try again' ) }
 								</button>
 							) }
 						</>
@@ -121,7 +122,7 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 					{ result && result.error && (
 						<p className="tp-quiz-feedback tp-fail tp-quiz-verdict">
 							{ preview && 'quiz_not_found' === result.error
-								? 'Save your changes to preview grading.'
+								? __( 'Save your changes to preview grading.' )
 								: quizpressErrorMessage( result.error ) }
 						</p>
 					) }
@@ -143,7 +144,7 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 						</p>
 						<div className="tp-quiz-opts">
 							{ q.type === 'boolean'
-								? [ { id: 'true', label: 'True' }, { id: 'false', label: 'False' } ].map( ( o ) => (
+								? [ { id: 'true', label: __( 'True' ) }, { id: 'false', label: __( 'False' ) } ].map( ( o ) => (
 										<label key={ o.id } className={ `tp-quiz-opt ${ String( answers[ q.id ] ) === o.id ? 'is-picked' : '' }` }>
 											<input type="radio" name={ q.id } checked={ String( answers[ q.id ] ) === o.id } onChange={ () => setAnswer( q.id, o.id ) } />
 											{ o.label }
@@ -162,20 +163,20 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 				{ result && ! result.passed && ! result.error && (
 					<p className="tp-quiz-feedback tp-fail">
 						{ result.locked
-							? 'Locked — you must re-watch the video to try again.'
-							: `Not quite (${ result.score }%). Attempts left: ${ result.attemptsLeft }.` }
+							? __( 'Locked — you must re-watch the video to try again.' )
+							: __sprintf( 'Not quite (%1$d%%). Attempts left: %2$d.', result.score, result.attemptsLeft ) }
 					</p>
 				) }
 				{ result && result.passed && (
 					<p className="tp-quiz-feedback tp-pass">
 						<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-						Passed ({ result.score }%)
+						{ __sprintf( 'Passed (%d%%)', result.score ) }
 					</p>
 				) }
 				{ result && result.error && <p className="tp-quiz-feedback tp-fail">{ result.error }</p> }
 
 				<button className="tp-quiz-submit" disabled={ ! answeredAll || busy } onClick={ submit }>
-					{ busy ? 'Checking…' : 'Submit' }
+					{ busy ? __( 'Checking…' ) : __( 'Submit' ) }
 				</button>
 			</div>
 		</div>

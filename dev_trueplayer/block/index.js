@@ -1,5 +1,5 @@
 import { registerBlockType } from '@wordpress/blocks';
-import { __ } from '@wordpress/i18n';
+import { __ } from '@Utils/translation';
 import Edit from './edit';
 import { brand } from './data';
 
@@ -10,7 +10,7 @@ registerBlockType( 'trueplayer/player', {
 	// The site owner's own name when white-label is on, so the inserter agrees
 	// with the admin menu.
 	title: brand(),
-	description: __( 'Watch-verified, quiz-gated video.', 'trueplayer' ),
+	description: __( 'Watch-verified, quiz-gated video.' ),
 	icon: 'format-video',
 	category: 'embed',
 	attributes: { videoId: { type: 'number', default: 0 } },

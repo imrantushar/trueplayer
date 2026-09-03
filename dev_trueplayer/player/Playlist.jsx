@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from '@wordpress/element';
 import Player from './Player';
 import { resolveCustomize } from './customize';
+import { __, __sprintf } from '@Utils/translation';
 
 /**
  * Load-strategy resolution, mirrored from includes/shortcode.php's
@@ -47,7 +48,7 @@ function Facade( { config, onPlay } ) {
 	}
 
 	return (
-		<button type="button" className={ `tp-facade${ isAudio ? ' is-audio' : '' }` } style={ style } aria-label="Play video" onClick={ onPlay }>
+		<button type="button" className={ `tp-facade${ isAudio ? ' is-audio' : '' }` } style={ style } aria-label={ __( 'Play video' ) } onClick={ onPlay }>
 			{ poster && <img className="tp-facade-poster" src={ poster } alt="" loading="lazy" decoding="async" /> }
 			<span className="tp-facade-btn">
 				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
@@ -149,7 +150,7 @@ export default function Playlist( { data } ) {
 									<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
 								</span>
 							) }
-							{ data.showTitles && <span className="tp-pl-item-title">{ it.title || `Video ${ i + 1 }` }</span> }
+							{ data.showTitles && <span className="tp-pl-item-title">{ it.title || __sprintf( 'Video %d', i + 1 ) }</span> }
 						</button>
 					) ) }
 				</div>

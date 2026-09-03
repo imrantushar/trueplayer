@@ -5,6 +5,7 @@ import { Icon } from './icons';
 import { posterCandidates } from '../utils/poster';
 import { BsThreeDots } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
+import { __ } from '@Utils/translation';
 
 export function Button( { children, variant = 'primary', size = 'md', className = '', ...rest } ) {
 	// GemCRM button presets: primary (solid blue), secondary/ghost (outline),
@@ -257,7 +258,7 @@ export function SplitButton( { children, onClick, items = [], size = 'md', class
 				onClick={ () => setOpen( ( o ) => ! o ) }
 				aria-haspopup="menu"
 				aria-expanded={ open }
-				aria-label="More create options"
+				aria-label={ __( 'More create options' ) }
 				className="inline-flex items-center justify-center w-8 rounded-r bg-brand-500 hover:opacity-90 text-white border border-brand-500 border-l-brand-600 transition-opacity"
 			>
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
@@ -309,7 +310,7 @@ export function OptionMenu( { items } ) {
 			<button
 				type="button"
 				onClick={ () => setOpen( ( o ) => ! o ) }
-				aria-label="More actions"
+				aria-label={ __( 'More actions' ) }
 				className="w-8 h-8 inline-flex items-center justify-center rounded text-muted hover:text-ink hover:bg-gray-100 transition-colors border border-line"
 			>
 				<BsThreeDots />
@@ -372,7 +373,7 @@ export function Modal( { title, onClose, children, footer, className = '' } ) {
 			<div className={ `bg-white rounded-card shadow-pop w-full flex flex-col max-h-[calc(100vh-6rem)] ${ width } ${ className }` } onClick={ ( e ) => e.stopPropagation() }>
 				<div className="flex items-center justify-between px-6 py-4 border-b border-line shrink-0">
 					<h3 className="text-base font-semibold text-ink">{ title }</h3>
-					<button onClick={ onClose } className="text-muted hover:text-ink text-lg leading-none" aria-label="Close">&times;</button>
+					<button onClick={ onClose } className="text-muted hover:text-ink text-lg leading-none" aria-label={ __( 'Close' ) }>&times;</button>
 				</div>
 				<div className="p-6 overflow-y-auto">{ children }</div>
 				{ footer && <div className="px-6 py-4 border-t border-line flex items-center justify-end gap-2 shrink-0">{ footer }</div> }
@@ -396,7 +397,7 @@ export function Toast( { message, tone = 'danger', onDismiss } ) {
 			<div className={ `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium shadow-pop ${ tones[ tone ] || tones.danger }` }>
 				{ message }
 				{ onDismiss && (
-					<button type="button" onClick={ onDismiss } className="text-current opacity-60 hover:opacity-100 leading-none" aria-label="Dismiss"><IoClose /></button>
+					<button type="button" onClick={ onDismiss } className="text-current opacity-60 hover:opacity-100 leading-none" aria-label={ __( 'Dismiss' ) }><IoClose /></button>
 				) }
 			</div>
 		</div>
@@ -459,12 +460,12 @@ export function Pagination( { page, pages, onPage } ) {
 	const btn = 'min-w-[34px] h-[34px] px-2 rounded text-sm font-medium border border-line disabled:opacity-40 disabled:pointer-events-none';
 	return (
 		<div className="flex items-center justify-center gap-1 mt-6">
-			<button className={ btn } disabled={ page <= 1 } onClick={ () => onPage( page - 1 ) } aria-label="Previous page">‹</button>
+			<button className={ btn } disabled={ page <= 1 } onClick={ () => onPage( page - 1 ) } aria-label={ __( 'Previous page' ) }>‹</button>
 			{ nums.map( ( n, i ) => n === '…'
 				? <span key={ `e${ i }` } className="px-1 text-muted">…</span>
 				: <button key={ n } onClick={ () => onPage( n ) } className={ `${ btn } ${ n === page ? 'bg-brand-500 text-white border-brand-500' : 'bg-white text-ink hover:bg-gray-50' }` }>{ n }</button>
 			) }
-			<button className={ btn } disabled={ page >= pages } onClick={ () => onPage( page + 1 ) } aria-label="Next page">›</button>
+			<button className={ btn } disabled={ page >= pages } onClick={ () => onPage( page + 1 ) } aria-label={ __( 'Next page' ) }>›</button>
 		</div>
 	);
 }
@@ -491,9 +492,9 @@ export function sourceMeta( source = {} ) {
 		vimeo: { label: 'Vimeo', tone: 'brand' },
 		bunny: { label: 'Bunny', tone: 'green' },
 		mux: { label: 'Mux', tone: 'brand' },
-		audio: { label: 'Audio', tone: 'gray' },
+		audio: { label: __( 'Audio' ), tone: 'gray' },
 	};
-	return map[ type ] || { label: type || 'no source', tone: 'gray' };
+	return map[ type ] || { label: type || __( 'no source' ), tone: 'gray' };
 }
 
 /**

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from '@wordpress/element';
+import { __, __sprintf, _nSprintf } from '@Utils/translation';
 import { Card, Button, Badge, Input, Modal, Toast } from '../../components/UI';
 import { Icon } from '../../components/icons';
 import { brand } from '../../brand';
@@ -58,11 +59,11 @@ export default function LicensePanel() {
 			// around it, depending on SDK version.
 			setLicense( ( prev ) => ( { ...prev, ...( ( data && data.license ) || data || {} ) } ) );
 			if ( ! quiet ) {
-				notify( 'success', 'License status refreshed.' );
+				notify( 'success', __( 'License status refreshed.' ) );
 			}
 		} catch ( e ) {
 			if ( ! quiet ) {
-				fail( e, 'Could not reach the license server.' );
+				fail( e, __( 'Could not reach the license server.' ) );
 			}
 		} finally {
 			setBusy( '' );
@@ -82,7 +83,7 @@ export default function LicensePanel() {
 	 */
 	const activate = async ( value, frees = [] ) => {
 		if ( ! value ) {
-			notify( 'danger', 'Enter your license key first.' );
+			notify( 'danger', __( 'Enter your license key first.' ) );
 			return;
 		}
 		setBusy( 'activate' );
@@ -93,14 +94,14 @@ export default function LicensePanel() {
 			setLimit( null );
 			// The store's own wording distinguishes "activated" from "updated"
 			// (re-keying an existing install), which our copy can't know.
-			notify( 'success', ( data && data.message ) || 'License activated.' );
+			notify( 'success', ( data && data.message ) || __( 'License activated.' ) );
 		} catch ( e ) {
 			// Every seat is in use. The store sends the other sites with the
 			// refusal precisely so this is a choice, not a dead end.
 			if ( e.code === LIMIT_REACHED && Array.isArray( e.data && e.data.sites ) ) {
 				setLimit( { key: value, sites: e.data.sites, limit: e.data.limit, message: e.message } );
 			} else {
-				fail( e, 'Could not activate that license key.' );
+				fail( e, __( 'Could not activate that license key.' ) );
 			}
 		} finally {
 			setBusy( '' );
@@ -111,16 +112,16 @@ export default function LicensePanel() {
 		// Deactivating frees the seat on the customer's account — worth a beat
 		// of thought, since re-activating needs the key again.
 		// eslint-disable-next-line no-alert
-		if ( ! window.confirm( `Deactivate this license on ${ window.location.hostname }? It frees the activation for another site.` ) ) {
+		if ( ! window.confirm( __sprintf( 'Deactivate this license on %s? It frees the activation for another site.', window.location.hostname ) ) ) {
 			return;
 		}
 		setBusy( 'deactivate' );
 		try {
 			const data = await licenseApi.deactivate();
 			setLicense( ( prev ) => ( { ...prev, ...DEFAULT_LICENSE, ...( ( data && data.license ) || data || {} ) } ) );
-			notify( 'success', ( data && data.message ) || 'License deactivated.' );
+			notify( 'success', ( data && data.message ) || __( 'License deactivated.' ) );
 		} catch ( e ) {
-			fail( e, 'Could not deactivate this license.' );
+			fail( e, __( 'Could not deactivate this license.' ) );
 		} finally {
 			setBusy( '' );
 		}
@@ -139,13 +140,13 @@ export default function LicensePanel() {
 
 					<h3 className="font-semibold text-lg text-ink mt-4 mb-1 max-w-xl mx-auto">
 						{ isActive
-							? `${ name } Pro — license active`
-							: `Activate ${ name } Pro for updates & support` }
+							? __sprintf( '%s Pro — license active', name )
+							: __sprintf( 'Activate %s Pro for updates & support', name ) }
 					</h3>
 					<p className="text-sm text-muted m-0 max-w-xl mx-auto">
 						{ isActive
-							? 'Automatic updates and priority support are switched on for this site.'
-							: 'Activate your license to get automatic updates and priority support straight from your WordPress dashboard.' }
+							? __( 'Automatic updates and priority support are switched on for this site.' )
+							: __( 'Activate your license to get automatic updates and priority support straight from your WordPress dashboard.' ) }
 					</p>
 
 					{ /* A key is on file but isn't active any more — expired, or
@@ -175,7 +176,7 @@ export default function LicensePanel() {
 							className="flex-1 min-w-[300px] text-center font-mono"
 							value={ isActive ? license.license || '' : key }
 							readOnly={ isActive }
-							placeholder="Enter your license key to activate"
+							placeholder={ __( 'Enter your license key to activate' ) }
 							onChange={ ( e ) => setKey( e.target.value ) }
 							onKeyDown={ ( e ) => {
 								if ( e.key === 'Enter' && ! isActive ) {
@@ -183,16 +184,16 @@ export default function LicensePanel() {
 									activate( key.trim() );
 								}
 							} }
-							aria-label="License key"
+							aria-label={ __( 'License key' ) }
 						/>
 						{ isActive ? (
 							<Button variant="danger" onClick={ deactivate } disabled={ !! busy }>
-								{ busy === 'deactivate' ? 'Deactivating…' : 'Deactivate license' }
+								{ busy === 'deactivate' ? __( 'Deactivating…' ) : __( 'Deactivate license' ) }
 							</Button>
 						) : (
 							<Button onClick={ () => activate( key.trim() ) } disabled={ !! busy }>
 								<Icon name="check" className="w-4 h-4" />
-								{ busy === 'activate' ? 'Activating…' : 'Activate license' }
+								{ busy === 'activate' ? __( 'Activating…' ) : __( 'Activate license' ) }
 							</Button>
 						) }
 						<a
@@ -201,14 +202,14 @@ export default function LicensePanel() {
 							rel="noopener noreferrer"
 							className="inline-flex items-center rounded border border-line bg-white px-4 py-2 text-sm font-medium text-ink no-underline hover:bg-brand-50 hover:text-brand-500 transition-colors"
 						>
-							Manage license
+							{ __( 'Manage license' ) }
 						</a>
 					</div>
 
 					{ ! isActive && (
 						<p className="text-sm text-muted mt-4 mb-0">
-							Don’t have a license key?{ ' ' }
-							<a href={ purchaseUrl } target="_blank" rel="noopener noreferrer">Purchase one here</a>
+							{ __( 'Don’t have a license key?' ) }{ ' ' }
+							<a href={ purchaseUrl } target="_blank" rel="noopener noreferrer">{ __( 'Purchase one here' ) }</a>
 						</p>
 					) }
 				</div>
@@ -217,42 +218,42 @@ export default function LicensePanel() {
 					<>
 						<span className="block h-px w-full bg-line my-7" />
 						<div className="flex flex-wrap justify-center gap-x-10 gap-y-5">
-							<Meta label="Status">
-								<Badge tone="green">Active</Badge>
+							<Meta label={ __( 'Status' ) }>
+								<Badge tone="green">{ __( 'Active' ) }</Badge>
 							</Meta>
-							<Meta label="Last checked">
+							<Meta label={ __( 'Last checked' ) }>
 								<span className="inline-flex items-center gap-1.5">
-									{ license.updated_at ? formatUtc( license.updated_at ) : 'Never' }
+									{ license.updated_at ? formatUtc( license.updated_at ) : __( 'Never' ) }
 									<button
 										type="button"
 										onClick={ () => refresh() }
 										disabled={ !! busy }
-										title="Check license status now"
-										aria-label="Check license status now"
+										title={ __( 'Check license status now' ) }
+										aria-label={ __( 'Check license status now' ) }
 										className="inline-flex items-center text-brand-500 hover:opacity-70 disabled:opacity-40"
 									>
 										<Icon name="refresh" className={ `w-3.5 h-3.5 ${ busy === 'check' ? 'animate-spin' : '' }` } />
 									</button>
 								</span>
 							</Meta>
-							<Meta label="Expires">
-								{ license.expires ? formatUtc( license.expires, 'date' ) : 'Never' }
+							<Meta label={ __( 'Expires' ) }>
+								{ license.expires ? formatUtc( license.expires, 'date' ) : __( 'Never' ) }
 							</Meta>
-							<Meta label="Activations remaining">
+							<Meta label={ __( 'Activations remaining' ) }>
 								{ license.unlimited
-									? 'Unlimited'
-									: `${ license.remaining ?? 0 } out of ${ license.limit ?? 1 }` }
+									? __( 'Unlimited' )
+									: __sprintf( '%1$d out of %2$d', license.remaining ?? 0, license.limit ?? 1 ) }
 							</Meta>
 							{ /* This is the SDK's own meaning: the store serves updates for
 							     as long as the license is valid. Whether WordPress installs
 							     them unattended is its own per-plugin setting, so the title
 							     says which one this is. */ }
-							<Meta label="Automatic updates">
+							<Meta label={ __( 'Automatic updates' ) }>
 								<span
 									className="text-success font-medium"
-									title="New versions are delivered from your account while this license is active. Unattended installs are a separate WordPress setting, under Plugins."
+									title={ __( 'New versions are delivered from your account while this license is active. Unattended installs are a separate WordPress setting, under Plugins.' ) }
 								>
-									Enabled
+									{ __( 'Enabled' ) }
 								</span>
 							</Meta>
 						</div>
@@ -288,28 +289,31 @@ function SeatPicker( { state, busy, onCancel, onConfirm } ) {
 
 	return (
 		<Modal
-			title="Activation limit reached"
+			title={ __( 'Activation limit reached' ) }
 			className="max-w-lg"
 			onClose={ busy ? () => {} : onCancel }
 			footer={
 				<>
-					<Button variant="ghost" onClick={ onCancel } disabled={ busy }>Cancel</Button>
+					<Button variant="ghost" onClick={ onCancel } disabled={ busy }>{ __( 'Cancel' ) }</Button>
 					<Button variant="danger" onClick={ () => onConfirm( picked ) } disabled={ busy || ! picked.length }>
-						{ busy ? 'Working…' : 'Release & activate here' }
+						{ busy ? __( 'Working…' ) : __( 'Release & activate here' ) }
 					</Button>
 				</>
 			}
 		>
 			<p className="text-sm text-muted mt-0 mb-4">
 				{ state.limit
-					? `This license is already active on its maximum of ${ state.limit } site${ state.limit === 1 ? '' : 's' }. Choose which to deactivate so this site can take a seat.`
-					: 'This license has reached its activation limit. Choose which site to deactivate so this site can take a seat.' }
+					? _nSprintf(
+						'This license is already active on its maximum of %d site. Choose which to deactivate so this site can take a seat.',
+						'This license is already active on its maximum of %d sites. Choose which to deactivate so this site can take a seat.',
+						state.limit
+					  )
+					: __( 'This license has reached its activation limit. Choose which site to deactivate so this site can take a seat.' ) }
 			</p>
 
 			{ ! sites.length ? (
 				<p className="text-sm text-muted m-0">
-					The store didn’t report any other active sites. Deactivate one from your
-					account dashboard, then try again.
+					{ __( 'The store didn’t report any other active sites. Deactivate one from your account dashboard, then try again.' ) }
 				</p>
 			) : (
 				<ul className="list-none p-0 m-0 space-y-2">
@@ -332,11 +336,11 @@ function SeatPicker( { state, busy, onCancel, onConfirm } ) {
 									/>
 									<span className="min-w-0">
 										<span className="block text-sm text-ink break-all">
-											{ site.site_url || '(unknown site)' }
+											{ site.site_url || __( '(unknown site)' ) }
 										</span>
 										{ site.activated_at && (
 											<span className="block text-xs text-muted mt-0.5">
-												Activated { site.activated_at }
+												{ __sprintf( 'Activated %s', site.activated_at ) }
 											</span>
 										) }
 									</span>

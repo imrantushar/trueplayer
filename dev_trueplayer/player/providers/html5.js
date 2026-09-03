@@ -1,4 +1,5 @@
 import { createEmitter } from './emitter';
+import { __, __sprintf } from '@Utils/translation';
 
 /**
  * HTML5 <video>/<audio> provider. Plays self-hosted files and HLS — natively on
@@ -53,9 +54,9 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 			hls.on( Hls.Events.MANIFEST_PARSED, () => {
 				qualities = ( hls.levels || [] ).map( ( lvl, i ) => ( {
 					id: String( i ),
-					label: lvl.height ? `${ lvl.height }p` : `Level ${ i }`,
+					label: lvl.height ? __sprintf( '%dp', lvl.height ) : __sprintf( 'Level %d', i ),
 				} ) );
-				qualities.unshift( { id: 'auto', label: 'Auto' } );
+				qualities.unshift( { id: 'auto', label: __( 'Auto' ) } );
 				emitter.emit( 'qualitychange', qualities );
 			} );
 		} else {
@@ -69,7 +70,7 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 	( source.subtitles || [] ).forEach( ( t, i ) => {
 		const track = document.createElement( 'track' );
 		track.kind = 'subtitles';
-		track.label = t.label || `Track ${ i + 1 }`;
+		track.label = t.label || __sprintf( 'Track %d', i + 1 );
 		track.srclang = t.srclang || 'en';
 		track.src = t.src;
 		if ( t.default ) {
@@ -147,7 +148,7 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 				id: String( i ),
 				// A track saved without a label would otherwise be a blank row in
 				// the menu, with nothing to tell it from its neighbours.
-				label: t.label || t.language || `Track ${ i + 1 }`,
+				label: t.label || t.language || __sprintf( 'Track %d', i + 1 ),
 				isDefault: !! ( els[ i ] && els[ i ].default ),
 			} ) );
 		},

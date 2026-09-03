@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from '@wordpress/element';
 import { passesConditions } from '../rules';
 import EmailForm from './EmailForm';
+import { __ } from '@Utils/translation';
 
 /**
  * Interactive layers (pro) — timed, positioned elements over the picture:
@@ -84,7 +85,7 @@ function ShortcodeLayer( { layer, preview } ) {
 		return preview && layer.shortcode ? (
 			<div className={ `tp-layer tp-shortcode-layer is-placeholder tp-pos-${ layer.position || 'middle-center' }` }>
 				<code>{ layer.shortcode }</code>
-				<span>Runs on the page, not in this preview.</span>
+				<span>{ __( 'Runs on the page, not in this preview.' ) }</span>
 			</div>
 		) : null;
 	}

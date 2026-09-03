@@ -7,31 +7,32 @@ import { BsTrash } from 'react-icons/bs';
 import { Icon } from '../../components/icons';
 import { formatTime } from '@Utils/format';
 import { IoClose } from 'react-icons/io5';
+import { __, __sprintf } from '@Utils/translation';
 
 const uid = () => 'ly_' + Math.random().toString( 36 ).slice( 2, 8 );
 
 const TYPE_META = {
-	hotspot: { label: 'Hotspot', hint: 'A pulsing clickable region over the picture.' },
-	banner: { label: 'Banner', hint: 'An image (optionally linked) shown during a window.' },
-	shortcode: { label: 'Shortcode', hint: 'Any WordPress shortcode, rendered over the video.' },
-	form: { label: 'Email form', hint: 'Inline email capture (uses your Subscribe integration).' },
+	hotspot: { label: __( 'Hotspot' ), hint: __( 'A pulsing clickable region over the picture.' ) },
+	banner: { label: __( 'Banner' ), hint: __( 'An image (optionally linked) shown during a window.' ) },
+	shortcode: { label: __( 'Shortcode' ), hint: __( 'Any WordPress shortcode, rendered over the video.' ) },
+	form: { label: __( 'Email form' ), hint: __( 'Inline email capture (uses your Subscribe integration).' ) },
 };
 
 const POSITIONS = [
-	[ 'top-left', 'Top left' ], [ 'top-center', 'Top center' ], [ 'top-right', 'Top right' ],
-	[ 'middle-left', 'Middle left' ], [ 'middle-center', 'Center' ], [ 'middle-right', 'Middle right' ],
-	[ 'bottom-left', 'Bottom left' ], [ 'bottom-center', 'Bottom center' ], [ 'bottom-right', 'Bottom right' ],
+	[ 'top-left', __( 'Top left' ) ], [ 'top-center', __( 'Top center' ) ], [ 'top-right', __( 'Top right' ) ],
+	[ 'middle-left', __( 'Middle left' ) ], [ 'middle-center', __( 'Center' ) ], [ 'middle-right', __( 'Middle right' ) ],
+	[ 'bottom-left', __( 'Bottom left' ) ], [ 'bottom-center', __( 'Bottom center' ) ], [ 'bottom-right', __( 'Bottom right' ) ],
 ];
 
 const RULE_FIELDS = [
-	[ 'logged_in', 'Viewer is logged in' ],
-	[ 'crm_contact', 'Is a CRM contact' ],
-	[ 'crm_tag', 'Has CRM tag' ],
-	[ 'crm_list', 'In CRM list' ],
-	[ 'email_submitted', 'Has submitted email' ],
-	[ 'url_param', 'URL parameter' ],
-	[ 'layer_seen', 'Has seen layer (id)' ],
-	[ 'layer_completed', 'Completed layer (id)' ],
+	[ 'logged_in', __( 'Viewer is logged in' ) ],
+	[ 'crm_contact', __( 'Is a CRM contact' ) ],
+	[ 'crm_tag', __( 'Has CRM tag' ) ],
+	[ 'crm_list', __( 'In CRM list' ) ],
+	[ 'email_submitted', __( 'Has submitted email' ) ],
+	[ 'url_param', __( 'URL parameter' ) ],
+	[ 'layer_seen', __( 'Has seen layer (id)' ) ],
+	[ 'layer_completed', __( 'Completed layer (id)' ) ],
 ];
 const BOOL_FIELDS = [ 'logged_in', 'crm_contact', 'email_submitted' ];
 
@@ -46,7 +47,7 @@ const BOOL_FIELDS = [ 'logged_in', 'crm_contact', 'email_submitted' ];
 function ProBadge() {
 	return (
 		<span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1.5 py-0.5 leading-none shrink-0">
-			PRO
+			{ __( 'PRO' ) }
 		</span>
 	);
 }
@@ -63,17 +64,17 @@ function ConditionsEditor( { value, onChange } ) {
 		<div className="mt-4 border-t border-line pt-4">
 			<div className="flex items-center justify-between mb-2">
 				<span className="flex items-center gap-2">
-					<span className="text-xs font-semibold text-ink uppercase tracking-wide">Display rules</span>
+					<span className="text-xs font-semibold text-ink uppercase tracking-wide">{ __( 'Display rules' ) }</span>
 					<ProBadge />
 				</span>
 				{ group.rules.length > 1 && (
 					<Select value={ group.match } onChange={ ( e ) => set( { match: e.target.value } ) } className="w-36">
-						<option value="all">Match all</option>
-						<option value="any">Match any</option>
+						<option value="all">{ __( 'Match all' ) }</option>
+						<option value="any">{ __( 'Match any' ) }</option>
 					</Select>
 				) }
 			</div>
-			{ ! group.rules.length && <p className="text-xs text-gray-400 mb-2">Always shown. Add a rule to target specific viewers.</p> }
+			{ ! group.rules.length && <p className="text-xs text-gray-400 mb-2">{ __( 'Always shown. Add a rule to target specific viewers.' ) }</p> }
 			{ group.rules.map( ( r, idx ) => {
 				const isBool = BOOL_FIELDS.includes( r.field );
 				return (
@@ -89,25 +90,25 @@ function ConditionsEditor( { value, onChange } ) {
 							{ RULE_FIELDS.map( ( [ v, label ] ) => <option key={ v } value={ v }>{ label }</option> ) }
 						</Select>
 						<Select value={ r.operator } onChange={ ( e ) => setRule( idx, { operator: e.target.value } ) } className="w-[104px] shrink-0">
-							<option value="is">is</option>
-							<option value="is_not">is not</option>
-							{ ! isBool && <option value="contains">contains</option> }
+							<option value="is">{ __( 'is' ) }</option>
+							<option value="is_not">{ __( 'is not' ) }</option>
+							{ ! isBool && <option value="contains">{ __( 'contains' ) }</option> }
 						</Select>
 						{ r.field === 'url_param' && (
-							<Input value={ r.key || '' } onChange={ ( e ) => setRule( idx, { key: e.target.value } ) } placeholder="param key" className="flex-1 min-w-[80px]" />
+							<Input value={ r.key || '' } onChange={ ( e ) => setRule( idx, { key: e.target.value } ) } placeholder={ __( 'param key' ) } className="flex-1 min-w-[80px]" />
 						) }
 						{ isBool ? (
 							<Select value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } className="w-[92px] shrink-0">
-								<option value="yes">yes</option>
-								<option value="no">no</option>
+								<option value="yes">{ __( 'yes' ) }</option>
+								<option value="no">{ __( 'no' ) }</option>
 							</Select>
 						) : (
-							<Input value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } placeholder="value" className="flex-1 min-w-[80px]" />
+							<Input value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } placeholder={ __( 'value' ) } className="flex-1 min-w-[80px]" />
 						) }
 						<button
 							type="button"
 							onClick={ () => removeRule( idx ) }
-							aria-label="Remove rule"
+							aria-label={ __( 'Remove rule' ) }
 							className="shrink-0 w-10 h-10 inline-flex items-center justify-center rounded border border-line bg-white text-muted hover:border-danger hover:text-danger transition-colors"
 						>
 							<IoClose className="w-4 h-4" />
@@ -115,7 +116,7 @@ function ConditionsEditor( { value, onChange } ) {
 					</div>
 				);
 			} ) }
-			<Button variant="ghost" size="sm" onClick={ addRule }>+ Add rule</Button>
+			<Button variant="ghost" size="sm" onClick={ addRule }>{ __( '+ Add rule' ) }</Button>
 		</div>
 	);
 }
@@ -141,9 +142,9 @@ const newLayer = ( type ) => {
 				required: true,
 				collectName: false,
 				dedupe: true,
-				title: 'Subscribe to keep watching',
+				title: __( 'Subscribe to keep watching' ),
 				description: '',
-				buttonLabel: 'Subscribe',
+				buttonLabel: __( 'Subscribe' ),
 				placeholder: 'you@email.com',
 				thanks: '',
 				provider: '',
@@ -174,7 +175,7 @@ function TimeParts( { seconds = 0, onChange } ) {
 	// className cannot override — three of those would push the group apart.
 	return (
 		<div className="grid grid-cols-3 gap-3">
-			{ [ [ 'h', 'Hours' ], [ 'm', 'Minutes' ], [ 's', 'Seconds' ] ].map( ( [ key, label ] ) => (
+			{ [ [ 'h', __( 'Hours' ) ], [ 'm', __( 'Minutes' ) ], [ 's', __( 'Seconds' ) ] ].map( ( [ key, label ] ) => (
 				<label key={ key } className="block">
 					<Input type="number" min="0" value={ parts[ key ] } onChange={ ( e ) => setPart( key, e.target.value ) } />
 					<span className="block text-xs text-gray-400 mt-1.5">{ label }</span>
@@ -201,23 +202,23 @@ function EmailFormStyle( { layer, set } ) {
 	// set for both modes: the form looks the same either way, so a colour here
 	// means the same thing whichever Mode is selected.
 	const colors = [
-		[ 'bg', 'Background', '#ffffff' ],
-		[ 'title', 'Headline colour', '#111827' ],
-		[ 'muted', 'Description colour', '#6b7280' ],
-		[ 'buttonBg', 'Button background', 'player accent' ],
-		[ 'buttonText', 'Button text colour', '#ffffff' ],
+		[ 'bg', __( 'Background' ), '#ffffff' ],
+		[ 'title', __( 'Headline colour' ), '#111827' ],
+		[ 'muted', __( 'Description colour' ), '#6b7280' ],
+		[ 'buttonBg', __( 'Button background' ), __( 'player accent' ) ],
+		[ 'buttonText', __( 'Button text colour' ), '#ffffff' ],
 	];
 
 	return (
 		<>
-			<p className="text-sm text-muted mb-4">Leave a field empty to keep the player’s own.</p>
+			<p className="text-sm text-muted mb-4">{ __( 'Leave a field empty to keep the player’s own.' ) }</p>
 			<div className="grid md:grid-cols-2 gap-x-6">
 				{ colors.map( ( [ key, label, fallback ] ) => (
 					<Field key={ key } label={ label }>
 						<ColorInput value={ style[ key ] || '' } onChange={ ( v ) => setStyle( { [ key ]: v } ) } placeholder={ fallback } />
 					</Field>
 				) ) }
-				<Field label="Button corner radius (px)">
+				<Field label={ __( 'Button corner radius (px)' ) }>
 					<Input
 						type="number"
 						min="0"
@@ -250,7 +251,7 @@ function EmailFormFields( { layer, set, rules } ) {
 			     panel scannable: the colours are set once and rarely touched,
 			     while the copy and destination are what an author comes back to. */ }
 			<div className="inline-flex p-1 mb-5 rounded bg-subtle border border-line">
-				{ [ [ 'content', 'Content' ], [ 'style', 'Style' ] ].map( ( [ key, label ] ) => (
+				{ [ [ 'content', __( 'Content' ) ], [ 'style', __( 'Style' ) ] ].map( ( [ key, label ] ) => (
 					<button
 						key={ key }
 						type="button"
@@ -301,26 +302,26 @@ function EmailFormContent( { layer, set } ) {
 	return (
 		<>
 			<div className="grid md:grid-cols-2 gap-x-6">
-				<Field label="Mode" hint={ gate ? 'Covers the video and pauses it.' : 'A panel beside the picture; the video keeps playing.' }>
+				<Field label={ __( 'Mode' ) } hint={ gate ? __( 'Covers the video and pauses it.' ) : __( 'A panel beside the picture; the video keeps playing.' ) }>
 					<Select value={ layer.mode || 'gate' } onChange={ ( e ) => set( { mode: e.target.value } ) }>
-						<option value="gate">Gate — pause and ask</option>
-						<option value="inline">Inline — alongside the video</option>
+						<option value="gate">{ __( 'Gate — pause and ask' ) }</option>
+						<option value="inline">{ __( 'Inline — alongside the video' ) }</option>
 					</Select>
 				</Field>
 				{ gate && (
-					<Field label="When to show">
+					<Field label={ __( 'When to show' ) }>
 						<Select value={ layer.trigger || 'time' } onChange={ ( e ) => set( { trigger: e.target.value } ) }>
-							<option value="pre">Before playback</option>
-							<option value="time">At a timestamp</option>
-							<option value="end">When the video ends</option>
+							<option value="pre">{ __( 'Before playback' ) }</option>
+							<option value="time">{ __( 'At a timestamp' ) }</option>
+							<option value="end">{ __( 'When the video ends' ) }</option>
 						</Select>
 					</Field>
 				) }
 			</div>
 
 			<Field
-				label="Position"
-				hint={ gate ? 'A gate covers the video; position applies to the inline mode.' : 'Where the panel sits over the picture.' }
+				label={ __( 'Position' ) }
+				hint={ gate ? __( 'A gate covers the video; position applies to the inline mode.' ) : __( 'Where the panel sits over the picture.' ) }
 			>
 				<Select value={ layer.position || 'middle-center' } onChange={ ( e ) => set( { position: e.target.value } ) }>
 					{ POSITIONS.map( ( [ v, lab ] ) => <option key={ v } value={ v }>{ lab }</option> ) }
@@ -330,43 +331,43 @@ function EmailFormContent( { layer, set } ) {
 			{ /* A gate fires once at a moment; an inline panel is shown across a
 			     window. Two different questions, so two different controls. */ }
 			{ gate && 'time' === ( layer.trigger || 'time' ) && (
-				<FieldGroup label="Show at" hint="How far into the video the gate appears.">
+				<FieldGroup label={ __( 'Show at' ) } hint={ __( 'How far into the video the gate appears.' ) }>
 					<TimeParts seconds={ layer.start } onChange={ ( v ) => set( { start: v } ) } />
 				</FieldGroup>
 			) }
 			{ ! gate && (
-				<FieldGroup label="Show from" hint="The form stays until the video ends.">
+				<FieldGroup label={ __( 'Show from' ) } hint={ __( 'The form stays until the video ends.' ) }>
 					<TimeParts seconds={ layer.start } onChange={ ( v ) => set( { start: v } ) } />
 				</FieldGroup>
 			) }
 
 			<div className="grid md:grid-cols-2 gap-x-6">
-				<Field label="Headline"><Input value={ layer.title || '' } onChange={ ( e ) => set( { title: e.target.value } ) } placeholder="Subscribe to keep watching" /></Field>
-				<Field label="Button label"><Input value={ layer.buttonLabel || '' } onChange={ ( e ) => set( { buttonLabel: e.target.value } ) } placeholder="Subscribe" /></Field>
+				<Field label={ __( 'Headline' ) }><Input value={ layer.title || '' } onChange={ ( e ) => set( { title: e.target.value } ) } placeholder={ __( 'Subscribe to keep watching' ) } /></Field>
+				<Field label={ __( 'Button label' ) }><Input value={ layer.buttonLabel || '' } onChange={ ( e ) => set( { buttonLabel: e.target.value } ) } placeholder={ __( 'Subscribe' ) } /></Field>
 			</div>
 			<div className="grid md:grid-cols-2 gap-x-6">
-				<Field label="Description" hint="Optional line under the headline."><Input value={ layer.description || '' } onChange={ ( e ) => set( { description: e.target.value } ) } placeholder="Enter your email to continue." /></Field>
-				<Field label="Email placeholder"><Input value={ layer.placeholder || '' } onChange={ ( e ) => set( { placeholder: e.target.value } ) } placeholder="you@email.com" /></Field>
+				<Field label={ __( 'Description' ) } hint={ __( 'Optional line under the headline.' ) }><Input value={ layer.description || '' } onChange={ ( e ) => set( { description: e.target.value } ) } placeholder={ __( 'Enter your email to continue.' ) } /></Field>
+				<Field label={ __( 'Email placeholder' ) }><Input value={ layer.placeholder || '' } onChange={ ( e ) => set( { placeholder: e.target.value } ) } placeholder={ __( 'you@email.com' ) } /></Field>
 			</div>
 			{ ! gate && (
-				<Field label="Thank-you message" hint="Shown in place of the form once someone subscribes.">
-					<Input value={ layer.thanks || '' } onChange={ ( e ) => set( { thanks: e.target.value } ) } placeholder="Thanks — you’re in!" />
+				<Field label={ __( 'Thank-you message' ) } hint={ __( 'Shown in place of the form once someone subscribes.' ) }>
+					<Input value={ layer.thanks || '' } onChange={ ( e ) => set( { thanks: e.target.value } ) } placeholder={ __( 'Thanks — you’re in!' ) } />
 				</Field>
 			) }
 
-			<FieldGroup label="Send contacts to" hint="Where a submitted address goes.">
+			<FieldGroup label={ __( 'Send contacts to' ) } hint={ __( 'Where a submitted address goes.' ) }>
 				<Select value={ layer.provider || '' } onChange={ ( e ) => set( { provider: e.target.value, lists: [] } ) }>
-					<option value="">— Select a provider —</option>
+					<option value="">{ __( '— Select a provider —' ) }</option>
 					{ ( providers || [] ).map( ( p ) => (
 						<option key={ p.id } value={ p.id } disabled={ ! p.available || p.requiresPro }>
-							{ p.name }{ p.requiresPro ? ' (Pro)' : ( ! p.available ? ' (not installed)' : '' ) }
+							{ p.name }{ p.requiresPro ? __( ' (Pro)' ) : ( ! p.available ? __( ' (not installed)' ) : '' ) }
 						</option>
 					) ) }
 				</Select>
 			</FieldGroup>
 
 			{ lists.length > 0 && (
-				<FieldGroup label="Lists" hint="The contact is added to the selected lists.">
+				<FieldGroup label={ __( 'Lists' ) } hint={ __( 'The contact is added to the selected lists.' ) }>
 					<div className="flex flex-wrap gap-2">
 						{ lists.map( ( li ) => {
 							const on = ( layer.lists || [] ).includes( li.id );
@@ -394,14 +395,14 @@ function EmailFormContent( { layer, set } ) {
 					checked={ layer.required !== false }
 					onChange={ ( v ) => set( { required: v } ) }
 					label={ gate
-						? 'Required — the viewer can’t continue without subscribing'
-						: 'Required — the viewer can’t dismiss the form' }
+						? __( 'Required — the viewer can’t continue without subscribing' )
+						: __( 'Required — the viewer can’t dismiss the form' ) }
 				/>
-				<Toggle checked={ !! layer.collectName } onChange={ ( v ) => set( { collectName: v } ) } label="Also ask for a name" />
+				<Toggle checked={ !! layer.collectName } onChange={ ( v ) => set( { collectName: v } ) } label={ __( 'Also ask for a name' ) } />
 				<Toggle
 					checked={ layer.dedupe !== false }
 					onChange={ ( v ) => set( { dedupe: v } ) }
-					label="Ask only once per viewer"
+					label={ __( 'Ask only once per viewer' ) }
 				/>
 			</div>
 		</>
@@ -413,12 +414,11 @@ function RulesUpsell() {
 	return (
 		<div className="mt-4 border-t border-line pt-4">
 			<span className="flex items-center gap-2">
-				<span className="text-xs font-semibold text-ink uppercase tracking-wide">Display rules</span>
+				<span className="text-xs font-semibold text-ink uppercase tracking-wide">{ __( 'Display rules' ) }</span>
 				<ProBadge />
 			</span>
 			<p className="text-xs text-muted mt-1.5">
-				Showing a layer only to certain viewers — logged in, a CRM contact, carrying a URL parameter —
-				needs TruePlayer Pro. Without it the layer is shown to everyone.
+				{ __( 'Showing a layer only to certain viewers — logged in, a CRM contact, carrying a URL parameter — needs TruePlayer Pro. Without it the layer is shown to everyone.' ) }
 			</p>
 		</div>
 	);
@@ -474,21 +474,26 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 	return (
 		<div className="space-y-4">
 			<div>
-				<h3 className="font-semibold text-gray-900 !mb-1">Interactive layers</h3>
-				<p className="text-sm text-gray-500">Timed elements over the video — hotspots, banners, shortcodes and email forms.</p>
+				<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Interactive layers' ) }</h3>
+				<p className="text-sm text-gray-500">{ __( 'Timed elements over the video — hotspots, banners, shortcodes and email forms.' ) }</p>
 			</div>
 
 			{ layers.length === 0 && (
 				<Card className="p-10 text-center border-dashed">
-					<p className="text-sm text-gray-500">No layers yet.</p>
-					<p className="text-xs text-gray-400 mt-1">Add a hotspot, banner, shortcode or email form below.</p>
+					<p className="text-sm text-gray-500">{ __( 'No layers yet.' ) }</p>
+					<p className="text-xs text-gray-400 mt-1">{ __( 'Add a hotspot, banner, shortcode or email form below.' ) }</p>
 				</Card>
 			) }
 
 			<div className="space-y-2">
 			{ layers.map( ( l, i ) => {
 				const open = openId === l.id;
-				const summary = `${ TYPE_META[ l.type ]?.label || l.type } · ${ formatTime( l.start ?? 0 ) } – ${ l.end === '' || l.end == null ? 'end' : formatTime( l.end ) }`;
+				const summary = __sprintf(
+					'%1$s · %2$s – %3$s',
+					TYPE_META[ l.type ]?.label || l.type,
+					formatTime( l.start ?? 0 ),
+					l.end === '' || l.end == null ? __( 'end' ) : formatTime( l.end )
+				);
 				const heading = l.title || l.tooltip || TYPE_META[ l.type ]?.label || l.type;
 				return (
 				<Card key={ l.id } className="overflow-hidden">
@@ -510,8 +515,8 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 							<button
 								type="button"
 								onClick={ () => onPreviewLayer( l.id ) }
-								title={ previewingLayerId === l.id ? 'Hide it from the live preview' : 'Show this in the live preview' }
-								aria-label={ previewingLayerId === l.id ? 'Hide it from the live preview' : 'Show this in the live preview' }
+								title={ previewingLayerId === l.id ? __( 'Hide it from the live preview' ) : __( 'Show this in the live preview' ) }
+								aria-label={ previewingLayerId === l.id ? __( 'Hide it from the live preview' ) : __( 'Show this in the live preview' ) }
 								aria-pressed={ previewingLayerId === l.id }
 								className={ `relative z-10 w-8 h-8 shrink-0 inline-flex items-center justify-center rounded border transition-colors ${
 									previewingLayerId === l.id ? 'border-brand-500 bg-brand-50 text-brand-500' : 'border-line text-muted hover:text-ink hover:bg-gray-100'
@@ -536,11 +541,11 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 						     1:07:30 as 4050. These layers have no end control: they
 						     run from `start` to the end of the video, which is what
 						     `end: ''` means to the player. */ }
-						<FieldGroup label="Show from" hint="How far into the video this appears.">
+						<FieldGroup label={ __( 'Show from' ) } hint={ __( 'How far into the video this appears.' ) }>
 							<TimeParts seconds={ l.start } onChange={ ( v ) => setOne( i, { start: v } ) } />
 						</FieldGroup>
 						{ l.type !== 'hotspot' && (
-							<Field label="Position" hint="Where it sits over the picture.">
+							<Field label={ __( 'Position' ) } hint={ __( 'Where it sits over the picture.' ) }>
 								<Select value={ l.position || 'middle-center' } onChange={ ( e ) => setOne( i, { position: e.target.value } ) }>
 									{ POSITIONS.map( ( [ v, lab ] ) => <option key={ v } value={ v }>{ lab }</option> ) }
 								</Select>
@@ -552,31 +557,31 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 					{ l.type === 'hotspot' && (
 						<>
 							<div className="grid grid-cols-4 gap-x-4">
-								<Field label="Left (%)"><Input type="number" min="0" max="100" value={ l.x ?? 40 } onChange={ ( e ) => setOne( i, { x: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
-								<Field label="Top (%)"><Input type="number" min="0" max="100" value={ l.y ?? 40 } onChange={ ( e ) => setOne( i, { y: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
-								<Field label="Width (%)"><Input type="number" min="2" max="100" value={ l.w ?? 20 } onChange={ ( e ) => setOne( i, { w: parseInt( e.target.value, 10 ) || 2 } ) } /></Field>
-								<Field label="Height (%)"><Input type="number" min="2" max="100" value={ l.h ?? 20 } onChange={ ( e ) => setOne( i, { h: parseInt( e.target.value, 10 ) || 2 } ) } /></Field>
+								<Field label={ __( 'Left (%)' ) }><Input type="number" min="0" max="100" value={ l.x ?? 40 } onChange={ ( e ) => setOne( i, { x: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
+								<Field label={ __( 'Top (%)' ) }><Input type="number" min="0" max="100" value={ l.y ?? 40 } onChange={ ( e ) => setOne( i, { y: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
+								<Field label={ __( 'Width (%)' ) }><Input type="number" min="2" max="100" value={ l.w ?? 20 } onChange={ ( e ) => setOne( i, { w: parseInt( e.target.value, 10 ) || 2 } ) } /></Field>
+								<Field label={ __( 'Height (%)' ) }><Input type="number" min="2" max="100" value={ l.h ?? 20 } onChange={ ( e ) => setOne( i, { h: parseInt( e.target.value, 10 ) || 2 } ) } /></Field>
 							</div>
 							<div className="grid md:grid-cols-2 gap-x-6">
-								<Field label="Tooltip"><Input value={ l.tooltip || '' } onChange={ ( e ) => setOne( i, { tooltip: e.target.value } ) } placeholder="See the product" /></Field>
-								<Field label="Link URL"><Input value={ l.url || '' } onChange={ ( e ) => setOne( i, { url: e.target.value } ) } placeholder="https://…" /></Field>
+								<Field label={ __( 'Tooltip' ) }><Input value={ l.tooltip || '' } onChange={ ( e ) => setOne( i, { tooltip: e.target.value } ) } placeholder={ __( 'See the product' ) } /></Field>
+								<Field label={ __( 'Link URL' ) }><Input value={ l.url || '' } onChange={ ( e ) => setOne( i, { url: e.target.value } ) } placeholder="https://…" /></Field>
 							</div>
 						</>
 					) }
 
 					{ l.type === 'banner' && (
 						<>
-							<Field label="Image">
-								<MediaPicker value={ l.image || '' } onChange={ ( url ) => setOne( i, { image: url } ) } accept="image" label="Upload an image" />
+							<Field label={ __( 'Image' ) }>
+								<MediaPicker value={ l.image || '' } onChange={ ( url ) => setOne( i, { image: url } ) } accept="image" label={ __( 'Upload an image' ) } />
 							</Field>
-							<Field label="Link URL (optional)"><Input value={ l.url || '' } onChange={ ( e ) => setOne( i, { url: e.target.value } ) } placeholder="https://…" /></Field>
+							<Field label={ __( 'Link URL (optional)' ) }><Input value={ l.url || '' } onChange={ ( e ) => setOne( i, { url: e.target.value } ) } placeholder="https://…" /></Field>
 						</>
 					) }
 
 					{ l.type === 'shortcode' && (
 						<Field
-								label="Shortcode"
-								hint="Rendered on the server when the page loads. Best for self-contained markup — a shortcode whose JavaScript starts up on page load (video players, sliders, some forms) will show its markup but not run, because the layer only enters the page when the playhead reaches it."
+								label={ __( 'Shortcode' ) }
+								hint={ __( 'Rendered on the server when the page loads. Best for self-contained markup — a shortcode whose JavaScript starts up on page load (video players, sliders, some forms) will show its markup but not run, because the layer only enters the page when the playhead reaches it.' ) }
 							>
 							<Textarea rows={ 2 } className="font-mono text-xs" value={ l.shortcode || '' } onChange={ ( e ) => setOne( i, { shortcode: e.target.value } ) } placeholder='[contact-form-7 id="123"]' />
 						</Field>
@@ -609,7 +614,7 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 
 			<div className="relative inline-block" ref={ addBtnRef }>
 				<Button variant="secondary" onClick={ toggleMenu } className="inline-flex items-center gap-1.5">
-					+ Add layer
+					{ __( '+ Add layer' ) }
 					<Icon name="chevronRight" className={ `w-3.5 h-3.5 transition-transform ${ menu ? '-rotate-90' : 'rotate-90' }` } />
 				</Button>
 				{ menu && (

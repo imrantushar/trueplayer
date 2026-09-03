@@ -2,6 +2,8 @@
  * Thin REST helper. Uses the localized TruePlayerGlobal for base URL + nonce so
  * logged-in requests authenticate (cookie + X-WP-Nonce) and guests still work.
  */
+import { __sprintf } from './translation';
+
 const G = () => window.TruePlayerGlobal || {};
 
 function base() {
@@ -47,7 +49,7 @@ async function request( path, { method = 'GET', body } = {} ) {
 		try {
 			detail = await res.json();
 		} catch ( e ) {}
-		const err = new Error( detail.message || `Request failed (${ res.status })` );
+		const err = new Error( detail.message || __sprintf( 'Request failed (%d)', res.status ) );
 		err.status = res.status;
 		err.detail = detail;
 		throw err;
@@ -81,7 +83,7 @@ async function upload( path, blob ) {
 	} );
 	const json = await res.json().catch( () => null );
 	if ( ! res.ok ) {
-		const err = new Error( ( json && json.message ) || `Upload failed (${ res.status })` );
+		const err = new Error( ( json && json.message ) || __sprintf( 'Upload failed (%d)', res.status ) );
 		err.status = res.status;
 		// The decoded body too, not just the status: a chunked upload has to
 		// read `data.expected` off a 409 to know where to resume from.
