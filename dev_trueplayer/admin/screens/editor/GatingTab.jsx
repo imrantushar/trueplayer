@@ -1,5 +1,6 @@
 import { useEffect, useState } from '@wordpress/element';
 import { Card, Field, Input, Select, Toggle, Button, Badge } from '../../components/UI';
+import { Icon } from '../../components/icons';
 import { api } from '../../api';
 import { BsTrash } from 'react-icons/bs';
 
@@ -223,6 +224,72 @@ function QuizSourceFields( { quiz, quizpressOpts, onChange } ) {
 }
 
 /**
+ * One collapsible checkpoint row — mirrors QuizPress's own Questions-step
+ * accordion in the quiz builder (collapsed summary, click to expand into the
+ * full editor) and reuses the same drag-to-reorder pattern already used for
+ * playlist items (Playlists.jsx: native HTML5 drag, no added dependency).
+ */
+function CheckpointRow( {
+	cp,
+	index,
+	isOpen,
+	onToggle,
+	onChange,
+	onRemove,
+	quizpressOpts,
+	isDragging,
+	isOver,
+	onDragStart,
+	onDragOver,
+	onDrop,
+	onDragEnd,
+} ) {
+	const questionCount = ( cp.questions || [] ).length;
+	const quizpressTitle = 'quizpress' === cp.source
+		? ( ( quizpressOpts && quizpressOpts.quizzes ) || [] ).find( ( q ) => q.id === cp.quizpressId )?.title
+		: null;
+	const summary = 'quizpress' === cp.source
+		? ( quizpressTitle || 'No QuizPress quiz selected yet' )
+		: `${ questionCount } question${ 1 === questionCount ? '' : 's' }`;
+
+	return (
+		<div
+			draggable
+			onDragStart={ onDragStart }
+			onDragOver={ onDragOver }
+			onDrop={ onDrop }
+			onDragEnd={ onDragEnd }
+			className={ `border rounded-lg bg-white transition ${ isOver ? 'border-brand-400 ring-2 ring-brand-100' : 'border-line' } ${ isDragging ? 'opacity-50' : '' }` }
+		>
+			<div
+				className={ `flex items-center gap-2 p-3 cursor-pointer ${ isOpen ? 'border-b border-solid border-line' : '' }` }
+				onClick={ onToggle }
+			>
+				<span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 select-none px-0.5" title="Drag to reorder" aria-hidden="true">⠿</span>
+				<Icon name="chevronRight" className={ `w-4 h-4 text-gray-400 shrink-0 transition-transform ${ isOpen ? 'rotate-90' : '' }` } />
+				<div className="flex-1 min-w-0">
+					<p className="text-sm font-medium text-ink truncate">{ cp.title || `Checkpoint ${ index + 1 }` }</p>
+					<p className="text-xs text-gray-400 truncate">At { cp.at }s · { summary }</p>
+				</div>
+				<Button variant="danger" size="sm" onClick={ ( e ) => { e.stopPropagation(); onRemove(); } }><BsTrash /></Button>
+			</div>
+			{ isOpen && (
+				<div className="p-3">
+					<div className="flex gap-2 items-end mb-3">
+						<Field label="At (seconds)"><Input type="number" className="w-28" value={ cp.at } onChange={ ( e ) => onChange( { at: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
+						{ 'quizpress' !== cp.source && (
+							<Field label="Pass %"><Input type="number" className="w-24" value={ cp.passPercent } onChange={ ( e ) => onChange( { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
+						) }
+						<div className="flex-1"><Field label="Title"><Input value={ cp.title || '' } onChange={ ( e ) => onChange( { title: e.target.value } ) } placeholder="Checkpoint" /></Field></div>
+					</div>
+					<QuizSourceFields quiz={ cp } quizpressOpts={ quizpressOpts } onChange={ onChange } />
+				</div>
+			) }
+		</div>
+	);
+}
+
+/**
  * The site-wide watch-verification policy (Settings → Enforcement), which this
  * tab inherits from. Localized by PHP so both sides agree on one set of
  * defaults — see Helper::enforcement_defaults().
@@ -271,11 +338,38 @@ export default function GatingTab( { config, patch } ) {
 		patch( { gating: next } );
 	};
 
-	const addCheckpoint = () =>
-		set( { checkpoints: [ ...gating.checkpoints, { id: uid(), at: 30, title: '', passPercent: 70, questions: [] } ] } );
+	// Which checkpoint accordion rows are expanded — a newly added checkpoint
+	// opens by default, same as QuizPress's own Questions-step builder.
+	const [ openCheckpoints, setOpenCheckpoints ] = useState( () => new Set() );
+	const toggleCheckpointOpen = ( id ) =>
+		setOpenCheckpoints( ( open ) => {
+			const next = new Set( open );
+			next.has( id ) ? next.delete( id ) : next.add( id );
+			return next;
+		} );
+
+	const addCheckpoint = () => {
+		const id = uid();
+		set( { checkpoints: [ ...gating.checkpoints, { id, at: 30, title: '', passPercent: 70, questions: [] } ] } );
+		setOpenCheckpoints( ( open ) => new Set( open ).add( id ) );
+	};
 	const setCheckpoint = ( i, partial ) =>
 		set( { checkpoints: gating.checkpoints.map( ( c, idx ) => ( idx === i ? { ...c, ...partial } : c ) ) } );
 	const removeCheckpoint = ( i ) => set( { checkpoints: gating.checkpoints.filter( ( _, idx ) => idx !== i ) } );
+
+	// Native HTML5 drag reorder — same pattern as the playlist editor
+	// (Playlists.jsx), no added dependency.
+	const [ dragIndex, setDragIndex ] = useState( null );
+	const [ overIndex, setOverIndex ] = useState( null );
+	const reorderCheckpoints = ( from, to ) => {
+		if ( null === from || null === to || from === to ) {
+			return;
+		}
+		const next = [ ...gating.checkpoints ];
+		const [ moved ] = next.splice( from, 1 );
+		next.splice( to, 0, moved );
+		set( { checkpoints: next } );
+	};
 
 	const toggleFinal = ( on ) => set( { finalQuiz: on ? { title: 'Final quiz', passPercent: 70, questions: [] } : null } );
 	const setFinal = ( partial ) => set( { finalQuiz: { ...gating.finalQuiz, ...partial } } );
@@ -314,23 +408,28 @@ export default function GatingTab( { config, patch } ) {
 				<div className="flex items-center justify-between mb-4">
 					<div>
 						<h3 className="font-semibold text-gray-900">Checkpoint questions</h3>
-						<p className="text-sm text-gray-500">Pause playback at a timestamp and require a correct answer to continue.</p>
+						<p className="text-sm text-gray-500">Pause playback at a timestamp and require a correct answer to continue. Drag { gating.checkpoints.length > 1 ? '⠿ to reorder, click' : 'click' } a row to expand it.</p>
 					</div>
 					<Button variant="ghost" onClick={ addCheckpoint }>+ Checkpoint</Button>
 				</div>
-				<div className="space-y-6 mt-4 pt-5 border-t border-solid border-line">
+				<div className="space-y-3 mt-4 pt-5 border-t border-solid border-line">
 					{ gating.checkpoints.map( ( cp, i ) => (
-						<div key={ cp.id } className="border-l-4 border-brand-200 pl-4">
-							<div className="flex gap-2 items-end mb-3">
-								<Field label="At (seconds)"><Input type="number" className="w-28" value={ cp.at } onChange={ ( e ) => setCheckpoint( i, { at: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
-								{ 'quizpress' !== cp.source && (
-									<Field label="Pass %"><Input type="number" className="w-24" value={ cp.passPercent } onChange={ ( e ) => setCheckpoint( i, { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
-								) }
-								<div className="flex-1"><Field label="Title"><Input value={ cp.title || '' } onChange={ ( e ) => setCheckpoint( i, { title: e.target.value } ) } placeholder="Checkpoint" /></Field></div>
-								<Button variant="danger" onClick={ () => removeCheckpoint( i ) }><BsTrash /></Button>
-							</div>
-							<QuizSourceFields quiz={ cp } quizpressOpts={ quizpressOpts } onChange={ ( partial ) => setCheckpoint( i, partial ) } />
-						</div>
+						<CheckpointRow
+							key={ cp.id }
+							cp={ cp }
+							index={ i }
+							isOpen={ openCheckpoints.has( cp.id ) }
+							onToggle={ () => toggleCheckpointOpen( cp.id ) }
+							onChange={ ( partial ) => setCheckpoint( i, partial ) }
+							onRemove={ () => removeCheckpoint( i ) }
+							quizpressOpts={ quizpressOpts }
+							isDragging={ dragIndex === i }
+							isOver={ overIndex === i && dragIndex !== i }
+							onDragStart={ () => setDragIndex( i ) }
+							onDragOver={ ( e ) => { e.preventDefault(); if ( overIndex !== i ) { setOverIndex( i ); } } }
+							onDrop={ () => { reorderCheckpoints( dragIndex, i ); setDragIndex( null ); setOverIndex( null ); } }
+							onDragEnd={ () => { setDragIndex( null ); setOverIndex( null ); } }
+						/>
 					) ) }
 					{ gating.checkpoints.length === 0 && <p className="text-sm text-gray-400">No checkpoints yet.</p> }
 				</div>
