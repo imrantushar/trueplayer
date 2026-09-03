@@ -60,6 +60,10 @@ export const api = {
 	attestationExportUrl: ( id ) => rest.url( `attestation/export?video=${ id }&_wpnonce=${ nonce() }` ),
 	certificateUrl: ( code ) => rest.url( `attestation/certificate?code=${ encodeURIComponent( code ) }` ),
 
+	// Bunny.net Storage (pro) — the upload itself is chunked, see utils/bunnyUpload.js.
+	bunnyStatus: () => rest.get( 'bunny/status' ),
+	bunnyFiles: () => rest.get( 'bunny/files' ),
+
 	// LMS course/lesson options (pro)
 	getLmsOptions: () => rest.get( 'lms/options' ),
 

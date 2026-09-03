@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { Card, Field, FieldGroup, Input, Select, SectionTitle, Toggle } from '../../components/UI';
+import BunnyStorageField from '../../components/BunnyStorageField';
 import MediaFileCard from '../../components/MediaFileCard';
 import PosterField from '../../components/PosterField';
 import { isPro } from '../../pro';
@@ -219,8 +220,8 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 			) }
 
 			{ source.type === 'bunnyStorage' && (
-				<Field label="File URL" required hint="A direct mp4/webm or .m3u8 URL from your Bunny Storage pull zone.">
-					<Input value={ source.src || '' } onChange={ ( e ) => set( { src: e.target.value.trim() } ) } placeholder="https://your-zone.b-cdn.net/path/video.mp4" />
+				<Field label="Video file" required hint="Upload straight to your storage zone, reuse a file already in it, or paste a URL.">
+					<BunnyStorageField value={ source.src || '' } onChange={ ( src ) => set( { src } ) } />
 				</Field>
 			) }
 

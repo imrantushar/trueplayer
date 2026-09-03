@@ -31,7 +31,19 @@ class InstantPage {
 		return $vars;
 	}
 
+	/**
+	 * The address this page is actually served at.
+	 *
+	 * `home_url`, never `site_url`: the rewrite rule is registered against the
+	 * site's front end, so an install with WordPress in its own directory
+	 * serves /tp/{id}/ from the home address, not from wp/. And with plain
+	 * permalinks there is no pretty route at all — `add_rewrite_rule` produces
+	 * nothing usable — so the query var is the only address that resolves.
+	 */
 	public static function url( int $video_id ): string {
+		if ( ! get_option( 'permalink_structure' ) ) {
+			return add_query_arg( self::QUERY_VAR, $video_id, home_url( '/' ) );
+		}
 		return home_url( '/tp/' . $video_id . '/' );
 	}
 

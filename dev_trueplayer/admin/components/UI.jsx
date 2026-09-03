@@ -165,6 +165,54 @@ export function Card( { children, className = '' } ) {
 	return <div className={ `bg-white rounded-card border border-line shadow-card ${ className }` }>{ children }</div>;
 }
 
+/**
+ * A Card whose body folds away behind its own heading.
+ *
+ * For settings that are only relevant to some installs: the title and its
+ * description stay readable while closed, so the screen still says what is on
+ * offer, and only the fields — the part that costs vertical space and invites
+ * mis-pasting — are hidden until asked for.
+ *
+ * `open` / `onToggle` are controlled, so a caller can run several of these as
+ * one accordion by holding a single "which is open" value. `badge` renders to
+ * the right of the title, for saying something about the closed state.
+ */
+export function CollapsibleCard( { title, description, badge, open, onToggle, children, className = '' } ) {
+	const bodyId = useRef( `tp-panel-${ Math.random().toString( 36 ).slice( 2, 9 ) }` ).current;
+
+	return (
+		<Card className={ className }>
+			<button
+				type="button"
+				onClick={ onToggle }
+				aria-expanded={ open }
+				aria-controls={ bodyId }
+				className="w-full text-left flex items-start gap-3 p-6 group"
+			>
+				<span className="min-w-0 flex-1">
+					<span className="flex items-center gap-2">
+						<span className="font-semibold text-gray-900 group-hover:text-brand-500 transition-colors">{ title }</span>
+						{ badge }
+					</span>
+					{ description && <span className="block text-sm text-muted mt-1">{ description }</span> }
+				</span>
+				{ /* The chevron points right when closed and down when open —
+				     rotating one glyph rather than swapping two keeps the arrow
+				     from jumping a pixel as it changes. */ }
+				<Icon
+					name="chevronRight"
+					className={ `w-4 h-4 shrink-0 mt-0.5 text-gray-400 transition-transform ${ open ? 'rotate-90' : '' }` }
+				/>
+			</button>
+			{ open && (
+				<div id={ bodyId } className="px-6 pb-6 -mt-1">
+					<div className="pt-5 border-t border-solid border-line">{ children }</div>
+				</div>
+			) }
+		</Card>
+	);
+}
+
 /** Row-actions dropdown — kebab trigger + icon/label menu. items: [ { label, icon, onClick, danger? } ]; danger items (e.g. Delete) render in red. */
 /**
  * Primary action with a caret that reveals related actions — the main segment

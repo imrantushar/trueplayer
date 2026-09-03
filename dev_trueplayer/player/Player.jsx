@@ -944,6 +944,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	stageStyle[ '--tp-cap-bg' ] = hexToRgba( appearance.captionBackground || '#000000', ( appearance.captionOpacity ?? 75 ) / 100 );
 	// Aspect ratio (audio keeps its compact bar; sticky keeps the ratio too so
 	// the mini player matches the video's shape).
+	//
+	// "Auto (native)" must resolve to a real ratio, never the CSS keyword
+	// `auto`. The stage is sized purely by `aspect-ratio` — every child of it
+	// (.tp-media-container, .tp-media) is `position: absolute; inset: 0` and
+	// contributes no height — so `aspect-ratio: auto` on a <div>, which has no
+	// intrinsic ratio of its own, collapsed the whole player to 0px and left a
+	// blank page with the video playing invisibly inside it.
 	if ( source.mediaType !== 'audio' && appearance.aspectRatio && appearance.aspectRatio !== '16:9' ) {
 		// `auto` must never reach CSS as-is. `aspect-ratio: auto` on a plain
 		// <div> resolves to no ratio at all, and every child of the stage is

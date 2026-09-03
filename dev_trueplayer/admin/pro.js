@@ -26,4 +26,4 @@ export function proFlag( name ) {
 }
 
 export const PRO_SKINS = [ 'floating', 'ambient' ];
-export const PRO_SOURCES = [ 'bunny', 'mux', 'hls' ];
+export const PRO_SOURCES = [ 'bunny', 'bunnyStorage', 'mux', 'hls' ];

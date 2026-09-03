@@ -83,6 +83,9 @@ async function upload( path, blob ) {
 	if ( ! res.ok ) {
 		const err = new Error( ( json && json.message ) || `Upload failed (${ res.status })` );
 		err.status = res.status;
+		// The decoded body too, not just the status: a chunked upload has to
+		// read `data.expected` off a 409 to know where to resume from.
+		err.detail = json || {};
 		throw err;
 	}
 	return json;

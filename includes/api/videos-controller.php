@@ -788,12 +788,18 @@ class VideosController extends WP_REST_Controller {
 		$terms = wp_get_object_terms( $post->ID, \TruePlayer\Database\PostType::VIDEO_TAXONOMY );
 		$tags  = is_wp_error( $terms ) ? [] : wp_list_pluck( $terms, 'name' );
 		return [
-			'id'        => $post->ID,
-			'title'     => $post->post_title,
-			'shortcode' => sprintf( '[trueplayer id="%d"]', $post->ID ),
-			'config'    => $this->config_of( $post->ID ),
-			'tags'      => array_values( $tags ),
-			'modified'  => $post->post_modified_gmt,
+			'id'         => $post->ID,
+			'title'      => $post->post_title,
+			'shortcode'  => sprintf( '[trueplayer id="%d"]', $post->ID ),
+			// Like `shortcode`: the embed the author copies, built where its
+			// shape is defined rather than reassembled in the browser. The
+			// admin used to compose this from `site_url` and a hardcoded /tp/
+			// path, which is the wrong host on a WordPress-in-its-own-directory
+			// install and the wrong shape on plain permalinks.
+			'instantUrl' => \TruePlayer\InstantPage::url( $post->ID ),
+			'config'     => $this->config_of( $post->ID ),
+			'tags'       => array_values( $tags ),
+			'modified'   => $post->post_modified_gmt,
 		];
 	}
 }
