@@ -27,6 +27,15 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 	const [ answers, setAnswers ] = useState( {} );
 	const [ busy, setBusy ] = useState( false );
 	const [ result, setResult ] = useState( null );
+	// Bumped to remount <QuizpressQuiz> from scratch on "Try again" — it goes
+	// quiet (renders nothing) once an attempt finishes, so a fresh key is what
+	// brings back its own start screen (Retake quiz button, updated attempt
+	// count) rather than teaching it about grading outcomes it doesn't own.
+	const [ resetKey, setResetKey ] = useState( 0 );
+	const retryQuizpress = () => {
+		setResult( null );
+		setResetKey( ( k ) => k + 1 );
+	};
 
 	const isQuizpress = 'quizpress' === quiz.source;
 	const questions   = quiz.questions || [];
@@ -78,7 +87,7 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 			<div className="tp-overlay tp-quiz tp-quiz--quizpress">
 				<div className="tp-quiz-card">
 					<h3 className="tp-quiz-title">{ title }</h3>
-					<QuizpressQuiz quizId={ quiz.quizpressId } onAttemptFinished={ submit } />
+					<QuizpressQuiz key={ resetKey } quizId={ quiz.quizpressId } onAttemptFinished={ submit } />
 					{ busy && <p className="tp-quiz-feedback">Checking your result…</p> }
 					{ result && result.passed && (
 						<p className="tp-quiz-feedback tp-pass tp-quiz-verdict">
@@ -92,13 +101,22 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 						</p>
 					) }
 					{ result && ! result.passed && ! result.pending && ! result.error && (
-						<p className="tp-quiz-feedback tp-fail tp-quiz-verdict">
-							{ result.locked
-								? `You didn't pass (${ result.score }%) — locked. Re-watch the video to try again.`
-								: result.preview
-									? `You didn't pass this attempt (${ result.score }%).`
-									: `You didn't pass this attempt (${ result.score }%). Attempts left: ${ result.attemptsLeft }.` }
-						</p>
+						<>
+							<p className="tp-quiz-feedback tp-fail tp-quiz-verdict">
+								{ result.locked
+									? `You didn't pass (${ result.score }%) — locked. Re-watch the video to try again.`
+									: result.preview
+										? `You didn't pass this attempt (${ result.score }%).`
+										: `You didn't pass this attempt (${ result.score }%). Attempts left: ${ result.attemptsLeft }.` }
+							</p>
+							{ /* Locked already swaps this whole overlay for the re-watch
+							     screen (Player.jsx's onQuizLocked) — nothing to retry here. */ }
+							{ ! result.locked && (
+								<button type="button" className="tp-quiz-submit" onClick={ retryQuizpress }>
+									Try again
+								</button>
+							) }
+						</>
 					) }
 					{ result && result.error && (
 						<p className="tp-quiz-feedback tp-fail tp-quiz-verdict">
