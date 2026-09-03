@@ -173,8 +173,20 @@ export default function App() {
 
 			<div className="flex flex-1 min-h-0">
 				{ route.name === 'editor' ? (
-					// The editor renders its own contextual sidebar (its steps).
-					<Editor id={ route.id } onEditState={ setEditState } />
+					// The editor renders its own contextual sidebar (its steps). The
+					// active step/sub-step ride in the URL too — replaceState, not
+					// push, same reasoning as Settings below — so a reload lands back
+					// on the step the author was on instead of Source.
+					<Editor
+						id={ route.id }
+						tab={ route.tab }
+						sub={ route.sub }
+						onTabChange={ ( tab, sub ) => {
+							window.history.replaceState( {}, '', routeUrl( 'editor', { id: route.id, tab, sub } ) );
+							setRoute( ( r ) => ( { ...r, tab, sub } ) );
+						} }
+						onEditState={ setEditState }
+					/>
 				) : (
 					<main className="flex-1 min-w-0">
 						<div className="max-w-[1250px] mx-auto px-8 py-8">

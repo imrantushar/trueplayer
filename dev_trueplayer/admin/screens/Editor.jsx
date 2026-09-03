@@ -76,12 +76,44 @@ function AccessTab( { config, patch, sub = 'gating' } ) {
 	);
 }
 
-export default function Editor( { id, onEditState } ) {
+// Step/sub-step keys valid for the URL (see nav.js's `?tab=&sub=` on the
+// editor route). Kept next to TABS/*_SUBS so they can't drift apart.
+const VALID_TABS = TABS.map( ( t ) => t.key );
+const validSubOf = ( tabKey, subKey ) => {
+	const def = TABS.find( ( t ) => t.key === tabKey );
+	return !! ( def && def.subs && def.subs.some( ( [ key ] ) => key === subKey ) );
+};
+
+export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, onTabChange } ) {
 	const [ video, setVideo ] = useState( null );
-	const [ tab, setTab ] = useState( 'source' );
-	const [ activeSub, setActiveSub ] = useState( { player: 'appearance', interactions: 'overlays', access: 'gating' } ); // active sub per accordion section
-	const [ navOpen, setNavOpen ] = useState( null ); // which nav section's accordion is expanded
-	const selectSub = ( key, subKey ) => { setTab( key ); setNavOpen( key ); setActiveSub( ( m ) => ( { ...m, [ key ]: subKey } ) ); };
+	// Controlled from the URL when the app provides it (App.jsx's route) — a
+	// reload then lands back on the same step instead of Source. Falls back to
+	// plain local state when it doesn't (Presets.jsx embeds this editor for a
+	// preset, with no URL of its own to ride in).
+	const initialTab = VALID_TABS.includes( tabProp ) ? tabProp : 'source';
+	const [ tabState, setTabState ] = useState( initialTab );
+	const [ activeSub, setActiveSub ] = useState( () => {
+		const base = { player: 'appearance', interactions: 'overlays', access: 'gating' };
+		if ( validSubOf( initialTab, subProp ) ) {
+			base[ initialTab ] = subProp;
+		}
+		return base;
+	} );
+	const [ navOpen, setNavOpen ] = useState( () => {
+		const def = TABS.find( ( t ) => t.key === initialTab );
+		return def && def.subs ? initialTab : null;
+	} );
+	const tab = tabState;
+	// Every step change (with or without a sub-step) also tells the parent, so
+	// it can push the URL — a plain no-op when there's no `onTabChange` (the
+	// Presets-embedded case).
+	const setTab = ( key, subKey ) => {
+		setTabState( key );
+		if ( onTabChange ) {
+			onTabChange( key, subKey );
+		}
+	};
+	const selectSub = ( key, subKey ) => { setTab( key, subKey ); setNavOpen( key ); setActiveSub( ( m ) => ( { ...m, [ key ]: subKey } ) ); };
 	const [ dirty, setDirty ] = useState( false );
 	const [ saving, setSaving ] = useState( false );
 	const [ presets, setPresets ] = useState( [] );
@@ -233,7 +265,7 @@ export default function Editor( { id, onEditState } ) {
 								// A tab with subs toggles its accordion (and navigates in);
 								// a plain tab just navigates and collapses any open accordion.
 								const onClickPrimary = () => {
-									setTab( t.key );
+									setTab( t.key, t.subs ? activeSub[ t.key ] : undefined );
 									setNavOpen( t.subs ? ( open ? null : t.key ) : null );
 								};
 								return (

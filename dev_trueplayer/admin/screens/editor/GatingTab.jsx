@@ -161,33 +161,39 @@ function QuizSourceFields( { quiz, quizpressOpts, onChange } ) {
 	const quizzes = ( quizpressOpts && quizpressOpts.quizzes ) || [];
 	const selectedQuiz = quizzes.find( ( q ) => q.id === quiz.quizpressId );
 
+	const quizpressReady = ! quizpressOpts || quizpressOpts.available;
+
 	return (
 		<div>
-			<Field label="Questions" className="mb-3">
-				<Select
-					className="w-64"
-					value={ source }
-					onChange={ ( e ) => onChange( { source: 'quizpress' === e.target.value ? 'quizpress' : 'native' } ) }
-				>
-					<option value="native">Author here</option>
-					<option value="quizpress">Use a QuizPress quiz</option>
-				</Select>
-			</Field>
+			<div className="flex gap-3 items-start mb-3">
+				<Field label="Questions" className={ 'quizpress' === source && quizpressReady ? 'w-64 shrink-0' : '' }>
+					<Select
+						className={ 'quizpress' === source && quizpressReady ? '' : 'w-64' }
+						value={ source }
+						onChange={ ( e ) => onChange( { source: 'quizpress' === e.target.value ? 'quizpress' : 'native' } ) }
+					>
+						<option value="native">Author here</option>
+						<option value="quizpress">Use a QuizPress quiz</option>
+					</Select>
+				</Field>
+				{ 'quizpress' === source && quizpressReady && (
+					<Field label="Quiz" className="flex-1" hint="Question types, scoring and feedback all come from QuizPress.">
+						<Select value={ quiz.quizpressId || '' } onChange={ ( e ) => onChange( { quizpressId: parseInt( e.target.value, 10 ) || 0 } ) }>
+							<option value="">— select —</option>
+							{ quizzes.map( ( q ) => (
+								<option key={ q.id } value={ q.id }>
+									{ q.title }{ q.hasManualReview ? ' — has manual-review questions' : '' }
+								</option>
+							) ) }
+						</Select>
+					</Field>
+				) }
+			</div>
 			{ 'quizpress' === source ? (
 				quizpressOpts && ! quizpressOpts.available ? (
 					<p className="text-sm text-gray-400">Install QuizPress to link a quiz here.</p>
 				) : (
 					<>
-						<Field label="Quiz" hint="Question types, scoring and feedback all come from QuizPress.">
-							<Select value={ quiz.quizpressId || '' } onChange={ ( e ) => onChange( { quizpressId: parseInt( e.target.value, 10 ) || 0 } ) }>
-								<option value="">— select —</option>
-								{ quizzes.map( ( q ) => (
-									<option key={ q.id } value={ q.id }>
-										{ q.title }{ q.hasManualReview ? ' — has manual-review questions' : '' }
-									</option>
-								) ) }
-							</Select>
-						</Field>
 						{ selectedQuiz && (
 							<div className="mb-4 rounded-lg border border-solid border-line bg-gray-50 p-3 text-sm text-gray-700">
 								<p className="mb-1">
@@ -357,12 +363,17 @@ export default function GatingTab( { config, patch } ) {
 		set( { checkpoints: gating.checkpoints.map( ( c, idx ) => ( idx === i ? { ...c, ...partial } : c ) ) } );
 	const removeCheckpoint = ( i ) => set( { checkpoints: gating.checkpoints.filter( ( _, idx ) => idx !== i ) } );
 
-	// Native HTML5 drag reorder — same pattern as the playlist editor
-	// (Playlists.jsx), no added dependency.
+	// Native HTML5 drag reorder. The source index rides in the drag event's own
+	// dataTransfer payload (the standard way to do this) rather than being read
+	// back out of React state at drop time — reading it from state instead (the
+	// playlist editor's approach) depends on a state update having flushed and
+	// re-rendered new closures onto the drop target before the drop fires,
+	// which raced and silently dropped reorders here. dragIndex/overIndex below
+	// still exist, but purely for the drag-source/drag-over highlight styling.
 	const [ dragIndex, setDragIndex ] = useState( null );
 	const [ overIndex, setOverIndex ] = useState( null );
 	const reorderCheckpoints = ( from, to ) => {
-		if ( null === from || null === to || from === to ) {
+		if ( null === from || null === to || Number.isNaN( from ) || from === to ) {
 			return;
 		}
 		const next = [ ...gating.checkpoints ];
@@ -425,9 +436,9 @@ export default function GatingTab( { config, patch } ) {
 							quizpressOpts={ quizpressOpts }
 							isDragging={ dragIndex === i }
 							isOver={ overIndex === i && dragIndex !== i }
-							onDragStart={ () => setDragIndex( i ) }
+							onDragStart={ ( e ) => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData( 'text/plain', String( i ) ); setDragIndex( i ); } }
 							onDragOver={ ( e ) => { e.preventDefault(); if ( overIndex !== i ) { setOverIndex( i ); } } }
-							onDrop={ () => { reorderCheckpoints( dragIndex, i ); setDragIndex( null ); setOverIndex( null ); } }
+							onDrop={ ( e ) => { e.preventDefault(); reorderCheckpoints( parseInt( e.dataTransfer.getData( 'text/plain' ), 10 ), i ); setDragIndex( null ); setOverIndex( null ); } }
 							onDragEnd={ () => { setDragIndex( null ); setOverIndex( null ); } }
 						/>
 					) ) }

@@ -1,5 +1,6 @@
 import { useState } from '@wordpress/element';
 import { Card, Field, Input, Button, Textarea, Toggle, SectionTitle } from '../../components/UI';
+import { Icon } from '../../components/icons';
 import { BsTrash } from 'react-icons/bs';
 
 const uid = () => 'tc_' + Math.random().toString( 36 ).slice( 2, 8 );
@@ -39,7 +40,7 @@ export default function TimedContentTab( { config, patch } ) {
 								<button type="button" onClick={ () => setOpenId( open ? null : it.id ) } className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50">
 									<span className="text-xs font-semibold text-muted tabular-nums">{ summary }</span>
 									<div className="flex-1 min-w-0 text-sm text-ink truncate">{ ( it.content || '' ).replace( /<[^>]+>/g, '' ).trim() || `Segment ${ i + 1 }` }</div>
-									<span className="text-muted text-xs">{ open ? '▲' : '▼' }</span>
+									<Icon name="chevronRight" className={ `w-3.5 h-3.5 text-muted shrink-0 transition-transform ${ open ? '-rotate-90' : 'rotate-90' }` } />
 								</button>
 								{ open && (
 									<div className="px-6 pb-6 pt-4 border-t border-line">

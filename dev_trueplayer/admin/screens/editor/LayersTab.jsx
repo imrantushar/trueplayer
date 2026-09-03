@@ -521,7 +521,7 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 							</button>
 						) }
 
-						<span className="text-muted text-xs shrink-0">{ open ? '▲' : '▼' }</span>
+						<Icon name="chevronRight" className={ `w-3.5 h-3.5 text-muted shrink-0 transition-transform ${ open ? '-rotate-90' : 'rotate-90' }` } />
 					</div>
 					{ open && (
 					<div className="px-6 pb-6 pt-4 border-t border-line">
@@ -608,7 +608,10 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 			</div>
 
 			<div className="relative inline-block" ref={ addBtnRef }>
-				<Button variant="secondary" onClick={ toggleMenu }>+ Add layer ▾</Button>
+				<Button variant="secondary" onClick={ toggleMenu } className="inline-flex items-center gap-1.5">
+					+ Add layer
+					<Icon name="chevronRight" className={ `w-3.5 h-3.5 transition-transform ${ menu ? '-rotate-90' : 'rotate-90' }` } />
+				</Button>
 				{ menu && (
 					<>
 						{ /* Above the sticky header (z-30), which is opaque and was
