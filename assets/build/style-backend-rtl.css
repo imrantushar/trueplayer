@@ -941,14 +941,12 @@
 .border-transparent {
 		border-color: transparent;
 }
-<<<<<<< HEAD
 .border-warning {
 		--tw-border-opacity: 1;
 		border-color: rgb(253 176 34 / var(--tw-border-opacity, 1));
-=======
+}
 .border-warning\/40 {
 		border-color: rgb(253 176 34 / 0.4);
->>>>>>> next-release
 }
 .border-l-brand-600 {
 		--tw-border-opacity: 1;

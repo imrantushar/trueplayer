@@ -1468,7 +1468,6 @@
 	cursor: not-allowed;
 }
 
-<<<<<<< HEAD
 /* A QuizPress-sourced quiz's own answer widgets (images, matching pairs,
    graphs, …) need real room — wider than the compact native quiz card. */
 .tp-quiz--quizpress .tp-quiz-card {
@@ -1558,8 +1557,6 @@
 	cursor: pointer;
 }
 
-=======
->>>>>>> next-release
 /* ---- spinner ---- */
 .tp-spinner {
 	position: absolute;
