@@ -30,11 +30,24 @@ Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources 
 * Added - Post-upload URL verification with playback error details.
 * Added - Collapsible Bunny.net settings sections with status badges.
 * Added - Bunny.net Storage as a source in the Create Media dialog.
+* Added - QuizPress quiz as an alternative question source for checkpoints and the final quiz.
+* Added - Inline QuizPress quiz-taking UI, question-by-question, using QuizPress's own answer widgets and grading.
+* Added - Real pass/fail and score read from QuizPress's own attempt data.
+* Added - A no-penalty "awaiting manual review" outcome for QuizPress quizzes with manually-reviewed questions.
+* Added - QuizPress passing grade, attempt limit, and manual-review warnings shown in the Gating tab.
+* Added - Live-preview grading for QuizPress-sourced quizzes.
+* Added - "Try again" after a failed QuizPress-sourced checkpoint.
+* Added - Drag-and-drop reordering and a collapsible accordion for checkpoint and question lists.
+* Added - The editor's active tab now stays in the URL, so a reload keeps your place.
+* Added - A "What's New" panel in the admin top bar.
 
 * Fixed - Bunny.net Storage Private mode not applying token protection.
 * Fixed - Bunny.net token signing for single files and HLS directories.
 * Fixed - Single-file tokens potentially unlocking an entire folder.
 * Fixed - The standalone video page to provide a clean, shareable URL.
+* Fixed - The frontend volume slider stretching to fill the control bar on some themes.
+* Fixed - The settings/speed menu not closing on an outside click.
+* Fixed - Arrow key volume/seek shortcuts also scrolling the page.
 
 = 1.1.0 - 01-09-2026 =
 * Fixed - Saving a video, preset or playlist whose settings contained a double quote or a backslash wiped the whole configuration, source and layers included. Adding a shortcode layer was the easiest way to hit it.

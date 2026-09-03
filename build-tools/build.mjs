@@ -288,7 +288,7 @@ async function buildZip(cfg) {
   const distignore = path.join(ROOT, '.distignore');
   if (fs.existsSync(distignore)) ig.add(fs.readFileSync(distignore, 'utf8'));
   else warn('no .distignore — shipping everything except .git/node_modules');
-  ig.add(['.git', 'node_modules', '.build-cache', 'dist']); // always-ignored safety net
+  ig.add(['.git', 'node_modules', '.build-cache', 'dist', 'changelog.md']); // always-ignored safety net
 
   const outDir = path.resolve(ROOT, cfg.outputDir);
   fs.mkdirSync(outDir, { recursive: true });

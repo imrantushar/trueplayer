@@ -1,5 +1,6 @@
 import { Icon } from './icons';
 import { brand } from '../brand';
+import WhatsNew from './WhatsNew';
 
 /**
  * Top bar — brand + breadcrumb + a slot screens portal their toolbar into.
@@ -46,6 +47,7 @@ export default function Header( { crumbs = [], onHome } ) {
 			) ) }
 			{ /* Screens (e.g. the editor) portal their toolbar actions here. */ }
 			<div id="tp-topbar-slot" className="ml-auto flex items-center gap-2.5 shrink-0" />
+			<WhatsNew />
 		</header>
 	);
 }

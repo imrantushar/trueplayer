@@ -46,3 +46,4 @@ AGENTS.md
 *.log
 *.map
 *.sh
+changelog.md
