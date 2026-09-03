@@ -897,10 +897,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 		switch ( e.key ) {
 			case ' ': case 'k': e.preventDefault(); playPause(); break;
-			case 'ArrowRight': skip( cz.skipSeconds ); break;
-			case 'ArrowLeft': skip( -cz.skipSeconds ); break;
-			case 'ArrowUp': setVolume( Math.min( 1, p.getVolume() + 0.1 ) ); break;
-			case 'ArrowDown': setVolume( Math.max( 0, p.getVolume() - 0.1 ) ); break;
+			// preventDefault on every arrow case: without it the page scrolls
+			// (vertically for Up/Down, and some browsers/OSes treat Left/Right as
+			// a back/forward or horizontal-scroll gesture too) at the same time
+			// the player reacts, so a volume/seek key press also yanked the page.
+			case 'ArrowRight': e.preventDefault(); skip( cz.skipSeconds ); break;
+			case 'ArrowLeft': e.preventDefault(); skip( -cz.skipSeconds ); break;
+			case 'ArrowUp': e.preventDefault(); setVolume( Math.min( 1, p.getVolume() + 0.1 ) ); break;
+			case 'ArrowDown': e.preventDefault(); setVolume( Math.max( 0, p.getVolume() - 0.1 ) ); break;
 			case 'm': toggleMute(); break;
 			case 'f': fullscreen(); break;
 			default: break;

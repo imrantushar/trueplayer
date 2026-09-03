@@ -1,1 +1,128 @@
-"use strict";(globalThis.webpackChunktrueplayer=globalThis.webpackChunktrueplayer||[]).push([[137],{116(e,t,a){a.d(t,{createVimeoProvider:()=>u});var i=a(418);async function u(e,t,u={}){const r=(await a.e(320).then(a.bind(a,273))).default,n=(0,i.z)(),s=document.createElement("div");s.className="tp-media",e.appendChild(s);const c=new r(s,{id:t.videoId||(t.src||"").match(/vimeo\.com\/(\d+)/)?.[1]||t.src,controls:!1,responsive:!0,playsinline:!0,autoplay:!!u.autoStart,muted:!(!u.behavior||!u.behavior.muted)});let d=0,o=0,m=!0;return c.on("timeupdate",e=>{o=e.seconds,n.emit("timeupdate")}),c.on("play",()=>{m=!1,n.emit("play"),n.emit("playing")}),c.on("pause",()=>{m=!0,n.emit("pause")}),c.on("ended",()=>n.emit("ended")),c.on("bufferstart",()=>n.emit("waiting")),c.ready().then(async()=>{d=await c.getDuration().catch(()=>0),n.emit("ready"),n.emit("durationchange")}),{kind:"vimeo",element:s,capabilities:{pip:!!document.pictureInPictureEnabled,quality:!1,rate:!0,tracks:!1},on:n.on,play:()=>c.play(),pause:()=>c.pause(),seek:e=>(o=e,n.emit("timeupdate"),c.setCurrentTime(e).then(e=>{o=e,n.emit("timeupdate")}).catch(()=>{})),setVolume:e=>c.setVolume(e),setMuted:e=>c.setMuted(e),setRate:e=>c.setPlaybackRate(e),getCurrentTime:()=>o,getDuration:()=>d,getBufferedEnd:()=>o,isPaused:()=>m,isMuted:()=>!1,getVolume:()=>1,getRate:()=>1,getQualities:()=>[],setQuality:()=>{},getTextTracks:()=>[],setTextTrack:()=>{},requestPiP:()=>c.requestPictureInPicture(),exitPiP:()=>c.exitPictureInPicture(),isPiPActive:()=>c.getPictureInPicture().catch(()=>!1),destroy:()=>{try{c.destroy()}catch(e){}n.clear()}}}}}]);
+"use strict";
+(globalThis["webpackChunktrueplayer"] = globalThis["webpackChunktrueplayer"] || []).push([["vimeo"],{
+
+/***/ "./dev_trueplayer/player/providers/vimeo.js"
+/*!**************************************************!*\
+  !*** ./dev_trueplayer/player/providers/vimeo.js ***!
+  \**************************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   createVimeoProvider: () => (/* binding */ createVimeoProvider)
+/* harmony export */ });
+/* harmony import */ var _emitter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./emitter */ "./dev_trueplayer/player/providers/emitter.js");
+
+
+/**
+ * Vimeo provider via @vimeo/player (lazy-imported). Native controls hidden;
+ * our custom control bar drives it.
+ */
+async function createVimeoProvider(container, source, opts = {}) {
+  const Vimeo = (await __webpack_require__.e(/*! import() | vimeojs */ "vimeojs").then(__webpack_require__.bind(__webpack_require__, /*! @vimeo/player */ "./node_modules/@vimeo/player/dist/player.es.js"))).default;
+  const emitter = (0,_emitter__WEBPACK_IMPORTED_MODULE_0__.createEmitter)();
+  const host = document.createElement('div');
+  host.className = 'tp-media';
+  container.appendChild(host);
+  const id = source.videoId || (source.src || '').match(/vimeo\.com\/(\d+)/)?.[1] || source.src;
+  // `muted` was previously ignored here — this provider only ever read
+  // opts.autoStart, so "Start muted" did nothing on a Vimeo video.
+  // `loop` stays unset deliberately: Player.jsx loops from its own
+  // `ended` handler so end-of-video gating still runs.
+  const player = new Vimeo(host, {
+    id,
+    controls: false,
+    responsive: true,
+    playsinline: true,
+    autoplay: !!opts.autoStart,
+    muted: !!(opts.behavior && opts.behavior.muted)
+  });
+  let duration = 0;
+  let current = 0;
+  let paused = true;
+  player.on('timeupdate', d => {
+    current = d.seconds;
+    emitter.emit('timeupdate');
+  });
+  player.on('play', () => {
+    paused = false;
+    emitter.emit('play');
+    emitter.emit('playing');
+  });
+  player.on('pause', () => {
+    paused = true;
+    emitter.emit('pause');
+  });
+  player.on('ended', () => emitter.emit('ended'));
+  player.on('bufferstart', () => emitter.emit('waiting'));
+
+  // Emit 'ready' asynchronously (player.ready() resolves over the network),
+  // so the Player has subscribed by the time it fires. Awaiting it before we
+  // return would emit into the void and leave the player stuck on the spinner.
+  player.ready().then(async () => {
+    duration = await player.getDuration().catch(() => 0);
+    emitter.emit('ready');
+    emitter.emit('durationchange');
+  });
+  return {
+    kind: 'vimeo',
+    element: host,
+    // Whether a given embed actually supports it is only knowable async
+    // (player.getPictureInPicture() round-trips to the iframe), so this is
+    // a browser-level check; per-video support still governs whether
+    // requestPiP() itself resolves.
+    capabilities: {
+      pip: !!document.pictureInPictureEnabled,
+      quality: false,
+      rate: true,
+      tracks: false
+    },
+    on: emitter.on,
+    play: () => player.play(),
+    pause: () => player.pause(),
+    // `current` only otherwise moves on the 'timeupdate' event, which Vimeo
+    // fires during playback but not reliably right after a seek made while
+    // paused (dragging the scrubber without hitting play). Without this,
+    // getCurrentTime() kept returning the pre-drag value, so the Scrubber's
+    // "wait for playback to catch up" reconciliation never saw it catch up
+    // and the thumb snapped back after its timeout — set it optimistically
+    // so a paused seek is reflected immediately, then reconcile with the
+    // real (resolved) position once the postMessage round-trip completes.
+    seek: t => {
+      current = t;
+      emitter.emit('timeupdate');
+      return player.setCurrentTime(t).then(seconds => {
+        current = seconds;
+        emitter.emit('timeupdate');
+      }).catch(() => {});
+    },
+    setVolume: v => player.setVolume(v),
+    setMuted: m => player.setMuted(m),
+    setRate: r => player.setPlaybackRate(r),
+    getCurrentTime: () => current,
+    getDuration: () => duration,
+    getBufferedEnd: () => current,
+    isPaused: () => paused,
+    isMuted: () => false,
+    getVolume: () => 1,
+    getRate: () => 1,
+    getQualities: () => [],
+    setQuality: () => {},
+    getTextTracks: () => [],
+    setTextTrack: () => {},
+    requestPiP: () => player.requestPictureInPicture(),
+    exitPiP: () => player.exitPictureInPicture(),
+    isPiPActive: () => player.getPictureInPicture().catch(() => false),
+    destroy: () => {
+      try {
+        player.destroy();
+      } catch (e) {}
+      emitter.clear();
+    }
+  };
+}
+
+/***/ }
+
+}]);
+//# sourceMappingURL=vimeo.1.2.0.js.map

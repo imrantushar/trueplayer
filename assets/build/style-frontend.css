@@ -1,3 +1,6 @@
+/*!*********************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/@wordpress/scripts/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./dev_trueplayer/player/style.css ***!
+  \*********************************************************************************************************************************************************************************************************************/
 /* Frontend player — scoped, CSS-variable driven. No Tailwind (keeps the
    frontend bundle lean). */
 
@@ -638,9 +641,67 @@
 	color: #e5e7eb;
 	font-variant-numeric: tabular-nums;
 }
-.tp-volume {
-	width: 74px;
-	accent-color: var(--tp-accent);
+/* !important: the player is embedded in arbitrary theme/page markup, and a
+   generic host-page reset like `input { width: 100% }` (common in form-
+   styling frameworks) otherwise wins the cascade on this specific property
+   over a single-class selector — accent-color/cursor aren't touched by that
+   kind of rule so they apply fine, but width silently loses, and since this
+   sits in a flex row (.tp-controls-row) an unconstrained width stretches it
+   across the whole bar. flex is pinned too so it can't grow/shrink either. */
+.tp-volume,
+.tp-volume:hover,
+.tp-volume:focus,
+.tp-volume:active {
+	width: 74px !important;
+	flex: 0 0 74px !important;
+	height: 16px; /* comfortable click target; the visible track is drawn thin below */
+	cursor: pointer;
+	/* Taking manual control of the track/thumb below via the WebKit/Moz
+	   pseudo-elements — accent-color only recolors the browser's default
+	   chrome (full-size thumb, solid track block), which read as a second,
+	   heavier control bar rather than a slim volume slider. */
+	-moz-appearance: none;
+	     appearance: none;
+	-webkit-appearance: none;
+    background: transparent;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+}
+.tp-volume::-webkit-slider-runnable-track {
+	height: 3px;
+	border-radius: 2px;
+	background: rgba( 255, 255, 255, 0.4 ) !important;
+    box-shadow: none !important;
+}
+.tp-volume::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 0.4rem;
+	height: 0.4rem;
+	margin-top: -3.5px; /* center the 10px thumb on the 3px track */
+	border-radius: 50%;
+	background: var( --tp-accent );
+	cursor: pointer;
+}
+.tp-volume::-moz-range-track {
+	height: 3px;
+	border-radius: 2px;
+	background: rgba( 255, 255, 255, 0.3 );
+	box-shadow: none !important;
+}
+.tp-volume::-moz-range-progress {
+	height: 8px;
+	border-radius: 8px;
+	background: var( --tp-accent );
+}
+.tp-volume::-moz-range-thumb {
+	width: 0.3rem !important;
+	height: 0.3rem !important;
+	border: 0;
+	border-radius: 50%;
+	background: var( --tp-accent );
 	cursor: pointer;
 }
 
@@ -1852,3 +1913,5 @@
 }
 @keyframes tp-timed-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
+
+/*# sourceMappingURL=style-frontend.css.map*/

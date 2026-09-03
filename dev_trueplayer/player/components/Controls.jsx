@@ -197,12 +197,28 @@ export function currentChapter( chapters, current, duration ) {
 
 function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, speeds } ) {
 	const [ open, setOpen ] = useState( false );
+	const wrapRef = useRef( null );
 	const rates = speeds && speeds.length ? speeds : [ 0.5, 0.75, 1, 1.25, 1.5, 2 ];
 	const qualities = provider?.getQualities?.() || [];
 	const tracks = provider?.getTextTracks?.() || [];
 
+	// Closes on an outside click — the gear button's own click still toggles
+	// normally, since that click lands inside wrapRef too.
+	useEffect( () => {
+		if ( ! open ) {
+			return;
+		}
+		const onOutside = ( e ) => {
+			if ( wrapRef.current && ! wrapRef.current.contains( e.target ) ) {
+				setOpen( false );
+			}
+		};
+		document.addEventListener( 'pointerdown', onOutside );
+		return () => document.removeEventListener( 'pointerdown', onOutside );
+	}, [ open ] );
+
 	return (
-		<div className="tp-menu-wrap">
+		<div className="tp-menu-wrap" ref={ wrapRef }>
 			<button className="tp-btn" aria-label="Settings" onClick={ () => setOpen( ! open ) }>
 				<Icon d={ P.gear } />
 			</button>
