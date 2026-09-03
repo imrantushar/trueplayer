@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use WP_REST_Controller;
 use WP_REST_Server;
+use TruePlayer\Helper;
 
 /**
  * Admin CRUD for tp_preset items — reusable player styles/behaviour. The whole
@@ -101,7 +102,7 @@ class PresetsController extends WP_REST_Controller {
 			return $id;
 		}
 		if ( isset( $body['config'] ) ) {
-			update_post_meta( $id, '_trueplayer_preset', wp_json_encode( $body['config'] ) );
+			Helper::update_json_meta( $id, '_trueplayer_preset', $body['config'] );
 		}
 		return rest_ensure_response( $this->to_item( get_post( $id ) ) );
 	}
@@ -116,7 +117,7 @@ class PresetsController extends WP_REST_Controller {
 			wp_update_post( [ 'ID' => $id, 'post_title' => sanitize_text_field( $body['title'] ) ] );
 		}
 		if ( array_key_exists( 'config', $body ) ) {
-			update_post_meta( $id, '_trueplayer_preset', wp_json_encode( $body['config'] ) );
+			Helper::update_json_meta( $id, '_trueplayer_preset', $body['config'] );
 		}
 		return rest_ensure_response( $this->to_item( get_post( $id ) ) );
 	}

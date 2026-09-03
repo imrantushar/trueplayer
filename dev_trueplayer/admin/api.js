@@ -24,6 +24,16 @@ export const api = {
 	 * @return {Promise<{id: number, url: string}>} The stored attachment.
 	 */
 	savePoster: ( id, blob, src ) => rest.upload( `videos/${ id }/poster?src=${ encodeURIComponent( src ) }`, blob ),
+
+	/**
+	 * Delete the frames captured for a video that no saved config uses — called
+	 * when the author removes the video file, so a poster generated for a file
+	 * that is now gone doesn't linger in the media library. The poster the saved
+	 * config still points at is kept until the removal itself is saved.
+	 *
+	 * @param {number} id Video id.
+	 */
+	discardPosters: ( id ) => rest.del( `videos/${ id }/poster` ),
 	getSettings: () => rest.get( 'settings' ),
 	saveSettings: ( data ) => rest.post( 'settings', data ),
 	listViewers: ( id ) => rest.get( `viewers?video=${ id }` ),

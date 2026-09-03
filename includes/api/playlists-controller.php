@@ -9,6 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use WP_REST_Controller;
 use WP_REST_Server;
 use TruePlayer\Playlist;
+use TruePlayer\Helper;
 
 /**
  * Admin CRUD for playlists (tp_playlist). Config stored as the
@@ -64,7 +65,7 @@ class PlaylistsController extends WP_REST_Controller {
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
-		update_post_meta( $id, '_trueplayer_playlist', wp_json_encode( $this->sanitize( $body['config'] ?? [] ) ) );
+		Helper::update_json_meta( $id, '_trueplayer_playlist', $this->sanitize( $body['config'] ?? [] ) );
 		return rest_ensure_response( $this->to_item( get_post( $id ) ) );
 	}
 
@@ -78,7 +79,7 @@ class PlaylistsController extends WP_REST_Controller {
 			wp_update_post( [ 'ID' => $id, 'post_title' => sanitize_text_field( $body['title'] ) ] );
 		}
 		if ( array_key_exists( 'config', $body ) ) {
-			update_post_meta( $id, '_trueplayer_playlist', wp_json_encode( $this->sanitize( $body['config'] ) ) );
+			Helper::update_json_meta( $id, '_trueplayer_playlist', $this->sanitize( $body['config'] ) );
 		}
 		return rest_ensure_response( $this->to_item( get_post( $id ) ) );
 	}

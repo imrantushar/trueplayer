@@ -292,6 +292,17 @@
 	border: 0;
 }
 
+/* Audio mode has no picture. The <audio> element the provider builds is
+   invisible on its own, but a player still mounted from before the source was
+   switched to audio-only — or a provider that only hands back an iframe —
+   would otherwise paint video across the bar, behind the waveform.
+   `visibility`, not `display`, so nothing about how the media loads or plays
+   changes; the cover art is a sibling and is unaffected. */
+.tp-stage.is-audio .tp-media,
+.tp-stage.is-audio .tp-media-container iframe {
+	visibility: hidden;
+}
+
 /* Transparent click-shield over embedded players (YouTube/Vimeo): swallows
    pointer events so their in-frame links can't be clicked, while our own
    controls (z-index 5) and big-play button sit above it and stay usable. */
@@ -592,15 +603,6 @@
 	opacity: 0;
 	pointer-events: none;
 }
-/* Nothing has played yet: poster + play button only. Hover doesn't reveal the
-   bar either — there is no position to scrub and no sound to set, so the bar
-   would only be decoration over the poster. (Set by Player.jsx, which keeps
-   audio and big-play-less players out of it.) */
-.tp-stage.is-unstarted .tp-controls {
-	opacity: 0;
-	pointer-events: none;
-}
-
 .tp-controls-row {
 	display: flex;
 	align-items: center;
@@ -930,6 +932,13 @@
 	z-index: 4;
 	pointer-events: none;
 }
+/* Raised over the big play button (z-index 5) while an email form is showing,
+   so the form reads as the thing being asked of the viewer rather than sitting
+   behind the button. The container still passes pointer events through
+   everywhere except the layer itself, so the control bar stays usable. */
+.tp-layers.is-blocking {
+	z-index: 6;
+}
 .tp-layer {
 	pointer-events: auto;
 }
@@ -992,53 +1001,163 @@
 	border-radius: 10px;
 	padding: 14px 16px;
 }
-.tp-form-layer {
-	position: absolute;
-	background: rgba( 17, 24, 39, 0.92 );
-	backdrop-filter: blur( 4px );
-	border-radius: 12px;
-	padding: 14px 16px;
+/* Editor preview only: PHP renders shortcodes, and the preview builds its
+   config in the browser, so there is no html to show. Naming the shortcode
+   beats an empty stage that reads as a broken feature. */
+.tp-shortcode-layer.is-placeholder {
+	background: rgba( 17, 24, 39, 0.88 );
+	color: #e5e7eb;
+	border: 1px dashed rgba( 229, 231, 235, 0.45 );
+	text-align: center;
+}
+.tp-shortcode-layer.is-placeholder code {
+	display: block;
+	font-size: 12px;
+	word-break: break-all;
 	color: #fff;
+}
+.tp-shortcode-layer.is-placeholder span {
+	display: block;
+	margin-top: 6px;
+	font-size: 11px;
+	opacity: 0.7;
+}
+/* ---- email form ----
+   One form, one appearance. The mode decides only where it sits and whether it
+   blocks: the gate is centred on the dimmed video, the inline panel is placed
+   over the picture and lets playback continue. Nothing below is per-mode, so
+   switching Mode cannot change how the form looks — and a colour set on the
+   Style tab means the same thing either way. */
+.tp-emailform {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	max-width: min( 360px, 84% );
+	gap: 10px;
+	box-sizing: border-box;
+	margin: 0;
+	width: 100%;
+	max-width: 420px;
+	padding: 22px;
+	border-radius: 12px;
+	background: var( --tp-of-bg, #fff );
+	color: #111827;
+	text-align: center;
+	box-shadow: 0 12px 40px rgba( 0, 0, 0, 0.3 );
 }
-.tp-form-layer-title {
+
+/* Gate: centred by .tp-overlay. It covers the whole stage, so it has to fit
+   inside it — a short player (21:9, or the scaled editor preview) would
+   otherwise spill the form past the picture with its button out of reach. */
+.tp-emailform-card {
+	max-height: 90%;
+	overflow-y: auto;
+}
+
+/* Inline: placed over the picture by tp-pos-*. */
+.tp-emailform-panel {
+	position: absolute;
+	max-width: min( 420px, 88% );
+}
+
+.tp-emailform-title {
+	margin: 0;
+	font-weight: 700;
+	color: var( --tp-of-title, inherit );
+}
+/* Scoped to the stage on purpose: the admin styles headings inside `.tp-admin`
+   and a theme will style them on the front end, either of which outranks a bare
+   class — which is why the headline colour looked dead in the preview. */
+.tp-stage .tp-emailform-title {
+	font-size: 19px;
+	margin-bottom: 6px;
+}
+
+.tp-emailform-desc {
+	margin: 0 0 4px;
 	font-size: 14px;
+	color: var( --tp-of-muted, #6b7280 );
 }
-.tp-form-layer-row {
-	display: flex;
-	gap: 6px;
-}
-.tp-form-layer-row input {
-	flex: 1;
+
+.tp-emailform-input {
+	width: 100%;
 	min-width: 0;
-	border: 1px solid rgba( 255, 255, 255, 0.25 );
-	background: rgba( 255, 255, 255, 0.1 );
-	color: #fff;
-	border-radius: 7px;
-	padding: 8px 10px;
-	font-size: 13px;
+	box-sizing: border-box;
+	font-size: 14px;
+	border-radius: 8px;
+	padding: 11px 12px;
+	background: #f3f4f6;
+	border: 1px solid #d1d5db;
+	color: #111827;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.tp-form-layer-row button {
-	background: var( --tp-accent );
-	color: #fff;
+/* Hover previews the focus state rather than a grey step towards it — the same
+   rule the admin's own fields follow. Both track the button colour, so a
+   restyled form gets matching field states. */
+.tp-emailform-input:hover,
+.tp-emailform-input:focus {
+	outline: none;
+	border-color: var( --tp-of-btn-bg, var( --tp-accent ) );
+}
+.tp-emailform-input:focus {
+	box-shadow: 0 0 0 3px rgba( 0, 107, 255, 0.15 );
+}
+.tp-emailform-input::placeholder {
+	color: var( --tp-of-muted, #9ca3af );
+	opacity: 0.75;
+}
+
+/* Email + submit share a line; a name field, when asked for, stays above it. */
+.tp-emailform-row {
+	display: flex;
+	align-items: stretch;
+	gap: 8px;
+}
+.tp-emailform-submit {
+	flex: 0 0 auto;
+	background: var( --tp-of-btn-bg, var( --tp-accent, #4f46e5 ) );
+	color: var( --tp-of-btn-text, #fff );
 	border: 0;
-	border-radius: 7px;
-	padding: 8px 14px;
-	font-size: 13px;
+	border-radius: var( --tp-of-btn-radius, 8px );
+	padding: 11px 18px;
+	font-size: 14px;
 	font-weight: 600;
+	white-space: nowrap;
 	cursor: pointer;
 }
-.tp-form-layer-error {
-	font-size: 12px;
-	color: #fca5a5;
+.tp-emailform-submit:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
 }
-.tp-form-layer-thanks {
+/* Narrow players can't hold both on one line without squeezing the field to
+   nothing, so they stack instead. */
+@container (max-width: 420px) {
+	.tp-emailform-row {
+		flex-direction: column;
+	}
+	.tp-emailform-submit {
+		width: 100%;
+	}
+}
+
+.tp-emailform-error {
 	margin: 0;
-	font-size: 13.5px;
+	font-size: 13px;
+	color: #dc2626;
+}
+
+.tp-emailform-thanks {
+	margin: 0;
 	font-weight: 600;
+}
+
+.tp-emailform-skip {
+	align-self: center;
+	background: none;
+	border: 0;
+	padding: 0;
+	font-size: 13px;
+	text-decoration: underline;
+	cursor: pointer;
+	color: var( --tp-of-muted, #6b7280 );
 }
 
 /* ---- dynamic watermark (pro) ---- */
@@ -1317,56 +1436,6 @@
 .tp-quiz-submit:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
-}
-
-/* ---- opt-in / subscribe ---- */
-.tp-optin-card {
-	background: #fff;
-	color: #111827;
-	border-radius: 12px;
-	padding: 26px;
-	max-width: 420px;
-	width: 100%;
-	text-align: center;
-	box-shadow: 0 12px 40px rgba( 0, 0, 0, 0.3 );
-}
-.tp-optin-title {
-	margin: 0 0 8px;
-	font-size: 19px;
-	font-weight: 700;
-}
-.tp-optin-desc {
-	margin: 0 0 16px;
-	color: #6b7280;
-	font-size: 14px;
-}
-.tp-optin-input {
-	width: 100%;
-	box-sizing: border-box;
-	padding: 11px 12px;
-	margin-bottom: 10px;
-	border: 1px solid #d1d5db;
-	border-radius: 8px;
-	font-size: 14px;
-}
-.tp-optin-input:focus {
-	outline: none;
-	border-color: var(--tp-accent);
-}
-.tp-optin-error {
-	color: #dc2626;
-	font-size: 13px;
-	margin: 0 0 10px;
-}
-.tp-optin-skip {
-	display: block;
-	margin: 12px auto 0;
-	background: none;
-	border: 0;
-	color: #6b7280;
-	font-size: 13px;
-	text-decoration: underline;
-	cursor: pointer;
 }
 
 /* ---- spinner ---- */

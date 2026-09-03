@@ -85,9 +85,15 @@ Handle in-player opt-ins, or register a full provider:
 ```php
 // Lightweight: handle any opt-in.
 add_filter( 'trueplayer/subscribe', function ( $result, $data ) {
-    // $data = [ email, name, video_id, provider, lists, tags ]
+    // $data = [ email, name, video_id, layer_id, provider, lists, tags ]
+    // `layer_id` names the Email form layer that was submitted; the provider and
+    // lists are resolved from that layer, falling back to the built-in
+    // `wp_mail` notification provider so a capture is never simply dropped.
     return [ 'ok' => true ];
 }, 10, 2 );
+
+// Providers a free install may use (the notification provider by default).
+add_filter( 'trueplayer/integrations/free', fn( $ids ) => [ ...$ids, 'my_provider' ] );
 
 // Full provider (implements \TruePlayer\Interfaces\IntegrationInterface).
 add_filter( 'trueplayer/integrations/register', function ( $list ) {

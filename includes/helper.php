@@ -74,6 +74,28 @@ class Helper {
 	}
 
 	/**
+	 * Store an array as JSON in post meta.
+	 *
+	 * The wp_slash() is not optional. update_post_meta() runs wp_unslash() on
+	 * its value — WP meta functions expect slashed input — which eats the
+	 * backslashes wp_json_encode() puts in front of every double quote inside a
+	 * string. A layer holding `[contact-form-7 id="123"]` was written as
+	 * `"shortcode":"[contact-form-7 id="123"]"`: invalid JSON, so the next
+	 * json_decode() returned null and the WHOLE config read back as empty —
+	 * source, layers and all silently lost on save. Any value with a quote or a
+	 * backslash in it did the same. Slashing first means the unslash restores
+	 * exactly what was encoded.
+	 *
+	 * @param int    $post_id Post to write to.
+	 * @param string $key     Meta key.
+	 * @param mixed  $data    Data to encode.
+	 * @return bool|int
+	 */
+	public static function update_json_meta( $post_id, $key, $data ) {
+		return update_post_meta( (int) $post_id, $key, wp_slash( wp_json_encode( $data ) ) );
+	}
+
+	/**
 	 * Decode a video's `_trueplayer_config` JSON meta into an array.
 	 */
 	public static function get_video_config( $video_id ) {
@@ -139,8 +161,42 @@ class Helper {
 			$config['customize']['appearance']['skin'] = 'default';
 		}
 		// Pro-only config never reaches the free frontend.
-		unset( $config['layers'], $config['protection'], $config['timedContent'] );
+		unset( $config['protection'], $config['timedContent'] );
+		$config['layers'] = self::free_layers( $config['layers'] ?? [] );
+		if ( ! $config['layers'] ) {
+			unset( $config['layers'] );
+		}
 		return $config;
+	}
+
+	/**
+	 * The layers a free install may render.
+	 *
+	 * Email capture is free, and it lives in the layer stack — so the stack can
+	 * no longer be dropped wholesale. Form layers survive; hotspots, banners and
+	 * shortcode layers stay Pro as before.
+	 *
+	 * Display rules are Pro in their own right, so they are stripped from the
+	 * layers that do survive. Stripping the rule rather than the layer is
+	 * deliberate: a rule that cannot be evaluated must fail open, or a free
+	 * install would silently stop showing a capture form it is entitled to.
+	 *
+	 * @param mixed $layers Raw `config.layers`.
+	 * @return array Layers safe to render without Pro.
+	 */
+	private static function free_layers( $layers ): array {
+		if ( ! is_array( $layers ) ) {
+			return [];
+		}
+		$kept = [];
+		foreach ( $layers as $layer ) {
+			if ( ! is_array( $layer ) || 'form' !== ( $layer['type'] ?? '' ) ) {
+				continue;
+			}
+			unset( $layer['conditions'] );
+			$kept[] = $layer;
+		}
+		return array_values( $kept );
 	}
 
 	/** Extract an 11-char YouTube id from a watch/share/embed/shorts URL. */

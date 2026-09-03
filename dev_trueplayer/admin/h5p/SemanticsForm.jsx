@@ -25,7 +25,14 @@ const uuid = () =>
 const semanticsCache = {};
 async function loadSemantics( machineName ) {
 	if ( ! semanticsCache[ machineName ] ) {
-		semanticsCache[ machineName ] = api.h5pSemantics( machineName );
+		// The promise is cached, not the result — so a library that failed to
+		// load (most often because it isn't installed) must drop out again, or
+		// the rejection is cached for the life of the page and the field can
+		// never recover, not even after the content type is installed.
+		semanticsCache[ machineName ] = api.h5pSemantics( machineName ).catch( ( err ) => {
+			delete semanticsCache[ machineName ];
+			throw err;
+		} );
 	}
 	return semanticsCache[ machineName ];
 }
@@ -381,14 +388,22 @@ function LibraryField( { field, value, onChange, depth = 0 } ) {
 	const options = field.options || [];
 	const current = value && value.library ? value.library : ( options.length === 1 ? options[ 0 ] : '' );
 	const [ semantics, setSemantics ] = useState( null );
+	const [ failed, setFailed ] = useState( '' );
 
 	useEffect( () => {
 		let alive = true;
-		if ( current ) {
-			loadSemantics( machineOf( current ) ).then( ( res ) => alive && setSemantics( res.semantics || [] ) );
-		} else {
-			setSemantics( null );
+		// Clear first. Without this the previous library's fields stay on screen
+		// for the whole fetch — and for good if the fetch fails — so choosing
+		// Video or Audio left H5P.Image's uploader sitting under a Type that
+		// said something else, which reads as the selector doing nothing.
+		setSemantics( null );
+		setFailed( '' );
+		if ( ! current ) {
+			return undefined;
 		}
+		loadSemantics( machineOf( current ) )
+			.then( ( res ) => alive && setSemantics( res.semantics || [] ) )
+			.catch( () => alive && setFailed( machineOf( current ) ) );
 		return () => { alive = false; };
 	}, [ current ] );
 
@@ -410,6 +425,15 @@ function LibraryField( { field, value, onChange, depth = 0 } ) {
 				</Field>
 			) : (
 				field.label && <span className="block text-[13px] font-medium text-ink mb-2">{ field.label }</span>
+			) }
+			{ /* A content type can be referenced by another type's semantics without
+			     being installed — H5P ships each one as a separate library. Naming
+			     it beats an empty space where the fields should be. */ }
+			{ failed && (
+				<p className="text-[13px] text-muted border border-line rounded-card px-3 py-2.5">
+					<strong className="font-medium text-ink">{ failed.replace( 'H5P.', '' ) }</strong> isn’t installed
+					on this site yet, so it has no settings to show. Install it from the content-type list, then choose it here again.
+				</p>
 			) }
 			{ current && semantics && (
 				<div className="pl-4 border-l border-line">

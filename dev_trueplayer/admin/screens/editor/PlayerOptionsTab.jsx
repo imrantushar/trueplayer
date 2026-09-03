@@ -235,21 +235,39 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 											<Toggle checked={behavior.muted} onChange={(v) => setSection('behavior', { muted: v })} label="Start muted" />
 										)}
 										<Toggle checked={behavior.loop} onChange={(v) => setSection('behavior', { loop: v })} label="Loop" />
-										<Toggle checked={behavior.resetOnEnd} onChange={(v) => setSection('behavior', { resetOnEnd: v })} label="Reset to start when finished" />
+										<Toggle
+											checked={behavior.resetOnEnd && !behavior.loop}
+											disabled={behavior.loop}
+											onChange={(v) => setSection('behavior', { resetOnEnd: v })}
+											label={<>Reset to start when finished{behavior.loop && <em className="block not-italic text-[11px] text-gray-400 mt-0.5">Loop already restarts the video, and keeps it playing.</em>}</>}
+										/>
 									</div>
 
 									<div className='flex flex-col gap-6'>
 										<Toggle checked={behavior.savePosition} onChange={(v) => setSection('behavior', { savePosition: v })} label="Save & resume playback position" />
 										<Toggle checked={behavior.hideControls} onChange={(v) => setSection('behavior', { hideControls: v })} label="Auto-hide controls while playing" />
-										<Toggle checked={behavior.sticky} onChange={(v) => setSection('behavior', { sticky: v })} label="Float player when scrolling away" />
-										<Toggle checked={behavior.noSkip} onChange={(v) => setSection('behavior', { noSkip: v })} label="Prevent skipping ahead (no jumping to unwatched parts)" disabled={behavior.disableSeek} />
+										<Toggle
+											checked={behavior.sticky}
+											onChange={(v) => setSection('behavior', { sticky: v })}
+											label={<>Float player when scrolling away{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">Test on a real page — the preview is scaled, so it can&rsquo;t float.</em>}</>}
+										/>
+										<Toggle
+											checked={behavior.noSkip}
+											disabled={behavior.disableSeek}
+											onChange={(v) => setSection('behavior', { noSkip: v })}
+											label={<>Prevent skipping ahead (no jumping to unwatched parts){<em className="block not-italic text-[11px] text-gray-400 mt-0.5">Test on a real page — the preview stays scrubbable on purpose.</em>}</>}
+										/>
 										<Toggle
 											checked={behavior.disableSeek}
 											onChange={(v) => setSection('behavior', { disableSeek: v, ...(v ? { noSkip: false } : {}) })}
 											label="Disable the timeline entirely (no click or drag, forward or back)"
 										/>
 										{hoverPreviewEligible && (
-											<Toggle checked={behavior.hoverPreview} onChange={(v) => setSection('behavior', { hoverPreview: v })} label="Muted preview on hover (self-hosted video)" />
+											<Toggle
+												checked={behavior.hoverPreview}
+												onChange={(v) => setSection('behavior', { hoverPreview: v })}
+												label={<>Muted preview on hover (self-hosted video){<em className="block not-italic text-[11px] text-gray-400 mt-0.5">Test on a real page — it needs the click-to-load poster.</em>}</>}
+											/>
 										)}
 									</div>
 								</div>
