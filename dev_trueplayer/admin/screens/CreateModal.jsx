@@ -20,6 +20,7 @@ const MEDIA_TYPES = [
 	{ value: 'vimeo', label: 'Vimeo', hint: 'Paste a video link' },
 	{ value: 'url', label: 'External URL', hint: 'A direct mp4 / webm file' },
 	{ value: 'bunny', label: 'Bunny.net Stream', hint: 'Signed, private delivery', pro: true },
+	{ value: 'bunnyStorage', label: 'Bunny.net Storage', hint: 'A direct file from your zone', pro: true },
 	{ value: 'mux', label: 'Mux', hint: 'Adaptive streaming', pro: true },
 	{ value: 'hls', label: 'HLS stream', hint: 'An .m3u8 playlist', pro: true },
 ];

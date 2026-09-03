@@ -68,6 +68,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const coverageRef = useRef( null );
 	const passedCheckpoints = useRef( new Set() );
 	const furthestRef = useRef( 0 ); // furthest naturally-watched second (for no-skip)
+	// Scopes this player's ::cue rule to its own stage — several players can
+	// share a page with different caption styling.
+	const cueUid = useRef( Math.random().toString( 36 ).slice( 2, 9 ) ).current;
 
 	const gating = { ...DEFAULT_GATING, ...( config.gating || {} ) };
 	// Anti-skip is an opt-in restriction the admin sets per video (Questions &
@@ -81,7 +84,6 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	}
 	const source = config.source || {};
 	const branding = config.branding || {};
-	const optin = config.optin || {};
 	const optinDoneRef = useRef( false );
 	const allOverlays = Array.isArray( config.overlays ) ? config.overlays : [];
 	// CTA cards use the fire-once modal engine; text overlays are non-blocking
@@ -90,7 +92,21 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const textOverlays = allOverlays.filter( ( o ) => o.type === 'text' );
 	const actionBar = config.actionBar || {};
 	// Pro: interactive layers + protection (server strips both when free).
-	const layers = Array.isArray( config.layers ) ? config.layers : [];
+	const allLayers = Array.isArray( config.layers ) ? config.layers : [];
+	/**
+	 * The email-capture gate, which is an Email form layer in `mode: 'gate'`.
+	 *
+	 * Capture used to be a second feature with its own `config.optin` object and
+	 * its own player path, so a video could carry two ways of asking for the
+	 * same address and only one of them had a provider. There is exactly one
+	 * source now; the old object is converted to a layer on upgrade and then
+	 * removed (see Migrator).
+	 */
+	const optinGate = allLayers.find( ( l ) => 'form' === l.type && 'gate' === l.mode ) || null;
+	// The gate is rendered by the player itself (it has to pause playback), so
+	// the layer stack must not draw it a second time as an inline panel.
+	const layers = optinGate ? allLayers.filter( ( l ) => l.id !== optinGate.id ) : allLayers;
+	const optinKey = `tp_optin_${ videoId }_${ optinGate ? optinGate.id : 'none' }`;
 	const watermark = { ...( ( config.protection && config.protection.dynamicWatermark ) || {} ) };
 	if ( preview && watermark.enabled && ! watermark.text ) {
 		watermark.text = 'viewer@example.com'; // live text is resolved server-side
@@ -147,6 +163,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ activeOverlay, setActiveOverlay ] = useState( null );
 	const [ activeTextIds, setActiveTextIds ] = useState( [] );
 	const [ infoOpen, setInfoOpen ] = useState( false );
+	// The media's real intrinsic ratio ('1920 / 1080'), once it can be read.
+	const [ nativeRatio, setNativeRatio ] = useState( null );
 
 	const getCues = useCallback( () => ( providerRef.current?.getCues ? providerRef.current.getCues() : [] ), [] );
 
@@ -169,6 +187,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 	useEffect( () => {
 		let disposed = false;
+		// Belongs to the media being torn down, not the one coming in.
+		setNativeRatio( null );
 
 		( async () => {
 			// Premium sources are pro-only.
@@ -253,7 +273,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 			// Resume position: server value wins, else localStorage (savePosition).
 			let resumeAt = gateState.resumeAt || 0;
-			if ( ! resumeAt && behavior.savePosition ) {
+			// Not in the editor preview: it shares the `tp_pos_` key with the
+			// real front end, so the preview would open part-way through the
+			// video — easy to misread as reset-on-end being broken.
+			if ( ! resumeAt && behavior.savePosition && ! preview ) {
 				const saved = parseInt( window.localStorage.getItem( `tp_pos_${ videoId }` ) || '0', 10 );
 				if ( saved > 0 ) {
 					resumeAt = saved;
@@ -267,15 +290,59 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				setFrontier( resumeAt );
 			}
 
-			optinDoneRef.current = gatingOn ? !! window.localStorage.getItem( `tp_optin_${ videoId }` ) : true;
+			// Keyed per gate now that a video can carry more than one form, but the
+			// pre-merge key still counts — someone who already subscribed must not
+			// be asked again just because the feature moved.
+			optinDoneRef.current = optinGate
+				? !! ( window.localStorage.getItem( optinKey ) || window.localStorage.getItem( `tp_optin_${ videoId }` ) )
+				: true;
+
+			// The media element only when it is a real <video>/<audio> — YouTube
+			// and Vimeo hand back a host <div> wrapping an iframe, which has no
+			// intrinsic size to read.
+			const mediaEl = () => {
+				const el = provider.element;
+				return el && typeof el.videoWidth === 'number' ? el : null;
+			};
+			// Measured unconditionally rather than only when the ratio is set to
+			// `auto`: the author can switch to Auto in the editor long after the
+			// provider is up, and this effect only re-runs on videoId.
+			const measureNative = () => {
+				const el = mediaEl();
+				if ( el && el.videoWidth > 0 && el.videoHeight > 0 ) {
+					setNativeRatio( `${ el.videoWidth } / ${ el.videoHeight }` );
+					return true;
+				}
+				return false;
+			};
 
 			provider.on( 'ready', () => {
 				setReady( true );
+				// `loadedmetadata` usually already carries the dimensions, but an
+				// HLS level can land later; <video> fires `resize` exactly when its
+				// intrinsic size becomes known, so fall back to that.
+				const el = mediaEl();
+				if ( ! measureNative() && el ) {
+					const onResize = () => {
+						if ( measureNative() ) {
+							el.removeEventListener( 'resize', onResize );
+						}
+					};
+					el.addEventListener( 'resize', onResize );
+				}
+				// A track the author marked default is shown by the browser itself,
+				// so read back what is actually on screen instead of trusting the
+				// 'off' this state started on — otherwise the caption button and the
+				// menu both report captions off while they are being rendered.
+				const active = provider.getActiveTextTrack?.();
+				if ( active ) {
+					setUi( ( s ) => ( { ...s, track: active } ) );
+				}
 				if ( resumeAt && resumeAt < provider.getDuration() - 2 ) {
 					provider.seek( resumeAt );
 				}
 				// Pre-roll opt-in gate.
-				if ( optin.enabled && optin.position === 'pre' && ! optinDoneRef.current ) {
+				if ( optinGate && 'pre' === optinGate.trigger && ! optinDoneRef.current ) {
 					setActiveOptin( true );
 				} else if ( autoStart && ! gateState.locked ) {
 					// Booted from a click-to-load poster or autoplay: begin playing
@@ -310,10 +377,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 							setFrontier( tracker.frontier );
 						}
 					}
-					if ( behavior.savePosition ) {
+					if ( behavior.savePosition && ! preview ) {
 						window.localStorage.setItem( `tp_pos_${ videoId }`, String( Math.floor( t ) ) );
 					}
-					if ( gatingOn && ! maybeOptin( t ) ) {
+					if ( ! maybeOptin( t ) ) {
 						maybeCheckpoint( t );
 					}
 					maybeOverlay( t );
@@ -339,7 +406,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			provider.on( 'ratechange', sync );
 			provider.on( 'volumechange', sync );
 			provider.on( 'ended', onEnded );
-			provider.on( 'error', () => setError( 'Playback error.' ) );
+			// Providers that know why they failed say so — YouTube's embed-disabled
+			// case is the one an author most needs named, since the video plays
+			// perfectly on youtube.com and nothing about the URL is wrong.
+			provider.on( 'error', ( detail ) => setError(
+				( detail && detail.message ) || 'Playback error.'
+			) );
 		} )();
 
 		return () => {
@@ -400,7 +472,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		if ( activeOptin || activeQuiz || optinDoneRef.current ) {
 			return false;
 		}
-		if ( optin.enabled && optin.position === 'time' && t >= ( optin.at || 0 ) ) {
+		if ( optinGate && 'time' === ( optinGate.trigger || 'time' ) && t >= ( optinGate.start || 0 ) ) {
 			providerRef.current.pause();
 			setActiveOptin( true );
 			return true;
@@ -470,6 +542,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// this either way.
 	const cueRef = useRef( null );
 	const cuedTextRef = useRef( null ); // text overlay the eye currently has up
+	const cuedLayerRef = useRef( null ); // layer the eye currently has up
+	// Preview-only overrides for the layer stack: one layer forced on screen
+	// regardless of its window, and one suppressed after the eye let it go.
+	// Without these the eye did nothing visible for an inline form — the default
+	// window starts at 0, so the panel was already up, and nothing took it down.
+	const [ forcedLayerId, setForcedLayerId ] = useState( null );
+	const [ hiddenLayerId, setHiddenLayerId ] = useState( null );
 	useEffect( () => {
 		if ( ! preview || ! previewCue || ! ready || cueRef.current === previewCue.token ) {
 			return;
@@ -479,6 +558,52 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			return;
 		}
 		cueRef.current = previewCue.token;
+
+		// The eye on an Email form row. A layer cue and an overlay cue are the
+		// same gesture — "show me this one now" — but a form has to be raised
+		// differently depending on its mode, so it branches out here before the
+		// overlay path.
+		if ( undefined !== previewCue.layerId ) {
+			const l = previewCue.layerId ? allLayers.find( ( x ) => x.id === previewCue.layerId ) : null;
+			if ( ! l ) {
+				// Toggled off, or the layer is gone — take down whatever the eye
+				// put up. An inline panel has to be suppressed rather than merely
+				// released: we are paused inside its window, so the normal rule
+				// would simply draw it again.
+				setActiveOptin( false );
+				setHiddenLayerId( cuedLayerRef.current );
+				setForcedLayerId( null );
+				cuedLayerRef.current = null;
+				return;
+			}
+			cuedLayerRef.current = l.id;
+			setHiddenLayerId( null ); // a new cue releases any earlier suppression
+			setStarted( true );
+			const gateMode = 'inline' !== l.mode;
+			// Where the layer is due. A gate on 'pre' or 'end' has no timestamp of
+			// its own, so preview it at the edge it actually fires on.
+			const at = gateMode
+				? ( 'end' === l.trigger ? Math.max( 0, p.getDuration() - 0.25 ) : ( 'pre' === l.trigger ? 0 : parseFloat( l.start ) || 0 ) )
+				: ( parseFloat( l.start ) || 0 );
+			p.seek( at );
+			p.pause();
+			if ( gateMode ) {
+				// Ignore the once-per-viewer rule while previewing: an author
+				// asking to see the gate has asked to see it, and a previous
+				// preview must not make it un-showable.
+				optinDoneRef.current = false;
+				setActiveOptin( true );
+				setForcedLayerId( null );
+			} else {
+				// Forced rather than left to the time window: `seek` resolves
+				// asynchronously, so the position the window is tested against is
+				// still the old one when this returns.
+				setActiveOptin( false );
+				setForcedLayerId( l.id );
+			}
+			sync();
+			return;
+		}
 
 		const o = previewCue.overlayId ? allOverlays.find( ( x ) => x.id === previewCue.overlayId ) : null;
 		if ( ! o ) {
@@ -541,10 +666,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		if ( gatingOn && hasQuizContent( gating.finalQuiz ) ) {
 			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || 'Final quiz' } );
 			gated = true;
-		} else if ( gatingOn && optin.enabled && optin.position === 'end' && ! optinDoneRef.current ) {
+		} else if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
 			setActiveOptin( true );
 			gated = true;
-		} else if ( behavior.resetOnEnd ) {
+		} else if ( behavior.resetOnEnd && ! behavior.loop ) {
+			// Loop supersedes reset-on-end — both rewind, but only loop keeps
+			// playing, and it is applied below once nothing has claimed the end.
 			providerRef.current.seek( 0 );
 			setStarted( false );
 		}
@@ -557,6 +684,19 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			gated = true;
 		}
 		sync();
+		// Loop, once the quiz / opt-in / end screen have all declined the end.
+		// Deliberately not the media element's own `loop` attribute: a looping
+		// element never fires `ended`, so every branch above would be dead. An
+		// explicit per-video Loop also wins over playlist auto-advance — an
+		// author who wanted the next item would have left Loop off.
+		if ( ! gated && behavior.loop ) {
+			providerRef.current.seek( 0 );
+			if ( coverageRef.current ) {
+				coverageRef.current.newSession();
+			}
+			providerRef.current.play();
+			return;
+		}
 		// Playlist autoplay-next: only when nothing is gating the end.
 		if ( ! gated && onEndedProp ) {
 			onEndedProp();
@@ -564,10 +704,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	};
 
 	const finishOptin = () => {
-		window.localStorage.setItem( `tp_optin_${ videoId }`, '1' );
+		// Only remembered when the author asked for it; a gate set to show every
+		// time is a deliberate choice, not something to quietly suppress.
+		if ( ! optinGate || false !== optinGate.dedupe ) {
+			window.localStorage.setItem( optinKey, '1' );
+		}
 		optinDoneRef.current = true;
 		setActiveOptin( false );
-		if ( optin.position !== 'end' && providerRef.current ) {
+		if ( optinGate && 'end' !== optinGate.trigger && providerRef.current ) {
 			providerRef.current.play();
 		}
 	};
@@ -624,6 +768,11 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const skip = ( delta ) => {
 		const p = providerRef.current;
 		if ( ! p ) {
+			return;
+		}
+		// "Disable the timeline entirely" has to mean the keyboard and the
+		// rewind/forward buttons too, not just the scrubber — both land here.
+		if ( behavior.disableSeek ) {
 			return;
 		}
 		let t = p.getCurrentTime() + delta;
@@ -766,7 +915,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			providerRef.current.play();
 		} else {
 			setGate( ( g ) => ( { ...( g || {} ), completed: true } ) );
-			if ( optin.enabled && optin.position === 'end' && ! optinDoneRef.current ) {
+			if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
 				setActiveOptin( true );
 			} else if ( behavior.resetOnEnd ) {
 				providerRef.current.seek( 0 );
@@ -807,21 +956,51 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	stageStyle[ '--tp-cap-bg' ] = hexToRgba( appearance.captionBackground || '#000000', ( appearance.captionOpacity ?? 75 ) / 100 );
 	// Aspect ratio (audio keeps its compact bar; sticky keeps the ratio too so
 	// the mini player matches the video's shape).
+	//
+	// "Auto (native)" must resolve to a real ratio, never the CSS keyword
+	// `auto`. The stage is sized purely by `aspect-ratio` — every child of it
+	// (.tp-media-container, .tp-media) is `position: absolute; inset: 0` and
+	// contributes no height — so `aspect-ratio: auto` on a <div>, which has no
+	// intrinsic ratio of its own, collapsed the whole player to 0px and left a
+	// blank page with the video playing invisibly inside it.
 	if ( source.mediaType !== 'audio' && appearance.aspectRatio && appearance.aspectRatio !== '16:9' ) {
-		stageStyle.aspectRatio = appearance.aspectRatio === 'auto' ? 'auto' : appearance.aspectRatio.replace( ':', ' / ' );
+		// `auto` must never reach CSS as-is. `aspect-ratio: auto` on a plain
+		// <div> resolves to no ratio at all, and every child of the stage is
+		// absolutely positioned, so the box collapsed to zero height and the
+		// player vanished. Use the measured intrinsic ratio instead, holding
+		// the 16:9 default until it is known — and permanently for iframe
+		// embeds, which expose no intrinsic size to measure.
+		stageStyle.aspectRatio = appearance.aspectRatio === 'auto'
+			? ( nativeRatio || '16 / 9' )
+			: appearance.aspectRatio.replace( ':', ' / ' );
 	}
 
+	// Caption cues are styled by a real rule carrying literal values, not by
+	// the custom properties above. Chromium does not reliably resolve `var()`
+	// inside `::cue` — the declaration is dropped and the cue silently falls
+	// back to the UA default, which is why the background colour and opacity
+	// controls appeared to do nothing. The properties are still set on the
+	// stage so Custom CSS can read them.
+	const cueCss = [
+		`.tp-cap-${ cueUid } video::cue{`,
+		`color:${ appearance.captionColor || '#ffffff' };`,
+		`background-color:${ hexToRgba( appearance.captionBackground || '#000000', ( appearance.captionOpacity ?? 75 ) / 100 ) };`,
+		`font-size:calc(1em * ${ ( appearance.captionSize || 100 ) / 100 });`,
+		'}',
+	].join( '' );
+
 	const skin = appearance.skin || 'default';
-	// Before the first play, the stage shows its poster and the big play button
-	// and nothing else — the control bar has nothing to control yet, and every
-	// video platform reads this way. Only when the big play button is actually
-	// there, though: hiding the bar without it would leave no way to start.
-	// Audio is exempt — its control bar *is* the player.
-	const unstarted = ! started && appearance.bigPlay && source.mediaType !== 'audio';
+	// The control bar is shown from the moment the media is ready, before the
+	// first play as well as after it. It used to be held back until playback
+	// started, on the grounds that there is nothing to scrub yet — but that
+	// leaves the player looking inert, hides the duration and the volume and
+	// captions controls that are perfectly meaningful on a paused video, and
+	// gives an author no way to see their own control-bar styling without
+	// starting the video. Auto-hide-while-playing (is-idle) is unaffected.
 	const stageClass = [
 		'tp-stage',
+		`tp-cap-${ cueUid }`,
 		`tp-skin-${ skin }`,
-		unstarted ? 'is-unstarted' : '',
 		idle && ui.playing ? 'is-idle' : '',
 		source.mediaType === 'audio' ? 'is-audio' : '',
 		`tp-bar-${ appearance.controlBarStyle }`,
@@ -839,6 +1018,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const stage = (
 		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
 		<div ref={ stageRef } className={ stageClass } style={ stageStyle } tabIndex={ 0 } onKeyDown={ onKeyDown }>
+			<style>{ cueCss }</style>
 			{ sticky && ! pipWin && (
 				<button
 					className="tp-sticky-close"
@@ -918,9 +1098,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				<Layers
 					layers={ layers }
 					current={ ui.current }
+					forcedId={ forcedLayerId }
+					hiddenId={ hiddenLayerId }
 					videoId={ videoId }
 					preview={ preview }
-					onOptin={ ( { email } ) => ( preview ? Promise.resolve() : rest.post( 'optin', { video: videoId, email } ) ) }
+					onOptin={ ( { email, name, layerId } ) => ( preview
+						? Promise.resolve()
+						: rest.post( 'optin', { video: videoId, email, name, layer: layerId } ) ) }
 				/>
 			) }
 
@@ -955,10 +1139,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 			{ ready && ! ui.playing && ! locked && ! activeQuiz && ! activeOptin && ! error && appearance.bigPlay && source.mediaType !== 'audio' && <BigPlay onPlay={ playPause } /> }
 
-			{ activeOptin && (
+			{ activeOptin && optinGate && (
 				<Optin
 					videoId={ videoId }
-					optin={ optin }
+					optin={ optinGate }
 					preview={ preview }
 					onDone={ finishOptin }
 					onSkip={ finishOptin }

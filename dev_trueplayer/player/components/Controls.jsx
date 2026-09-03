@@ -18,6 +18,7 @@ const P = {
 	forward: 'M13 6v12l8.5-6L13 6zM4 18l8.5-6L4 6v12z',
 	download: 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z',
 	list: 'M3 5h13v2H3V5zm0 6h13v2H3v-2zm0 6h9v2H3v-2zm15.5-6L22 13l-3.5 2v-4z',
+	cc: 'M19 4H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm-8.2 6.2H9.3v-.4H7.8v4.4h1.5v-.5h1.5v.8c0 .6-.5 1.1-1.1 1.1H7.4c-.6 0-1.1-.5-1.1-1.1V9.5c0-.6.5-1.1 1.1-1.1h2.3c.6 0 1.1.5 1.1 1.1v.7zm6.9 0h-1.5v-.4h-1.5v4.4h1.5v-.5h1.5v.8c0 .6-.5 1.1-1.1 1.1h-2.3c-.6 0-1.1-.5-1.1-1.1V9.5c0-.6.5-1.1 1.1-1.1h2.3c.6 0 1.1.5 1.1 1.1v.7z',
 };
 
 function buildSegments( chapters, duration ) {
@@ -249,6 +250,13 @@ export default function Controls( props ) {
 	} = props;
 
 	const show = ( key, fallback = true ) => ( controls[ key ] === undefined ? fallback : controls[ key ] );
+
+	// Read once for the caption button; the Menu reads its own copy for the
+	// language list. Embeds report none, so the button never appears for them.
+	const textTracks = provider?.getTextTracks?.() || [];
+	// Turning captions on picks the track the author marked default, falling
+	// back to the first — never 'off', which would make the button a no-op.
+	const defaultTrackId = ( textTracks.find( ( t ) => t.isDefault ) || textTracks[ 0 ] || {} ).id ?? '0';
 	const chapterNow = currentChapter( chapters, current, duration );
 
 	return (
@@ -263,12 +271,14 @@ export default function Controls( props ) {
 						<Icon d={ playing ? P.pause : P.play } />
 					</button>
 				) }
-				{ show( 'rewind' ) && (
+				{ /* Hidden, not merely inert, when the timeline is locked: a button
+				     that visibly does nothing reads as a broken player. */ }
+				{ show( 'rewind' ) && ! scrubDisabled && (
 					<button className="tp-btn" aria-label="Rewind" onClick={ () => onSkip( -skipSeconds ) }>
 						<Icon d={ P.rewind } />
 					</button>
 				) }
-				{ show( 'forward' ) && (
+				{ show( 'forward' ) && ! scrubDisabled && (
 					<button className="tp-btn" aria-label="Fast forward" onClick={ () => onSkip( skipSeconds ) }>
 						<Icon d={ P.forward } />
 					</button>
@@ -298,6 +308,21 @@ export default function Controls( props ) {
 				{ hasInfo && (
 					<button className={ `tp-btn ${ infoOpen ? 'is-active' : '' }` } aria-label="Chapters &amp; transcript" aria-pressed={ infoOpen } onClick={ onInfo }>
 						<Icon d={ P.list } />
+					</button>
+				) }
+				{ /* Captions are a one-tap control, not a setting: a viewer who needs
+				     them needs them now, and burying the only way to switch them on
+				     three levels into the gear menu is why `controls.captions` — a
+				     toggle the editor has always offered — appeared to do nothing.
+				     The menu still lists every track for picking a language. */ }
+				{ show( 'captions' ) && textTracks.length > 0 && (
+					<button
+						className={ `tp-btn ${ track !== 'off' ? 'is-active' : '' }` }
+						aria-label="Subtitles"
+						aria-pressed={ track !== 'off' }
+						onClick={ () => onTrack( track === 'off' ? defaultTrackId : 'off' ) }
+					>
+						<Icon d={ P.cc } />
 					</button>
 				) }
 				{ show( 'settings' ) && (

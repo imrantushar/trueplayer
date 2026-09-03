@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use TruePlayer\Database\PostType;
+use TruePlayer\Helper;
 
 /**
  * Migration importer — pulls an existing Presto Player or FluentPlayer library
@@ -93,7 +94,7 @@ class ImportService {
 				continue;
 			}
 
-			update_post_meta( $new_id, '_trueplayer_config', wp_json_encode( $mapped['config'] ) );
+			Helper::update_json_meta( $new_id, '_trueplayer_config', $mapped['config'] );
 			update_post_meta( $new_id, self::IMPORT_META, $source . ':' . $post->ID );
 			if ( ! empty( $mapped['tags'] ) ) {
 				wp_set_object_terms( $new_id, $mapped['tags'], PostType::VIDEO_TAXONOMY, false );

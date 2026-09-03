@@ -114,7 +114,7 @@ class CLI {
 
 		if ( empty( $assoc['no-playlist'] ) ) {
 			$pl = wp_insert_post( [ 'post_type' => Playlist::POST_TYPE, 'post_status' => 'publish', 'post_title' => 'Demo — Course playlist' ] );
-			update_post_meta( $pl, '_trueplayer_playlist', wp_json_encode( [ 'title' => 'Demo course', 'layout' => 'sidebar', 'videos' => array_slice( $ids, 0, 5 ), 'autoplayNext' => true, 'showTitles' => true ] ) );
+			Helper::update_json_meta( $pl, '_trueplayer_playlist', [ 'title' => 'Demo course', 'layout' => 'sidebar', 'videos' => array_slice( $ids, 0, 5 ), 'autoplayNext' => true, 'showTitles' => true ] );
 			update_post_meta( $pl, self::SEED_META, 1 );
 			\WP_CLI::success( sprintf( 'Created playlist #%d — shortcode: [trueplayer_playlist id="%d"]', $pl, $pl ) );
 		}
@@ -137,7 +137,7 @@ class CLI {
 
 	private function make_video( $title, $config ) {
 		$id = wp_insert_post( [ 'post_type' => TRUEPLAYER_VIDEO_POST_TYPE, 'post_status' => 'publish', 'post_title' => $title ] );
-		update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
+		Helper::update_json_meta( $id, '_trueplayer_config', $config );
 		update_post_meta( $id, self::SEED_META, 1 );
 		return $id;
 	}

@@ -16,6 +16,9 @@ export function Button( { children, variant = 'primary', size = 'md', className 
 		subtle: 'bg-brand-100 hover:opacity-90 text-brand-500 border border-transparent',
 		clear: 'bg-transparent hover:bg-brand-50 text-brand-500 border border-transparent',
 		danger: 'bg-danger-light hover:opacity-90 text-danger border border-transparent',
+		// Destructive, but secondary to the action beside it — a bordered
+		// Remove reads as equal in weight to the Replace it sits next to.
+		dangerClear: 'bg-transparent hover:bg-danger-light text-danger border border-transparent',
 	};
 	// Compact, medium-weight sizing (md is the comfortable default).
 	const sizes = {
@@ -48,15 +51,37 @@ export function Field( { label, hint, required = false, children, className = ''
 	);
 }
 
+/**
+ * A labelled block for controls that are themselves buttons — media pickers,
+ * action rows — where `Field` is the wrong element: it renders a <label>, and
+ * a label wrapping buttons folds their text into its accessible name and
+ * forwards stray clicks into the first one. Same look, plain <div>.
+ */
+export function FieldGroup( { label, hint, required = false, children, className = '' } ) {
+	return (
+		<div className={ `block mb-5 ${ className }` }>
+			{ label && (
+				<span className="block text-[13px] font-medium text-ink mb-1.5">
+					{ label }{ required && <span className="text-danger"> *</span> }
+				</span>
+			) }
+			{ children }
+			{ hint && <span className="block text-xs text-gray-400 mt-1.5">{ hint }</span> }
+		</div>
+	);
+}
+
+// `hover:` and `focus:` name the same colour on purpose — pointing at a field
+// and landing on it are one continuous gesture, so they read as one state.
 const controlBase =
-	'w-full h-10 rounded border border-line px-3 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none';
+	'w-full h-10 rounded border border-line px-3 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder hover:border-brand-500 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none';
 
 export function Input( { className = '', ...props } ) {
 	return <input { ...props } className={ `${ controlBase } ${ className }` } />;
 }
 
 export function Textarea( { className = '', ...props } ) {
-	return <textarea { ...props } className={ `w-full rounded border border-line px-3 py-2 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none ${ className }` } />;
+	return <textarea { ...props } className={ `w-full rounded border border-line px-3 py-2 text-sm text-ink bg-white transition-shadow placeholder:text-placeholder hover:border-brand-500 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none ${ className }` } />;
 }
 
 /** Flatten a React children tree to its text (for react-select option labels). */
@@ -78,16 +103,24 @@ function nodeText( node ) {
 
 const RS_STYLES = {
 	control: ( base, s ) => ( {
-		...base, minHeight: 40, borderRadius: 4, fontSize: 14, backgroundColor: '#fff',
+		...base, minHeight: 40, borderRadius: 4, fontSize: 14, backgroundColor: '#fff', cursor: 'pointer',
 		borderColor: s.isFocused ? '#006BFF' : '#e5e7eb',
 		boxShadow: s.isFocused ? '0 0 0 2px #E3E7FF' : 'none',
-		'&:hover': { borderColor: s.isFocused ? '#006BFF' : '#cbd1d7' },
+		// Hover previews the focus colour rather than a grey step towards it, so
+		// pointing at a field and landing on it read as the same state.
+		'&:hover': { borderColor: '#006BFF' },
 	} ),
-	valueContainer: ( base ) => ( { ...base, padding: '0 4px 0 10px' } ),
-	placeholder: ( base ) => ( { ...base, color: '#A2ADB9' } ),
-	singleValue: ( base ) => ( { ...base, color: '#1f2937' } ),
+	// Text starts exactly where an <Input>'s does (px-3 = 12px). react-select
+	// reaches that total by adding its own 2px margins to whatever the value
+	// container pads, so the two only lined up by coincidence — the margins are
+	// zeroed here and the padding states the full 12px, which is what keeps a
+	// select and an input stacked in a column reading as one field.
+	valueContainer: ( base ) => ( { ...base, padding: '0 4px 0 12px' } ),
+	input: ( base ) => ( { ...base, cursor: 'inherit', margin: 0, paddingTop: 0, paddingBottom: 0 } ),
+	placeholder: ( base ) => ( { ...base, color: '#A2ADB9', margin: 0 } ),
+	singleValue: ( base ) => ( { ...base, color: '#1f2937', margin: 0 } ),
 	indicatorSeparator: () => ( { display: 'none' } ),
-	dropdownIndicator: ( base ) => ( { ...base, color: '#738496', padding: 6 } ),
+	dropdownIndicator: ( base ) => ( { ...base, color: '#738496', padding: 6, cursor: 'pointer' } ),
 	menu: ( base ) => ( { ...base, borderRadius: 6, overflow: 'hidden', border: '1px solid #e5e7eb', boxShadow: '0 8px 28px rgba(16,24,40,0.12)' } ),
 	menuPortal: ( base ) => ( { ...base, zIndex: 100000 } ),
 	option: ( base, s ) => ( {
@@ -130,6 +163,54 @@ export function Select( { className = '', children, value, onChange, disabled = 
 
 export function Card( { children, className = '' } ) {
 	return <div className={ `bg-white rounded-card border border-line shadow-card ${ className }` }>{ children }</div>;
+}
+
+/**
+ * A Card whose body folds away behind its own heading.
+ *
+ * For settings that are only relevant to some installs: the title and its
+ * description stay readable while closed, so the screen still says what is on
+ * offer, and only the fields — the part that costs vertical space and invites
+ * mis-pasting — are hidden until asked for.
+ *
+ * `open` / `onToggle` are controlled, so a caller can run several of these as
+ * one accordion by holding a single "which is open" value. `badge` renders to
+ * the right of the title, for saying something about the closed state.
+ */
+export function CollapsibleCard( { title, description, badge, open, onToggle, children, className = '' } ) {
+	const bodyId = useRef( `tp-panel-${ Math.random().toString( 36 ).slice( 2, 9 ) }` ).current;
+
+	return (
+		<Card className={ className }>
+			<button
+				type="button"
+				onClick={ onToggle }
+				aria-expanded={ open }
+				aria-controls={ bodyId }
+				className="w-full text-left flex items-start gap-3 p-6 group"
+			>
+				<span className="min-w-0 flex-1">
+					<span className="flex items-center gap-2">
+						<span className="font-semibold text-gray-900 group-hover:text-brand-500 transition-colors">{ title }</span>
+						{ badge }
+					</span>
+					{ description && <span className="block text-sm text-muted mt-1">{ description }</span> }
+				</span>
+				{ /* The chevron points right when closed and down when open —
+				     rotating one glyph rather than swapping two keeps the arrow
+				     from jumping a pixel as it changes. */ }
+				<Icon
+					name="chevronRight"
+					className={ `w-4 h-4 shrink-0 mt-0.5 text-gray-400 transition-transform ${ open ? 'rotate-90' : '' }` }
+				/>
+			</button>
+			{ open && (
+				<div id={ bodyId } className="px-6 pb-6 -mt-1">
+					<div className="pt-5 border-t border-solid border-line">{ children }</div>
+				</div>
+			) }
+		</Card>
+	);
 }
 
 /** Row-actions dropdown — kebab trigger + icon/label menu. items: [ { label, icon, onClick, danger? } ]; danger items (e.g. Delete) render in red. */

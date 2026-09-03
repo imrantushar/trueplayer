@@ -3,6 +3,7 @@ import Player from '@Player/Player';
 import { Card } from '../../components/UI';
 import { hasVideoSource, sourceKey } from '../../utils/videoSource';
 import { withDerivedPoster } from '../../utils/poster';
+import { applyPreset } from '../../utils/preset';
 // NOTE: the player CSS (style-frontend.css) is enqueued on admin pages by PHP.
 // Do NOT import it here — sharing that CSS module across the frontend + admin
 // entries makes webpack merge it into style-backend.css and stop emitting
@@ -40,10 +41,14 @@ import { withDerivedPoster } from '../../utils/poster';
  * ~1.5x more of it on screen. Raising this again re-shrinks the preview.
  */
 const REFERENCE_WIDTH = 520;
-export default function PreviewPanel( { id, config, onDuration, previewCue = null } ) {
+export default function PreviewPanel( { id, config, presets = [], onDuration, previewCue = null } ) {
 	const [ bump, setBump ] = useState( 0 );
-	const hasSource = hasVideoSource( config.source || {} );
-	const key = `${ sourceKey( config.source || {} ) }:${ bump }`;
+	// The preset is resolved here rather than into the edited config, so the
+	// preview shows the published result while the fields keep showing the
+	// author's own overrides — the same split the server makes at render.
+	const resolved = applyPreset( config, presets );
+	const hasSource = hasVideoSource( resolved.source || {} );
+	const key = `${ sourceKey( resolved.source || {} ) }:${ bump }`;
 
 	const frameRef = useRef( null );
 	const innerRef = useRef( null );
@@ -108,7 +113,7 @@ export default function PreviewPanel( { id, config, onDuration, previewCue = nul
 					>
 						{ /* Preview the provider's own thumbnail when no poster is set,
 						     matching what PHP derives for the real embed. */ }
-						<Player key={ key } videoId={ id } config={ withDerivedPoster( config ) } preview onDuration={ onDuration } previewCue={ previewCue } />
+						<Player key={ key } videoId={ id } config={ withDerivedPoster( resolved ) } preview onDuration={ onDuration } previewCue={ previewCue } />
 					</div>
 				</div>
 			) }

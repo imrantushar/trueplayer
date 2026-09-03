@@ -16,11 +16,19 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Pro {
 
-	/** Pro features and their default gate (all gate on active() in phase A). */
+	/**
+	 * Pro features and their default gate (all gate on active() in phase A).
+	 *
+	 * Email capture is deliberately absent: it merged into the Email form layer
+	 * and is free, because a player that cannot collect an address is not much
+	 * of an offer. What stays Pro is deciding *who* sees the form — the
+	 * conditional display rules (`layer_rules`).
+	 */
 	const FEATURES = [
 		'gating',          // watch-verification + quiz-gating + lock
 		'analytics',       // dashboard + data collection
-		'automation',      // webhooks + integrations + opt-in
+		'automation',      // webhooks + CRM integrations
+		'layer_rules',     // conditional display rules on layers
 		'premium_sources', // bunny / mux / hls / signed
 		'playlists',       // grid + sidebar
 		'premium_skins',   // floating / ambient + reusable presets

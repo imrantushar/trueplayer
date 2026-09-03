@@ -12,7 +12,18 @@ export async function createVimeoProvider( container, source, opts = {} ) {
 	container.appendChild( host );
 
 	const id = source.videoId || ( source.src || '' ).match( /vimeo\.com\/(\d+)/ )?.[ 1 ] || source.src;
-	const player = new Vimeo( host, { id, controls: false, responsive: true, playsinline: true, autoplay: !! opts.autoStart } );
+	// `muted` was previously ignored here — this provider only ever read
+	// opts.autoStart, so "Start muted" did nothing on a Vimeo video.
+	// `loop` stays unset deliberately: Player.jsx loops from its own
+	// `ended` handler so end-of-video gating still runs.
+	const player = new Vimeo( host, {
+		id,
+		controls: false,
+		responsive: true,
+		playsinline: true,
+		autoplay: !! opts.autoStart,
+		muted: !! ( opts.behavior && opts.behavior.muted ),
+	} );
 
 	let duration = 0;
 	let current = 0;

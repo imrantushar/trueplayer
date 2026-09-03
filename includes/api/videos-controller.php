@@ -95,9 +95,16 @@ class VideosController extends WP_REST_Controller {
 			$this->namespace,
 			'/' . $this->rest_base . '/(?P<id>\d+)/poster',
 			[
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => [ $this, 'save_poster' ],
-				'permission_callback' => [ $this, 'can_upload' ],
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'save_poster' ],
+					'permission_callback' => [ $this, 'can_upload' ],
+				],
+				[
+					'methods'             => WP_REST_Server::DELETABLE,
+					'callback'            => [ $this, 'discard_posters' ],
+					'permission_callback' => [ $this, 'admin' ],
+				],
 			]
 		);
 		register_rest_route(
@@ -132,6 +139,58 @@ class VideosController extends WP_REST_Controller {
 
 	/** Ceiling for a captured frame. A 1280px JPEG lands far under this. */
 	const POSTER_MAX_BYTES = 4194304;
+
+	/** A title is a label, not a document. Long enough for any real one. */
+	const TITLE_MAX_CHARS = 200;
+
+	/**
+	 * Reduce a submitted title to the plain text a title actually is, or refuse
+	 * it.
+	 *
+	 * `sanitize_text_field()` alone is not enough here on two counts. It answers
+	 * an array or object with an empty string, so a JSON body that sends a
+	 * structure where a name belongs is silently accepted as "no title" instead
+	 * of being reported as wrong. And it strips tags without decoding first, so
+	 * `&lt;script&gt;` passes through intact and is markup again the moment
+	 * anything unescapes it — which is exactly what a consumer of the title
+	 * outside HTML (a feed, a webhook payload, a certificate) may do.
+	 *
+	 * Anything that survives is plain, single-line text, capped in length. Input
+	 * that was entirely markup or code is rejected rather than quietly saved as
+	 * an empty name, so the author finds out.
+	 *
+	 * @param mixed $raw Whatever the request body carried.
+	 * @return string|\WP_Error Clean title (possibly ''), or an error.
+	 */
+	private function clean_title( $raw ) {
+		if ( ! is_scalar( $raw ) || is_bool( $raw ) ) {
+			return new \WP_Error(
+				'tp_title_invalid',
+				__( 'The title has to be plain text.', 'trueplayer' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$text = html_entity_decode( (string) $raw, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		// `true` also collapses the line breaks a title has no use for.
+		$text = wp_strip_all_tags( $text, true );
+		$text = trim( sanitize_text_field( $text ) );
+
+		// Something was sent, and nothing survived: it was markup or code all the
+		// way down. Saying so beats storing a nameless video.
+		if ( '' === $text && '' !== trim( (string) $raw ) ) {
+			return new \WP_Error(
+				'tp_title_invalid',
+				__( 'The title has to be plain text — markup and code are not accepted.', 'trueplayer' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		if ( function_exists( 'mb_substr' ) ) {
+			return mb_substr( $text, 0, self::TITLE_MAX_CHARS );
+		}
+		return substr( $text, 0, self::TITLE_MAX_CHARS );
+	}
 
 	public function admin() {
 		return current_user_can( 'manage_options' );
@@ -248,8 +307,11 @@ class VideosController extends WP_REST_Controller {
 			);
 		}
 
-		$title = isset( $body['title'] ) ? sanitize_text_field( (string) $body['title'] ) : '';
-		if ( '' === trim( $title ) ) {
+		$title = $this->clean_title( $body['title'] ?? '' );
+		if ( is_wp_error( $title ) ) {
+			return $title;
+		}
+		if ( '' === $title ) {
 			$title = __( 'Untitled video', 'trueplayer' );
 		}
 
@@ -266,7 +328,7 @@ class VideosController extends WP_REST_Controller {
 		}
 
 		$config = [ 'source' => [ 'type' => $type, 'src' => $src ] ];
-		update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
+		Helper::update_json_meta( $id, '_trueplayer_config', $config );
 		// Records that this video was made from inside a post, so one abandoned
 		// with the draft that prompted it can be told apart later from a video
 		// deliberately built in the library. Nothing deletes on that basis —
@@ -335,10 +397,13 @@ class VideosController extends WP_REST_Controller {
 		$source['src']    = $src;
 		$config['source'] = $source;
 
-		update_post_meta( $id, '_trueplayer_config', wp_json_encode( $config ) );
+		Helper::update_json_meta( $id, '_trueplayer_config', $config );
 
-		$title = isset( $body['title'] ) ? sanitize_text_field( (string) $body['title'] ) : '';
-		if ( '' !== trim( $title ) ) {
+		$title = $this->clean_title( $body['title'] ?? '' );
+		if ( is_wp_error( $title ) ) {
+			return $title;
+		}
+		if ( '' !== $title ) {
 			wp_update_post( [ 'ID' => $id, 'post_title' => $title ] );
 		}
 
@@ -484,7 +549,13 @@ class VideosController extends WP_REST_Controller {
 
 	public function create( $request ) {
 		$body  = $request->get_json_params();
-		$title = isset( $body['title'] ) ? sanitize_text_field( $body['title'] ) : __( 'Untitled video', 'trueplayer' );
+		$title = $this->clean_title( $body['title'] ?? '' );
+		if ( is_wp_error( $title ) ) {
+			return $title;
+		}
+		if ( '' === $title ) {
+			$title = __( 'Untitled video', 'trueplayer' );
+		}
 		$id    = wp_insert_post(
 			[
 				'post_type'   => TRUEPLAYER_VIDEO_POST_TYPE,
@@ -496,7 +567,7 @@ class VideosController extends WP_REST_Controller {
 			return $id;
 		}
 		if ( isset( $body['config'] ) ) {
-			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $body['config'] ) );
+			Helper::update_json_meta( $id, '_trueplayer_config', $body['config'] );
 			// Resolve the provider poster now (Vimeo needs a remote call) so the
 			// first page render reads a warm cache instead of paying for it.
 			Helper::with_derived_poster( (array) $body['config'] );
@@ -514,10 +585,16 @@ class VideosController extends WP_REST_Controller {
 		}
 		$body = $request->get_json_params();
 		if ( isset( $body['title'] ) ) {
-			wp_update_post( [ 'ID' => $id, 'post_title' => sanitize_text_field( $body['title'] ) ] );
+			$title = $this->clean_title( $body['title'] );
+			if ( is_wp_error( $title ) ) {
+				return $title;
+			}
+			// An author who clears the field is renaming it to nothing, which is
+			// worse than a placeholder in every list that shows the name.
+			wp_update_post( [ 'ID' => $id, 'post_title' => '' !== $title ? $title : __( 'Untitled video', 'trueplayer' ) ] );
 		}
 		if ( array_key_exists( 'config', $body ) ) {
-			update_post_meta( $id, '_trueplayer_config', wp_json_encode( $body['config'] ) );
+			Helper::update_json_meta( $id, '_trueplayer_config', $body['config'] );
 			// Resolve the provider poster now (Vimeo needs a remote call) so the
 			// first page render reads a warm cache instead of paying for it.
 			Helper::with_derived_poster( (array) $body['config'] );
@@ -607,6 +684,31 @@ class VideosController extends WP_REST_Controller {
 	}
 
 	/**
+	 * Discard the frames captured for this video that no saved config uses.
+	 *
+	 * The editor calls this the moment the author removes the video file, so a
+	 * poster that was only ever generated for a file now gone doesn't sit in the
+	 * media library waiting for a save that may never come — capture, remove,
+	 * capture again is how duplicates pile up.
+	 *
+	 * The poster the *saved* config still points at is deliberately kept: the
+	 * removal lives only in the open editor until Update is pressed, and
+	 * discarding those changes has to leave the published page with the
+	 * thumbnail it is still rendering. That one is swept by the save itself
+	 * (see update()).
+	 */
+	public function discard_posters( $request ) {
+		$id = (int) $request['id'];
+		if ( get_post_type( $id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
+			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+		}
+		$saved  = $this->config_of( $id );
+		$in_use = (string) ( $saved['source']['poster'] ?? '' );
+		$this->prune_generated_posters( $id, $in_use ? attachment_url_to_postid( $in_use ) : 0 );
+		return rest_ensure_response( [ 'discarded' => true ] );
+	}
+
+	/**
 	 * A filename for a video's poster, named after the video file it came from
 	 * so the two sit together in the media library. `wp_upload_bits` de-dupes,
 	 * so a re-capture doesn't overwrite an image still in use elsewhere.
@@ -686,12 +788,18 @@ class VideosController extends WP_REST_Controller {
 		$terms = wp_get_object_terms( $post->ID, \TruePlayer\Database\PostType::VIDEO_TAXONOMY );
 		$tags  = is_wp_error( $terms ) ? [] : wp_list_pluck( $terms, 'name' );
 		return [
-			'id'        => $post->ID,
-			'title'     => $post->post_title,
-			'shortcode' => sprintf( '[trueplayer id="%d"]', $post->ID ),
-			'config'    => $this->config_of( $post->ID ),
-			'tags'      => array_values( $tags ),
-			'modified'  => $post->post_modified_gmt,
+			'id'         => $post->ID,
+			'title'      => $post->post_title,
+			'shortcode'  => sprintf( '[trueplayer id="%d"]', $post->ID ),
+			// Like `shortcode`: the embed the author copies, built where its
+			// shape is defined rather than reassembled in the browser. The
+			// admin used to compose this from `site_url` and a hardcoded /tp/
+			// path, which is the wrong host on a WordPress-in-its-own-directory
+			// install and the wrong shape on plain permalinks.
+			'instantUrl' => \TruePlayer\InstantPage::url( $post->ID ),
+			'config'     => $this->config_of( $post->ID ),
+			'tags'       => array_values( $tags ),
+			'modified'   => $post->post_modified_gmt,
 		];
 	}
 }

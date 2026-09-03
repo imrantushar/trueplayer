@@ -58,19 +58,22 @@ class PrivateVideo {
 			// The stream endpoint re-reads the raw meta for the real file.
 			$config['source']['crossOrigin'] = $config['source']['crossOrigin'] ?? false;
 		} elseif ( 'bunny' === $type ) {
-			$config['source'] = self::sign_bunny_source( $config['source'] );
+			$config['source'] = self::sign_bunny_stream( $config['source'] );
+		} elseif ( 'bunnyStorage' === $type ) {
+			$config['source'] = self::sign_bunny_storage( $config['source'] );
 		}
 		return $config;
 	}
 
 	/**
-	 * Bunny CDN Token Authentication (directory mode): the token covers
-	 * everything under /{videoId}/ so hls.js segment requests validate too.
-	 * Needs the pull zone's Token Authentication Key in Settings → Bunny.net.
+	 * Bunny Stream: the source is always an HLS playlist, so the token has to
+	 * cover the whole directory — hls.js fetches each segment as its own
+	 * request, and a token bound to playlist.m3u8 alone would 403 every one of
+	 * them. Needs the Stream pull zone's Token Authentication Key
+	 * (Settings → Sources & CDN → Bunny.net Stream).
 	 */
-	private static function sign_bunny_source( array $source ): array {
-		$settings = json_decode( get_option( TRUEPLAYER_SETTINGS_NAME, '{}' ), true );
-		$key      = is_array( $settings ) ? ( $settings['bunny']['tokenKey'] ?? '' ) : '';
+	private static function sign_bunny_stream( array $source ): array {
+		$key = (string) ( \TruePlayer\Helper::get_settings_section( 'bunny' )['tokenKey'] ?? '' );
 		if ( '' === $key ) {
 			return $source; // not configured — plain playback
 		}
@@ -80,27 +83,73 @@ class PrivateVideo {
 			$zone = preg_replace( '#^https?://#', '', rtrim( (string) ( $source['pullZone'] ?? '' ), '/' ) );
 			$src  = 'https://' . $zone . '/' . ( $source['videoId'] ?? '' ) . '/playlist.m3u8';
 		}
+
+		$signed = self::sign_bunny_url( $src, $key, true );
+		if ( '' !== $signed ) {
+			$source['src'] = $signed;
+		}
+		return $source;
+	}
+
+	/**
+	 * Bunny Storage: a plain file behind a pull zone. Uses that pull zone's own
+	 * Token Authentication Key — a different zone and a different key from
+	 * Stream's, which is why they are configured separately.
+	 *
+	 * A single file is signed by its exact path, so the token unlocks that
+	 * video and nothing else. Only an .m3u8 falls back to directory mode, and
+	 * only because its segments are separate requests that must validate too —
+	 * which does mean a token for one playlist covers its whole folder, so
+	 * manifests are best kept one per directory.
+	 */
+	private static function sign_bunny_storage( array $source ): array {
+		$storage = \TruePlayer\Helper::get_settings_section( 'bunny' )['storage'] ?? [];
+		$key     = is_array( $storage ) ? (string) ( $storage['tokenKey'] ?? '' ) : '';
+		$src     = (string) ( $source['src'] ?? '' );
+		if ( '' === $key || '' === $src ) {
+			return $source; // not configured — plain playback
+		}
+
+		$is_manifest = (bool) preg_match( '/\.m3u8($|\?)/i', $src );
+		$signed      = self::sign_bunny_url( $src, $key, $is_manifest );
+		if ( '' !== $signed ) {
+			$source['src'] = $signed;
+		}
+		return $source;
+	}
+
+	/**
+	 * Append Bunny CDN Token Authentication to a URL.
+	 *
+	 * Bunny hashes `key + path + expiry`, where `path` is either the exact URL
+	 * path or a directory prefix. Directory mode has to declare that prefix
+	 * back to the CDN in `token_path`; path mode must NOT send it, or Bunny
+	 * validates against a different string than the one that was signed.
+	 *
+	 * @param string $src       Absolute URL to sign.
+	 * @param string $key       The pull zone's Token Authentication Key.
+	 * @param bool   $directory Cover the whole directory rather than one file.
+	 * @return string The signed URL, or '' if the URL had no usable path.
+	 */
+	private static function sign_bunny_url( string $src, string $key, bool $directory ): string {
 		$path = wp_parse_url( $src, PHP_URL_PATH );
 		if ( ! $path ) {
-			return $source;
+			return '';
 		}
-		$token_path = rtrim( dirname( $path ), '/' ) . '/';
-		$expires    = time() + self::ttl();
-		$token      = strtr(
-			rtrim( base64_encode( hash( 'sha256', $key . $token_path . $expires, true ) ), '=' ),
+
+		$signed_path = $directory ? rtrim( dirname( $path ), '/' ) . '/' : $path;
+		$expires     = time() + self::ttl();
+		$token       = strtr(
+			rtrim( base64_encode( hash( 'sha256', $key . $signed_path . $expires, true ) ), '=' ),
 			'+/',
 			'-_'
 		);
 
-		$source['src'] = add_query_arg(
-			[
-				'token'      => $token,
-				'expires'    => $expires,
-				'token_path' => rawurlencode( $token_path ),
-			],
-			$src
-		);
-		return $source;
+		$args = [ 'token' => $token, 'expires' => $expires ];
+		if ( $directory ) {
+			$args['token_path'] = rawurlencode( $signed_path );
+		}
+		return add_query_arg( $args, $src );
 	}
 
 	/**
