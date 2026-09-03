@@ -32,13 +32,30 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 	const questions   = quiz.questions || [];
 	const setAnswer = ( qid, val ) => setAnswers( ( a ) => ( { ...a, [ qid ]: val } ) );
 
-	const submit = async () => {
+	const submit = async ( quizpressAttemptId ) => {
 		setBusy( true );
 		try {
-			const verdict = preview
+			// A native quiz's correct answers already sit in the local config in
+			// preview, so grading it locally is just an optimization. A QuizPress
+			// quiz has no local answer key either way — grading truth is always
+			// server-side there — so preview still asks the real server, just
+			// with `preview: true` so it skips attempt/lock bookkeeping (see
+			// GradingService::grade — an admin re-testing a checkpoint shouldn't
+			// lock the video or spam real webhooks).
+			const verdict = ( preview && ! isQuizpress )
 				? gradeLocal( quiz, answers )
-				: await rest.post( 'grade', { video: videoId, gate: gateId, answers } );
+				: await rest.post( 'grade', {
+						video: videoId,
+						gate: gateId,
+						answers,
+						...( isQuizpress && quizpressAttemptId ? { quizpressAttemptId } : {} ),
+						...( preview ? { preview: true } : {} ),
+				  } );
 			setResult( verdict );
+			if ( preview ) {
+				// No real playback to unlock/lock from a preview verdict.
+				return;
+			}
 			if ( verdict.passed ) {
 				setTimeout( () => onPass( verdict ), 900 );
 			} else if ( verdict.locked ) {
@@ -61,12 +78,12 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 			<div className="tp-overlay tp-quiz tp-quiz--quizpress">
 				<div className="tp-quiz-card">
 					<h3 className="tp-quiz-title">{ title }</h3>
-					<QuizpressQuiz quizId={ quiz.quizpressId } preview={ preview } onAttemptFinished={ submit } />
+					<QuizpressQuiz quizId={ quiz.quizpressId } onAttemptFinished={ submit } />
 					{ busy && <p className="tp-quiz-feedback">Checking your result…</p> }
 					{ result && result.passed && (
 						<p className="tp-quiz-feedback tp-pass tp-quiz-verdict">
 							<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-							You passed!
+							You passed! ({ result.score }%)
 						</p>
 					) }
 					{ result && result.pending && (
@@ -77,11 +94,19 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 					{ result && ! result.passed && ! result.pending && ! result.error && (
 						<p className="tp-quiz-feedback tp-fail tp-quiz-verdict">
 							{ result.locked
-								? "You didn't pass — locked. Re-watch the video to try again."
-								: `You didn't pass this attempt. Attempts left: ${ result.attemptsLeft }.` }
+								? `You didn't pass (${ result.score }%) — locked. Re-watch the video to try again.`
+								: result.preview
+									? `You didn't pass this attempt (${ result.score }%).`
+									: `You didn't pass this attempt (${ result.score }%). Attempts left: ${ result.attemptsLeft }.` }
 						</p>
 					) }
-					{ result && result.error && <p className="tp-quiz-feedback tp-fail tp-quiz-verdict">{ quizpressErrorMessage( result.error ) }</p> }
+					{ result && result.error && (
+						<p className="tp-quiz-feedback tp-fail tp-quiz-verdict">
+							{ preview && 'quiz_not_found' === result.error
+								? 'Save your changes to preview grading.'
+								: quizpressErrorMessage( result.error ) }
+						</p>
+					) }
 				</div>
 			</div>
 		);

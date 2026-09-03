@@ -69,7 +69,7 @@ const AnswerWidgetFallback = () => (
  * there — TruePlayer only asks GradingService to re-verify pass/fail once
  * an attempt finishes (see Quiz.jsx's `submit`).
  */
-export default function QuizpressQuiz( { quizId, preview = false, onAttemptFinished } ) {
+export default function QuizpressQuiz( { quizId, onAttemptFinished } ) {
 	const [ phase, setPhase ] = useState( 'loading' ); // loading | login_required | unavailable | start | taking | finishing | done
 	const [ quizMeta, setQuizMeta ] = useState( null );
 	const [ attempts, setAttempts ] = useState( [] );
@@ -154,8 +154,13 @@ export default function QuizpressQuiz( { quizId, preview = false, onAttemptFinis
 		} )
 			.then( () => {
 				setPhase( 'done' );
-				if ( ! preview && onAttemptFinished ) {
-					onAttemptFinished();
+				if ( onAttemptFinished ) {
+					// Identifies which attempt to verify — TruePlayer's server reads
+					// its real status/marks back from QuizPress rather than trusting
+					// anything asserted here (see GradingService::grade_quizpress).
+					// Called in preview too now: preview asks the same real endpoint,
+					// just flagged so it skips attempt/lock bookkeeping there.
+					onAttemptFinished( attempt.attempt_id );
 				}
 			} )
 			.catch( ( e ) => {
@@ -262,19 +267,15 @@ export default function QuizpressQuiz( { quizId, preview = false, onAttemptFinis
 	}
 
 	if ( 'done' === phase ) {
-		// Preview never asks TruePlayer's server to grade — no real attempt/lock
-		// side effects while just previewing (same reason the native quiz grades
-		// locally in preview instead of calling /grade) — so there's nothing to
-		// wait on there; say so plainly rather than leaving "Checking…" up
-		// forever. Outside preview, onAttemptFinished (Quiz.jsx's own submit)
-		// has already fired and that parent owns every remaining bit of
-		// feedback (its own "Checking…" while /grade is in flight, then the one
-		// final Passed/Not-quite/Locked message) — render nothing here so the
-		// viewer sees a single, unambiguous outcome instead of this "Checking…"
-		// sitting stuck above a second, contradicting message.
-		return preview ? (
-			<p className="tp-quiz-feedback">Attempt submitted to QuizPress. Pass/fail isn't graded in preview — try it on the published video.</p>
-		) : null;
+		// onAttemptFinished (Quiz.jsx's own submit) has already fired — in both
+		// preview and the real embed it now asks TruePlayer's real /grade
+		// endpoint (preview flags it to skip attempt/lock bookkeeping, but
+		// still reads QuizPress's actual result). That parent owns every
+		// remaining bit of feedback — its own "Checking…" while the request is
+		// in flight, then the one final Passed/Not-quite/Pending message —
+		// so render nothing here rather than a second, potentially
+		// contradicting message.
+		return null;
 	}
 
 	return null;

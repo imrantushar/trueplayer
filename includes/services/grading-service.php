@@ -29,10 +29,19 @@ class GradingService {
 	 * Grade a submission for a checkpoint (`gate_id` = "checkpoint:<id>") or the
 	 * final quiz (`gate_id` = "final").
 	 *
-	 * @param array $answers Map of questionId => submitted answer.
+	 * @param array $answers              Map of questionId => submitted answer.
+	 * @param int   $quizpress_attempt_id The just-finished QuizPress attempt to verify,
+	 *                                    for a QuizPress-sourced quiz (ignored otherwise).
+	 * @param bool  $preview              Admin editor's live preview: still reads the
+	 *                                    real QuizPress result (there's no local answer
+	 *                                    key to fall back to for a QuizPress quiz, unlike
+	 *                                    the native path), but skips every side effect —
+	 *                                    no attempt logged, no lock, no event emitted —
+	 *                                    so testing a checkpoint repeatedly in preview
+	 *                                    can't lock the video or spam real webhooks.
 	 * @return array Sanitized verdict (never includes correct answers).
 	 */
-	public static function grade( $video_id, Subject $subject, $gate_id, array $answers ) {
+	public static function grade( $video_id, Subject $subject, $gate_id, array $answers, $quizpress_attempt_id = 0, $preview = false ) {
 		// Quiz-gating is a pro feature.
 		if ( ! \TruePlayer\Pro::active() ) {
 			return [ 'error' => 'pro_required' ];
@@ -46,7 +55,7 @@ class GradingService {
 		}
 
 		if ( 'quizpress' === ( $quiz['source'] ?? 'native' ) ) {
-			return self::grade_quizpress( $video_id, $subject, $gate_id, $is_final, $gating, $quiz );
+			return self::grade_quizpress( $video_id, $subject, $gate_id, $is_final, $gating, $quiz, (int) $quizpress_attempt_id, (bool) $preview );
 		}
 
 		if ( empty( $quiz['questions'] ) ) {
@@ -75,13 +84,18 @@ class GradingService {
 
 	/**
 	 * QuizPress-sourced checkpoint/final quiz: QuizPress owns authoring,
-	 * question types and grading — TruePlayer only asks it who the subject is
-	 * and whether their latest attempt at the linked quiz passed, then runs
-	 * that verdict through the exact same attempt/lock/event pipeline as a
-	 * native quiz. Never trusts the browser's `quizpress:attempt_finished`
-	 * event for the verdict itself — only as a "go check" signal.
+	 * question types and grading — TruePlayer only reads the one attempt the
+	 * viewer just finished (identified by id, not "whatever's most recent")
+	 * and runs its real result through the exact same attempt/lock/event
+	 * pipeline as a native quiz. Never trusts the browser's
+	 * `quizpress:attempt_finished` event, or the attempt id itself, as the
+	 * verdict — the id only says which row to go verify server-side; the
+	 * score and status are read back from that row, and it's confirmed to
+	 * actually belong to this quiz and this subject before any of it is
+	 * trusted (see Academy LMS's own QuizPress integration for the same
+	 * total_marks/earned_marks -> percentage read this mirrors).
 	 */
-	private static function grade_quizpress( $video_id, Subject $subject, $gate_id, $is_final, array $gating, array $quiz ) {
+	private static function grade_quizpress( $video_id, Subject $subject, $gate_id, $is_final, array $gating, array $quiz, $quizpress_attempt_id = 0, $preview = false ) {
 		$quizpress_id = (int) ( $quiz['quizpressId'] ?? 0 );
 		if ( ! $quizpress_id || ! class_exists( '\\QuizPress\\API\\Query\\Attempts' ) ) {
 			return [ 'error' => 'quizpress_unavailable' ];
@@ -93,10 +107,12 @@ class GradingService {
 			return [ 'error' => 'login_required' ];
 		}
 
-		$status = \QuizPress\API\Query\Attempts::get_last_quiz_attempt_status( $quizpress_id, (int) $subject->id );
-		if ( '' === $status ) {
+		$attempt = $quizpress_attempt_id ? \QuizPress\API\Query\Attempts::get_quiz_attempt( (int) $quizpress_attempt_id ) : null;
+		if ( ! $attempt || (int) $attempt->quiz_id !== $quizpress_id || (int) $attempt->user_id !== (int) $subject->id ) {
 			return [ 'error' => 'quiz_not_completed' ];
 		}
+
+		$status = (string) $attempt->attempt_status;
 
 		// A quiz containing a manually-reviewed question type (short answer,
 		// paragraph, date, number) always finishes 'pending' regardless of
@@ -109,10 +125,26 @@ class GradingService {
 			return [ 'passed' => false, 'pending' => true ];
 		}
 
-		$passed = ( 'passed' === $status );
-		$score  = $passed ? 100 : 0; // QuizPress owns the real percentage; pass/fail is all the gate needs.
+		$passed       = ( 'passed' === $status );
+		$total_marks  = (float) $attempt->total_marks;
+		$earned_marks = (float) $attempt->earned_marks;
+		$score        = $total_marks > 0 ? round( $earned_marks / $total_marks * 100, 2 ) : 0;
 
-		return self::record_verdict( $video_id, $subject, $gate_id, $is_final, $gating, $score, $passed, [ 'quizpressId' => $quizpress_id ], [] );
+		if ( $preview ) {
+			return [ 'passed' => $passed, 'score' => $score, 'preview' => true ];
+		}
+
+		return self::record_verdict(
+			$video_id,
+			$subject,
+			$gate_id,
+			$is_final,
+			$gating,
+			$score,
+			$passed,
+			[ 'quizpressId' => $quizpress_id, 'quizpressAttemptId' => $quizpress_attempt_id ],
+			[]
+		);
 	}
 
 	/**
