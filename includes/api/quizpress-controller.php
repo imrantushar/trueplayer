@@ -57,6 +57,17 @@ class QuizpressController {
 							'id'              => $quiz->ID,
 							'title'           => $quiz->post_title,
 							'hasManualReview' => self::has_manual_review_question( $quiz->ID ),
+							// QuizPress's own passing grade and attempt limit — the
+							// numbers that actually decide pass/fail and retries for
+							// this quiz (see GradingService::grade_quizpress). Surfaced
+							// so the Gating tab can show them instead of a TruePlayer
+							// "Pass %" field that has no effect on a QuizPress-sourced
+							// checkpoint, and can explain that TruePlayer's own
+							// video-wide "Max quiz attempts" is a separate, additional
+							// gate on top of this one.
+							'passingGrade'    => (int) get_post_meta( $quiz->ID, 'quizpress_quiz_passing_grade', true ),
+							'maxAttempts'     => (int) get_post_meta( $quiz->ID, 'quizpress_quiz_max_attempts_allowed', true ),
+							'feedbackMode'    => (string) get_post_meta( $quiz->ID, 'quizpress_quiz_feedback_mode', true ),
 						];
 					},
 					$quizzes

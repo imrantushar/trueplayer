@@ -144,6 +144,11 @@ function QuestionList( { questions, onChange } ) {
 	);
 }
 
+const QUIZPRESS_FEEDBACK_MODE_LABELS = {
+	default: 'one attempt only',
+	retry_mode: 'retries allowed',
+};
+
 /**
  * Question source for one checkpoint/final quiz: authored here (native, 2
  * question types) or picked from an existing QuizPress quiz — QuizPress owns
@@ -182,6 +187,24 @@ function QuizSourceFields( { quiz, quizpressOpts, onChange } ) {
 								) ) }
 							</Select>
 						</Field>
+						{ selectedQuiz && (
+							<div className="mb-4 rounded-lg border border-solid border-line bg-gray-50 p-3 text-sm text-gray-700">
+								<p className="mb-1">
+									<strong>Passing grade:</strong> { selectedQuiz.passingGrade || 0 }%
+									{ ' · ' }
+									<strong>QuizPress attempts:</strong> { selectedQuiz.maxAttempts ? selectedQuiz.maxAttempts : 'Unlimited' }
+									{ selectedQuiz.feedbackMode && QUIZPRESS_FEEDBACK_MODE_LABELS[ selectedQuiz.feedbackMode ]
+										? ` (${ QUIZPRESS_FEEDBACK_MODE_LABELS[ selectedQuiz.feedbackMode ] })`
+										: '' }
+								</p>
+								<p className="text-xs text-gray-500">
+									Set on the quiz itself in QuizPress — this checkpoint's own "Pass %" field isn't used
+									for a QuizPress quiz. QuizPress's attempt limit above is separate from TruePlayer's
+									own "Max quiz attempts" (Watch verification, above): that one still applies too and
+									locks the whole video (requiring a rewatch) independently, once it's reached.
+								</p>
+							</div>
+						) }
 						{ selectedQuiz && selectedQuiz.hasManualReview && (
 							<div className="mb-4 rounded-lg border border-solid border-warning bg-warning-light p-3 text-sm text-warning">
 								<strong>Heads up:</strong> this quiz includes a manually-reviewed question type (short
@@ -257,6 +280,12 @@ export default function GatingTab( { config, patch } ) {
 	const toggleFinal = ( on ) => set( { finalQuiz: on ? { title: 'Final quiz', passPercent: 70, questions: [] } : null } );
 	const setFinal = ( partial ) => set( { finalQuiz: { ...gating.finalQuiz, ...partial } } );
 
+	// Whether "Max quiz attempts" above needs to explain it's a separate limit
+	// from QuizPress's own — only worth mentioning once any gate actually uses one.
+	const anyQuizpress =
+		gating.checkpoints.some( ( cp ) => 'quizpress' === cp.source ) ||
+		( gating.finalQuiz && 'quizpress' === gating.finalQuiz.source );
+
 	return (
 		<div className="space-y-6">
 			<Card className="p-6 max-w-2xl">
@@ -265,7 +294,14 @@ export default function GatingTab( { config, patch } ) {
 					<Field label="Completion threshold (%)" hint="Coverage required to count as 'watched'.">
 						<Input type="number" min="1" max="100" value={ gating.completionThreshold } onChange={ ( e ) => set( { completionThreshold: parseInt( e.target.value, 10 ) || 0 } ) } />
 					</Field>
-					<Field label="Max quiz attempts" hint="Before the video locks.">
+					<Field
+						label="Max quiz attempts"
+						hint={
+							anyQuizpress
+								? "Before the video locks — a separate limit from QuizPress's own attempt limit on a linked quiz below; both apply independently."
+								: 'Before the video locks.'
+						}
+					>
 						<Input type="number" min="1" value={ gating.maxAttempts } onChange={ ( e ) => set( { maxAttempts: parseInt( e.target.value, 10 ) || 1 } ) } />
 					</Field>
 				</div>
@@ -287,7 +323,9 @@ export default function GatingTab( { config, patch } ) {
 						<div key={ cp.id } className="border-l-4 border-brand-200 pl-4">
 							<div className="flex gap-2 items-end mb-3">
 								<Field label="At (seconds)"><Input type="number" className="w-28" value={ cp.at } onChange={ ( e ) => setCheckpoint( i, { at: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
-								<Field label="Pass %"><Input type="number" className="w-24" value={ cp.passPercent } onChange={ ( e ) => setCheckpoint( i, { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
+								{ 'quizpress' !== cp.source && (
+									<Field label="Pass %"><Input type="number" className="w-24" value={ cp.passPercent } onChange={ ( e ) => setCheckpoint( i, { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
+								) }
 								<div className="flex-1"><Field label="Title"><Input value={ cp.title || '' } onChange={ ( e ) => setCheckpoint( i, { title: e.target.value } ) } placeholder="Checkpoint" /></Field></div>
 								<Button variant="danger" onClick={ () => removeCheckpoint( i ) }><BsTrash /></Button>
 							</div>
@@ -310,7 +348,9 @@ export default function GatingTab( { config, patch } ) {
 					<div className='mt-4 pt-5 border-t border-solid border-line'>
 						<div className="flex gap-2 items-end mb-4">
 							<div className="flex-1"><Field label="Title"><Input value={ gating.finalQuiz.title || '' } onChange={ ( e ) => setFinal( { title: e.target.value } ) } /></Field></div>
-							<Field label="Pass %"><Input type="number" className="w-24" value={ gating.finalQuiz.passPercent } onChange={ ( e ) => setFinal( { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
+							{ 'quizpress' !== gating.finalQuiz.source && (
+								<Field label="Pass %"><Input type="number" className="w-24" value={ gating.finalQuiz.passPercent } onChange={ ( e ) => setFinal( { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
+							) }
 						</div>
 						<QuizSourceFields quiz={ gating.finalQuiz } quizpressOpts={ quizpressOpts } onChange={ setFinal } />
 					</div>
