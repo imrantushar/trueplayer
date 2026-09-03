@@ -37,8 +37,16 @@ echo "   Version: $VERSION"
 echo "   Output : $POT_FILE"
 echo ""
 
+# --ignore-domain (not --domain): dev_trueplayer/utils/translation.js wraps
+# @wordpress/i18n so every call site only passes the string, e.g. __('text')
+# — the 'trueplayer' domain is injected inside the wrapper, never as a
+# literal at the call site. --domain=trueplayer requires that literal to be
+# present and match, so every wrapped call was silently skipped; --ignore-domain
+# extracts __/_n/_x/_nx calls regardless, which is what actually appears in
+# the compiled JS. PHP calls (which do pass 'trueplayer' explicitly) still
+# get extracted the same either way.
 wp i18n make-pot . "$POT_FILE" \
-  --domain="$TEXT_DOMAIN" \
+  --ignore-domain \
   --exclude="dev_trueplayer/,node_modules/,vendor/,scripts/,.git/,docs/,build-tools/"
 
 echo ""
