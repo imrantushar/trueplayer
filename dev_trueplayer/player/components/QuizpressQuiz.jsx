@@ -262,7 +262,19 @@ export default function QuizpressQuiz( { quizId, preview = false, onAttemptFinis
 	}
 
 	if ( 'done' === phase ) {
-		return <p className="tp-quiz-feedback">Checking your result…</p>;
+		// Preview never asks TruePlayer's server to grade — no real attempt/lock
+		// side effects while just previewing (same reason the native quiz grades
+		// locally in preview instead of calling /grade) — so there's nothing to
+		// wait on there; say so plainly rather than leaving "Checking…" up
+		// forever. Outside preview, onAttemptFinished (Quiz.jsx's own submit)
+		// has already fired and that parent owns every remaining bit of
+		// feedback (its own "Checking…" while /grade is in flight, then the one
+		// final Passed/Not-quite/Locked message) — render nothing here so the
+		// viewer sees a single, unambiguous outcome instead of this "Checking…"
+		// sitting stuck above a second, contradicting message.
+		return preview ? (
+			<p className="tp-quiz-feedback">Attempt submitted to QuizPress. Pass/fail isn't graded in preview — try it on the published video.</p>
+		) : null;
 	}
 
 	return null;

@@ -153,6 +153,7 @@ function QuestionList( { questions, onChange } ) {
 function QuizSourceFields( { quiz, quizpressOpts, onChange } ) {
 	const source  = 'quizpress' === quiz.source ? 'quizpress' : 'native';
 	const quizzes = ( quizpressOpts && quizpressOpts.quizzes ) || [];
+	const selectedQuiz = quizzes.find( ( q ) => q.id === quiz.quizpressId );
 
 	return (
 		<div>
@@ -170,12 +171,26 @@ function QuizSourceFields( { quiz, quizpressOpts, onChange } ) {
 				quizpressOpts && ! quizpressOpts.available ? (
 					<p className="text-sm text-gray-400">Install QuizPress to link a quiz here.</p>
 				) : (
-					<Field label="Quiz" hint="Question types, scoring and feedback all come from QuizPress.">
-						<Select value={ quiz.quizpressId || '' } onChange={ ( e ) => onChange( { quizpressId: parseInt( e.target.value, 10 ) || 0 } ) }>
-							<option value="">— select —</option>
-							{ quizzes.map( ( q ) => <option key={ q.id } value={ q.id }>{ q.title }</option> ) }
-						</Select>
-					</Field>
+					<>
+						<Field label="Quiz" hint="Question types, scoring and feedback all come from QuizPress.">
+							<Select value={ quiz.quizpressId || '' } onChange={ ( e ) => onChange( { quizpressId: parseInt( e.target.value, 10 ) || 0 } ) }>
+								<option value="">— select —</option>
+								{ quizzes.map( ( q ) => (
+									<option key={ q.id } value={ q.id }>
+										{ q.title }{ q.hasManualReview ? ' — has manual-review questions' : '' }
+									</option>
+								) ) }
+							</Select>
+						</Field>
+						{ selectedQuiz && selectedQuiz.hasManualReview && (
+							<div className="mb-4 rounded-lg border border-solid border-warning bg-warning-light p-3 text-sm text-warning">
+								<strong>Heads up:</strong> this quiz includes a manually-reviewed question type (short
+								answer, paragraph, date, or number). QuizPress won't mark an attempt passed or failed
+								until an admin reviews it in <em>QuizPress → Quiz Insights</em> — until then, a viewer
+								gated on this quiz can't complete the video.
+							</div>
+						) }
+					</>
 				)
 			) : (
 				<QuestionList questions={ quiz.questions || [] } onChange={ ( questions ) => onChange( { questions } ) } />

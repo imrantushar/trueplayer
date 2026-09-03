@@ -908,6 +908,10 @@
 .border-transparent {
 		border-color: transparent;
 }
+.border-warning {
+		--tw-border-opacity: 1;
+		border-color: rgb(253 176 34 / var(--tw-border-opacity, 1));
+}
 .border-l-brand-600 {
 		--tw-border-opacity: 1;
 		border-left-color: rgb(0 92 224 / var(--tw-border-opacity, 1));

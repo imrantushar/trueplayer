@@ -1304,6 +1304,21 @@
 .tp-quiz-feedback.tp-fail {
 	color: #dc2626;
 }
+/* The final pass/fail/pending outcome of a QuizPress-sourced quiz — given
+   its own banner, not just another feedback line, so it reads as the one
+   unambiguous result rather than blending in with in-progress messages. */
+.tp-quiz-verdict {
+	font-size: 15px;
+	padding: 12px 14px;
+	border-radius: 8px;
+	background: rgba( 0, 0, 0, 0.04 );
+}
+.tp-quiz-verdict.tp-pass {
+	background: rgba( 22, 163, 74, 0.1 );
+}
+.tp-quiz-verdict.tp-fail {
+	background: rgba( 220, 38, 38, 0.08 );
+}
 .tp-quiz-submit {
 	margin-top: 8px;
 	background: var(--tp-accent);

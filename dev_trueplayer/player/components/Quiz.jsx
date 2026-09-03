@@ -3,6 +3,18 @@ import { rest } from '@Utils/rest';
 import { gradeLocal } from '../grade-local';
 import QuizpressQuiz from './QuizpressQuiz';
 
+// GradingService::grade_quizpress returns these as raw internal codes — map
+// the ones a viewer can actually hit to plain language instead of surfacing
+// e.g. "login_required" verbatim.
+const QUIZPRESS_ERROR_MESSAGES = {
+	login_required: 'Log in to have this attempt count.',
+	quiz_not_completed: 'Finish the quiz above first.',
+	quizpress_unavailable: "This quiz isn't available right now.",
+	quiz_not_found: "This quiz isn't set up correctly — contact the site owner.",
+	pro_required: 'This feature requires TruePlayer Pro.',
+};
+const quizpressErrorMessage = ( code ) => QUIZPRESS_ERROR_MESSAGES[ code ] || code;
+
 /**
  * In-player quiz layer used for both checkpoints and the final gate. Renders
  * question prompts (never answers), submits to the server for grading, and
@@ -50,21 +62,26 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 				<div className="tp-quiz-card">
 					<h3 className="tp-quiz-title">{ title }</h3>
 					<QuizpressQuiz quizId={ quiz.quizpressId } preview={ preview } onAttemptFinished={ submit } />
-					{ busy && <p className="tp-quiz-feedback">Checking…</p> }
-					{ result && ! result.passed && ! result.error && (
-						<p className="tp-quiz-feedback tp-fail">
-							{ result.locked
-								? 'Locked — you must re-watch the video to try again.'
-								: `Not quite. Attempts left: ${ result.attemptsLeft }.` }
-						</p>
-					) }
+					{ busy && <p className="tp-quiz-feedback">Checking your result…</p> }
 					{ result && result.passed && (
-						<p className="tp-quiz-feedback tp-pass">
-							<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-							Passed
+						<p className="tp-quiz-feedback tp-pass tp-quiz-verdict">
+							<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+							You passed!
 						</p>
 					) }
-					{ result && result.error && <p className="tp-quiz-feedback tp-fail">{ result.error }</p> }
+					{ result && result.pending && (
+						<p className="tp-quiz-feedback tp-quiz-verdict">
+							Your answers are awaiting manual review. You'll be able to continue once they're graded.
+						</p>
+					) }
+					{ result && ! result.passed && ! result.pending && ! result.error && (
+						<p className="tp-quiz-feedback tp-fail tp-quiz-verdict">
+							{ result.locked
+								? "You didn't pass — locked. Re-watch the video to try again."
+								: `You didn't pass this attempt. Attempts left: ${ result.attemptsLeft }.` }
+						</p>
+					) }
+					{ result && result.error && <p className="tp-quiz-feedback tp-fail tp-quiz-verdict">{ quizpressErrorMessage( result.error ) }</p> }
 				</div>
 			</div>
 		);

@@ -98,6 +98,17 @@ class GradingService {
 			return [ 'error' => 'quiz_not_completed' ];
 		}
 
+		// A quiz containing a manually-reviewed question type (short answer,
+		// paragraph, date, number) always finishes 'pending' regardless of
+		// score — QuizPress won't compute passed/failed until an admin reviews
+		// it in Quiz Insights. Treating 'pending' as a fail would silently
+		// consume an attempt and could lock the video before a human ever
+		// looks at it, so it gets its own outcome: no attempt consumed, no
+		// lock — the gate just re-checks next time and resolves once reviewed.
+		if ( 'pending' === $status ) {
+			return [ 'passed' => false, 'pending' => true ];
+		}
+
 		$passed = ( 'passed' === $status );
 		$score  = $passed ? 100 : 0; // QuizPress owns the real percentage; pass/fail is all the gate needs.
 
