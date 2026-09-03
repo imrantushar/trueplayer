@@ -81,12 +81,26 @@ function LmsLink( { config, patch } ) {
 }
 
 function QuestionList( { questions, onChange } ) {
+	// Same collapsed-summary / click-to-expand accordion as the checkpoint
+	// list above (and QuizPress's own Questions-step builder) — a newly
+	// added question opens by default.
+	const [ openQuestions, setOpenQuestions ] = useState( () => new Set() );
+	const toggleOpen = ( id ) =>
+		setOpenQuestions( ( open ) => {
+			const next = new Set( open );
+			next.has( id ) ? next.delete( id ) : next.add( id );
+			return next;
+		} );
+
 	const setQ = ( i, partial ) => onChange( questions.map( ( q, idx ) => ( idx === i ? { ...q, ...partial } : q ) ) );
-	const addQ = () =>
+	const addQ = () => {
+		const id = uid();
 		onChange( [
 			...questions,
-			{ id: uid(), type: 'mcq', prompt: '', options: [ { id: uid(), label: '' }, { id: uid(), label: '' } ], correct: '' },
+			{ id, type: 'mcq', prompt: '', options: [ { id: uid(), label: '' }, { id: uid(), label: '' } ], correct: '' },
 		] );
+		setOpenQuestions( ( open ) => new Set( open ).add( id ) );
+	};
 	const removeQ = ( i ) => onChange( questions.filter( ( _, idx ) => idx !== i ) );
 
 	const setOpt = ( qi, oi, label ) => {
@@ -100,46 +114,88 @@ function QuestionList( { questions, onChange } ) {
 		setQ( qi, { options: q.options.filter( ( _, idx ) => idx !== oi ) } );
 	};
 
-	return (
-		<div className="space-y-4">
-			{ questions.map( ( q, qi ) => (
-				<div key={ q.id } className="border border-line rounded-lg p-4">
-					<div className="flex gap-2 items-center mb-3">
-						<span className="text-sm font-semibold text-gray-500">Q{ qi + 1 }</span>
-						<Select className="w-40" value={ q.type } onChange={ ( e ) => setQ( qi, { type: e.target.value, correct: '' } ) }>
-							<option value="mcq">Multiple choice</option>
-							<option value="boolean">True / False</option>
-						</Select>
-						<div className="flex-1" />
-						<Button variant="danger" onClick={ () => removeQ( qi ) }><BsTrash /></Button>
-					</div>
-					<Input className="mb-3" value={ q.prompt } onChange={ ( e ) => setQ( qi, { prompt: e.target.value } ) } placeholder="Question prompt…" />
+	// Native HTML5 drag reorder — same as the checkpoint list above. The
+	// source index rides in the drag event's own dataTransfer payload rather
+	// than being read back out of React state at drop time, which is what
+	// made the checkpoint list's first version silently fail to reorder.
+	const [ dragIndex, setDragIndex ] = useState( null );
+	const [ overIndex, setOverIndex ] = useState( null );
+	const reorderQ = ( from, to ) => {
+		if ( null === from || null === to || Number.isNaN( from ) || from === to ) {
+			return;
+		}
+		const next = [ ...questions ];
+		const [ moved ] = next.splice( from, 1 );
+		next.splice( to, 0, moved );
+		onChange( next );
+	};
 
-					{ q.type === 'boolean' ? (
-						<Field label="Correct answer">
-							<Select className="w-40" value={ q.correct } onChange={ ( e ) => setQ( qi, { correct: e.target.value } ) }>
-								<option value="">— pick —</option>
-								<option value="true">True</option>
-								<option value="false">False</option>
-							</Select>
-						</Field>
-					) : (
-						<div>
-							<span className="block text-xs text-gray-500 mb-2">Options (select the correct one)</span>
-							<div className="space-y-2">
-								{ q.options.map( ( o, oi ) => (
-									<div key={ o.id } className="flex gap-2 items-center">
-										<input type="radio" name={ `correct-${ q.id }` } checked={ q.correct === o.id } onChange={ () => setQ( qi, { correct: o.id } ) } />
-										<Input value={ o.label } onChange={ ( e ) => setOpt( qi, oi, e.target.value ) } placeholder={ `Option ${ oi + 1 }` } />
-										{ q.options.length > 2 && <Button variant="danger" onClick={ () => removeOpt( qi, oi ) }><BsTrash /></Button> }
-									</div>
-								) ) }
+	return (
+		<div className="space-y-3">
+			{ questions.map( ( q, qi ) => {
+				const isOpen = openQuestions.has( q.id );
+				const typeLabel = 'boolean' === q.type ? 'True / False' : 'Multiple choice';
+				return (
+					<div
+						key={ q.id }
+						draggable
+						onDragStart={ ( e ) => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData( 'text/plain', String( qi ) ); setDragIndex( qi ); } }
+						onDragOver={ ( e ) => { e.preventDefault(); if ( overIndex !== qi ) { setOverIndex( qi ); } } }
+						onDrop={ ( e ) => { e.preventDefault(); reorderQ( parseInt( e.dataTransfer.getData( 'text/plain' ), 10 ), qi ); setDragIndex( null ); setOverIndex( null ); } }
+						onDragEnd={ () => { setDragIndex( null ); setOverIndex( null ); } }
+						className={ `border rounded-lg bg-white transition ${ overIndex === qi && dragIndex !== qi ? 'border-brand-400 ring-2 ring-brand-100' : 'border-line' } ${ dragIndex === qi ? 'opacity-50' : '' }` }
+					>
+						<div
+							className={ `flex items-center gap-2 p-3 cursor-pointer ${ isOpen ? 'border-b border-solid border-line' : '' }` }
+							onClick={ () => toggleOpen( q.id ) }
+						>
+							<span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 select-none px-0.5" title="Drag to reorder" aria-hidden="true">⠿</span>
+							<Icon name="chevronRight" className={ `w-4 h-4 text-gray-400 shrink-0 transition-transform ${ isOpen ? 'rotate-90' : '' }` } />
+							<div className="flex-1 min-w-0">
+								<p className="text-sm font-medium text-ink truncate">{ q.prompt || `Question ${ qi + 1 }` }</p>
+								<p className="text-xs text-gray-400 truncate">Q{ qi + 1 } · { typeLabel }</p>
 							</div>
-							<Button variant="ghost" className="mt-2" onClick={ () => addOpt( qi ) }>+ Option</Button>
+							<Button variant="danger" size="sm" onClick={ ( e ) => { e.stopPropagation(); removeQ( qi ); } }><BsTrash /></Button>
 						</div>
-					) }
-				</div>
-			) ) }
+						{ isOpen && (
+							<div className="p-3">
+								<div className="flex gap-2 items-center mb-3">
+									<span className="text-sm font-semibold text-gray-500">Q{ qi + 1 }</span>
+									<Select className="w-40" value={ q.type } onChange={ ( e ) => setQ( qi, { type: e.target.value, correct: '' } ) }>
+										<option value="mcq">Multiple choice</option>
+										<option value="boolean">True / False</option>
+									</Select>
+								</div>
+								<Input className="mb-3" value={ q.prompt } onChange={ ( e ) => setQ( qi, { prompt: e.target.value } ) } placeholder="Question prompt…" />
+
+								{ q.type === 'boolean' ? (
+									<Field label="Correct answer">
+										<Select className="w-40" value={ q.correct } onChange={ ( e ) => setQ( qi, { correct: e.target.value } ) }>
+											<option value="">— pick —</option>
+											<option value="true">True</option>
+											<option value="false">False</option>
+										</Select>
+									</Field>
+								) : (
+									<div>
+										<span className="block text-xs text-gray-500 mb-2">Options (select the correct one)</span>
+										<div className="space-y-2">
+											{ q.options.map( ( o, oi ) => (
+												<div key={ o.id } className="flex gap-2 items-center">
+													<input type="radio" name={ `correct-${ q.id }` } checked={ q.correct === o.id } onChange={ () => setQ( qi, { correct: o.id } ) } />
+													<Input value={ o.label } onChange={ ( e ) => setOpt( qi, oi, e.target.value ) } placeholder={ `Option ${ oi + 1 }` } />
+													{ q.options.length > 2 && <Button variant="danger" onClick={ () => removeOpt( qi, oi ) }><BsTrash /></Button> }
+												</div>
+											) ) }
+										</div>
+										<Button variant="ghost" className="mt-2" onClick={ () => addOpt( qi ) }>+ Option</Button>
+									</div>
+								) }
+							</div>
+						) }
+					</div>
+				);
+			} ) }
 			<Button variant="ghost" onClick={ addQ }>+ Add question</Button>
 		</div>
 	);
