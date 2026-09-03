@@ -1,0 +1,29 @@
+{
+    "name": "kodezen/trueplayer",
+    "description": "TruePlayer — watch-verified, quiz-gated video & audio player for WordPress.",
+    "type": "wordpress-plugin",
+    "license": "GPL-3.0-or-later",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/imrantushar/storeengine-sdk-for-wordpress.git"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "storeengine/wordpress-sdk": "^1.5"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true
+        }
+    },
+    "scripts": {
+        "build": "@composer install --no-dev --optimize-autoloader --classmap-authoritative",
+        "dev": "@composer install"
+    },
+    "scripts-descriptions": {
+        "build": "Installs dependencies without dev-dependencies.",
+        "dev": "Installs all dependencies including dev-dependencies."
+    }
+}

@@ -113,6 +113,19 @@ final class SE_License_SDK_Updater {
 
 		register_activation_hook( $this->client->getPackageFile(), [ $this, 'delete_cached_version_info' ] );
 		register_deactivation_hook( $this->client->getPackageFile(), [ $this, 'delete_cached_version_info' ] );
+
+		// Core/free plugin dependency gate (Points 1+2): never let the pro
+		// update out-run the free plugin it depends on. No-op unless the
+		// consumer declared `requires_core`.
+		if ( $this->client->core_dependency()->is_configured() ) {
+			// Abort a native "Update now" / bulk / cron auto-update of the pro
+			// plugin while the core plugin is behind — priority 5 so it runs
+			// before the package-integrity check and short-circuits early.
+			// (The SDK's own installer attempts a core update first; this is
+			// the safety net for every other upgrade path.)
+			add_filter( 'upgrader_pre_install', [ $this, 'gate_core_dependency' ], 5, 2 );
+			add_action( 'admin_notices', [ $this, 'core_dependency_notice' ] );
+		}
 	}
 
 	/**
@@ -224,14 +237,24 @@ final class SE_License_SDK_Updater {
 			return in_array( $this->client->getBasename(), $hook_extra['plugins'], true );
 		}
 
+		// Native single theme update (themes are keyed by stylesheet == slug).
+		if ( ! empty( $hook_extra['theme'] ) ) {
+			return $hook_extra['theme'] === $this->client->getSlug();
+		}
+
+		// Native bulk theme update.
+		if ( ! empty( $hook_extra['themes'] ) && is_array( $hook_extra['themes'] ) ) {
+			return in_array( $this->client->getSlug(), $hook_extra['themes'], true );
+		}
+
 		return false;
 	}
 
 	/**
 	 * Effective list of package-relative paths that must exist for an update to
-	 * be accepted. Uses the consumer's declared `critical_paths`, or a
-	 * conservative default. Filterable so a site can trim/extend without
-	 * re-vendoring the SDK.
+	 * be accepted. Uses the consumer's declared `critical_paths`, falling back
+	 * to `vendor/autoload.php` only when the installed build actually ships one.
+	 * Filterable so a site can trim/extend without re-vendoring the SDK.
 	 *
 	 * @return array
 	 */
@@ -239,9 +262,22 @@ final class SE_License_SDK_Updater {
 		$paths = $this->client->getCriticalPaths();
 
 		if ( null === $paths ) {
-			// Conservative default: the autoloader almost every consumer ships
-			// and hard-requires. Kept minimal to avoid false-positive blocks.
-			$paths = [ 'vendor/autoload.php' ];
+			// Derive the default from the installed copy rather than assuming a
+			// layout. Until 1.5.6 this was a blind [ 'vendor/autoload.php' ],
+			// which permanently blocked updates for any consumer that ships no
+			// vendor/ directory — a pro plugin with no runtime Composer
+			// dependencies, or one that vendors somewhere else. Their packages
+			// were rejected for a file they never had, with no way to recover:
+			// the check runs from the *installed* build, so declaring
+			// `critical_paths` in a later release cannot rescue a site already
+			// running an older one.
+			//
+			// Only require the autoloader when the installed build actually has
+			// one. That keeps the protection for the consumers it was written
+			// for and stops it firing where it was always a false positive. An
+			// explicitly declared `critical_paths` is untouched by this.
+			$installed = trailingslashit( dirname( $this->client->getPackageFile() ) ) . 'vendor/autoload.php';
+			$paths     = file_exists( $installed ) ? [ 'vendor/autoload.php' ] : [];
 		}
 
 		/**
@@ -255,6 +291,79 @@ final class SE_License_SDK_Updater {
 	}
 
 	/**
+	 * Abort a pro update while the core/free plugin it depends on is behind.
+	 *
+	 * Hooked on core's `upgrader_pre_install` so it covers the native "Update
+	 * now" link, bulk updates on update-core.php, and unattended background
+	 * auto-updates alike. We only GATE here (never trigger a nested core
+	 * upgrade — a re-entrant WP_Upgrader run is unsafe); the SDK's own
+	 * installer does the auto-update-the-core-first attempt before it gets here.
+	 *
+	 * @param bool|WP_Error $response   Whether to proceed. WP_Error to abort.
+	 * @param array         $hook_extra Upgrade context.
+	 *
+	 * @return bool|WP_Error
+	 */
+	public function gate_core_dependency( $response, $hook_extra = [] ) {
+		// An upstream pre-install check already failed — pass it through.
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		// Only ever gate an upgrade we can prove is this pro plugin.
+		if ( ! $this->source_belongs_to_this_plugin( $hook_extra ) ) {
+			return $response;
+		}
+
+		// Never gate a rollback/downgrade — the latest release's core-version
+		// requirement doesn't apply to an older pro version.
+		if ( ! empty( $hook_extra['storeengine_sdk']['is_rollback'] ) ) {
+			return $response;
+		}
+
+		$result = $this->client->core_dependency()->ensure_satisfied_or_error( false );
+
+		return is_wp_error( $result ) ? $result : $response;
+	}
+
+	/**
+	 * Nag the admin to update the core/free plugin first when a pro update is
+	 * pending but the dependency isn't satisfied. Only shown while an update is
+	 * actually waiting, so a latent version gap that blocks nothing stays quiet.
+	 *
+	 * @return void
+	 */
+	public function core_dependency_notice() {
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			return;
+		}
+
+		$dep = $this->client->core_dependency();
+
+		if ( ! $dep->is_configured() || $dep->is_satisfied() ) {
+			return;
+		}
+
+		// Only nag when a pro update is actually pending.
+		$which = $this->client->isPlugin() ? 'plugin_update' : 'theme_update';
+		$info  = get_transient( $this->cache_key . $which );
+
+		$update_pending = is_object( $info )
+			&& ! empty( $info->new_version )
+			&& version_compare( $this->client->getProjectVersion(), $info->new_version, '<' );
+
+		if ( ! $update_pending ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-warning"><p><strong>%1$s:</strong> %2$s</p></div>',
+			esc_html( $this->client->getPackageName() ),
+			esc_html( $dep->unmet_message() )
+		);
+	}
+
+	/**
 	 * Set up WordPress filter hooks to get theme update.
 	 *
 	 * @return void
@@ -263,6 +372,16 @@ final class SE_License_SDK_Updater {
 		add_filter( 'pre_set_site_transient_update_themes', [ $this, 'check_theme_update' ] );
 		add_filter( 'themes_api', [ $this, 'themes_api_filter' ], 10, 3 );
 		add_action( 'switch_theme', [ $this, 'delete_cached_version_info' ] );
+
+		// Abort an incomplete theme update BEFORE WP swaps the live theme
+		// folder — parity with the plugin path.
+		add_filter( 'upgrader_source_selection', [ $this, 'validate_package_source' ], 20, 4 );
+
+		// Core/free plugin dependency gate — no-op unless `requires_core` is set.
+		if ( $this->client->core_dependency()->is_configured() ) {
+			add_filter( 'upgrader_pre_install', [ $this, 'gate_core_dependency' ], 5, 2 );
+			add_action( 'admin_notices', [ $this, 'core_dependency_notice' ] );
+		}
 	}
 
 	/**
@@ -275,7 +394,10 @@ final class SE_License_SDK_Updater {
 	public function check_plugin_update( $transient_data ) {
 		global $pagenow;
 
-		if ( 'plugins.php' === $pagenow && is_multisite() ) {
+		// On multisite, skip injection on the per-site plugins.php (a site admin
+		// can't update a network plugin anyway) — but DO inject in the Network
+		// Admin, where a super admin manages network-activated plugin updates.
+		if ( 'plugins.php' === $pagenow && is_multisite() && ! is_network_admin() ) {
 			return $transient_data;
 		}
 
@@ -439,6 +561,14 @@ final class SE_License_SDK_Updater {
 
 			$data = $response['data'];
 
+			// Mirror the license server's per-release core-plugin requirement
+			// (if any) so the dependency gate can read it during a later install
+			// request. Stored even when empty so a dropped requirement clears.
+			$required_core = ( isset( $data['requires_core']['min_version'] ) && is_string( $data['requires_core']['min_version'] ) )
+				? $data['requires_core']['min_version']
+				: '';
+			( new SE_License_SDK_Update_State( $this->client ) )->set( [ 'required_core_version' => $required_core ] );
+
 			if ( 'plugin_update' !== $action ) {
 				// information -> package-info
 				$response = $this->client->request( [
@@ -563,22 +693,14 @@ final class SE_License_SDK_Updater {
 	 * @param array $hook_extra
 	 */
 	public function record_previous_version( $upgrader, $hook_extra ) {
-		if ( empty( $hook_extra['type'] ) || 'plugin' !== $hook_extra['type'] ) {
+		$type = $hook_extra['type'] ?? '';
+
+		// Only this product's own plugin/theme update.
+		if ( ! in_array( $type, [ 'plugin', 'theme' ], true ) ) {
 			return;
 		}
 
-		if ( empty( $hook_extra['plugins'] ) && empty( $hook_extra['plugin'] ) ) {
-			return;
-		}
-
-		$updated = [];
-		if ( ! empty( $hook_extra['plugins'] ) && is_array( $hook_extra['plugins'] ) ) {
-			$updated = $hook_extra['plugins'];
-		} elseif ( ! empty( $hook_extra['plugin'] ) ) {
-			$updated = [ $hook_extra['plugin'] ];
-		}
-
-		if ( ! in_array( $this->client->getBasename(), $updated, true ) ) {
+		if ( ! $this->source_belongs_to_this_plugin( $hook_extra ) ) {
 			return;
 		}
 
@@ -592,6 +714,16 @@ final class SE_License_SDK_Updater {
 			'previous_version' => $previous,
 			'last_install_at'  => time(),
 		] );
+
+		/**
+		 * Fires after this product's files have been updated in place (covers the
+		 * native "Update now"/bulk/auto-update paths and the SDK installer alike).
+		 * Hook name: "{product-hook-prefix}_update_installed".
+		 *
+		 * @param string                 $previous The version that was running before the swap.
+		 * @param SE_License_SDK_Updater $this     The updater instance.
+		 */
+		$this->client->do_action( 'update_installed', $previous, $this );
 	}
 
 	/**

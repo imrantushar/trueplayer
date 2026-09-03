@@ -8,7 +8,7 @@
 
   "versionFrom": "header",
 
-  "steps": { "js": true, "composer": false, "strauss": false, "pot": true, "zip": true },
+  "steps": { "js": true, "composer": true, "strauss": false, "pot": true, "zip": true },
 
   "js": { "install": "auto", "installCommand": "npm ci --legacy-peer-deps", "buildScript": "build" },
 

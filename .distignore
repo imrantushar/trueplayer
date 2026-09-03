@@ -11,6 +11,10 @@ postcss.config.js
 package.json
 package-lock.json
 
+# Composer manifests (the built vendor/ autoloader needs neither at runtime)
+composer.json
+composer.lock
+
 # === Cross-platform build kit (dev-only, never shipped) ===
 /build-tools/
 /build.config.json
