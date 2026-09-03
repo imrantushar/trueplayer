@@ -18,7 +18,7 @@ const TAG_STYLES = {
 	Removed: 'bg-gray-100 text-gray-500',
 };
 const TAG_LABELS = {
-	Added: __( 'Feature' ),
+	Added: __( 'Added' ),
 	Improved: __( 'Improvement' ),
 	Fixed: __( 'Fix' ),
 	Security: __( 'Security' ),

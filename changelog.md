@@ -21,6 +21,7 @@
 - Added drag-and-drop reordering and a collapsible accordion for checkpoint and question lists.
 - Added URL-based editor tabs, so a reload keeps your place.
 - Added a "What's New" panel in the admin top bar.
+- Added js translation.
 
 ### Fixed
 
