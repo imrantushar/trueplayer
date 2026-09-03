@@ -94,6 +94,26 @@ class Assets {
 			wp_enqueue_media();
 		}
 
+		// The Gating tab's live preview renders a QuizPress-sourced quiz inline
+		// (QuizpressQuiz.jsx), which needs QuizPress's own frontend script for
+		// its `quizpress.question-answer-widget.content` / `quizpress.submit-
+		// question-answer` hooks. `QuizPress\Assets::frontend_scripts()` only
+		// runs on the front-end `wp_enqueue_scripts` hook, which never fires in
+		// wp-admin — call it directly here (idempotent: register-only, safe to
+		// call twice) rather than re-deriving its build paths ourselves.
+		//
+		// Script only, deliberately not QuizPress's stylesheet: both plugins
+		// ship their own separate Tailwind build with generic, unprefixed
+		// utility classes (`.flex`, `.grid`, `.p-6`, …) — loading QuizPress's
+		// global CSS into this admin page let its reset/utilities collide with
+		// and override this app's own layout (broke the 3-column editor
+		// grid). The widget renders a little plainer without it; that's the
+		// trade.
+		if ( class_exists( '\\QuizPress\\Assets' ) ) {
+			( new \QuizPress\Assets() )->frontend_scripts();
+			wp_enqueue_script( 'quizpress-frontend-scripts' );
+		}
+
 		wp_enqueue_script(
 			self::BACKEND_SCRIPT_HANDLE,
 			TRUEPLAYER_ASSETS_URI . sprintf( 'build/backend.%s.js', TRUEPLAYER_VERSION ),
@@ -188,6 +208,7 @@ class Assets {
 			'site_url'         => site_url(),
 			'admin_url'        => admin_url(),
 			'is_login'         => (bool) is_user_logged_in(),
+			'user_id'          => get_current_user_id(),
 			'is_admin'         => (bool) current_user_can( 'manage_options' ),
 			'addons'           => $trueplayer_addons,
 			// Installing Pro is what unlocks its features; the licence buys

@@ -23,6 +23,37 @@ class Shortcode {
 	}
 
 	/**
+	 * When the video has a QuizPress-sourced checkpoint/final quiz, put
+	 * QuizPress's own frontend bundle on the page — already registered by
+	 * QuizPress itself, never bundled/duplicated here. That bundle registers
+	 * the `quizpress.question-answer-widget.content` / `quizpress.submit-
+	 * question-answer` `@wordpress/hooks` filters the player's stepper reads
+	 * (see QuizpressQuiz.jsx) — mirrors Academy LMS's own
+	 * `AcademyQuizpress\Frontend::maybe_enqueue_quizpress_player()`.
+	 */
+	private static function maybe_enqueue_quizpress( array $config ) {
+		$gating = is_array( $config['gating'] ?? null ) ? $config['gating'] : [];
+		$uses_quizpress = static function ( $quiz ) {
+			return is_array( $quiz ) && 'quizpress' === ( $quiz['source'] ?? '' ) && ! empty( $quiz['quizpressId'] );
+		};
+		$has_quizpress = $uses_quizpress( $gating['finalQuiz'] ?? null );
+		if ( ! $has_quizpress && ! empty( $gating['checkpoints'] ) && is_array( $gating['checkpoints'] ) ) {
+			foreach ( $gating['checkpoints'] as $cp ) {
+				if ( $uses_quizpress( $cp ) ) {
+					$has_quizpress = true;
+					break;
+				}
+			}
+		}
+		if ( ! $has_quizpress || ! wp_script_is( 'quizpress-frontend-scripts', 'registered' ) ) {
+			return;
+		}
+		wp_enqueue_style( 'quizpress-frontend-icon' );
+		wp_enqueue_style( 'quizpress-frontend-style' );
+		wp_enqueue_script( 'quizpress-frontend-scripts' );
+	}
+
+	/**
 	 * `[trueplayer_popup id="N" label="Watch"]` (or wrapping content) — a trigger
 	 * that opens the player in a lightbox. Nothing loads until it's clicked.
 	 */
@@ -36,6 +67,7 @@ class Shortcode {
 		wp_enqueue_script( Assets::FRONTEND_SCRIPT_HANDLE );
 
 		$config = self::resolved_config( $video_id );
+		self::maybe_enqueue_quizpress( $config );
 		$json   = wp_json_encode( [ 'videoId' => $video_id, 'title' => get_the_title( $video_id ), 'config' => $config ] );
 		$label  = '' !== trim( (string) $content ) ? do_shortcode( $content ) : ( $atts['label'] ?: __( 'Watch video', 'trueplayer' ) );
 		$accent = $config['customize']['appearance']['accent'] ?? '';
@@ -76,6 +108,7 @@ class Shortcode {
 		wp_enqueue_script( Assets::FRONTEND_SCRIPT_HANDLE );
 
 		$config = self::resolved_config( $video_id );
+		self::maybe_enqueue_quizpress( $config );
 
 		$json = wp_json_encode(
 			[
@@ -136,7 +169,6 @@ class Shortcode {
 		if ( Pro::active() ) {
 			$config = self::prepare_layers( $config );
 			$config = self::prepare_timed_content( $config );
-			$config = self::prepare_quizpress_quizzes( $config );
 			$config = self::prepare_watermark( $config );
 			$config = PrivateVideo::prepare_source( $config, $video_id );
 		}
@@ -177,37 +209,6 @@ class Shortcode {
 			unset( $item['content'] );
 		}
 		unset( $item );
-		return $config;
-	}
-
-	/**
-	 * A checkpoint/final quiz can point at a QuizPress quiz instead of
-	 * authoring questions here. QuizPress's own shortcode can't run in the
-	 * browser, so — same as `prepare_layers` — it's rendered now and shipped
-	 * as trusted `html`; the client only ever mounts it.
-	 */
-	private static function prepare_quizpress_quizzes( array $config ): array {
-		if ( empty( $config['gating'] ) || ! is_array( $config['gating'] ) || ! post_type_exists( 'quizpress_quiz' ) ) {
-			return $config;
-		}
-		$gating = $config['gating'];
-
-		$render = static function ( $quiz ) {
-			if ( ! is_array( $quiz ) || 'quizpress' !== ( $quiz['source'] ?? '' ) || empty( $quiz['quizpressId'] ) ) {
-				return $quiz;
-			}
-			$quiz['html'] = do_shortcode( '[quizpress_quiz quiz_id="' . absint( $quiz['quizpressId'] ) . '"]' );
-			return $quiz;
-		};
-
-		if ( ! empty( $gating['checkpoints'] ) && is_array( $gating['checkpoints'] ) ) {
-			$gating['checkpoints'] = array_map( $render, $gating['checkpoints'] );
-		}
-		if ( ! empty( $gating['finalQuiz'] ) ) {
-			$gating['finalQuiz'] = $render( $gating['finalQuiz'] );
-		}
-
-		$config['gating'] = $gating;
 		return $config;
 	}
 

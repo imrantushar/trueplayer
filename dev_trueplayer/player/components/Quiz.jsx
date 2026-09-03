@@ -1,6 +1,7 @@
-import { useEffect, useState } from '@wordpress/element';
+import { useState } from '@wordpress/element';
 import { rest } from '@Utils/rest';
 import { gradeLocal } from '../grade-local';
+import QuizpressQuiz from './QuizpressQuiz';
 
 /**
  * In-player quiz layer used for both checkpoints and the final gate. Renders
@@ -40,34 +41,15 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 		}
 	};
 
-	// QuizPress grades itself in its own embed; this only asks the server to
-	// confirm the resulting pass/fail once QuizPress says an attempt finished
-	// — the browser event is a "go check", never the verdict itself (grading
-	// stays server-side, same as the native path — see GradingService).
-	useEffect( () => {
-		if ( ! isQuizpress || preview ) {
-			return;
-		}
-		const onFinished = ( e ) => {
-			const finishedQuizId = e?.detail?.quiz_id;
-			if ( finishedQuizId && String( finishedQuizId ) !== String( quiz.quizpressId ) ) {
-				return; // a different quiz on the same page finished — not ours.
-			}
-			submit();
-		};
-		window.addEventListener( 'quizpress:attempt_finished', onFinished );
-		return () => window.removeEventListener( 'quizpress:attempt_finished', onFinished );
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [ isQuizpress, preview, quiz.quizpressId ] );
-
+	// QuizPress grades itself; once its attempt finishes, this only asks
+	// TruePlayer's server to confirm the resulting pass/fail — grading stays
+	// server-side, same as the native path (see GradingService).
 	if ( isQuizpress ) {
 		return (
 			<div className="tp-overlay tp-quiz tp-quiz--quizpress">
 				<div className="tp-quiz-card">
 					<h3 className="tp-quiz-title">{ title }</h3>
-					{ quiz.html
-						? <div className="tp-quiz-embed" dangerouslySetInnerHTML={ { __html: quiz.html } } />
-						: <p className="tp-quiz-feedback tp-fail">This quiz isn't available right now.</p> }
+					<QuizpressQuiz quizId={ quiz.quizpressId } preview={ preview } onAttemptFinished={ submit } />
 					{ busy && <p className="tp-quiz-feedback">Checking…</p> }
 					{ result && ! result.passed && ! result.error && (
 						<p className="tp-quiz-feedback tp-fail">

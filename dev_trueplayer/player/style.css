@@ -1319,6 +1319,45 @@
 	cursor: not-allowed;
 }
 
+/* A QuizPress-sourced quiz's own answer widgets (images, matching pairs,
+   graphs, …) need real room — wider than the compact native quiz card. */
+.tp-quiz--quizpress .tp-quiz-card {
+	max-width: 680px;
+}
+.tp-quiz-qp-progress {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--tp-accent);
+	margin: 0 0 8px;
+}
+.tp-quiz-qp-widget {
+	margin: 12px 0;
+}
+.tp-quiz-qp-nav {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	margin-top: 8px;
+}
+.tp-quiz-qp-prev {
+	background: transparent;
+	color: #374151;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	padding: 11px 20px;
+	font-weight: 600;
+	cursor: pointer;
+}
+.tp-quiz-qp-prev:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.tp-quiz-qp-start p {
+	margin: 0 0 8px;
+	font-size: 14px;
+	color: #374151;
+}
+
 /* ---- opt-in / subscribe ---- */
 .tp-optin-card {
 	background: #fff;
