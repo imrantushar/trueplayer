@@ -10,7 +10,6 @@ import LayersTab from './editor/LayersTab';
 import TimedContentTab from './editor/TimedContentTab';
 import ProtectionTab from './editor/ProtectionTab';
 import GatingTab from './editor/GatingTab';
-import SubscribeTab from './editor/SubscribeTab';
 import EmbedTab from './editor/EmbedTab';
 import PreviewPanel from './editor/PreviewPanel';
 import UpsellPanel from '../components/UpsellPanel';
@@ -21,9 +20,11 @@ import { hasVideoSource } from '../utils/videoSource';
 // nav can badge it. Overlays (Call to action) is free; the rest are pro.
 const INTERACTIONS_SUBS = [
 	[ 'overlays', 'Call to action' ],
-	[ 'layers', 'Layers', true ],
+	// Not Pro-flagged: the Email form layer (formerly its own "Email capture"
+	// section) is free. The Pro half is the display-rules editor inside it, and
+	// LayersTab gates that itself.
+	[ 'layers', 'Layers' ],
 	[ 'timed', 'Timed content', true ],
-	[ 'subscribe', 'Email capture', true ],
 ];
 
 // Access & gating sub-sections. No per-sub pro flag: the whole tab is pro, so
@@ -48,14 +49,16 @@ const PRO_TAB_INFO = {
 // Interactions = everything shown on/around the video. Overlays are free;
 // layers / timed content / email capture are pro (gated inline). The sub-nav
 // lives in the editor's left-nav accordion, so this renders the active one only.
-function InteractionsTab( { config, patch, pro, sub = 'overlays', onPreviewOverlay, previewingId } ) {
+function InteractionsTab( { config, patch, pro, sub = 'overlays', onPreviewOverlay, previewingId, onPreviewLayer, previewingLayerId } ) {
 	const gate = ( node, info ) => ( pro ? node : <UpsellPanel title={ info.title } features={ info.features } /> );
 	return (
 		<div className="w-full min-w-0">
 			{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } onPreviewOverlay={ onPreviewOverlay } previewingId={ previewingId } /> }
-			{ sub === 'layers' && gate( <LayersTab config={ config } patch={ patch } />, { title: 'Interactive layers', features: [ 'Clickable hotspots over the picture', 'Timed banners & shortcode embeds', 'Conditional display rules' ] } ) }
+			{ /* Ungated: email capture lives here now and is free. The layer types
+			     that do need Pro are stripped server-side, and the rules editor
+			     gates itself. */ }
+			{ sub === 'layers' && <LayersTab config={ config } patch={ patch } onPreviewLayer={ onPreviewLayer } previewingLayerId={ previewingLayerId } /> }
 			{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, { title: 'Timed content', features: [ 'A content region below the player that changes with the video', 'Time-synced forms, buttons & text' ] } ) }
-			{ sub === 'subscribe' && gate( <SubscribeTab config={ config } patch={ patch } />, { title: 'Email capture', features: [ 'In-player opt-in gate', 'Send contacts to GemCRM & other CRMs' ] } ) }
 		</div>
 	);
 }
@@ -94,6 +97,13 @@ export default function Editor( { id, onEditState } ) {
 		overlayId: cur && cur.overlayId === overlayId ? null : overlayId,
 		token: Date.now(),
 	} ) ), [] );
+	// Layers share the cue rather than getting a second one: only one thing can
+	// be held up in the preview at a time, so raising a layer must also take
+	// down whatever overlay the other eye had up.
+	const previewLayer = useCallback( ( layerId ) => setPreviewCue( ( cur ) => ( {
+		layerId: cur && cur.layerId === layerId ? null : layerId,
+		token: Date.now(),
+	} ) ), [] );
 
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => setVideo( v ) );
@@ -126,9 +136,9 @@ export default function Editor( { id, onEditState } ) {
 		setDirty( true );
 	};
 
-	// Report title/dirty state up to the app shell — it drives the breadcrumb
-	// (the title is edited right in the crumb trail) and the unsaved-changes
-	// guard when leaving.
+	// Report title/dirty state up to the app shell — it names the breadcrumb and
+	// drives the unsaved-changes guard when leaving. The title is edited in the
+	// Source step (see SourceTab), not in the crumb.
 	useEffect( () => {
 		onEditState && onEditState( { title: video?.title, dirty, onTitleChange: setTitle } );
 	}, [ video?.title, dirty ] );
@@ -235,7 +245,7 @@ export default function Editor( { id, onEditState } ) {
 														key={ subKey }
 														onClick={ () => selectSub( t.key, subKey ) }
 														className={ `flex items-center justify-between gap-2 w-full px-3 py-1.5 rounded-md text-[13px] text-left transition ${
-															active && activeSub[ t.key ] === subKey ? 'bg-white text-brand-700 font-semibold shadow-sm' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+															active && activeSub[ t.key ] === subKey ? 'text-brand-700 font-semibold' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
 														}` }
 													>
 														<span className="truncate">{ subLabel }</span>
@@ -256,10 +266,10 @@ export default function Editor( { id, onEditState } ) {
 							<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
 						) : (
 							<>
-								{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } videoId={ id } /> }
+								{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } videoId={ id } title={ video?.title || '' } onTitleChange={ setTitle } /> }
 								{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } sub={ activeSub.player } /> }
 								{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
-								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } previewingId={ previewCue?.overlayId || null } /> }
+								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } previewingId={ previewCue?.overlayId || null } onPreviewLayer={ previewLayer } previewingLayerId={ previewCue?.layerId || null } /> }
 								{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } sub={ activeSub.access } /> }
 							</>
 						) }
@@ -268,7 +278,7 @@ export default function Editor( { id, onEditState } ) {
 					{ /* Column 3 — live preview, pinned so the author sees changes as
 						they edit. */ }
 					<div className="w-full min-w-0 xl:sticky xl:top-[104px]">
-						<PreviewPanel id={ id } config={ config } onDuration={ setDuration } previewCue={ previewCue } />
+						<PreviewPanel id={ id } config={ config } presets={ presets } onDuration={ setDuration } previewCue={ previewCue } />
 					</div>
 				</div>
 			</div>

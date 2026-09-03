@@ -19,14 +19,21 @@ export function hasVideoSource( source = {} ) {
  * Used to force a remount (via React `key`) when the source materially
  * changes, since the player's own provider-creation effect only re-runs on
  * `videoId`, not on source edits (see player/Player.jsx).
+ *
+ * `mediaType` counts as materially changing it: the HTML5 provider builds an
+ * <audio> element or a <video> one from that field alone (player/providers/
+ * html5.js), and it is decided when the element is created. Leaving it out
+ * meant switching a video to audio-only restyled the stage into an audio bar
+ * while the <video> already on it kept playing its picture straight through.
  */
 export function sourceKey( source = {} ) {
+	const media = source.mediaType === 'audio' ? 'audio' : 'video';
 	switch ( source.type ) {
 		case 'bunny':
-			return `bunny:${ source.pullZone || '' }:${ source.videoId || '' }`;
+			return `bunny:${ media }:${ source.pullZone || '' }:${ source.videoId || '' }`;
 		case 'mux':
-			return `mux:${ source.playbackId || '' }:${ source.src || '' }`;
+			return `mux:${ media }:${ source.playbackId || '' }:${ source.src || '' }`;
 		default:
-			return `${ source.type || '' }:${ source.src || '' }`;
+			return `${ source.type || '' }:${ media }:${ source.src || '' }`;
 	}
 }

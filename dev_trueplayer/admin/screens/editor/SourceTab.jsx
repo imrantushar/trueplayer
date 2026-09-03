@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
-import { Card, Field, Input, Select, Toggle, Button } from '../../components/UI';
-import MediaPicker from '../../components/MediaPicker';
+import { Card, Field, FieldGroup, Input, Select, SectionTitle, Toggle } from '../../components/UI';
+import MediaFileCard from '../../components/MediaFileCard';
+import PosterField from '../../components/PosterField';
 import { isPro } from '../../pro';
 import { api } from '../../api';
 import { canAutoCaptureFrame, canCaptureFrame, captureVideoFrame } from '../../utils/frameCapture';
@@ -16,14 +17,41 @@ const TYPES = [
 	{ value: 'hls', label: 'HLS stream (.m3u8)', pro: true },
 ];
 
-export default function SourceTab( { config, patch, videoId } ) {
+/**
+ * The fields that say *where the media is*, as opposed to how it is presented.
+ * They belong to one kind of source: a media-library URL is meaningless in
+ * YouTube's field, and a Bunny pull zone is meaningless everywhere else. Set
+ * together when the type changes, so no field keeps another type's value.
+ */
+const SOURCE_FIELDS = [ 'src', 'pullZone', 'videoId', 'playbackId' ];
+
+/** Just the source-locating fields of a source, with absent ones as ''. */
+function locatorOf( source = {} ) {
+	return SOURCE_FIELDS.reduce( ( out, key ) => {
+		out[ key ] = source[ key ] || '';
+		return out;
+	}, {} );
+}
+
+export default function SourceTab( { config, patch, videoId, title = '', onTitleChange } ) {
 	const source = config.source || { type: 'self' };
 	const set = ( partial ) => patch( { source: { ...source, ...partial } } );
+	const audio = source.mediaType === 'audio';
+	// Audio-only describes a file the browser plays without a picture, so it is
+	// only meaningful for the file-backed types — a YouTube or Vimeo source is an
+	// iframe either way. Still shown when it is already on, so a setting made
+	// before a source change never gets stranded somewhere it can't be undone.
+	const canBeAudio = [ 'self', 'url', 'bunnyStorage' ].includes( source.type ) || audio;
 
 	const [ capture, setCapture ] = useState( { busy: false, error: '' } );
 	// The src the auto-capture below has already dealt with, so it fires once
 	// per newly chosen file rather than on every keystroke or re-render.
 	const captured = useRef( null );
+	// What each source type held, so switching away and back returns the author
+	// to what they had rather than to an empty field. Filled as types are left,
+	// which means the type the video was loaded on is stashed the first time it
+	// is switched away from — so coming back restores the saved source.
+	const stashed = useRef( {} );
 
 	/**
 	 * Read a frame out of the video and store it as the poster.
@@ -71,12 +99,83 @@ export default function SourceTab( { config, patch, videoId } ) {
 		grabPoster( src );
 	}, [ source, videoId, grabPoster ] );
 
+	/**
+	 * Whether the poster on screen is one we produced — a frame captured from
+	 * the file, or a thumbnail derived from the provider — rather than one the
+	 * author picked. Ours describes a particular piece of media and dies with
+	 * it; theirs is their own work and outlives it. Same rule the server applies
+	 * when a source is retargeted (VideosController::quick_update).
+	 */
+	const ourPoster = () => !! ( source.posterAuto || source.posterDerived );
+
+	/**
+	 * Clear the poster we generated, in the config and in the media library, and
+	 * hand back the config patch for the caller to merge with its own change.
+	 *
+	 * The cleanup call is fire-and-forget: it must not block the edit the author
+	 * already made. The server keeps whichever poster the *saved* config still
+	 * points at, so backing out of an unsaved change can't leave the published
+	 * page with a missing thumbnail.
+	 */
+	const clearOurPoster = () => {
+		if ( videoId ) {
+			api.discardPosters( videoId ).catch( () => {} );
+		}
+		return { poster: '', posterAuto: false, posterDerived: false, posterFallbacks: undefined };
+	};
+
+	/** Drop the file — and with it the poster that came from it. */
+	const removeFile = () => {
+		// Re-picking the very same file has to capture again, and the auto-capture
+		// guard keys on the last src it handled.
+		captured.current = '';
+		set( { src: '', ...( ourPoster() ? clearOurPoster() : {} ) } );
+	};
+
+	/**
+	 * Switch the kind of source — carrying nothing of the old one over.
+	 *
+	 * The locating fields are swapped, not kept: the uploaded file's URL used to
+	 * stay behind in YouTube's field, where it reads as a value the author
+	 * entered and fails to load as one. A poster made for the old source goes
+	 * too — a frame captured from an upload says nothing about the YouTube video
+	 * replacing it, and while it sits there it also blocks the provider
+	 * thumbnail that should take over (posters are only derived when empty).
+	 */
+	const changeType = ( type ) => {
+		if ( type === source.type ) {
+			return;
+		}
+		captured.current = '';
+		stashed.current[ source.type || 'self' ] = locatorOf( source );
+		const restored = stashed.current[ type ] || locatorOf( {} );
+		set( { type, ...restored, ...( ourPoster() ? clearOurPoster() : {} ) } );
+	};
+
 	const canGrab = canCaptureFrame( source ) && !! videoId;
 
 	return (
-		<Card className="p-6 max-w-2xl">
+		<div className="w-full max-w-2xl space-y-6">
+		<Card className="p-6">
+			<SectionTitle>Source Configuration</SectionTitle>
+
+			{ /* The title leads, rather than being typed into the breadcrumb it
+			     used to live in: a crumb is a place indicator, so an editable one
+			     is invisible as a form field — nothing marks it required, it can't
+			     carry a hint, and an author who never hovers it never learns the
+			     name is theirs to set. */ }
+			{ onTitleChange && (
+				<Field label="Title" required hint="Names this media in your library, and labels it in the player.">
+					<Input
+						value={ title }
+						onChange={ ( e ) => onTitleChange( e.target.value ) }
+						placeholder="Untitled"
+					/>
+				</Field>
+			) }
+
 			<Field label="Source type" hint={ ! isPro() ? 'Bunny.net & HLS streaming require TruePlayer Pro.' : undefined }>
-				<Select value={ source.type || 'self' } onChange={ ( e ) => set( { type: e.target.value } ) }>
+				<Select value={ source.type || 'self' } onChange={ ( e ) => changeType( e.target.value ) }>
 					{ TYPES.map( ( t ) => (
 						<option key={ t.value } value={ t.value } disabled={ t.pro && ! isPro() }>
 							{ t.label }{ t.pro && ! isPro() ? ' (Pro)' : '' }
@@ -86,9 +185,20 @@ export default function SourceTab( { config, patch, videoId } ) {
 			</Field>
 
 			{ source.type === 'self' && (
-				<Field label="Video file" required hint="Pick an uploaded video from the media library. A thumbnail is grabbed from it automatically.">
-					<MediaPicker value={ source.src || '' } onChange={ ( url ) => set( { src: url } ) } accept="video" label="Upload a video" />
-				</Field>
+				<FieldGroup
+					label={ audio ? 'Audio file' : 'Video file' }
+					required
+					hint={ audio
+						? 'Pick an uploaded audio file from the media library.'
+						: 'Pick an uploaded video from the media library. A thumbnail is grabbed from it automatically.' }
+				>
+					<MediaFileCard
+						source={ source }
+						audio={ audio }
+						onPick={ ( url ) => set( { src: url } ) }
+						onRemove={ removeFile }
+					/>
+				</FieldGroup>
 			) }
 
 			{ source.type === 'bunny' && (
@@ -123,31 +233,32 @@ export default function SourceTab( { config, patch, videoId } ) {
 				</Field>
 			) }
 
-			{ /* The capture controls sit outside the Field: it renders a <label>,
-			     and a button nested in one folds its text into the picker's
-			     accessible name. */ }
-			<Field label="Poster image" hint="Shown before playback (optional)." className={ canGrab ? 'mb-2.5' : undefined }>
-				<MediaPicker value={ source.poster || '' } onChange={ ( url ) => set( { poster: url, posterAuto: false } ) } accept="image" label="Upload an image" />
-			</Field>
-			{ canGrab && (
-				<div className="mb-5">
-					<div className="flex items-center gap-3">
-						<Button variant="ghost" size="sm" disabled={ capture.busy } onClick={ () => grabPoster( source.src ) }>
-							{ capture.busy ? 'Grabbing a frame…' : `${ source.poster ? 'Regenerate' : 'Generate' } from video` }
-						</Button>
-						{ ! capture.busy && ! capture.error && source.posterAuto && (
-							<span className="text-xs text-muted">Grabbed from the video.</span>
-						) }
+			<FieldGroup label={ audio ? 'Cover art' : 'Poster image' }>
+				<PosterField
+					source={ source }
+					audio={ audio }
+					canGrab={ canGrab }
+					capture={ capture }
+					onPick={ ( url ) => set( { poster: url, posterAuto: false } ) }
+					onRemove={ () => set( { poster: '', posterAuto: false, posterDerived: false, posterFallbacks: undefined } ) }
+					onGrab={ () => grabPoster( source.src ) }
+				/>
+			</FieldGroup>
+
+			{ canBeAudio && (
+				<div className="flex items-center justify-between gap-4 pt-5 border-t border-line">
+					<div className="min-w-0">
+						<p className="text-[13px] font-medium text-ink">Audio-only (podcast) player</p>
+						<p className="text-xs text-muted mt-0.5">Hide video screen and switch to audio player mode.</p>
 					</div>
-					{ capture.error && <span className="block text-xs text-danger mt-2">{ capture.error }</span> }
+					<Toggle
+						checked={ audio }
+						onChange={ ( v ) => set( { mediaType: v ? 'audio' : 'video' } ) }
+						className="shrink-0"
+					/>
 				</div>
 			) }
-
-			<Toggle
-				checked={ source.mediaType === 'audio' }
-				onChange={ ( v ) => set( { mediaType: v ? 'audio' : 'video' } ) }
-				label="Audio-only (podcast) player"
-			/>
 		</Card>
+		</div>
 	);
 }

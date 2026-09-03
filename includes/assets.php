@@ -170,7 +170,13 @@ class Assets {
 				// (see TruePlayerInteractive\Interactive::expose_state), so core
 				// doesn't enumerate features it no longer owns. The registry is
 				// what the Settings → Addons screen lists.
-				[ 'addons_registry' => \TruePlayer\Addons::registry() ]
+				[
+					'addons_registry' => \TruePlayer\Addons::registry(),
+					// The address email-capture notifications fall back to, shown as
+					// the placeholder on that setting so the default is visible
+					// rather than merely described.
+					'admin_email'     => (string) get_option( 'admin_email' ),
+				]
 			)
 		);
 	}

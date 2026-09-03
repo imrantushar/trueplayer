@@ -89,3 +89,32 @@ body[class*="page_trueplayer"] #wpbody-content {
 .tp-admin p {
 	margin: 0;
 }
+
+/* Number fields are ordinary fields.
+   Chrome and Safari paint stepper arrows inside `type="number"`, which eat the
+   right-hand padding and give those inputs a different silhouette from the text
+   inputs beside them — visible wherever the two sit in one row (a layer's
+   "Show from" next to its "Headline", the hotspot geometry row). The value is
+   still typed, and every one of these fields has explicit min/max, so the
+   arrows are decoration we can do without. */
+.tp-admin input[type='number'] {
+	-moz-appearance: textfield;
+	appearance: textfield;
+	/* WordPress styles number inputs where it does not style text ones
+	   (wp-admin/css/forms.css) — `input[type="number"]` outranks a utility
+	   class, and Tailwind's preflight is off here, so a number field was
+	   rendering at WP's 2px radius and #949494 border while every text field
+	   beside it used ours. Restated at matching specificity. */
+	border-radius: 4px;
+	border: 1px solid #e5e7eb;
+}
+.tp-admin input[type='number']:hover,
+.tp-admin input[type='number']:focus {
+	border-color: #006bff;
+}
+.tp-admin input[type='number']::-webkit-outer-spin-button,
+.tp-admin input[type='number']::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	appearance: none;
+	margin: 0;
+}

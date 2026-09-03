@@ -5,3 +5,14 @@
 # Cross-platform build kit output (tool itself in build-tools/ is tracked)
 /.build-cache/
 /dist/
+
+# Browser-automation / E2E artifacts. Session logs, page snapshots, traces and
+# saved auth state are per-run local noise — regenerated on demand, and the
+# auth/profile ones carry live session credentials, so they must never land in
+# a commit.
+/.playwright-mcp/
+/test-results/
+/playwright-report/
+/blob-report/
+/.auth/
+/.docwriter/
