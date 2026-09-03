@@ -28,6 +28,7 @@ class Api {
 		( new API\IntegrationsController() )->register_routes();
 		( new API\AnalyticsController() )->register_routes();
 		( new API\StreamController() )->register_routes();
+		( new API\BunnyController() )->register_routes();
 		( new API\LmsController() )->register_routes();
 		( new API\ImportController() )->register_routes();
 		( new API\RulesController() )->register_routes();
