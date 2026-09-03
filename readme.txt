@@ -4,7 +4,7 @@ Tags: video, player, lms, quiz, webhooks, watch tracking
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,6 +21,20 @@ TruePlayer is a native WordPress video/audio player built for enforcement and au
 Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources (Mux, BunnyCDN), and Gem-ecosystem bridges.
 
 == Changelog ==
+
+= 1.2.0 - 03-09-2026 =
+* Added - Direct Bunny.net Storage uploads from the editor with drag & drop, picker, progress bar, and cancel support.
+* Added - Bunny.net Storage file browser to reuse existing uploads.
+* Added - Bunny.net Storage credentials under Settings → Sources & CDN.
+* Added - 4 MB chunked uploads for large files.
+* Added - Post-upload URL verification with playback error details.
+* Added - Collapsible Bunny.net settings sections with status badges.
+* Added - Bunny.net Storage as a source in the Create Media dialog.
+
+* Fixed - Bunny.net Storage Private mode not applying token protection.
+* Fixed - Bunny.net token signing for single files and HLS directories.
+* Fixed - Single-file tokens potentially unlocking an entire folder.
+* Fixed - The standalone video page to provide a clean, shareable URL.
 
 = 1.0.0 - 27/08/2026 =
 First stable release. TruePlayer ships as a native WordPress video & audio player built for enforcement and automation.
