@@ -133,7 +133,16 @@ class BunnyController extends WP_REST_Controller {
 			return $guard;
 		}
 		return rest_ensure_response(
-			array_merge( BunnyStorage::status(), [ 'chunkSize' => self::CHUNK_BYTES ] )
+			array_merge(
+				BunnyStorage::status(),
+				[
+					'chunkSize' => self::CHUNK_BYTES,
+					// Flagged before an upload rather than after, so nobody
+					// waits out a large transfer to be told the hostname was
+					// for the wrong Bunny product.
+					'streamHost' => BunnyStorage::looks_like_stream_host( BunnyStorage::config()['pullZone'] ),
+				]
+			)
 		);
 	}
 
@@ -333,12 +342,19 @@ class BunnyController extends WP_REST_Controller {
 			return $url;
 		}
 
+		// The bytes are in the zone; whether they can be *played* is a separate
+		// question, and the answer is worth having now rather than after the
+		// author publishes a black player.
+		$check = BunnyStorage::verify_public_url( $url );
+
 		return rest_ensure_response(
 			[
-				'url'  => $url,
-				'name' => wp_basename( $remote ),
-				'path' => $remote,
-				'size' => $written,
+				'url'       => $url,
+				'name'      => wp_basename( $remote ),
+				'path'      => $remote,
+				'size'      => $written,
+				'reachable' => $check['reachable'],
+				'warning'   => $check['warning'],
 			]
 		);
 	}

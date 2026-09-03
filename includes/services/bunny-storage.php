@@ -75,6 +75,69 @@ class BunnyStorage {
 	}
 
 	/**
+	 * Whether a hostname is a Bunny **Stream** pull zone rather than a storage
+	 * one.
+	 *
+	 * Stream names its zones `vz-{uuid}.b-cdn.net` automatically, and those
+	 * serve a video library — `/{guid}/playlist.m3u8` and nothing else. Point
+	 * Storage at one and every upload succeeds, then 404s on playback, because
+	 * the file really is stored and really is unreachable from that host. The
+	 * two hostnames are the single easiest thing to mix up between the two
+	 * products, and the prefix is the one reliable tell.
+	 */
+	public static function looks_like_stream_host( string $host ): bool {
+		return 1 === preg_match( '/^vz-[0-9a-f-]+\.b-cdn\.net$/i', trim( $host ) );
+	}
+
+	/**
+	 * Ask the pull zone for a file we just stored, so a misconfiguration is
+	 * reported at upload time instead of as a black player weeks later.
+	 *
+	 * This is advisory, never fatal: the bytes are in the zone either way, and
+	 * throwing away a finished multi-gigabyte upload because a HEAD request
+	 * came back wrong would be a worse outcome than reporting it.
+	 *
+	 * @return array{reachable: bool, status: int, warning: string}
+	 */
+	public static function verify_public_url( string $url ): array {
+		$c    = self::config();
+		$host = $c['pullZone'];
+
+		$response = wp_safe_remote_head( $url, [ 'timeout' => 10, 'redirection' => 2 ] );
+		$status   = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
+
+		if ( $status >= 200 && $status < 400 ) {
+			return [ 'reachable' => true, 'status' => $status, 'warning' => '' ];
+		}
+
+		// The specific, overwhelmingly common cause first — a generic "not
+		// reachable" would send someone hunting through the wrong settings.
+		if ( self::looks_like_stream_host( $host ) ) {
+			$warning = sprintf(
+				/* translators: %s: the configured pull-zone hostname. */
+				__( 'The file uploaded, but %s is a Bunny Stream pull zone — it serves a video library, not your storage zone, so this file cannot be played from it. In Bunny, open Storage → your zone → Connected pull zones and use that hostname under Settings → Sources & CDN.', 'trueplayer' ),
+				$host
+			);
+		} elseif ( 401 === $status || 403 === $status ) {
+			$warning = __( 'The file uploaded, but the pull zone refused to serve it. If Token Authentication is enabled on that zone, add its key under Settings → Sources & CDN and mark the video private — otherwise the zone blocks unsigned requests.', 'trueplayer' );
+		} elseif ( 404 === $status ) {
+			$warning = sprintf(
+				/* translators: %s: the configured pull-zone hostname. */
+				__( 'The file uploaded, but %s returned "not found" for it. Check that this pull zone is the one connected to your storage zone.', 'trueplayer' ),
+				$host
+			);
+		} else {
+			$warning = sprintf(
+				/* translators: %s: the configured pull-zone hostname. */
+				__( 'The file uploaded, but %s did not serve it back. Check the pull-zone hostname under Settings → Sources & CDN.', 'trueplayer' ),
+				$host
+			);
+		}
+
+		return [ 'reachable' => false, 'status' => $status, 'warning' => $warning ];
+	}
+
+	/**
 	 * What the editor needs to know before offering the upload UI. Never
 	 * includes the access key — the browser has no use for it and must not
 	 * carry it, even behind an admin capability.

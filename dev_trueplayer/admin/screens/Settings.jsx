@@ -107,6 +107,11 @@ const COMPLIANCE_DEFAULTS = { certIssuer: '', certLogo: '', certSignature: '', c
 
 // Bunny.net storage endpoints. Codes must match BunnyStorage::REGIONS in PHP —
 // the server maps them to hostnames, and an unknown code falls back to default.
+// Bunny names a Stream pull zone `vz-{uuid}.b-cdn.net`. Mirrors
+// BunnyStorage::looks_like_stream_host() — the server makes the same call after
+// an upload, this one just gets there first.
+const IS_STREAM_HOST = /^vz-[0-9a-f-]+\.b-cdn\.net$/i;
+
 const BUNNY_REGIONS = [
 	{ value: '', label: 'Default — Falkenstein, DE' },
 	{ value: 'ny', label: 'New York, US' },
@@ -459,8 +464,17 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 													{ /* Required, not optional: the storage host serves nothing publicly,
 													     so without a pull zone an upload succeeds and yields a URL that
 													     cannot be played. */ }
-													<Field label="Pull-zone hostname" required hint="Where the files are served from — usually your-zone.b-cdn.net. Uploads need this to produce a playable URL.">
+													<Field label="Pull-zone hostname" required hint="Bunny → Storage → your zone → Connected pull zones. Uploads need this to produce a playable URL.">
 														<Input value={st.pullZone || ''} onChange={(e) => setSt({ pullZone: e.target.value.replace(/^https?:\/\//, '').replace(/\/$/, '').trim() })} placeholder="my-videos.b-cdn.net" />
+														{ /* Bunny auto-names Stream's zones `vz-{uuid}.b-cdn.net`, and that
+														     one hostname is the difference between every upload playing and
+														     every upload 404ing — while the upload itself succeeds either
+														     way, so nothing else in the flow can catch it. */ }
+														{IS_STREAM_HOST.test(st.pullZone || '') && (
+															<p className="text-xs text-ink leading-5 !mt-1.5 p-2.5 rounded border border-warning/40 bg-warning-light">
+																That is a <strong>Stream</strong> pull zone (Bunny names them <code>vz-…</code>). It serves a video library, not your storage zone — files uploaded here will not play from it. Use the hostname under <strong>Storage → your zone → Connected pull zones</strong> instead.
+															</p>
+														)}
 													</Field>
 													<Field label="Upload folder" hint="Folder inside the zone that uploads land in. Leave empty to use the zone root.">
 														<Input value={st.folder ?? 'trueplayer'} onChange={(e) => setSt({ folder: e.target.value.replace(/^\/+|\/+$/g, '') })} placeholder="trueplayer" />

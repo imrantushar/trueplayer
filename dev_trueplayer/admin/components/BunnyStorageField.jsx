@@ -22,6 +22,10 @@ export default function BunnyStorageField( { value, onChange } ) {
 	const [ status, setStatus ] = useState( null ); // null = still asking
 	const [ upload, setUpload ] = useState( null ); // { name, percent }
 	const [ error, setError ] = useState( '' );
+	// Distinct from `error`: the file did upload, it just may not play. The URL
+	// is kept either way — discarding a finished transfer over a config mistake
+	// would cost the author the whole upload to fix a hostname.
+	const [ warning, setWarning ] = useState( '' );
 	const [ browsing, setBrowsing ] = useState( false );
 	const [ pasting, setPasting ] = useState( false );
 	const inputRef = useRef( null );
@@ -48,6 +52,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 			return;
 		}
 		setError( '' );
+		setWarning( '' );
 		token.current = { cancelled: false };
 		setUpload( { name: file.name, percent: 0 } );
 		try {
@@ -56,6 +61,9 @@ export default function BunnyStorageField( { value, onChange } ) {
 				onProgress: ( percent ) => setUpload( ( u ) => ( u ? { ...u, percent } : u ) ),
 			} );
 			onChange( stored.url );
+			if ( stored.warning ) {
+				setWarning( stored.warning );
+			}
 		} catch ( e ) {
 			if ( ! token.current.cancelled ) {
 				setError( e.message || 'That file could not be uploaded.' );
@@ -116,6 +124,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 				</div>
 				<FilePicker inputRef={ inputRef } onPick={ send } />
 				{ error && <p className="text-xs text-danger !mt-1.5">{ error }</p> }
+				{ warning && <Warning text={ warning } /> }
 			</>
 		);
 	}
@@ -181,6 +190,9 @@ export default function BunnyStorageField( { value, onChange } ) {
 
 			<FilePicker inputRef={ inputRef } onPick={ send } />
 			{ error && <p className="text-xs text-danger !mt-1.5">{ error }</p> }
+			{ status.streamHost && (
+				<Warning text={ `${ status.pullZone } is a Bunny Stream pull zone, not a storage one — files uploaded here will not play from it. Fix the pull-zone hostname under Settings → Sources & CDN first.` } />
+			) }
 
 			{ browsing && (
 				<ZoneBrowser
@@ -192,6 +204,23 @@ export default function BunnyStorageField( { value, onChange } ) {
 				/>
 			) }
 		</>
+	);
+}
+
+/**
+ * A problem worth stopping for that isn't a failure — the upload worked, the
+ * playback URL is doubtful. Amber rather than red, and never in place of the
+ * file: the author still has their upload, they just have a hostname to fix.
+ */
+function Warning( { text } ) {
+	return (
+		// The body is `text-ink`, not `text-warning`: #FDB022 on its own 12%
+		// tint is about 1.9:1, which is fine for a one-word badge and
+		// unreadable for a sentence. The amber carries in the icon and border.
+		<div className="flex gap-2 mt-2 p-3 rounded border border-warning/40 bg-warning-light">
+			<Icon name="help" className="w-4 h-4 shrink-0 text-warning mt-px" />
+			<p className="text-xs text-ink leading-5 !m-0">{ text }</p>
+		</div>
 	);
 }
 

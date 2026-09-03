@@ -27,7 +27,9 @@ const wait = ( ms ) => new Promise( ( resolve ) => setTimeout( resolve, ms ) );
  * @param {Object}   options             Upload options.
  * @param {Function} options.onProgress  Called with 0–100 as chunks land.
  * @param {Object}   options.token       `{ cancelled: boolean }` — flip it to stop.
- * @return {Promise<{url: string, name: string, size: number}>} The stored file.
+ * @return {Promise<{url: string, name: string, size: number, reachable: boolean, warning: string}>}
+ *   The stored file. `reachable` is the server's check that the pull zone
+ *   actually serves it back — false comes with a `warning` saying why.
  */
 export async function uploadToBunny( file, { onProgress = () => {}, token = { cancelled: false } } = {} ) {
 	const opened = await rest.post( 'bunny/upload/start', { name: file.name, size: file.size } );
