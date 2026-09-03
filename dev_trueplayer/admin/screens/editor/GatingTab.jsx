@@ -145,6 +145,46 @@ function QuestionList( { questions, onChange } ) {
 }
 
 /**
+ * Question source for one checkpoint/final quiz: authored here (native, 2
+ * question types) or picked from an existing QuizPress quiz — QuizPress owns
+ * authoring, question types and grading for that case; TruePlayer only gates
+ * on pass/fail (see GradingService::grade_quizpress).
+ */
+function QuizSourceFields( { quiz, quizpressOpts, onChange } ) {
+	const source  = 'quizpress' === quiz.source ? 'quizpress' : 'native';
+	const quizzes = ( quizpressOpts && quizpressOpts.quizzes ) || [];
+
+	return (
+		<div>
+			<Field label="Questions" className="mb-3">
+				<Select
+					className="w-64"
+					value={ source }
+					onChange={ ( e ) => onChange( { source: 'quizpress' === e.target.value ? 'quizpress' : 'native' } ) }
+				>
+					<option value="native">Author here</option>
+					<option value="quizpress">Use a QuizPress quiz</option>
+				</Select>
+			</Field>
+			{ 'quizpress' === source ? (
+				quizpressOpts && ! quizpressOpts.available ? (
+					<p className="text-sm text-gray-400">Install QuizPress to link a quiz here.</p>
+				) : (
+					<Field label="Quiz" hint="Question types, scoring and feedback all come from QuizPress.">
+						<Select value={ quiz.quizpressId || '' } onChange={ ( e ) => onChange( { quizpressId: parseInt( e.target.value, 10 ) || 0 } ) }>
+							<option value="">— select —</option>
+							{ quizzes.map( ( q ) => <option key={ q.id } value={ q.id }>{ q.title }</option> ) }
+						</Select>
+					</Field>
+				)
+			) : (
+				<QuestionList questions={ quiz.questions || [] } onChange={ ( questions ) => onChange( { questions } ) } />
+			) }
+		</div>
+	);
+}
+
+/**
  * The site-wide watch-verification policy (Settings → Enforcement), which this
  * tab inherits from. Localized by PHP so both sides agree on one set of
  * defaults — see Helper::enforcement_defaults().
@@ -165,6 +205,8 @@ const POLICY_KEYS = [ 'completionThreshold', 'antiSkip', 'maxAttempts', 'require
 
 export default function GatingTab( { config, patch } ) {
 	const policy = sitePolicy();
+	const [ quizpressOpts, setQuizpressOpts ] = useState( null );
+	useEffect( () => { api.getQuizpressOptions().then( setQuizpressOpts ).catch( () => setQuizpressOpts( { available: false, quizzes: [] } ) ); }, [] );
 	const gating = {
 		...policy,
 		checkpoints: [],
@@ -234,7 +276,7 @@ export default function GatingTab( { config, patch } ) {
 								<div className="flex-1"><Field label="Title"><Input value={ cp.title || '' } onChange={ ( e ) => setCheckpoint( i, { title: e.target.value } ) } placeholder="Checkpoint" /></Field></div>
 								<Button variant="danger" onClick={ () => removeCheckpoint( i ) }><BsTrash /></Button>
 							</div>
-							<QuestionList questions={ cp.questions || [] } onChange={ ( questions ) => setCheckpoint( i, { questions } ) } />
+							<QuizSourceFields quiz={ cp } quizpressOpts={ quizpressOpts } onChange={ ( partial ) => setCheckpoint( i, partial ) } />
 						</div>
 					) ) }
 					{ gating.checkpoints.length === 0 && <p className="text-sm text-gray-400">No checkpoints yet.</p> }
@@ -255,7 +297,7 @@ export default function GatingTab( { config, patch } ) {
 							<div className="flex-1"><Field label="Title"><Input value={ gating.finalQuiz.title || '' } onChange={ ( e ) => setFinal( { title: e.target.value } ) } /></Field></div>
 							<Field label="Pass %"><Input type="number" className="w-24" value={ gating.finalQuiz.passPercent } onChange={ ( e ) => setFinal( { passPercent: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
 						</div>
-						<QuestionList questions={ gating.finalQuiz.questions || [] } onChange={ ( questions ) => setFinal( { questions } ) } />
+						<QuizSourceFields quiz={ gating.finalQuiz } quizpressOpts={ quizpressOpts } onChange={ setFinal } />
 					</div>
 				) }
 			</Card>

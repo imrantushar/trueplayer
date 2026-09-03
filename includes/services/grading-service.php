@@ -37,19 +37,27 @@ class GradingService {
 		if ( ! \TruePlayer\Pro::active() ) {
 			return [ 'error' => 'pro_required' ];
 		}
-		$gating    = ProgressService::gating_config( $video_id );
-		$quiz      = self::find_quiz( $gating, $gate_id );
-		$is_final  = ( 'final' === $gate_id );
+		$gating   = ProgressService::gating_config( $video_id );
+		$quiz     = self::find_quiz( $gating, $gate_id );
+		$is_final = ( 'final' === $gate_id );
 
-		if ( ! $quiz || empty( $quiz['questions'] ) ) {
+		if ( ! $quiz ) {
 			return [ 'error' => 'quiz_not_found' ];
 		}
 
-		$questions   = $quiz['questions'];
-		$pass_pct    = isset( $quiz['passPercent'] ) ? (float) $quiz['passPercent'] : 70;
-		$total       = count( $questions );
-		$correct     = 0;
-		$per_q       = [];
+		if ( 'quizpress' === ( $quiz['source'] ?? 'native' ) ) {
+			return self::grade_quizpress( $video_id, $subject, $gate_id, $is_final, $gating, $quiz );
+		}
+
+		if ( empty( $quiz['questions'] ) ) {
+			return [ 'error' => 'quiz_not_found' ];
+		}
+
+		$questions = $quiz['questions'];
+		$pass_pct  = isset( $quiz['passPercent'] ) ? (float) $quiz['passPercent'] : 70;
+		$total     = count( $questions );
+		$correct   = 0;
+		$per_q     = [];
 
 		foreach ( $questions as $q ) {
 			$qid   = $q['id'] ?? '';
@@ -62,9 +70,47 @@ class GradingService {
 		$score  = $total > 0 ? round( $correct / $total * 100, 2 ) : 0;
 		$passed = $score >= $pass_pct;
 
-		// Attempt bookkeeping.
-		$row       = ProgressService::get_row( $video_id, $subject );
-		$attempts  = (int) ( $row['attempts'] ?? 0 );
+		return self::record_verdict( $video_id, $subject, $gate_id, $is_final, $gating, $score, $passed, $answers, $per_q );
+	}
+
+	/**
+	 * QuizPress-sourced checkpoint/final quiz: QuizPress owns authoring,
+	 * question types and grading — TruePlayer only asks it who the subject is
+	 * and whether their latest attempt at the linked quiz passed, then runs
+	 * that verdict through the exact same attempt/lock/event pipeline as a
+	 * native quiz. Never trusts the browser's `quizpress:attempt_finished`
+	 * event for the verdict itself — only as a "go check" signal.
+	 */
+	private static function grade_quizpress( $video_id, Subject $subject, $gate_id, $is_final, array $gating, array $quiz ) {
+		$quizpress_id = (int) ( $quiz['quizpressId'] ?? 0 );
+		if ( ! $quizpress_id || ! class_exists( '\\QuizPress\\API\\Query\\Attempts' ) ) {
+			return [ 'error' => 'quizpress_unavailable' ];
+		}
+
+		// Reliable per-person tracking needs a real user id — guests have none
+		// for QuizPress to key attempts on.
+		if ( 'user' !== $subject->type ) {
+			return [ 'error' => 'login_required' ];
+		}
+
+		$status = \QuizPress\API\Query\Attempts::get_last_quiz_attempt_status( $quizpress_id, (int) $subject->id );
+		if ( '' === $status ) {
+			return [ 'error' => 'quiz_not_completed' ];
+		}
+
+		$passed = ( 'passed' === $status );
+		$score  = $passed ? 100 : 0; // QuizPress owns the real percentage; pass/fail is all the gate needs.
+
+		return self::record_verdict( $video_id, $subject, $gate_id, $is_final, $gating, $score, $passed, [ 'quizpressId' => $quizpress_id ], [] );
+	}
+
+	/**
+	 * Shared attempt bookkeeping + lock enforcement + event emission for a
+	 * graded verdict, regardless of where the score came from.
+	 */
+	private static function record_verdict( $video_id, Subject $subject, $gate_id, $is_final, array $gating, $score, $passed, array $answers, array $per_q ) {
+		$row        = ProgressService::get_row( $video_id, $subject );
+		$attempts   = (int) ( $row['attempts'] ?? 0 );
 		$attempt_no = $attempts + 1;
 
 		self::log_attempt( $video_id, $subject, $gate_id, $answers, $score, $passed, $attempt_no );
@@ -85,9 +131,9 @@ class GradingService {
 				Events::emit( 'checkpoint.passed', ProgressService::event_payload( $video_id, $subject, $payload_extra ) );
 			}
 			return [
-				'passed'    => true,
-				'score'     => $score,
-				'completed' => $is_final,
+				'passed'      => true,
+				'score'       => $score,
+				'completed'   => $is_final,
 				'perQuestion' => $per_q,
 			];
 		}

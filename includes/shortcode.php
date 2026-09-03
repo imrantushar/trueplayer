@@ -136,6 +136,7 @@ class Shortcode {
 		if ( Pro::active() ) {
 			$config = self::prepare_layers( $config );
 			$config = self::prepare_timed_content( $config );
+			$config = self::prepare_quizpress_quizzes( $config );
 			$config = self::prepare_watermark( $config );
 			$config = PrivateVideo::prepare_source( $config, $video_id );
 		}
@@ -176,6 +177,37 @@ class Shortcode {
 			unset( $item['content'] );
 		}
 		unset( $item );
+		return $config;
+	}
+
+	/**
+	 * A checkpoint/final quiz can point at a QuizPress quiz instead of
+	 * authoring questions here. QuizPress's own shortcode can't run in the
+	 * browser, so — same as `prepare_layers` — it's rendered now and shipped
+	 * as trusted `html`; the client only ever mounts it.
+	 */
+	private static function prepare_quizpress_quizzes( array $config ): array {
+		if ( empty( $config['gating'] ) || ! is_array( $config['gating'] ) || ! post_type_exists( 'quizpress_quiz' ) ) {
+			return $config;
+		}
+		$gating = $config['gating'];
+
+		$render = static function ( $quiz ) {
+			if ( ! is_array( $quiz ) || 'quizpress' !== ( $quiz['source'] ?? '' ) || empty( $quiz['quizpressId'] ) ) {
+				return $quiz;
+			}
+			$quiz['html'] = do_shortcode( '[quizpress_quiz quiz_id="' . absint( $quiz['quizpressId'] ) . '"]' );
+			return $quiz;
+		};
+
+		if ( ! empty( $gating['checkpoints'] ) && is_array( $gating['checkpoints'] ) ) {
+			$gating['checkpoints'] = array_map( $render, $gating['checkpoints'] );
+		}
+		if ( ! empty( $gating['finalQuiz'] ) ) {
+			$gating['finalQuiz'] = $render( $gating['finalQuiz'] );
+		}
+
+		$config['gating'] = $gating;
 		return $config;
 	}
 

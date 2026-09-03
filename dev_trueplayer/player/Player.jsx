@@ -46,6 +46,18 @@ function hexToRgba( hex, alpha ) {
 	return `rgba(${ ( n >> 16 ) & 255 },${ ( n >> 8 ) & 255 },${ n & 255 },${ alpha })`;
 }
 
+// A checkpoint/final quiz has something to show either way: native questions
+// authored here, or a QuizPress quiz picked in place of them.
+function hasQuizContent( quiz ) {
+	if ( ! quiz ) {
+		return false;
+	}
+	if ( 'quizpress' === quiz.source ) {
+		return !! quiz.quizpressId;
+	}
+	return !! ( quiz.questions && quiz.questions.length );
+}
+
 export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false, previewCue = null } ) {
 	const stageRef = useRef( null );
 	const stickySentinelRef = useRef( null );
@@ -401,7 +413,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			return;
 		}
 		for ( const cp of gating.checkpoints || [] ) {
-			if ( ! cp.questions || ! cp.questions.length ) {
+			if ( ! hasQuizContent( cp ) ) {
 				continue;
 			}
 			if ( passedCheckpoints.current.has( cp.id ) ) {
@@ -526,7 +538,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 		gaEvent( 'video_complete', { video_id: videoId, video_title: title } );
 		let gated = false;
-		if ( gatingOn && gating.finalQuiz && gating.finalQuiz.questions && gating.finalQuiz.questions.length ) {
+		if ( gatingOn && hasQuizContent( gating.finalQuiz ) ) {
 			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || 'Final quiz' } );
 			gated = true;
 		} else if ( gatingOn && optin.enabled && optin.position === 'end' && ! optinDoneRef.current ) {

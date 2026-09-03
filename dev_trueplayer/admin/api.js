@@ -53,6 +53,9 @@ export const api = {
 	// LMS course/lesson options (pro)
 	getLmsOptions: () => rest.get( 'lms/options' ),
 
+	// QuizPress quiz options, for the Gating tab's "use a QuizPress quiz" picker (pro)
+	getQuizpressOptions: () => rest.get( 'quizpress/options' ),
+
 	// H5P engine (Interactive content)
 	h5pContentTypes: () => rest.get( 'h5p/content-types' ),
 	h5pItems: () => rest.get( 'h5p/items' ),
