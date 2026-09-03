@@ -4,6 +4,7 @@ import { CoverageTracker } from './coverage';
 import { resolveCustomize, autoplayMode } from './customize';
 import { gaEvent } from './ga';
 import { rest } from '@Utils/rest';
+import { __ } from '@Utils/translation';
 import { supportsContainerPiP, cloneStylesInto } from './pip';
 import Controls from './components/Controls';
 import InfoPanel from './components/InfoPanel';
@@ -44,6 +45,18 @@ function hexToRgba( hex, alpha ) {
 	}
 	const n = parseInt( m[ 1 ], 16 );
 	return `rgba(${ ( n >> 16 ) & 255 },${ ( n >> 8 ) & 255 },${ n & 255 },${ alpha })`;
+}
+
+// A checkpoint/final quiz has something to show either way: native questions
+// authored here, or a QuizPress quiz picked in place of them.
+function hasQuizContent( quiz ) {
+	if ( ! quiz ) {
+		return false;
+	}
+	if ( 'quizpress' === quiz.source ) {
+		return !! quiz.quizpressId;
+	}
+	return !! ( quiz.questions && quiz.questions.length );
 }
 
 export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false, previewCue = null } ) {
@@ -181,7 +194,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		( async () => {
 			// Premium sources are pro-only.
 			if ( [ 'bunny', 'mux', 'hls' ].includes( source.type ) && ! gatingOn ) {
-				setError( 'This video source requires TruePlayer Pro.' );
+				setError( __( 'This video source requires TruePlayer Pro.' ) );
 				return;
 			}
 
@@ -202,11 +215,11 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			setGate( gateState );
 			if ( gateState.canPlay === false ) {
 				const messages = {
-					login_required: 'Please log in to watch this video.',
-					enroll_required: 'Enroll in this course to watch.',
-					purchase_required: 'Purchase this course to watch.',
+					login_required: __( 'Please log in to watch this video.' ),
+					enroll_required: __( 'Enroll in this course to watch.' ),
+					purchase_required: __( 'Purchase this course to watch.' ),
 				};
-				setError( gateState.message || messages[ gateState.reason ] || 'This video is not available.' );
+				setError( gateState.message || messages[ gateState.reason ] || __( 'This video is not available.' ) );
 				return;
 			}
 			if ( gateState.locked ) {
@@ -230,7 +243,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				// identical once this message is all the author sees.
 				// eslint-disable-next-line no-console
 				console.error( '[TruePlayer] provider failed to load', source.type, e );
-				setError( 'Unable to load the player.' );
+				setError( __( 'Unable to load the player.' ) );
 				return;
 			}
 			if ( disposed ) {
@@ -398,7 +411,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			// case is the one an author most needs named, since the video plays
 			// perfectly on youtube.com and nothing about the URL is wrong.
 			provider.on( 'error', ( detail ) => setError(
-				( detail && detail.message ) || 'Playback error.'
+				( detail && detail.message ) || __( 'Playback error.' )
 			) );
 		} )();
 
@@ -473,7 +486,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			return;
 		}
 		for ( const cp of gating.checkpoints || [] ) {
-			if ( ! cp.questions || ! cp.questions.length ) {
+			if ( ! hasQuizContent( cp ) ) {
 				continue;
 			}
 			if ( passedCheckpoints.current.has( cp.id ) ) {
@@ -481,7 +494,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			}
 			if ( t >= cp.at ) {
 				providerRef.current.pause();
-				setActiveQuiz( { gateId: `checkpoint:${ cp.id }`, quiz: cp, title: cp.title || 'Checkpoint question' } );
+				setActiveQuiz( { gateId: `checkpoint:${ cp.id }`, quiz: cp, title: cp.title || __( 'Checkpoint question' ) } );
 				break;
 			}
 		}
@@ -651,8 +664,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 		gaEvent( 'video_complete', { video_id: videoId, video_title: title } );
 		let gated = false;
-		if ( gatingOn && gating.finalQuiz && gating.finalQuiz.questions && gating.finalQuiz.questions.length ) {
-			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || 'Final quiz' } );
+		if ( gatingOn && hasQuizContent( gating.finalQuiz ) ) {
+			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || __( 'Final quiz' ) } );
 			gated = true;
 		} else if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
 			setActiveOptin( true );
@@ -885,10 +898,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 		switch ( e.key ) {
 			case ' ': case 'k': e.preventDefault(); playPause(); break;
-			case 'ArrowRight': skip( cz.skipSeconds ); break;
-			case 'ArrowLeft': skip( -cz.skipSeconds ); break;
-			case 'ArrowUp': setVolume( Math.min( 1, p.getVolume() + 0.1 ) ); break;
-			case 'ArrowDown': setVolume( Math.max( 0, p.getVolume() - 0.1 ) ); break;
+			// preventDefault on every arrow case: without it the page scrolls
+			// (vertically for Up/Down, and some browsers/OSes treat Left/Right as
+			// a back/forward or horizontal-scroll gesture too) at the same time
+			// the player reacts, so a volume/seek key press also yanked the page.
+			case 'ArrowRight': e.preventDefault(); skip( cz.skipSeconds ); break;
+			case 'ArrowLeft': e.preventDefault(); skip( -cz.skipSeconds ); break;
+			case 'ArrowUp': e.preventDefault(); setVolume( Math.min( 1, p.getVolume() + 0.1 ) ); break;
+			case 'ArrowDown': e.preventDefault(); setVolume( Math.max( 0, p.getVolume() - 0.1 ) ); break;
 			case 'm': toggleMute(); break;
 			case 'f': fullscreen(); break;
 			default: break;
@@ -1010,7 +1027,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			{ sticky && ! pipWin && (
 				<button
 					className="tp-sticky-close"
-					aria-label="Close"
+					aria-label={ __( 'Close' ) }
 					onClick={ () => {
 						stickyDismissedRef.current = true;
 						setSticky( false );
@@ -1220,8 +1237,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			<span ref={ stickySentinelRef } className="tp-stage-sentinel" aria-hidden="true" />
 			{ pipWin ? (
 				<div className="tp-pip-placeholder">
-					<p>Playing in a floating window</p>
-					<button type="button" className="tp-pip-return" onClick={ closePiP }>Bring back</button>
+					<p>{ __( 'Playing in a floating window' ) }</p>
+					<button type="button" className="tp-pip-return" onClick={ closePiP }>{ __( 'Bring back' ) }</button>
 				</div>
 			) : stage }
 		</div>

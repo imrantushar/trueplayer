@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, createPortal } from '@wordpress/element';
+import { createInterpolateElement, useEffect, useState, useRef, createPortal } from '@wordpress/element';
 import { api } from '../api';
 import { Card, CollapsibleCard, Button, Badge, Field, Input, Select, Textarea, Toggle } from '../components/UI';
 import { Icon } from '../components/icons';
@@ -10,6 +10,7 @@ import LicensePanel from './settings/LicensePanel';
 import AddonsPanel from './settings/AddonsPanel';
 import MediaPicker from '../components/MediaPicker';
 import { PRESET_TEMPLATES, ASPECT_RATIOS } from '../data/preset-templates';
+import { __, __sprintf } from '@Utils/translation';
 
 /**
  * A mini player preview rendered in the template's own style.
@@ -88,7 +89,7 @@ function TemplateCard({ template, selected, disabled, accent, onSelect }) {
 					</span>
 				</span>
 
-				{template.pro && <span className="absolute top-1.5 right-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white/90 text-brand-500">PRO</span>}
+				{template.pro && <span className="absolute top-1.5 right-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white/90 text-brand-500">{ __( 'PRO' ) }</span>}
 			</div>
 
 			<div className="flex items-center gap-1.5 mt-2">
@@ -102,30 +103,30 @@ function TemplateCard({ template, selected, disabled, accent, onSelect }) {
 
 const NAV_GROUPS = [
 	{
-		label: 'Player', items: [
-			{ key: 'general', label: 'General', icon: 'settings' },
-			{ key: 'branding', label: 'Branding', icon: 'tag' },
-			{ key: 'sources', label: 'Sources & CDN', icon: 'cloud' },
+		label: __( 'Player' ), items: [
+			{ key: 'general', label: __( 'General' ), icon: 'settings' },
+			{ key: 'branding', label: __( 'Branding' ), icon: 'tag' },
+			{ key: 'sources', label: __( 'Sources & CDN' ), icon: 'cloud' },
 		]
 	},
 	{
-		label: 'Trust & data', items: [
-			{ key: 'enforcement', label: 'Enforcement', icon: 'shield' },
-			{ key: 'compliance', label: 'Compliance & privacy', icon: 'lock' },
-			{ key: 'analytics', label: 'Analytics', icon: 'analytics' },
+		label: __( 'Trust & data' ), items: [
+			{ key: 'enforcement', label: __( 'Enforcement' ), icon: 'shield' },
+			{ key: 'compliance', label: __( 'Compliance & privacy' ), icon: 'lock' },
+			{ key: 'analytics', label: __( 'Analytics' ), icon: 'analytics' },
 		]
 	},
 	{
-		label: 'Connect', items: [
-			{ key: 'integrations', label: 'Integrations', icon: 'plug' },
-			{ key: 'webhooks', label: 'Global webhooks', icon: 'webhook' },
-			{ key: 'logs', label: 'Webhook logs', icon: 'clock' },
+		label: __( 'Connect' ), items: [
+			{ key: 'integrations', label: __( 'Integrations' ), icon: 'plug' },
+			{ key: 'webhooks', label: __( 'Global webhooks' ), icon: 'webhook' },
+			{ key: 'logs', label: __( 'Webhook logs' ), icon: 'clock' },
 		]
 	},
 	{
-		label: 'Account', items: [
-			{ key: 'addons', label: 'Addons', icon: 'puzzle' },
-			{ key: 'license', label: 'License', icon: 'key' },
+		label: __( 'Account' ), items: [
+			{ key: 'addons', label: __( 'Addons' ), icon: 'puzzle' },
+			{ key: 'license', label: __( 'License' ), icon: 'key' },
 		]
 	},
 ];
@@ -167,15 +168,15 @@ const COMPLIANCE_DEFAULTS = { certIssuer: '', certLogo: '', certSignature: '', c
 const IS_STREAM_HOST = /^vz-[0-9a-f-]+\.b-cdn\.net$/i;
 
 const BUNNY_REGIONS = [
-	{ value: '', label: 'Default — Falkenstein, DE' },
-	{ value: 'ny', label: 'New York, US' },
-	{ value: 'la', label: 'Los Angeles, US' },
-	{ value: 'uk', label: 'London, UK' },
-	{ value: 'se', label: 'Stockholm, SE' },
-	{ value: 'sg', label: 'Singapore' },
-	{ value: 'syd', label: 'Sydney, AU' },
-	{ value: 'br', label: 'São Paulo, BR' },
-	{ value: 'jh', label: 'Johannesburg, ZA' },
+	{ value: '', label: __( 'Default — Falkenstein, DE' ) },
+	{ value: 'ny', label: __( 'New York, US' ) },
+	{ value: 'la', label: __( 'Los Angeles, US' ) },
+	{ value: 'uk', label: __( 'London, UK' ) },
+	{ value: 'se', label: __( 'Stockholm, SE' ) },
+	{ value: 'sg', label: __( 'Singapore' ) },
+	{ value: 'syd', label: __( 'Sydney, AU' ) },
+	{ value: 'br', label: __( 'São Paulo, BR' ) },
+	{ value: 'jh', label: __( 'Johannesburg, ZA' ) },
 ];
 
 function WebhookLogs({ className }) {
@@ -185,7 +186,7 @@ function WebhookLogs({ className }) {
 		<Card className={`overflow-hidden p-6 ${ className }`}>
 			<table className="w-full text-sm">
 				<thead className="bg-gray-50 text-gray-500 text-left">
-					<tr><th className="px-4 py-3 font-medium">When</th><th className="px-4 py-3 font-medium">Event</th><th className="px-4 py-3 font-medium">Endpoint</th><th className="px-4 py-3 font-medium">Result</th></tr>
+					<tr><th className="px-4 py-3 font-medium">{ __( 'When' ) }</th><th className="px-4 py-3 font-medium">{ __( 'Event' ) }</th><th className="px-4 py-3 font-medium">{ __( 'Endpoint' ) }</th><th className="px-4 py-3 font-medium">{ __( 'Result' ) }</th></tr>
 				</thead>
 				<tbody>
 					{(rows || []).map((r) => (
@@ -193,11 +194,11 @@ function WebhookLogs({ className }) {
 							<td className="px-4 py-3 text-gray-500 whitespace-nowrap">{r.created}</td>
 							<td className="px-4 py-3">{r.event}</td>
 							<td className="px-4 py-3 text-gray-500 truncate max-w-xs">{r.url}</td>
-							<td className="px-4 py-3"><Badge tone={r.ok ? 'green' : 'red'}>{r.code || 'error'}</Badge>{r.error ? <span className="text-xs text-red-500 ml-2">{r.error}</span> : ''}</td>
+							<td className="px-4 py-3"><Badge tone={r.ok ? 'green' : 'red'}>{r.code || __( 'error' )}</Badge>{r.error ? <span className="text-xs text-red-500 ml-2">{r.error}</span> : ''}</td>
 						</tr>
 					))}
-					{rows && rows.length === 0 && <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">No deliveries logged yet.</td></tr>}
-					{!rows && <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">Loading…</td></tr>}
+					{rows && rows.length === 0 && <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">{ __( 'No deliveries logged yet.' ) }</td></tr>}
+					{!rows && <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">{ __( 'Loading…' ) }</td></tr>}
 				</tbody>
 			</table>
 		</Card>
@@ -276,7 +277,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 	};
 
 	if (!settings) {
-		return <p className="text-gray-400">Loading…</p>;
+		return <p className="text-gray-400">{ __( 'Loading…' ) }</p>;
 	}
 
 	// "Connected" means uploads can actually run — the same three fields
@@ -290,15 +291,15 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 			{ /* Save lives in the topbar (portaled) — same pattern as the video editor. */}
 			{toolbarSlot && createPortal(
 				<>
-					{saved && <span className="inline-flex items-center gap-1 text-sm text-green-600"><Icon name="checkmark" className="w-4 h-4" /> Saved</span>}
-					<Button onClick={save} disabled={saving || !dirty}>{saving ? 'Saving…' : 'Save'}</Button>
+					{saved && <span className="inline-flex items-center gap-1 text-sm text-green-600"><Icon name="checkmark" className="w-4 h-4" /> { __( 'Saved' ) }</span>}
+					<Button onClick={save} disabled={saving || !dirty}>{saving ? __( 'Saving…' ) : __( 'Save' )}</Button>
 				</>,
 				toolbarSlot
 			)}
 
 			<div className="mb-6">
-				<h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-				<p className="text-sm text-gray-500">Site-wide defaults. Any single video can override these in its own editor.</p>
+				<h1 className="text-2xl font-bold text-gray-900">{ __( 'Settings' ) }</h1>
+				<p className="text-sm text-gray-500">{ __( 'Site-wide defaults. Any single video can override these in its own editor.' ) }</p>
 			</div>
 
 			<div className="flex gap-6 items-start">
@@ -330,8 +331,8 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 					{tab === 'general' && (
 						<div className="space-y-6">
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">Default player template</h3>
-								<p className="text-sm text-muted mb-4">The look applied to every video by default. A video's own preset or settings still override it.</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Default player template' ) }</h3>
+								<p className="text-sm text-muted mb-4">{ __( "The look applied to every video by default. A video's own preset or settings still override it." ) }</p>
 								<div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4 pt-5 border-t border-solid border-line">
 									{PRESET_TEMPLATES.map((t) => (
 										<TemplateCard
@@ -351,10 +352,10 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 							</Card>
 
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">Default aspect ratio</h3>
-								<p className="text-sm text-muted mb-4">The frame shape new videos use unless overridden per video.</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Default aspect ratio' ) }</h3>
+								<p className="text-sm text-muted mb-4">{ __( 'The frame shape new videos use unless overridden per video.' ) }</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									<Field label="Aspect ratio" className='!mb-0'>
+									<Field label={ __( 'Aspect ratio' ) } className='!mb-0'>
 										<Select value={settings.customize?.appearance?.aspectRatio || '16:9'} onChange={(e) => setSettings((s) => ({ ...s, customize: { ...(s.customize || {}), appearance: { ...(s.customize?.appearance || {}), aspectRatio: e.target.value } } }))}>
 											{ASPECT_RATIOS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
 										</Select>
@@ -363,8 +364,13 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 							</Card>
 
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">Custom CSS</h3>
-								<p className="text-sm text-muted">Injected on every page a TruePlayer player renders. Target <code>.tp-*</code> classes.</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Custom CSS' ) }</h3>
+								<p className="text-sm text-muted">
+									{ createInterpolateElement(
+										__( 'Injected on every page a TruePlayer player renders. Target <c>.tp-*</c> classes.' ),
+										{ c: <code /> }
+									) }
+								</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
 									<Textarea rows={6} className="font-mono text-xs" value={settings.customize?.css || ''} onChange={(e) => setSettings((s) => ({ ...s, customize: { ...(s.customize || {}), css: e.target.value } }))} placeholder=".tp-controls { --tp-accent: #4F46E5; }" />
 								</div>
@@ -375,31 +381,36 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 					{tab === 'enforcement' && (
 						isPro() ? (
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">Enforcement defaults</h3>
-								<p className="text-sm text-muted mb-4">The watch-verification &amp; gating policy applied to new videos. Any video can override these in its own <strong>Questions &amp; gating</strong> tab.</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Enforcement defaults' ) }</h3>
+								<p className="text-sm text-muted mb-4">
+									{ createInterpolateElement(
+										__( 'The watch-verification & gating policy applied to new videos. Any video can override these in its own <b>Questions & gating</b> tab.' ),
+										{ b: <strong /> }
+									) }
+								</p>
 								{(() => {
 									const enf = { ...ENFORCEMENT_DEFAULTS, ...(settings.enforcement || {}) };
 									const setEnf = (partial) => setSettings((s) => ({ ...s, enforcement: { ...ENFORCEMENT_DEFAULTS, ...(s.enforcement || {}), ...partial } }));
 									return (
 										<>
 											<div className="grid grid-cols-2 gap-4 mt-4 pt-5 border-t border-solid border-line">
-												<Field label="Completion threshold (%)" hint="Coverage required to count as 'watched'.">
+												<Field label={ __( 'Completion threshold (%)' ) } hint={ __( "Coverage required to count as 'watched'." ) }>
 													<Input type="number" min="1" max="100" value={enf.completionThreshold} onChange={(e) => setEnf({ completionThreshold: parseInt(e.target.value, 10) || 0 })} />
 												</Field>
-												<Field label="Max quiz attempts" hint="Before the video locks.">
+												<Field label={ __( 'Max quiz attempts' ) } hint={ __( 'Before the video locks.' ) }>
 													<Input type="number" min="1" value={enf.maxAttempts} onChange={(e) => setEnf({ maxAttempts: parseInt(e.target.value, 10) || 1 })} />
 												</Field>
 											</div>
-											<Toggle className="mb-6" checked={enf.antiSkip} onChange={(v) => setEnf({ antiSkip: v })} label="Anti-skip (block seeking past unwatched parts)" />
-											<Toggle className="mb-6" checked={enf.strict} onChange={(v) => setEnf({ strict: v })} label="Must-watch (strict): force 100% coverage + anti-skip" />
-											<Toggle className="mb-6" checked={enf.requireLogin} onChange={(v) => setEnf({ requireLogin: v })} label="Require login to watch (reliable per-person tracking)" />
-											<Toggle checked={enf.trackGuests} onChange={(v) => setEnf({ trackGuests: v })} label="Track logged-out guests (cookie-based, best-effort)" />
+											<Toggle className="mb-6" checked={enf.antiSkip} onChange={(v) => setEnf({ antiSkip: v })} label={ __( 'Anti-skip (block seeking past unwatched parts)' ) } />
+											<Toggle className="mb-6" checked={enf.strict} onChange={(v) => setEnf({ strict: v })} label={ __( 'Must-watch (strict): force 100% coverage + anti-skip' ) } />
+											<Toggle className="mb-6" checked={enf.requireLogin} onChange={(v) => setEnf({ requireLogin: v })} label={ __( 'Require login to watch (reliable per-person tracking)' ) } />
+											<Toggle checked={enf.trackGuests} onChange={(v) => setEnf({ trackGuests: v })} label={ __( 'Track logged-out guests (cookie-based, best-effort)' ) } />
 										</>
 									);
 								})()}
 							</Card>
 						) : (
-							<UpsellPanel title="Enforcement policy" features={['Site-wide watch-verification defaults', 'Anti-skip & must-watch (strict) mode', 'Quiz lock-on-fail & login gating']} />
+							<UpsellPanel title={ __( 'Enforcement policy' ) } features={[ __( 'Site-wide watch-verification defaults' ), __( 'Anti-skip & must-watch (strict) mode' ), __( 'Quiz lock-on-fail & login gating' ) ]} />
 						)
 					)}
 
@@ -407,24 +418,24 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 						isPro() ? (
 							<div className="space-y-6">
 								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 !mb-1">Certificate branding</h3>
-									<p className="text-sm text-muted mb-4">Shown on completion certificates &amp; the public verification page.</p>
+									<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Certificate branding' ) }</h3>
+									<p className="text-sm text-muted mb-4">{ __( 'Shown on completion certificates & the public verification page.' ) }</p>
 									{(() => {
 										const c = { ...COMPLIANCE_DEFAULTS, ...(settings.compliance || {}) };
 										const setC = (partial) => setSettings((s) => ({ ...s, compliance: { ...COMPLIANCE_DEFAULTS, ...(s.compliance || {}), ...partial } }));
 										return (
 											<div className='mt-4 pt-5 border-t border-solid border-line'>
-												<Field label="Issuer name" hint="Defaults to your site name.">
-													<Input value={c.certIssuer} onChange={(e) => setC({ certIssuer: e.target.value })} placeholder={(window.TruePlayerGlobal && window.TruePlayerGlobal.site_name) || 'Your organization'} />
+												<Field label={ __( 'Issuer name' ) } hint={ __( 'Defaults to your site name.' ) }>
+													<Input value={c.certIssuer} onChange={(e) => setC({ certIssuer: e.target.value })} placeholder={(window.TruePlayerGlobal && window.TruePlayerGlobal.site_name) || __( 'Your organization' )} />
 												</Field>
-												<Field label="Logo">
-													<MediaPicker value={c.certLogo} onChange={(url) => setC({ certLogo: url })} accept="image" label="Upload a logo" />
+												<Field label={ __( 'Logo' ) }>
+													<MediaPicker value={c.certLogo} onChange={(url) => setC({ certLogo: url })} accept="image" label={ __( 'Upload a logo' ) } />
 												</Field>
-												<Field label="Signature line" hint="e.g. a name / title printed under the certificate.">
-													<Input value={c.certSignature} onChange={(e) => setC({ certSignature: e.target.value })} placeholder="Jane Doe, Head of Training" />
+												<Field label={ __( 'Signature line' ) } hint={ __( 'e.g. a name / title printed under the certificate.' ) }>
+													<Input value={c.certSignature} onChange={(e) => setC({ certSignature: e.target.value })} placeholder={ __( 'Jane Doe, Head of Training' ) } />
 												</Field>
-												<Field label="Footer note" className='!mb-0'>
-													<Input value={c.certFooter} onChange={(e) => setC({ certFooter: e.target.value })} placeholder="This certificate can be verified online." />
+												<Field label={ __( 'Footer note' ) } className='!mb-0'>
+													<Input value={c.certFooter} onChange={(e) => setC({ certFooter: e.target.value })} placeholder={ __( 'This certificate can be verified online.' ) } />
 												</Field>
 											</div>
 										);
@@ -432,17 +443,17 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</Card>
 
 								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 !mb-1">Data retention</h3>
-									<p className="text-sm text-muted mb-4">Automatically purge watch &amp; quiz records older than a set age — for privacy &amp; GDPR compliance.</p>
+									<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Data retention' ) }</h3>
+									<p className="text-sm text-muted mb-4">{ __( 'Automatically purge watch & quiz records older than a set age — for privacy & GDPR compliance.' ) }</p>
 									{(() => {
 										const c = { ...COMPLIANCE_DEFAULTS, ...(settings.compliance || {}) };
 										const setC = (partial) => setSettings((s) => ({ ...s, compliance: { ...COMPLIANCE_DEFAULTS, ...(s.compliance || {}), ...partial } }));
 										return (
 											<div className='mt-4 pt-5 border-t border-solid border-line'>
-												<Toggle checked={c.retentionEnabled} onChange={(v) => setC({ retentionEnabled: v })} label="Auto-purge old records" />
+												<Toggle checked={c.retentionEnabled} onChange={(v) => setC({ retentionEnabled: v })} label={ __( 'Auto-purge old records' ) } />
 												{c.retentionEnabled ? (
 													<div className="mt-6">
-														<Field label="Keep records for (days)" hint="Progress + quiz attempts past this age are deleted daily." className='!mb-0'>
+														<Field label={ __( 'Keep records for (days)' ) } hint={ __( 'Progress + quiz attempts past this age are deleted daily.' ) } className='!mb-0'>
 															<Input type="number" min="7" value={c.retentionDays} onChange={(e) => setC({ retentionDays: parseInt(e.target.value, 10) || 0 })} />
 														</Field>
 													</div>
@@ -453,37 +464,42 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</Card>
 							</div>
 						) : (
-							<UpsellPanel title="Compliance &amp; privacy" features={['White-labelled completion certificates', 'Public verification page', 'Data-retention auto-purge (GDPR)']} />
+							<UpsellPanel title={ __( 'Compliance & privacy' ) } features={[ __( 'White-labelled completion certificates' ), __( 'Public verification page' ), __( 'Data-retention auto-purge (GDPR)' ) ]} />
 						)
 					)}
 
 					{tab === 'analytics' && (
 						isPro() ? (
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">Analytics collection</h3>
-								<p className="text-sm text-muted mb-4">Retention, replay heatmap &amp; daily rollups. Turning this off keeps watch-verification working but stops aggregate data collection.</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Analytics collection' ) }</h3>
+								<p className="text-sm text-muted mb-4">{ __( 'Retention, replay heatmap & daily rollups. Turning this off keeps watch-verification working but stops aggregate data collection.' ) }</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
 									<Toggle
 										checked={settings.analytics?.enabled !== false}
 										onChange={(v) => setSettings((s) => ({ ...s, analytics: { ...(s.analytics || {}), enabled: v } }))}
-										label="Collect video analytics"
+										label={ __( 'Collect video analytics' ) }
 										className="mb-6"
 									/>
-									<p className="text-xs text-muted mt-2">Data retention (auto-purge) is under <strong>Compliance &amp; privacy</strong>.</p>
+									<p className="text-xs text-muted mt-2">
+										{ createInterpolateElement(
+											__( 'Data retention (auto-purge) is under <b>Compliance & privacy</b>.' ),
+											{ b: <strong /> }
+										) }
+									</p>
 								</div>
 							</Card>
 						) : (
-							<UpsellPanel title="Video analytics" features={['Audience retention & replay heatmap', 'Completion funnel & per-viewer drill-down', 'Toggle collection site-wide']} />
+							<UpsellPanel title={ __( 'Video analytics' ) } features={[ __( 'Audience retention & replay heatmap' ), __( 'Completion funnel & per-viewer drill-down' ), __( 'Toggle collection site-wide' ) ]} />
 						)
 					)}
 
 					{tab === 'sources' && (
 						<div className="space-y-6">
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">YouTube</h3>
-								<p className="text-sm text-muted mb-4">Privacy-enhanced mode plays via youtube-nocookie.com — no cookies until a visitor presses play.</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'YouTube' ) }</h3>
+								<p className="text-sm text-muted mb-4">{ __( 'Privacy-enhanced mode plays via youtube-nocookie.com — no cookies until a visitor presses play.' ) }</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									<Toggle checked={!!settings.sources?.youtubeNoCookie} onChange={(v) => setSettings((s) => ({ ...s, sources: { ...(s.sources || {}), youtubeNoCookie: v } }))} label="Enable privacy-enhanced mode (no-cookie)" />
+									<Toggle checked={!!settings.sources?.youtubeNoCookie} onChange={(v) => setSettings((s) => ({ ...s, sources: { ...(s.sources || {}), youtubeNoCookie: v } }))} label={ __( 'Enable privacy-enhanced mode (no-cookie)' ) } />
 								</div>
 							</Card>
 
@@ -497,9 +513,9 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 									     Key and a storage password look identical and neither
 									     tells you when it has been pasted into the wrong box. */ }
 									<CollapsibleCard
-										title="Bunny.net Storage"
-										description="Video files you upload to a storage zone and serve through a pull zone. Connect it and videos can be uploaded straight from the editor — the password stays on this server, uploads are proxied, never sent from the browser."
-										badge={storageReady ? <Badge tone="green">Connected</Badge> : <Badge tone="gray">Not set up</Badge>}
+										title={ __( 'Bunny.net Storage' ) }
+										description={ __( 'Video files you upload to a storage zone and serve through a pull zone. Connect it and videos can be uploaded straight from the editor — the password stays on this server, uploads are proxied, never sent from the browser.' ) }
+										badge={storageReady ? <Badge tone="green">{ __( 'Connected' ) }</Badge> : <Badge tone="gray">{ __( 'Not set up' ) }</Badge>}
 										open={bunnyPanel === 'storage'}
 										onToggle={() => setBunnyPanel((p) => (p === 'storage' ? '' : 'storage'))}
 									>
@@ -509,22 +525,22 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 											return (
 												<>
 													<div className="grid grid-cols-2 gap-4">
-														<Field label="Storage zone name" hint="As it appears in your Bunny dashboard.">
+														<Field label={ __( 'Storage zone name' ) } hint={ __( 'As it appears in your Bunny dashboard.' ) }>
 															<Input value={st.zone || ''} onChange={(e) => setSt({ zone: e.target.value.trim() })} placeholder="my-videos" />
 														</Field>
-														<Field label="Region" hint="The zone's main storage region.">
+														<Field label={ __( 'Region' ) } hint={ __( "The zone's main storage region." ) }>
 															<Select value={st.region || ''} onChange={(e) => setSt({ region: e.target.value })}>
 																{BUNNY_REGIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
 															</Select>
 														</Field>
 													</div>
-													<Field label="Storage password" hint="Bunny → Storage → your zone → FTP &amp; API Access → Password. Not the same as a Token Authentication Key. Grants full access to the zone, so it is never exposed to the browser.">
+													<Field label={ __( 'Storage password' ) } hint={ __( 'Bunny → Storage → your zone → FTP & API Access → Password. Not the same as a Token Authentication Key. Grants full access to the zone, so it is never exposed to the browser.' ) }>
 														<Input type="password" value={st.accessKey || ''} onChange={(e) => setSt({ accessKey: e.target.value.trim() })} placeholder="••••••••-••••-••••" />
 													</Field>
 													{ /* Required, not optional: the storage host serves nothing publicly,
 													     so without a pull zone an upload succeeds and yields a URL that
 													     cannot be played. */ }
-													<Field label="Pull-zone hostname" required hint="Bunny → Storage → your zone → Connected pull zones. Uploads need this to produce a playable URL.">
+													<Field label={ __( 'Pull-zone hostname' ) } required hint={ __( 'Bunny → Storage → your zone → Connected pull zones. Uploads need this to produce a playable URL.' ) }>
 														<Input value={st.pullZone || ''} onChange={(e) => setSt({ pullZone: e.target.value.replace(/^https?:\/\//, '').replace(/\/$/, '').trim() })} placeholder="my-videos.b-cdn.net" />
 														{ /* Bunny auto-names Stream's zones `vz-{uuid}.b-cdn.net`, and that
 														     one hostname is the difference between every upload playing and
@@ -532,14 +548,17 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 														     way, so nothing else in the flow can catch it. */ }
 														{IS_STREAM_HOST.test(st.pullZone || '') && (
 															<p className="text-xs text-ink leading-5 !mt-1.5 p-2.5 rounded border border-warning/40 bg-warning-light">
-																That is a <strong>Stream</strong> pull zone (Bunny names them <code>vz-…</code>). It serves a video library, not your storage zone — files uploaded here will not play from it. Use the hostname under <strong>Storage → your zone → Connected pull zones</strong> instead.
+																{ createInterpolateElement(
+																	__( 'That is a <b>Stream</b> pull zone (Bunny names them <c>vz-…</c>). It serves a video library, not your storage zone — files uploaded here will not play from it. Use the hostname under <s>Storage → your zone → Connected pull zones</s> instead.' ),
+																	{ b: <strong />, c: <code />, s: <strong /> }
+																) }
 															</p>
 														)}
 													</Field>
-													<Field label="Upload folder" hint="Folder inside the zone that uploads land in. Leave empty to use the zone root.">
+													<Field label={ __( 'Upload folder' ) } hint={ __( 'Folder inside the zone that uploads land in. Leave empty to use the zone root.' ) }>
 														<Input value={st.folder ?? 'trueplayer'} onChange={(e) => setSt({ folder: e.target.value.replace(/^\/+|\/+$/g, '') })} placeholder="trueplayer" />
 													</Field>
-													<Field label="Token Authentication Key (optional)" hint="Bunny → CDN → this storage pull zone → Security → Token Authentication Key. Only needed to sign playback of videos you mark private." className='!mb-0'>
+													<Field label={ __( 'Token Authentication Key (optional)' ) } hint={ __( 'Bunny → CDN → this storage pull zone → Security → Token Authentication Key. Only needed to sign playback of videos you mark private.' ) } className='!mb-0'>
 														<Input type="password" value={st.tokenKey || ''} onChange={(e) => setSt({ tokenKey: e.target.value.trim() })} placeholder="••••••••-••••-••••" />
 													</Field>
 												</>
@@ -548,29 +567,29 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 									</CollapsibleCard>
 
 									<CollapsibleCard
-										title="Bunny.net Stream"
-										description="Videos hosted in a Bunny video library. Each video's own pull zone and video ID are set in its Source tab — only the signing key is site-wide."
-										badge={settings.bunny?.tokenKey ? <Badge tone="green">Key saved</Badge> : <Badge tone="gray">Not set up</Badge>}
+										title={ __( 'Bunny.net Stream' ) }
+										description={ __( "Videos hosted in a Bunny video library. Each video's own pull zone and video ID are set in its Source tab — only the signing key is site-wide." ) }
+										badge={settings.bunny?.tokenKey ? <Badge tone="green">{ __( 'Key saved' ) }</Badge> : <Badge tone="gray">{ __( 'Not set up' ) }</Badge>}
 										open={bunnyPanel === 'stream'}
 										onToggle={() => setBunnyPanel((p) => (p === 'stream' ? '' : 'stream'))}
 									>
-										<Field label="Token Authentication Key" hint="Bunny → CDN → your Stream pull zone → Security → Token Authentication Key. Only needed to sign playback of videos you mark private." className='!mb-0'>
+										<Field label={ __( 'Token Authentication Key' ) } hint={ __( 'Bunny → CDN → your Stream pull zone → Security → Token Authentication Key. Only needed to sign playback of videos you mark private.' ) } className='!mb-0'>
 											<Input type="password" value={settings.bunny?.tokenKey || ''} onChange={(e) => setSettings((s) => ({ ...s, bunny: { ...(s.bunny || {}), tokenKey: e.target.value.trim() } }))} placeholder="••••••••-••••-••••" />
 										</Field>
 									</CollapsibleCard>
 
 									<Card className="p-6">
-										<h3 className="font-semibold text-gray-900 !mb-1">Signed link expiry</h3>
-										<p className="text-sm text-muted mb-4">How long a signed / private playback URL stays valid before it must be re-issued.</p>
+										<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Signed link expiry' ) }</h3>
+										<p className="text-sm text-muted mb-4">{ __( 'How long a signed / private playback URL stays valid before it must be re-issued.' ) }</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
-											<Field label="Expiry (hours)" hint="Applies to private self-hosted files and to both Bunny sources above." className='!mb-0'>
+											<Field label={ __( 'Expiry (hours)' ) } hint={ __( 'Applies to private self-hosted files and to both Bunny sources above.' ) } className='!mb-0'>
 												<Input type="number" min="1" value={settings.sources?.signedUrlTtlHours || 6} onChange={(e) => setSettings((s) => ({ ...s, sources: { ...(s.sources || {}), signedUrlTtlHours: parseInt(e.target.value, 10) || 0 } }))} />
 											</Field>
 										</div>
 									</Card>
 								</>
 							) : (
-								<UpsellPanel title="Private &amp; premium sources" features={['Bunny.net token authentication', 'Signed, expiring playback URLs', 'Mux & HLS streaming']} />
+								<UpsellPanel title={ __( 'Private & premium sources' ) } features={[ __( 'Bunny.net token authentication' ), __( 'Signed, expiring playback URLs' ), __( 'Mux & HLS streaming' ) ]} />
 							)}
 						</div>
 					)}
@@ -581,10 +600,10 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 							     to when no CRM is connected, so it must be reachable without Pro
 							     — the rest of this section stays gated below. */ }
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">Email notification</h3>
-								<p className="text-sm text-muted mb-4">Where captured addresses are sent when a video's email form has no CRM provider selected.</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Email notification' ) }</h3>
+								<p className="text-sm text-muted mb-4">{ __( "Where captured addresses are sent when a video's email form has no CRM provider selected." ) }</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									<Field label="Send notifications to" hint="Leave empty to use this site's admin email address.">
+									<Field label={ __( 'Send notifications to' ) } hint={ __( "Leave empty to use this site's admin email address." ) }>
 										<Input
 											type="email"
 											value={settings.integrations?.wp_mail?.to || ''}
@@ -598,10 +617,10 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 						{ isPro() ? (
 							<>
 								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 !mb-1">Mailchimp</h3>
-									<p className="text-sm text-muted mb-4">Send in-player opt-ins to Mailchimp audiences. Paste your API key (Account → Extras → API keys).</p>
+									<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Mailchimp' ) }</h3>
+									<p className="text-sm text-muted mb-4">{ __( 'Send in-player opt-ins to Mailchimp audiences. Paste your API key (Account → Extras → API keys).' ) }</p>
 									<div className='mt-4 pt-5 border-t border-solid border-line'>
-										<Field label="Mailchimp API key" hint="Looks like abc123…-us21. Stored on your site only.">
+										<Field label={ __( 'Mailchimp API key' ) } hint={ __( 'Looks like abc123…-us21. Stored on your site only.' ) }>
 											<Input
 												type="password"
 												value={settings.integrations?.mailchimp?.api_key || ''}
@@ -609,22 +628,22 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 												placeholder="xxxxxxxxxxxxxxxx-us21"
 											/>
 										</Field>
-										<p className="text-xs text-muted">Once saved, Mailchimp audiences appear in each video’s Subscribe tab.</p>
+										<p className="text-xs text-muted">{ __( 'Once saved, Mailchimp audiences appear in each video’s Subscribe tab.' ) }</p>
 									</div>
 								</Card>
 
 								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 !mb-1">Google Analytics</h3>
-									<p className="text-sm text-muted mb-4">Send player events (video_start, video_complete) to GA4. Uses your existing site tag, or loads one from a measurement ID.</p>
+									<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Google Analytics' ) }</h3>
+									<p className="text-sm text-muted mb-4">{ __( 'Send player events (video_start, video_complete) to GA4. Uses your existing site tag, or loads one from a measurement ID.' ) }</p>
 									<div className='mt-4 pt-5 border-t border-solid border-line'>
 										<Toggle
 											checked={!!settings.integrations?.ga?.enabled}
 											onChange={(v) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), enabled: v } } }))}
-											label="Send player events to Google Analytics"
+											label={ __( 'Send player events to Google Analytics' ) }
 										/>
 										{settings.integrations?.ga?.enabled ? (
 											<div className="mt-6">
-												<Field label="Measurement ID" hint="Optional — leave blank to use the site's existing GA tag." className="!mb-0">
+												<Field label={ __( 'Measurement ID' ) } hint={ __( "Optional — leave blank to use the site's existing GA tag." ) } className="!mb-0">
 													<Input value={settings.integrations?.ga?.measurementId || ''} onChange={(e) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), measurementId: e.target.value.trim() } } }))} placeholder="G-XXXXXXXXXX" />
 												</Field>
 											</div>
@@ -633,7 +652,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</Card>
 							</>
 						) : (
-							<UpsellPanel title="CRM &amp; email integrations" features={['Mailchimp audiences', 'Google Analytics events', 'GemCRM / FluentCRM opt-in capture']} />
+							<UpsellPanel title={ __( 'CRM & email integrations' ) } features={[ __( 'Mailchimp audiences' ), __( 'Google Analytics events' ), __( 'GemCRM / FluentCRM opt-in capture' ) ]} />
 						)}
 						</div>
 					)}
@@ -647,48 +666,48 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 							return (
 								<div className="space-y-6">
 									<Card className="p-6">
-										<h3 className="font-semibold text-gray-900 !mb-1">Brand colors</h3>
-										<p className="text-sm text-muted mb-4">The default accent for the scrubber, buttons &amp; highlights. Any video or preset can override it.</p>
+										<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Brand colors' ) }</h3>
+										<p className="text-sm text-muted mb-4">{ __( 'The default accent for the scrubber, buttons & highlights. Any video or preset can override it.' ) }</p>
 										<div className="grid grid-cols-2 gap-4 mt-4 pt-5 border-t border-solid border-line">
-											<Field label="Accent color">
+											<Field label={ __( 'Accent color' ) }>
 												<div className="flex gap-2 items-center">
 													<input type="color" value={app.accent || '#006BFF'} onChange={(e) => setApp({ accent: e.target.value })} className="h-10 w-12 rounded border border-line" />
 													<Input value={app.accent || ''} onChange={(e) => setApp({ accent: e.target.value })} placeholder="#006BFF" />
 												</div>
 											</Field>
-											<Field label="Button hover color" hint="Optional.">
+											<Field label={ __( 'Button hover color' ) } hint={ __( 'Optional.' ) }>
 												<div className="flex gap-2 items-center">
 													<input type="color" value={app.hoverColor || '#ffffff'} onChange={(e) => setApp({ hoverColor: e.target.value })} className="h-10 w-12 rounded border border-line" />
-													<Input value={app.hoverColor || ''} onChange={(e) => setApp({ hoverColor: e.target.value })} placeholder="(none)" />
+													<Input value={app.hoverColor || ''} onChange={(e) => setApp({ hoverColor: e.target.value })} placeholder={ __( '(none)' ) } />
 												</div>
 											</Field>
 										</div>
 									</Card>
 
 									<Card className="p-6">
-										<h3 className="font-semibold text-gray-900 !mb-1">Player logo</h3>
-										<p className="text-sm text-muted">A watermark logo shown on every player by default.</p>
+										<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Player logo' ) }</h3>
+										<p className="text-sm text-muted">{ __( 'A watermark logo shown on every player by default.' ) }</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
 											{ /* Upload-only: a pasted URL was never the point of a logo
 											     field, and MediaPicker shows what you actually picked. */ }
-											<Field label="Logo image" className='!mb-0'>
-												<MediaPicker value={brand.logo || ''} onChange={(url) => setBrand({ logo: url })} accept="image" label="Upload a logo" />
+											<Field label={ __( 'Logo image' ) } className='!mb-0'>
+												<MediaPicker value={brand.logo || ''} onChange={(url) => setBrand({ logo: url })} accept="image" label={ __( 'Upload a logo' ) } />
 											</Field>
 											{brand.logo && (
 												<div className="grid grid-cols-2 gap-4">
-													<Field label="Position">
+													<Field label={ __( 'Position' ) }>
 														<Select value={brand.logoPosition || 'top-right'} onChange={(e) => setBrand({ logoPosition: e.target.value })}>
-															<option value="top-left">Top left</option>
-															<option value="top-right">Top right</option>
-															<option value="bottom-left">Bottom left</option>
-															<option value="bottom-right">Bottom right</option>
+															<option value="top-left">{ __( 'Top left' ) }</option>
+															<option value="top-right">{ __( 'Top right' ) }</option>
+															<option value="bottom-left">{ __( 'Bottom left' ) }</option>
+															<option value="bottom-right">{ __( 'Bottom right' ) }</option>
 														</Select>
 													</Field>
-													<Field label={`Opacity (${Math.round((brand.logoOpacity ?? 0.9) * 100)}%)`}>
+													<Field label={ __sprintf( 'Opacity (%d%%)', Math.round( ( brand.logoOpacity ?? 0.9 ) * 100 ) ) }>
 														<input type="range" min="10" max="100" step="5" value={Math.round((brand.logoOpacity ?? 0.9) * 100)} onChange={(e) => setBrand({ logoOpacity: parseInt(e.target.value, 10) / 100 })} className="w-full" />
 													</Field>
 													<div className="col-span-2">
-														<Field label="Click-through link" hint="Optional — makes the logo clickable.">
+														<Field label={ __( 'Click-through link' ) } hint={ __( 'Optional — makes the logo clickable.' ) }>
 															<Input value={brand.logoUrl || ''} onChange={(e) => setBrand({ logoUrl: e.target.value })} placeholder="https://your-site.com" />
 														</Field>
 													</div>
@@ -699,45 +718,45 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 
 									<Card className="p-6">
 										<div className="flex items-center gap-2 !mb-1">
-											<h3 className="font-semibold text-gray-900">White-label</h3>
-											{!isPro() && <Badge tone="gray">Pro</Badge>}
+											<h3 className="font-semibold text-gray-900">{ __( 'White-label' ) }</h3>
+											{!isPro() && <Badge tone="gray">{ __( 'Pro' ) }</Badge>}
 										</div>
-										<p className="text-sm text-muted mb-4">Replace the TruePlayer name across the admin and hide the player attribution.</p>
+										<p className="text-sm text-muted mb-4">{ __( 'Replace the TruePlayer name across the admin and hide the player attribution.' ) }</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
 											{isPro() ? (
 												<>
 													<Toggle
 														checked={!!settings.whiteLabel?.enabled}
 														onChange={(v) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), enabled: v } }))}
-														label="Enable white-label"
+														label={ __( 'Enable white-label' ) }
 														className="mb-6"
 													/>
 													{settings.whiteLabel?.enabled && (
 														<>
-															<Field label="Brand name" hint="Shown in the admin menu &amp; titles.">
+															<Field label={ __( 'Brand name' ) } hint={ __( 'Shown in the admin menu & titles.' ) }>
 																<Input
 																	value={settings.whiteLabel?.brand || ''}
 																	onChange={(e) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), brand: e.target.value } }))}
-																	placeholder="Acme Video"
+																	placeholder={ __( 'Acme Video' ) }
 																/>
 															</Field>
 															{ /* The mark that goes with the name — without it a rebranded
 															     install still showed TruePlayer's play glyph beside the
 															     owner's own name in the WP menu and the admin header. */ }
-															<Field label="Brand logo" hint="Square works best (used at 20px in the WordPress menu). Leave empty to keep the default mark.">
+															<Field label={ __( 'Brand logo' ) } hint={ __( 'Square works best (used at 20px in the WordPress menu). Leave empty to keep the default mark.' ) }>
 																<MediaPicker
 																	value={settings.whiteLabel?.logo || ''}
 																	onChange={(url) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), logo: url } }))}
 																	accept="image"
-																	label="Upload a mark"
+																	label={ __( 'Upload a mark' ) }
 																/>
 															</Field>
 														</>
 													)}
-													<p className="text-xs text-muted mt-2">Takes effect on the next page load after saving.</p>
+													<p className="text-xs text-muted mt-2">{ __( 'Takes effect on the next page load after saving.' ) }</p>
 												</>
 											) : (
-												<p className="text-sm text-muted">Upgrade to TruePlayer Pro to rebrand the admin and remove player attribution.</p>
+												<p className="text-sm text-muted">{ __( 'Upgrade to TruePlayer Pro to rebrand the admin and remove player attribution.' ) }</p>
 											)}
 										</div>
 									</Card>
@@ -747,14 +766,14 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 					)}
 
 					{tab === 'logs' && (
-						isPro() ? <WebhookLogs /> : <UpsellPanel title="Webhook delivery logs" features={['Every delivery attempt recorded', 'See failures &amp; status codes']} />
+						isPro() ? <WebhookLogs /> : <UpsellPanel title={ __( 'Webhook delivery logs' ) } features={[ __( 'Every delivery attempt recorded' ), __( 'See failures & status codes' ) ]} />
 					)}
 
 					{tab === 'webhooks' && (
 						isPro() ? (
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">Global webhooks</h3>
-								<p className="text-sm text-gray-500">Fire for every video, in addition to per-video webhooks.</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Global webhooks' ) }</h3>
+								<p className="text-sm text-gray-500">{ __( 'Fire for every video, in addition to per-video webhooks.' ) }</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
 									<EndpointList
 										endpoints={settings.webhooks || []}
@@ -763,7 +782,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</div>
 							</Card>
 						) : (
-							<UpsellPanel title="Automation & webhooks" features={['Signed webhooks on every player event', 'Site-wide + per-video endpoints']} />
+							<UpsellPanel title={ __( 'Automation & webhooks' ) } features={[ __( 'Signed webhooks on every player event' ), __( 'Site-wide + per-video endpoints' ) ]} />
 						)
 					)}
 
@@ -787,35 +806,37 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 							return (
 								<Card className="p-6">
 									<div className="flex items-center gap-3 mb-2">
-										<h3 className="font-semibold text-gray-900">License</h3>
-										{!isPro() && <Badge tone="gray">Free</Badge>}
-										{isPro() && <Badge tone="brand">Pro plugin active</Badge>}
-										{isPro() && status === 'active' && <Badge tone="green">License activated</Badge>}
-										{isPro() && status === 'inactive' && <Badge tone="amber">License not activated</Badge>}
+										<h3 className="font-semibold text-gray-900">{ __( 'License' ) }</h3>
+										{!isPro() && <Badge tone="gray">{ __( 'Free' ) }</Badge>}
+										{isPro() && <Badge tone="brand">{ __( 'Pro plugin active' ) }</Badge>}
+										{isPro() && status === 'active' && <Badge tone="green">{ __( 'License activated' ) }</Badge>}
+										{isPro() && status === 'inactive' && <Badge tone="amber">{ __( 'License not activated' ) }</Badge>}
 									</div>
 									{!isPro() && (
 										<p className="text-sm text-gray-500">
-											You’re on the free player. Install <strong>TruePlayer Pro</strong> and activate a license to unlock watch-verification, quiz-gating, analytics, automation, premium sources and playlists.
+											{ createInterpolateElement(
+												__( 'You’re on the free player. Install <b>TruePlayer Pro</b> and activate a license to unlock watch-verification, quiz-gating, analytics, automation, premium sources and playlists.' ),
+												{ b: <strong /> }
+											) }
 										</p>
 									)}
 									{isPro() && status === 'active' && (
-										<p className="text-sm text-gray-500">TruePlayer Pro is active and your license key is valid.</p>
+										<p className="text-sm text-gray-500">{ __( 'TruePlayer Pro is active and your license key is valid.' ) }</p>
 									)}
 									{isPro() && status === 'inactive' && (
 										<p className="text-sm text-gray-500">
-											TruePlayer Pro is running and every feature is available. Activating a license adds
-											automatic updates and priority support — it doesn’t unlock anything.
+											{ __( 'TruePlayer Pro is running and every feature is available. Activating a license adds automatic updates and priority support — it doesn’t unlock anything.' ) }
 										</p>
 									)}
 									{isPro() && status === 'unconfigured' && (
 										<p className="text-sm text-gray-500">
-											TruePlayer Pro is active. This build has no license server configured, so there’s no key to activate.
+											{ __( 'TruePlayer Pro is active. This build has no license server configured, so there’s no key to activate.' ) }
 										</p>
 									)}
 									{url && status !== 'unconfigured' && (
 										<div className="mt-4">
 											<Button variant="ghost" onClick={() => { window.location.href = url; }}>
-												{status === 'active' ? 'Manage license' : 'Activate license'}
+												{status === 'active' ? __( 'Manage license' ) : __( 'Activate license' )}
 											</Button>
 										</div>
 									)}

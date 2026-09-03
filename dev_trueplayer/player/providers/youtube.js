@@ -1,4 +1,5 @@
 import { createEmitter } from './emitter';
+import { __ } from '@Utils/translation';
 
 /** Load the YT IFrame API once. */
 let ytReady = null;
@@ -53,13 +54,13 @@ function parseId( source ) {
  * plays perfectly on youtube.com, and its owner has simply disallowed
  * embedding — no amount of checking the URL will fix it.
  */
-const ERRORS = {
-	2: 'That YouTube link doesn’t contain a valid video ID.',
-	5: 'YouTube couldn’t play this video in the browser.',
-	100: 'That YouTube video was removed, or is private.',
-	101: 'The owner of that YouTube video doesn’t allow it to be embedded.',
-	150: 'The owner of that YouTube video doesn’t allow it to be embedded.',
-};
+const ERRORS = () => ( {
+	2: __( 'That YouTube link doesn’t contain a valid video ID.' ),
+	5: __( 'YouTube couldn’t play this video in the browser.' ),
+	100: __( 'That YouTube video was removed, or is private.' ),
+	101: __( 'The owner of that YouTube video doesn’t allow it to be embedded.' ),
+	150: __( 'The owner of that YouTube video doesn’t allow it to be embedded.' ),
+} );
 
 /**
  * YouTube provider with our own controls overlaid (controls=0, modestbranding).
@@ -114,7 +115,7 @@ export async function createYouTubeProvider( container, source, opts = {} ) {
 			onError: ( e ) => {
 				emitter.emit( 'error', {
 					code: e && e.data,
-					message: ( ERRORS[ e && e.data ] ) || 'This YouTube video could not be played.',
+					message: ( ERRORS()[ e && e.data ] ) || __( 'This YouTube video could not be played.' ),
 				} );
 			},
 			onStateChange: ( e ) => {

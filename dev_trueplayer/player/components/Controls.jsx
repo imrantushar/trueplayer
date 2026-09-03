@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from '@wordpress/element';
 import { formatTime } from '@Utils/format';
+import { __, __sprintf } from '@Utils/translation';
 
 const Icon = ( { d } ) => (
 	<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
@@ -197,26 +198,42 @@ export function currentChapter( chapters, current, duration ) {
 
 function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, speeds } ) {
 	const [ open, setOpen ] = useState( false );
+	const wrapRef = useRef( null );
 	const rates = speeds && speeds.length ? speeds : [ 0.5, 0.75, 1, 1.25, 1.5, 2 ];
 	const qualities = provider?.getQualities?.() || [];
 	const tracks = provider?.getTextTracks?.() || [];
 
+	// Closes on an outside click — the gear button's own click still toggles
+	// normally, since that click lands inside wrapRef too.
+	useEffect( () => {
+		if ( ! open ) {
+			return;
+		}
+		const onOutside = ( e ) => {
+			if ( wrapRef.current && ! wrapRef.current.contains( e.target ) ) {
+				setOpen( false );
+			}
+		};
+		document.addEventListener( 'pointerdown', onOutside );
+		return () => document.removeEventListener( 'pointerdown', onOutside );
+	}, [ open ] );
+
 	return (
-		<div className="tp-menu-wrap">
-			<button className="tp-btn" aria-label="Settings" onClick={ () => setOpen( ! open ) }>
+		<div className="tp-menu-wrap" ref={ wrapRef }>
+			<button className="tp-btn" aria-label={ __( 'Settings' ) } onClick={ () => setOpen( ! open ) }>
 				<Icon d={ P.gear } />
 			</button>
 			{ open && (
 				<div className="tp-menu">
-					<div className="tp-menu-section">Speed</div>
+					<div className="tp-menu-section">{ __( 'Speed' ) }</div>
 					{ rates.map( ( r ) => (
 						<button key={ r } className={ `tp-menu-item ${ r === rate ? 'is-active' : '' }` } onClick={ () => { setRate( r ); setOpen( false ); } }>
-							{ r === 1 ? 'Normal' : `${ r }×` }
+							{ r === 1 ? __( 'Normal' ) : __sprintf( '%s×', r ) }
 						</button>
 					) ) }
 					{ qualities.length > 0 && (
 						<>
-							<div className="tp-menu-section">Quality</div>
+							<div className="tp-menu-section">{ __( 'Quality' ) }</div>
 							{ qualities.map( ( q ) => (
 								<button key={ q.id } className={ `tp-menu-item ${ q.id === quality ? 'is-active' : '' }` } onClick={ () => { setQuality( q.id ); setOpen( false ); } }>
 									{ q.label }
@@ -226,8 +243,8 @@ function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, 
 					) }
 					{ tracks.length > 0 && (
 						<>
-							<div className="tp-menu-section">Subtitles</div>
-							<button className={ `tp-menu-item ${ track === 'off' ? 'is-active' : '' }` } onClick={ () => { setTrack( 'off' ); setOpen( false ); } }>Off</button>
+							<div className="tp-menu-section">{ __( 'Subtitles' ) }</div>
+							<button className={ `tp-menu-item ${ track === 'off' ? 'is-active' : '' }` } onClick={ () => { setTrack( 'off' ); setOpen( false ); } }>{ __( 'Off' ) }</button>
 							{ tracks.map( ( t ) => (
 								<button key={ t.id } className={ `tp-menu-item ${ t.id === track ? 'is-active' : '' }` } onClick={ () => { setTrack( t.id ); setOpen( false ); } }>
 									{ t.label }
@@ -267,29 +284,29 @@ export default function Controls( props ) {
 			) }
 			<div className="tp-controls-row">
 				{ show( 'play' ) && (
-					<button className="tp-btn" aria-label={ playing ? 'Pause' : 'Play' } onClick={ onPlayPause }>
+					<button className="tp-btn" aria-label={ playing ? __( 'Pause' ) : __( 'Play' ) } onClick={ onPlayPause }>
 						<Icon d={ playing ? P.pause : P.play } />
 					</button>
 				) }
 				{ /* Hidden, not merely inert, when the timeline is locked: a button
 				     that visibly does nothing reads as a broken player. */ }
 				{ show( 'rewind' ) && ! scrubDisabled && (
-					<button className="tp-btn" aria-label="Rewind" onClick={ () => onSkip( -skipSeconds ) }>
+					<button className="tp-btn" aria-label={ __( 'Rewind' ) } onClick={ () => onSkip( -skipSeconds ) }>
 						<Icon d={ P.rewind } />
 					</button>
 				) }
 				{ show( 'forward' ) && ! scrubDisabled && (
-					<button className="tp-btn" aria-label="Fast forward" onClick={ () => onSkip( skipSeconds ) }>
+					<button className="tp-btn" aria-label={ __( 'Fast forward' ) } onClick={ () => onSkip( skipSeconds ) }>
 						<Icon d={ P.forward } />
 					</button>
 				) }
 				{ show( 'mute' ) && (
-					<button className="tp-btn" aria-label={ muted ? 'Unmute' : 'Mute' } onClick={ onMute }>
+					<button className="tp-btn" aria-label={ muted ? __( 'Unmute' ) : __( 'Mute' ) } onClick={ onMute }>
 						<Icon d={ muted || volume === 0 ? P.mute : P.volume } />
 					</button>
 				) }
 				{ show( 'volume' ) && (
-					<input className="tp-volume" type="range" min="0" max="1" step="0.05" value={ muted ? 0 : volume } onChange={ ( e ) => onVolume( parseFloat( e.target.value ) ) } aria-label="Volume" />
+					<input className="tp-volume" type="range" min="0" max="1" step="0.05" value={ muted ? 0 : volume } onChange={ ( e ) => onVolume( parseFloat( e.target.value ) ) } aria-label={ __( 'Volume' ) } />
 				) }
 				{ ( show( 'currentTime' ) || show( 'duration' ) ) && (
 					<span className="tp-time">
@@ -301,12 +318,12 @@ export default function Controls( props ) {
 				{ chapterNow && <span className="tp-chapter-now" title={ chapterNow }>· { chapterNow }</span> }
 				<div className="tp-spacer" />
 				{ show( 'download' ) && capabilities?.download && (
-					<button className="tp-btn" aria-label="Download" onClick={ onDownload }>
+					<button className="tp-btn" aria-label={ __( 'Download' ) } onClick={ onDownload }>
 						<Icon d={ P.download } />
 					</button>
 				) }
 				{ hasInfo && (
-					<button className={ `tp-btn ${ infoOpen ? 'is-active' : '' }` } aria-label="Chapters &amp; transcript" aria-pressed={ infoOpen } onClick={ onInfo }>
+					<button className={ `tp-btn ${ infoOpen ? 'is-active' : '' }` } aria-label={ __( 'Chapters & transcript' ) } aria-pressed={ infoOpen } onClick={ onInfo }>
 						<Icon d={ P.list } />
 					</button>
 				) }
@@ -318,7 +335,7 @@ export default function Controls( props ) {
 				{ show( 'captions' ) && textTracks.length > 0 && (
 					<button
 						className={ `tp-btn ${ track !== 'off' ? 'is-active' : '' }` }
-						aria-label="Subtitles"
+						aria-label={ __( 'Subtitles' ) }
 						aria-pressed={ track !== 'off' }
 						onClick={ () => onTrack( track === 'off' ? defaultTrackId : 'off' ) }
 					>
@@ -329,12 +346,12 @@ export default function Controls( props ) {
 					<Menu provider={ provider } rate={ rate } setRate={ onRate } quality={ quality } setQuality={ onQuality } track={ track } setTrack={ onTrack } speeds={ speeds } />
 				) }
 				{ show( 'pip' ) && capabilities?.pip && ! hidePiP && (
-					<button className="tp-btn" aria-label="Picture in picture" onClick={ onPiP }>
+					<button className="tp-btn" aria-label={ __( 'Picture in picture' ) } onClick={ onPiP }>
 						<Icon d={ P.pip } />
 					</button>
 				) }
 				{ show( 'fullscreen' ) && capabilities?.fullscreen !== false && (
-					<button className="tp-btn" aria-label="Fullscreen" onClick={ onFullscreen }>
+					<button className="tp-btn" aria-label={ __( 'Fullscreen' ) } onClick={ onFullscreen }>
 						<Icon d={ P.full } />
 					</button>
 				) }

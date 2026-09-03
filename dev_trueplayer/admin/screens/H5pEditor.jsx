@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import { Card, Field, Input, Button, Toast, Badge, SubSidebar } from '../components/UI';
 import SemanticsForm from '../h5p/SemanticsForm';
 import { api } from '../api';
+import { __ } from '@Utils/translation';
 
 /**
  * Authoring screen for an H5P item. Mirrors the native video editor: a
@@ -40,7 +41,7 @@ export default function H5pEditor( { video = null, machineName = '', title: init
 	}, [ semantics ] );
 
 	const sidebarItems = useMemo(
-		() => [ [ '__content', 'Content' ], ...groupTabs.map( ( g ) => [ g.name, g.label || g.name ] ) ],
+		() => [ [ '__content', __( 'Content' ) ], ...groupTabs.map( ( g ) => [ g.name, g.label || g.name ] ) ],
 		[ groupTabs ]
 	);
 
@@ -74,7 +75,7 @@ export default function H5pEditor( { video = null, machineName = '', title: init
 				setPreview( nextPreview );
 				setSub( '__content' );
 			} catch ( e ) {
-				if ( alive ) setError( e.message || 'Failed to load the content type.' );
+				if ( alive ) setError( e.message || __( 'Failed to load the content type.' ) );
 			} finally {
 				if ( alive ) {
 					setLoading( false );
@@ -96,7 +97,7 @@ export default function H5pEditor( { video = null, machineName = '', title: init
 			setStatus( 'saved' );
 		} catch ( e ) {
 			setStatus( 'idle' );
-			setError( e.message || 'Save failed.' );
+			setError( e.message || __( 'Save failed.' ) );
 		}
 	};
 
@@ -108,7 +109,7 @@ export default function H5pEditor( { video = null, machineName = '', title: init
 	}, [ params, title ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
 	if ( loading ) {
-		return <div className="p-8 text-gray-400">Loading builder…</div>;
+		return <div className="p-8 text-gray-400">{ __( 'Loading builder…' ) }</div>;
 	}
 
 	const previewSrc = preview ? `${ preview }${ preview.includes( '?' ) ? '&' : '?' }k=${ previewKey }` : '';
@@ -118,14 +119,14 @@ export default function H5pEditor( { video = null, machineName = '', title: init
 		<div>
 			<div className="flex items-center justify-between mb-5">
 				<div className="flex items-center gap-3">
-					<Button variant="ghost" size="sm" onClick={ onBack }>← Back</Button>
+					<Button variant="ghost" size="sm" onClick={ onBack }>{ __( '← Back' ) }</Button>
 					<Badge tone="blue">{ typeTitle }</Badge>
 				</div>
 				<div className="flex items-center gap-3">
 					<span className="text-xs text-gray-400 min-w-[64px] text-right">
-						{ status === 'saving' ? 'Saving…' : status === 'saved' ? 'Saved' : '' }
+						{ status === 'saving' ? __( 'Saving…' ) : status === 'saved' ? __( 'Saved' ) : '' }
 					</span>
-					<Button onClick={ persist } disabled={ status === 'saving' }>Save</Button>
+					<Button onClick={ persist } disabled={ status === 'saving' }>{ __( 'Save' ) }</Button>
 				</div>
 			</div>
 
@@ -137,8 +138,8 @@ export default function H5pEditor( { video = null, machineName = '', title: init
 					<Card className="p-6">
 						{ sub === '__content' ? (
 							<>
-								<Field label="Title" hint="Shown in your Media library (not to viewers).">
-									<Input value={ title } onChange={ ( e ) => setTitle( e.target.value ) } placeholder="Untitled interactive" />
+								<Field label={ __( 'Title' ) } hint={ __( 'Shown in your Media library (not to viewers).' ) }>
+									<Input value={ title } onChange={ ( e ) => setTitle( e.target.value ) } placeholder={ __( 'Untitled interactive' ) } />
 								</Field>
 								<div className="mt-6 pt-6 border-t border-line">
 									<SemanticsForm semantics={ contentFields } value={ params } onChange={ setParams } />
@@ -164,28 +165,28 @@ export default function H5pEditor( { video = null, machineName = '', title: init
 				<div className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-[104px]">
 					<Card className="overflow-hidden">
 						<div className="flex items-center justify-between px-4 py-2.5 border-b border-line bg-gray-50">
-							<span className="text-[13px] font-medium text-gray-700">Live preview</span>
+							<span className="text-[13px] font-medium text-gray-700">{ __( 'Live preview' ) }</span>
 							{ previewSrc && (
 								<button type="button" className="text-xs text-brand-500 hover:underline" onClick={ () => setPreviewKey( ( k ) => k + 1 ) }>
-									Refresh
+									{ __( 'Refresh' ) }
 								</button>
 							) }
 						</div>
 						{ previewSrc ? (
 							<iframe
 								key={ previewKey }
-								title="H5P preview"
+								title={ __( 'H5P preview' ) }
 								src={ previewSrc }
 								className="w-full block"
 								style={ { height: 460, border: 0, background: '#fff' } }
 							/>
 						) : (
 							<div className="h-[300px] flex items-center justify-center text-sm text-gray-400 px-6 text-center">
-								Start editing — your interactive content will preview here.
+								{ __( 'Start editing — your interactive content will preview here.' ) }
 							</div>
 						) }
 					</Card>
-					<p className="text-xs text-gray-400 mt-2 px-1">Changes save automatically and refresh the preview.</p>
+					<p className="text-xs text-gray-400 mt-2 px-1">{ __( 'Changes save automatically and refresh the preview.' ) }</p>
 				</div>
 			</div>
 

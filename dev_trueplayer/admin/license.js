@@ -1,3 +1,5 @@
+import { __sprintf } from '@Utils/translation';
+
 /**
  * StoreEngine licensing SDK bridge for the admin.
  *
@@ -68,7 +70,7 @@ async function call( endpoint, { method = 'GET', body, params } = {} ) {
 		// people to support. WP_Error serialises as { code, message, data }, and
 		// the code is what lets the caller branch: `license-activation-limit-reached`
 		// arrives as a 409 whose data carries the customer's other active sites.
-		const err = new Error( ( data && data.message ) || `Request failed (${ res.status })` );
+		const err = new Error( ( data && data.message ) || __sprintf( 'Request failed (%d)', res.status ) );
 		err.status = res.status;
 		err.code = ( data && data.code ) || '';
 		err.data = ( data && data.data ) || {};

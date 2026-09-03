@@ -1,4 +1,5 @@
 import { rest } from '@Utils/rest';
+import { __ } from '@Utils/translation';
 
 export const api = {
 	listVideos: () => rest.get( 'videos' ),
@@ -67,6 +68,9 @@ export const api = {
 	// LMS course/lesson options (pro)
 	getLmsOptions: () => rest.get( 'lms/options' ),
 
+	// QuizPress quiz options, for the Gating tab's "use a QuizPress quiz" picker (pro)
+	getQuizpressOptions: () => rest.get( 'quizpress/options' ),
+
 	// H5P engine (Interactive content)
 	h5pContentTypes: () => rest.get( 'h5p/content-types' ),
 	h5pItems: () => rest.get( 'h5p/items' ),
@@ -106,7 +110,7 @@ export const api = {
 		} );
 		const json = await res.json().catch( () => null );
 		if ( ! json || ! json.success ) {
-			throw new Error( ( json && json.data && json.data.message ) || 'Could not change the addon status.' );
+			throw new Error( ( json && json.data && json.data.message ) || __( 'Could not change the addon status.' ) );
 		}
 		return json.data;
 	},

@@ -36,6 +36,17 @@ const config = {
 	// them — and the next player mount dies with a ChunkLoadError. The
 	// once-before-build clean still runs, so a fresh build stays tidy.
 	plugins: [ ...defaultConfig.plugins, new CleanWebpackPlugin( { cleanStaleWebpackAssets: false } ) ],
+	module: {
+		...defaultConfig.module,
+		rules: [
+			...defaultConfig.module.rules,
+			// The admin "What's New" panel imports changelog.md as a plain string
+			// to parse — webpack 5's built-in asset/source type (no extra loader
+			// dependency needed, unlike QuizPress's own raw-loader-based version
+			// of this same panel).
+			{ test: /\.md$/, type: 'asset/source' },
+		],
+	},
 	resolve: {
 		...defaultConfig.resolve,
 		extensions: [ '.js', '.jsx', '.ts', '.tsx', '.json', '...' ],

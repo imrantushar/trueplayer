@@ -29,27 +29,44 @@ class GradingService {
 	 * Grade a submission for a checkpoint (`gate_id` = "checkpoint:<id>") or the
 	 * final quiz (`gate_id` = "final").
 	 *
-	 * @param array $answers Map of questionId => submitted answer.
+	 * @param array $answers              Map of questionId => submitted answer.
+	 * @param int   $quizpress_attempt_id The just-finished QuizPress attempt to verify,
+	 *                                    for a QuizPress-sourced quiz (ignored otherwise).
+	 * @param bool  $preview              Admin editor's live preview: still reads the
+	 *                                    real QuizPress result (there's no local answer
+	 *                                    key to fall back to for a QuizPress quiz, unlike
+	 *                                    the native path), but skips every side effect —
+	 *                                    no attempt logged, no lock, no event emitted —
+	 *                                    so testing a checkpoint repeatedly in preview
+	 *                                    can't lock the video or spam real webhooks.
 	 * @return array Sanitized verdict (never includes correct answers).
 	 */
-	public static function grade( $video_id, Subject $subject, $gate_id, array $answers ) {
+	public static function grade( $video_id, Subject $subject, $gate_id, array $answers, $quizpress_attempt_id = 0, $preview = false ) {
 		// Quiz-gating is a pro feature.
 		if ( ! \TruePlayer\Pro::active() ) {
 			return [ 'error' => 'pro_required' ];
 		}
-		$gating    = ProgressService::gating_config( $video_id );
-		$quiz      = self::find_quiz( $gating, $gate_id );
-		$is_final  = ( 'final' === $gate_id );
+		$gating   = ProgressService::gating_config( $video_id );
+		$quiz     = self::find_quiz( $gating, $gate_id );
+		$is_final = ( 'final' === $gate_id );
 
-		if ( ! $quiz || empty( $quiz['questions'] ) ) {
+		if ( ! $quiz ) {
 			return [ 'error' => 'quiz_not_found' ];
 		}
 
-		$questions   = $quiz['questions'];
-		$pass_pct    = isset( $quiz['passPercent'] ) ? (float) $quiz['passPercent'] : 70;
-		$total       = count( $questions );
-		$correct     = 0;
-		$per_q       = [];
+		if ( 'quizpress' === ( $quiz['source'] ?? 'native' ) ) {
+			return self::grade_quizpress( $video_id, $subject, $gate_id, $is_final, $gating, $quiz, (int) $quizpress_attempt_id, (bool) $preview );
+		}
+
+		if ( empty( $quiz['questions'] ) ) {
+			return [ 'error' => 'quiz_not_found' ];
+		}
+
+		$questions = $quiz['questions'];
+		$pass_pct  = isset( $quiz['passPercent'] ) ? (float) $quiz['passPercent'] : 70;
+		$total     = count( $questions );
+		$correct   = 0;
+		$per_q     = [];
 
 		foreach ( $questions as $q ) {
 			$qid   = $q['id'] ?? '';
@@ -62,9 +79,81 @@ class GradingService {
 		$score  = $total > 0 ? round( $correct / $total * 100, 2 ) : 0;
 		$passed = $score >= $pass_pct;
 
-		// Attempt bookkeeping.
-		$row       = ProgressService::get_row( $video_id, $subject );
-		$attempts  = (int) ( $row['attempts'] ?? 0 );
+		return self::record_verdict( $video_id, $subject, $gate_id, $is_final, $gating, $score, $passed, $answers, $per_q );
+	}
+
+	/**
+	 * QuizPress-sourced checkpoint/final quiz: QuizPress owns authoring,
+	 * question types and grading — TruePlayer only reads the one attempt the
+	 * viewer just finished (identified by id, not "whatever's most recent")
+	 * and runs its real result through the exact same attempt/lock/event
+	 * pipeline as a native quiz. Never trusts the browser's
+	 * `quizpress:attempt_finished` event, or the attempt id itself, as the
+	 * verdict — the id only says which row to go verify server-side; the
+	 * score and status are read back from that row, and it's confirmed to
+	 * actually belong to this quiz and this subject before any of it is
+	 * trusted (see Academy LMS's own QuizPress integration for the same
+	 * total_marks/earned_marks -> percentage read this mirrors).
+	 */
+	private static function grade_quizpress( $video_id, Subject $subject, $gate_id, $is_final, array $gating, array $quiz, $quizpress_attempt_id = 0, $preview = false ) {
+		$quizpress_id = (int) ( $quiz['quizpressId'] ?? 0 );
+		if ( ! $quizpress_id || ! class_exists( '\\QuizPress\\API\\Query\\Attempts' ) ) {
+			return [ 'error' => 'quizpress_unavailable' ];
+		}
+
+		// Reliable per-person tracking needs a real user id — guests have none
+		// for QuizPress to key attempts on.
+		if ( 'user' !== $subject->type ) {
+			return [ 'error' => 'login_required' ];
+		}
+
+		$attempt = $quizpress_attempt_id ? \QuizPress\API\Query\Attempts::get_quiz_attempt( (int) $quizpress_attempt_id ) : null;
+		if ( ! $attempt || (int) $attempt->quiz_id !== $quizpress_id || (int) $attempt->user_id !== (int) $subject->id ) {
+			return [ 'error' => 'quiz_not_completed' ];
+		}
+
+		$status = (string) $attempt->attempt_status;
+
+		// A quiz containing a manually-reviewed question type (short answer,
+		// paragraph, date, number) always finishes 'pending' regardless of
+		// score — QuizPress won't compute passed/failed until an admin reviews
+		// it in Quiz Insights. Treating 'pending' as a fail would silently
+		// consume an attempt and could lock the video before a human ever
+		// looks at it, so it gets its own outcome: no attempt consumed, no
+		// lock — the gate just re-checks next time and resolves once reviewed.
+		if ( 'pending' === $status ) {
+			return [ 'passed' => false, 'pending' => true ];
+		}
+
+		$passed       = ( 'passed' === $status );
+		$total_marks  = (float) $attempt->total_marks;
+		$earned_marks = (float) $attempt->earned_marks;
+		$score        = $total_marks > 0 ? round( $earned_marks / $total_marks * 100, 2 ) : 0;
+
+		if ( $preview ) {
+			return [ 'passed' => $passed, 'score' => $score, 'preview' => true ];
+		}
+
+		return self::record_verdict(
+			$video_id,
+			$subject,
+			$gate_id,
+			$is_final,
+			$gating,
+			$score,
+			$passed,
+			[ 'quizpressId' => $quizpress_id, 'quizpressAttemptId' => $quizpress_attempt_id ],
+			[]
+		);
+	}
+
+	/**
+	 * Shared attempt bookkeeping + lock enforcement + event emission for a
+	 * graded verdict, regardless of where the score came from.
+	 */
+	private static function record_verdict( $video_id, Subject $subject, $gate_id, $is_final, array $gating, $score, $passed, array $answers, array $per_q ) {
+		$row        = ProgressService::get_row( $video_id, $subject );
+		$attempts   = (int) ( $row['attempts'] ?? 0 );
 		$attempt_no = $attempts + 1;
 
 		self::log_attempt( $video_id, $subject, $gate_id, $answers, $score, $passed, $attempt_no );
@@ -85,9 +174,9 @@ class GradingService {
 				Events::emit( 'checkpoint.passed', ProgressService::event_payload( $video_id, $subject, $payload_extra ) );
 			}
 			return [
-				'passed'    => true,
-				'score'     => $score,
-				'completed' => $is_final,
+				'passed'      => true,
+				'score'       => $score,
+				'completed'   => $is_final,
 				'perQuestion' => $per_q,
 			];
 		}

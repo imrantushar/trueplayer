@@ -1,3 +1,5 @@
+import { __ } from '@Utils/translation';
+
 /**
  * Grab a still frame out of a video file, in the browser, so a self-hosted
  * upload gets a poster of its own.
@@ -71,10 +73,10 @@ function isCrossOrigin( url ) {
 function readError( err ) {
 	if ( err && 'SecurityError' === err.name ) {
 		return new Error(
-			'That video is served from another domain that doesn’t allow reading its frames. Upload the file to your media library, or choose a poster image yourself.'
+			__( 'That video is served from another domain that doesn’t allow reading its frames. Upload the file to your media library, or choose a poster image yourself.' )
 		);
 	}
-	return err instanceof Error ? err : new Error( 'Could not read a frame from this video.' );
+	return err instanceof Error ? err : new Error( __( 'Could not read a frame from this video.' ) );
 }
 
 /**
@@ -107,10 +109,10 @@ function loadVideo( url ) {
 		const ok = () => done( resolve, video );
 		const fail = () => done( reject, new Error(
 			isCrossOrigin( url )
-				? 'That video is on another domain and could not be read. Its host has to allow cross-origin requests, or the file can be uploaded to this site’s media library instead.'
-				: 'This video file could not be loaded.'
+				? __( 'That video is on another domain and could not be read. Its host has to allow cross-origin requests, or the file can be uploaded to this site’s media library instead.' )
+				: __( 'This video file could not be loaded.' )
 		) );
-		const timer = setTimeout( () => done( reject, new Error( 'The video took too long to load. A very large file over a slow connection can outrun this — try again, or set a poster image yourself.' ) ), METADATA_TIMEOUT );
+		const timer = setTimeout( () => done( reject, new Error( __( 'The video took too long to load. A very large file over a slow connection can outrun this — try again, or set a poster image yourself.' ) ) ), METADATA_TIMEOUT );
 
 		video.addEventListener( 'loadedmetadata', ok );
 		video.addEventListener( 'error', fail );
@@ -143,10 +145,10 @@ function seek( video, time ) {
 			fn( arg );
 		};
 		const ok = () => done( resolve );
-		const fail = () => done( reject, new Error( 'Could not seek this video.' ) );
+		const fail = () => done( reject, new Error( __( 'Could not seek this video.' ) ) );
 		// Seeking needs the server to answer a byte-range request; a host that
 		// serves uploads without range support never reaches the frame.
-		const timer = setTimeout( () => done( reject, new Error( 'Could not read a frame from this video — the server may not support range requests for media files.' ) ), SEEK_TIMEOUT );
+		const timer = setTimeout( () => done( reject, new Error( __( 'Could not read a frame from this video — the server may not support range requests for media files.' ) ) ), SEEK_TIMEOUT );
 
 		video.addEventListener( settles, ok );
 		video.addEventListener( 'error', fail );
@@ -161,7 +163,7 @@ function drawFrame( video, maxWidth ) {
 	const w = video.videoWidth;
 	const h = video.videoHeight;
 	if ( ! w || ! h ) {
-		throw new Error( 'This file has no picture to capture — it may be audio only.' );
+		throw new Error( __( 'This file has no picture to capture — it may be audio only.' ) );
 	}
 	const scale = Math.min( 1, maxWidth / w );
 	const canvas = document.createElement( 'canvas' );
@@ -198,7 +200,7 @@ function isFlat( canvas ) {
 function toJpeg( canvas, quality ) {
 	return new Promise( ( resolve, reject ) => {
 		canvas.toBlob(
-			( blob ) => ( blob ? resolve( blob ) : reject( new Error( 'Could not encode the captured frame.' ) ) ),
+			( blob ) => ( blob ? resolve( blob ) : reject( new Error( __( 'Could not encode the captured frame.' ) ) ) ),
 			'image/jpeg',
 			quality
 		);

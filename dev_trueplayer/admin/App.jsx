@@ -8,6 +8,7 @@ import Dashboard from './screens/Dashboard';
 import Header from './components/Header';
 import { Button, Modal } from './components/UI';
 import { parseRoute, routeUrl, PAGE_OF } from './nav';
+import { __ } from '@Utils/translation';
 
 export default function App() {
 	const [ route, setRoute ] = useState( () => parseRoute() );
@@ -146,20 +147,20 @@ export default function App() {
 		// edited inside the Library screen itself and come back through
 		// editState.onBack, which keeps its own filter — so the crumb names the
 		// filter it actually returns to.
-		const toMedia = { label: 'Media', onClick: () => go( 'library', { kind: 'media' } ) };
+		const toMedia = { label: __( 'Media' ), onClick: () => go( 'library', { kind: 'media' } ) };
 		switch ( name ) {
-			case 'dashboard': return [ { label: 'Dashboard' } ];
+			case 'dashboard': return [ { label: __( 'Dashboard' ) } ];
 			case 'library': return editState
-				? [ { label: 'Media', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
-				: [ { label: 'Media' } ];
+				? [ { label: __( 'Media' ), onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
+				: [ { label: __( 'Media' ) } ];
 			// Not editable: the title is a field in the editor's Source step now,
 			// so the crumb is purely where-you-are, like every other crumb.
 			case 'editor': return [ toMedia, { label: editState?.title || '' } ];
-			case 'analytics': return [ toMedia, { label: 'Analytics' } ];
+			case 'analytics': return [ toMedia, { label: __( 'Analytics' ) } ];
 			case 'presets': return editState
-				? [ { label: 'Presets', onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
-				: [ { label: 'Presets' } ];
-			case 'settings': return [ { label: 'Settings' } ];
+				? [ { label: __( 'Presets' ), onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
+				: [ { label: __( 'Presets' ) } ];
+			case 'settings': return [ { label: __( 'Settings' ) } ];
 			default: return [];
 		}
 	};
@@ -173,8 +174,20 @@ export default function App() {
 
 			<div className="flex flex-1 min-h-0">
 				{ route.name === 'editor' ? (
-					// The editor renders its own contextual sidebar (its steps).
-					<Editor id={ route.id } onEditState={ setEditState } />
+					// The editor renders its own contextual sidebar (its steps). The
+					// active step/sub-step ride in the URL too — replaceState, not
+					// push, same reasoning as Settings below — so a reload lands back
+					// on the step the author was on instead of Source.
+					<Editor
+						id={ route.id }
+						tab={ route.tab }
+						sub={ route.sub }
+						onTabChange={ ( tab, sub ) => {
+							window.history.replaceState( {}, '', routeUrl( 'editor', { id: route.id, tab, sub } ) );
+							setRoute( ( r ) => ( { ...r, tab, sub } ) );
+						} }
+						onEditState={ setEditState }
+					/>
 				) : (
 					<main className="flex-1 min-w-0">
 						<div className="max-w-[1250px] mx-auto px-8 py-8">
@@ -214,16 +227,16 @@ export default function App() {
 
 			{ confirmNav && (
 				<Modal
-					title="Unsaved changes"
+					title={ __( 'Unsaved changes' ) }
 					onClose={ () => setConfirmNav( null ) }
 					footer={
 						<>
-							<Button variant="ghost" onClick={ () => setConfirmNav( null ) }>Keep editing</Button>
-							<Button variant="danger" onClick={ () => { const run = confirmNav; setConfirmNav( null ); run(); } }>Discard changes</Button>
+							<Button variant="ghost" onClick={ () => setConfirmNav( null ) }>{ __( 'Keep editing' ) }</Button>
+							<Button variant="danger" onClick={ () => { const run = confirmNav; setConfirmNav( null ); run(); } }>{ __( 'Discard changes' ) }</Button>
 						</>
 					}
 				>
-					You have unsaved changes. If you leave now, they’ll be lost.
+					{ __( 'You have unsaved changes. If you leave now, they’ll be lost.' ) }
 				</Modal>
 			) }
 		</div>

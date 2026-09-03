@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef, useState } from '@wordpress/element';
+import { createInterpolateElement, useLayoutEffect, useRef, useState } from '@wordpress/element';
 import Player from '@Player/Player';
 import { Card } from '../../components/UI';
 import { hasVideoSource, sourceKey } from '../../utils/videoSource';
 import { withDerivedPoster } from '../../utils/poster';
 import { applyPreset } from '../../utils/preset';
+import { __ } from '@Utils/translation';
 // NOTE: the player CSS (style-frontend.css) is enqueued on admin pages by PHP.
 // Do NOT import it here — sharing that CSS module across the frontend + admin
 // entries makes webpack merge it into style-backend.css and stop emitting
@@ -88,18 +89,21 @@ export default function PreviewPanel( { id, config, presets = [], onDuration, pr
 	return (
 		<Card className="p-4">
 			<div className="flex items-center justify-between mb-2">
-				<span className="text-xs font-semibold uppercase tracking-wide text-gray-400">Live preview</span>
+				<span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{ __( 'Live preview' ) }</span>
 				<button
 					className="inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-xs font-medium text-ink hover:bg-gray-100 transition-colors"
 					onClick={ () => setBump( ( b ) => b + 1 ) }
 				>
-					<span aria-hidden="true">↻</span> Reload
+					<span aria-hidden="true">↻</span> { __( 'Reload' ) }
 				</button>
 			</div>
 
 			{ ! hasSource ? (
 				<div className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-gray-400 bg-white">
-					Add a video under <strong>Source</strong> to preview it.
+					{ createInterpolateElement(
+						__( 'Add a video under <strong>Source</strong> to preview it.' ),
+						{ strong: <strong /> }
+					) }
 				</div>
 			) : (
 				<div ref={ frameRef } style={ { height: height || undefined } } className="overflow-hidden">

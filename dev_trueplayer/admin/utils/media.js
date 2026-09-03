@@ -1,3 +1,5 @@
+import { __ } from '@Utils/translation';
+
 /**
  * Open the WordPress media library and return the chosen attachment URL.
  * Shared by the source (video/poster) and appearance (logo) pickers.
@@ -10,7 +12,7 @@ export function pickMedia( type, cb ) {
 		return;
 	}
 	const frame = window.wp.media( {
-		title: 'Select media',
+		title: __( 'Select media' ),
 		library: { type },
 		multiple: false,
 	} );

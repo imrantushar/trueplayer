@@ -39,7 +39,15 @@ export function parseRoute() {
 
 	if ( page === SLUG + '-videos' ) {
 		if ( action === 'edit' && id ) {
-			return { name: 'editor', id };
+			// The step + sub-step ride in the URL too, so a reload (or a shared
+			// link) keeps the author where they were instead of bouncing back to
+			// Source — same reasoning as the Settings tab below. Editor.jsx owns
+			// the actual set of valid keys (TABS / each tab's subs) and falls back
+			// to its own defaults for anything it doesn't recognize, so nothing
+			// here needs to duplicate that list.
+			const tab = q.get( 'tab' ) || '';
+			const sub = q.get( 'sub' ) || '';
+			return { name: 'editor', id, tab, sub };
 		}
 		if ( action === 'analytics' && id ) {
 			return { name: 'analytics', id };
@@ -70,6 +78,12 @@ export function routeUrl( name, params = {} ) {
 	const q = new URLSearchParams( { page } );
 	if ( name === 'editor' ) {
 		q.set( 'action', 'edit' );
+		if ( params.tab ) {
+			q.set( 'tab', params.tab );
+		}
+		if ( params.sub ) {
+			q.set( 'sub', params.sub );
+		}
 	}
 	if ( name === 'analytics' ) {
 		q.set( 'action', 'analytics' );

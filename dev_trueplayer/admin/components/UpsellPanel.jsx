@@ -1,5 +1,6 @@
 import { Card, Button, Badge } from './UI';
 import { Icon } from './icons';
+import { __ } from '@Utils/translation';
 
 /**
  * Shown in place of a pro-only screen/tab when TruePlayer Pro isn't installed.
@@ -14,7 +15,7 @@ export default function UpsellPanel( { title, features = [] } ) {
 		<Card className="p-8 max-w-xl mx-auto text-center">
 			<Badge tone="brand">TruePlayer Pro</Badge>
 			<h3 className="text-lg font-semibold text-ink mt-3 mb-1">{ title }</h3>
-			<p className="text-sm text-gray-500 mb-4">This is a Pro feature. Unlock the intelligence layer of TruePlayer.</p>
+			<p className="text-sm text-gray-500 mb-4">{ __( 'This is a Pro feature. Unlock the intelligence layer of TruePlayer.' ) }</p>
 			{ features.length > 0 && (
 				<ul className="text-sm text-gray-600 text-left inline-block mb-5 space-y-1">
 					{ features.map( ( f ) => (
@@ -24,7 +25,7 @@ export default function UpsellPanel( { title, features = [] } ) {
 			) }
 			<div className="flex gap-2 justify-center">
 				<a href={ purchase } target="_blank" rel="noreferrer">
-					<Button>Upgrade to Pro</Button>
+					<Button>{ __( 'Upgrade to Pro' ) }</Button>
 				</a>
 			</div>
 		</Card>

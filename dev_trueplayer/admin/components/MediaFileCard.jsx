@@ -1,5 +1,6 @@
 import { Button } from './UI';
 import { pickMedia } from '../utils/media';
+import { __ } from '@Utils/translation';
 
 /**
  * The chosen media file, shown as a described row rather than a bare filename.
@@ -15,9 +16,9 @@ import { pickMedia } from '../utils/media';
 
 /** Where a source's file lives, in the author's terms. */
 const ORIGIN = {
-	self: 'Media Library',
-	url: 'External URL',
-	bunnyStorage: 'Bunny Storage',
+	self: __( 'Media Library' ),
+	url: __( 'External URL' ),
+	bunnyStorage: __( 'Bunny Storage' ),
 };
 
 /** The file's name, from a media-library URL or a typed one. */
@@ -53,10 +54,10 @@ export default function MediaFileCard( { source, onPick, onRemove, audio = false
 					</svg>
 				</span>
 				<span className="text-sm font-medium text-ink group-hover:text-brand-600 transition-colors">
-					Choose { audio ? 'an audio file' : 'a video' }
+					{ audio ? __( 'Choose an audio file' ) : __( 'Choose a video' ) }
 				</span>
 				<span className="text-xs text-muted">
-					{ audio ? 'MP3, M4A, OGG or WAV from your media library.' : 'MP4, WebM or MOV from your media library.' }
+					{ audio ? __( 'MP3, M4A, OGG or WAV from your media library.' ) : __( 'MP4, WebM or MOV from your media library.' ) }
 				</span>
 			</button>
 		);
@@ -90,8 +91,8 @@ export default function MediaFileCard( { source, onPick, onRemove, audio = false
 			</div>
 
 			<div className="flex items-center gap-1.5 shrink-0">
-				<Button variant="ghost" size="sm" onClick={ choose }>Replace</Button>
-				<Button variant="dangerClear" size="sm" onClick={ onRemove }>Remove</Button>
+				<Button variant="ghost" size="sm" onClick={ choose }>{ __( 'Replace' ) }</Button>
+				<Button variant="dangerClear" size="sm" onClick={ onRemove }>{ __( 'Remove' ) }</Button>
 			</div>
 		</div>
 	);

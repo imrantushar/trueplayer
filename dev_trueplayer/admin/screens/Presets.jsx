@@ -6,6 +6,7 @@ import { isPro } from '../pro';
 import { PRESET_TEMPLATES, templateConfig } from '../data/preset-templates';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import PreviewPanel from './editor/PreviewPanel';
+import { __ } from '@Utils/translation';
 
 // A built-in sample so a preset can be previewed even before any video exists.
 const SAMPLE_SOURCE = { type: 'url', src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', poster: '' };
@@ -81,12 +82,12 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 			{ /* Save lives in the topbar (portaled) — same pattern as the video editor. */ }
 			{ toolbarSlot && createPortal(
 				<>
-					{ saved && <span className="inline-flex items-center gap-1 text-sm text-green-600"><Icon name="checkmark" className="w-4 h-4" /> Saved</span> }
-					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+					{ saved && <span className="inline-flex items-center gap-1 text-sm text-green-600"><Icon name="checkmark" className="w-4 h-4" /> { __( 'Saved' ) }</span> }
+					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? __( 'Saving…' ) : __( 'Save' ) }</Button>
 				</>,
 				toolbarSlot
 			) }
-			<p className="text-sm text-muted mb-4">These styles &amp; behaviours apply to any video that uses this preset. Individual videos can still override anything.</p>
+			<p className="text-sm text-muted mb-4">{ __( 'These styles & behaviours apply to any video that uses this preset. Individual videos can still override anything.' ) }</p>
 
 			<div className="flex flex-col xl:flex-row items-start gap-6 mt-6">
 				<div className="flex-1 min-w-0">
@@ -98,7 +99,7 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 					<Card className="p-4">
 						{ videos.length > 0 && (
 							<div className="flex items-center gap-2 mb-3">
-								<span className="text-xs text-muted whitespace-nowrap">Preview with</span>
+								<span className="text-xs text-muted whitespace-nowrap">{ __( 'Preview with' ) }</span>
 								<Select value={ previewId } onChange={ ( e ) => setPreviewId( parseInt( e.target.value, 10 ) ) } className="h-9 text-[13px]">
 									{ videos.map( ( v ) => <option key={ v.id } value={ v.id }>{ v.title }</option> ) }
 								</Select>
@@ -126,7 +127,7 @@ export default function Presets( { onEditState } ) {
 	const create = async () => {
 		setBusy( true );
 		try {
-			const label = PRESET_TEMPLATES.find( ( t ) => t.key === template )?.label || 'Untitled preset';
+			const label = PRESET_TEMPLATES.find( ( t ) => t.key === template )?.label || __( 'Untitled preset' );
 			const p = await api.createPreset( title || label, template === 'blank' ? {} : templateConfig( template ) );
 			setTitle( '' );
 			setAdding( false );
@@ -138,7 +139,7 @@ export default function Presets( { onEditState } ) {
 	};
 	const remove = async ( id ) => {
 		// eslint-disable-next-line no-alert
-		if ( ! window.confirm( 'Delete this preset? Videos using it fall back to defaults.' ) ) {
+		if ( ! window.confirm( __( 'Delete this preset? Videos using it fall back to defaults.' ) ) ) {
 			return;
 		}
 		await api.deletePreset( id );
@@ -153,32 +154,32 @@ export default function Presets( { onEditState } ) {
 		<div>
 			<div className="flex items-center justify-between mb-6">
 				<div>
-					<h1 className="text-2xl font-bold text-ink">Player presets</h1>
-					<p className="text-sm text-muted">Reusable styles &amp; behaviour — brand once, use everywhere.</p>
+					<h1 className="text-2xl font-bold text-ink">{ __( 'Player presets' ) }</h1>
+					<p className="text-sm text-muted">{ __( 'Reusable styles & behaviour — brand once, use everywhere.' ) }</p>
 				</div>
-				<Button onClick={ () => { setTitle( '' ); setAdding( true ); } }><Icon name="plus" className="w-4 h-4" /> Add preset</Button>
+				<Button onClick={ () => { setTitle( '' ); setAdding( true ); } }><Icon name="plus" className="w-4 h-4" /> { __( 'Add preset' ) }</Button>
 			</div>
 
 			{ adding && (
 				<Modal
-					title="Create preset"
+					title={ __( 'Create preset' ) }
 					onClose={ () => setAdding( false ) }
 					footer={
 						<>
-							<Button variant="ghost" onClick={ () => setAdding( false ) }>Cancel</Button>
-							<Button onClick={ create } disabled={ busy }>{ busy ? 'Creating…' : 'Create preset' }</Button>
+							<Button variant="ghost" onClick={ () => setAdding( false ) }>{ __( 'Cancel' ) }</Button>
+							<Button onClick={ create } disabled={ busy }>{ busy ? __( 'Creating…' ) : __( 'Create preset' ) }</Button>
 						</>
 					}
 				>
-					<Field label="Preset name">
-						<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } placeholder="e.g. Brand — dark" />
+					<Field label={ __( 'Preset name' ) }>
+						<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } placeholder={ __( 'e.g. Brand — dark' ) } />
 					</Field>
-					<Field label="Start from" hint="A predefined look to begin with — you can change everything after.">
+					<Field label={ __( 'Start from' ) } hint={ __( 'A predefined look to begin with — you can change everything after.' ) }>
 						<Select value={ template } onChange={ ( e ) => setTemplate( e.target.value ) }>
-							<option value="blank">Blank (defaults)</option>
+							<option value="blank">{ __( 'Blank (defaults)' ) }</option>
 							{ PRESET_TEMPLATES.map( ( t ) => (
 								<option key={ t.key } value={ t.key } disabled={ t.pro && ! isPro() }>
-									{ t.label }{ t.pro && ! isPro() ? ' — needs Pro' : '' }
+									{ t.label }{ t.pro && ! isPro() ? __( ' — needs Pro' ) : '' }
 								</option>
 							) ) }
 						</Select>
@@ -186,12 +187,12 @@ export default function Presets( { onEditState } ) {
 				</Modal>
 			) }
 
-			{ presets === null && <p className="text-gray-400">Loading…</p> }
+			{ presets === null && <p className="text-gray-400">{ __( 'Loading…' ) }</p> }
 			{ presets && presets.length === 0 && (
 				<Card className="p-12 text-center border-dashed">
 					<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="presets" className="w-6 h-6" /></div>
-					<p className="font-semibold text-gray-900">No presets yet</p>
-					<p className="text-sm text-gray-500">Create one to reuse a consistent player style across videos.</p>
+					<p className="font-semibold text-gray-900">{ __( 'No presets yet' ) }</p>
+					<p className="text-sm text-gray-500">{ __( 'Create one to reuse a consistent player style across videos.' ) }</p>
 				</Card>
 			) }
 
@@ -203,11 +204,11 @@ export default function Presets( { onEditState } ) {
 							<span className="w-10 h-10 rounded-lg border border-line shrink-0" style={ { background: accent } } />
 							<div className="flex-1 min-w-0">
 								<div className="font-semibold text-ink truncate">{ p.title }</div>
-								<div className="text-xs text-gray-500">Player preset</div>
+								<div className="text-xs text-gray-500">{ __( 'Player preset' ) }</div>
 							</div>
 							<OptionMenu items={ [
-								{ label: 'Edit', icon: 'edit', onClick: () => setEditing( p ) },
-								{ label: 'Delete', icon: 'trash', danger: true, onClick: () => remove( p.id ) },
+								{ label: __( 'Edit' ), icon: 'edit', onClick: () => setEditing( p ) },
+								{ label: __( 'Delete' ), icon: 'trash', danger: true, onClick: () => remove( p.id ) },
 							] } />
 						</Card>
 					);

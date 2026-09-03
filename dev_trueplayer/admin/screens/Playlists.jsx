@@ -3,6 +3,7 @@ import { api } from '../api';
 import { Icon } from '../components/icons';
 import { Card, Button, Input, Select, Toggle, Badge, Field, sourceMeta } from '../components/UI';
 import { BsTrash } from 'react-icons/bs';
+import { __, __sprintf, _nSprintf } from '@Utils/translation';
 
 // navigator.clipboard.writeText needs a secure context; fall back to the
 // classic textarea + execCommand trick (e.g. plain-http local dev sites).
@@ -127,33 +128,33 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved, onEditState
 			{ /* Save lives in the topbar (portaled) — same pattern as the video editor. */ }
 			{ toolbarSlot && createPortal(
 				<>
-					{ saved && <span className="inline-flex items-center gap-1 text-sm text-green-600"><Icon name="checkmark" className="w-4 h-4" /> Saved</span> }
-					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? 'Saving…' : 'Save' }</Button>
+					{ saved && <span className="inline-flex items-center gap-1 text-sm text-green-600"><Icon name="checkmark" className="w-4 h-4" /> { __( 'Saved' ) }</span> }
+					<Button onClick={ save } disabled={ saving || ! dirty }>{ saving ? __( 'Saving…' ) : __( 'Save' ) }</Button>
 				</>,
 				toolbarSlot
 			) }
 			<div className="grid md:grid-cols-2 gap-6">
 				<Card className="p-6">
-					<h3 className="font-semibold text-ink !mb-5 !pb-4 border-b border-solid border-line">Playlist settings</h3>
-					<Field label="Layout">
+					<h3 className="font-semibold text-ink !mb-5 !pb-4 border-b border-solid border-line">{ __( 'Playlist settings' ) }</h3>
+					<Field label={ __( 'Layout' ) }>
 						<Select value={ config.layout } onChange={ ( e ) => set( { layout: e.target.value } ) }>
-							<option value="sidebar">Sidebar (player + list)</option>
-							<option value="grid">Grid (cards)</option>
+							<option value="sidebar">{ __( 'Sidebar (player + list)' ) }</option>
+							<option value="grid">{ __( 'Grid (cards)' ) }</option>
 						</Select>
 					</Field>
-					<Toggle checked={ config.autoplayNext } onChange={ ( v ) => set( { autoplayNext: v } ) } label="Autoplay the next video" className="mb-6" />
-					<Toggle checked={ config.showTitles } onChange={ ( v ) => set( { showTitles: v } ) } label="Show video titles" />
+					<Toggle checked={ config.autoplayNext } onChange={ ( v ) => set( { autoplayNext: v } ) } label={ __( 'Autoplay the next video' ) } className="mb-6" />
+					<Toggle checked={ config.showTitles } onChange={ ( v ) => set( { showTitles: v } ) } label={ __( 'Show video titles' ) } />
 					<div className="mt-4 pt-4 border-t border-line flex items-center justify-between gap-4">
-						<p className="text-[13px] font-medium text-ink mb-1">Embed</p>
-						<code className="text-xs bg-gray-100 rounded px-2 py-1 cursor-pointer hover:text-brand-500" onClick={ copyShortcode } title="Copy shortcode">
-							{ copied ? <span className="inline-flex items-center gap-1"><Icon name="checkmark" className="w-3.5 h-3.5" /> Copied</span> : playlist.shortcode }
+						<p className="text-[13px] font-medium text-ink mb-1">{ __( 'Embed' ) }</p>
+						<code className="text-xs bg-gray-100 rounded px-2 py-1 cursor-pointer hover:text-brand-500" onClick={ copyShortcode } title={ __( 'Copy shortcode' ) }>
+							{ copied ? <span className="inline-flex items-center gap-1"><Icon name="checkmark" className="w-3.5 h-3.5" /> { __( 'Copied' ) }</span> : playlist.shortcode }
 						</code>
 					</div>
 				</Card>
 
 				<Card className="p-6">
-					<h3 className="font-semibold text-ink !mb-5 !pb-4 border-b border-solid border-line">Media in this playlist</h3>
-					<p className="text-sm text-gray-500 mb-3">{ selected.length } selected · drag to reorder.</p>
+					<h3 className="font-semibold text-ink !mb-5 !pb-4 border-b border-solid border-line">{ __( 'Media in this playlist' ) }</h3>
+					<p className="text-sm text-gray-500 mb-3">{ _nSprintf( '%d selected · drag to reorder.', '%d selected · drag to reorder.', selected.length ) }</p>
 					<div className="space-y-2 mb-4">
 						{ selected.map( ( id, i ) => {
 							const meta = sourceMeta( byId[ id ]?.config?.source || {} );
@@ -167,26 +168,26 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved, onEditState
 									onDragEnd={ () => { setDragIndex( null ); setOverIndex( null ); } }
 									className={ `flex items-center gap-2 border rounded-md p-2 bg-white transition ${ overIndex === i && dragIndex !== i ? 'border-brand-400 ring-2 ring-brand-100' : 'border-line' } ${ dragIndex === i ? 'opacity-50' : '' }` }
 								>
-									<span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 select-none px-0.5" title="Drag to reorder" aria-hidden="true">⠿</span>
+									<span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 select-none px-0.5" title={ __( 'Drag to reorder' ) } aria-hidden="true">⠿</span>
 									<span className="text-xs text-gray-400 w-4 text-center">{ i + 1 }</span>
-									<span className="flex-1 text-sm truncate">{ byId[ id ]?.title || `#${ id }` }</span>
+									<span className="flex-1 text-sm truncate">{ byId[ id ]?.title || __sprintf( '#%d', id ) }</span>
 									<Badge tone={ meta.tone }>{ meta.label }</Badge>
 									<div className="flex">
-										<button className="text-gray-300 hover:text-ink px-1" title="Move up" onClick={ () => move( i, -1 ) }>↑</button>
-										<button className="text-gray-300 hover:text-ink px-1" title="Move down" onClick={ () => move( i, 1 ) }>↓</button>
+										<button className="text-gray-300 hover:text-ink px-1" title={ __( 'Move up' ) } onClick={ () => move( i, -1 ) }>↑</button>
+										<button className="text-gray-300 hover:text-ink px-1" title={ __( 'Move down' ) } onClick={ () => move( i, 1 ) }>↓</button>
 									</div>
 									<Button variant="danger" size="sm" onClick={ () => remove( id ) }><BsTrash /></Button>
 								</div>
 							);
 						} ) }
-						{ selected.length === 0 && <p className="text-sm text-gray-400">No media yet — add one below.</p> }
+						{ selected.length === 0 && <p className="text-sm text-gray-400">{ __( 'No media yet — add one below.' ) }</p> }
 					</div>
 
 					{ ! adding ? (
-						<Button variant="subtle" onClick={ () => { setAdding( true ); setQuery( '' ); } }>+ Add media</Button>
+						<Button variant="subtle" onClick={ () => { setAdding( true ); setQuery( '' ); } }>{ __( '+ Add media' ) }</Button>
 					) : (
 						<div className="border border-line rounded-md p-2">
-							<Input autoFocus placeholder="Search media to add…" value={ query } onChange={ ( e ) => setQuery( e.target.value ) } />
+							<Input autoFocus placeholder={ __( 'Search media to add…' ) } value={ query } onChange={ ( e ) => setQuery( e.target.value ) } />
 							<div className="space-y-1 max-h-56 overflow-y-auto mt-2">
 								{ results.map( ( v ) => {
 									const meta = sourceMeta( v.config?.source || {} );
@@ -199,11 +200,11 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved, onEditState
 									);
 								} ) }
 								{ results.length === 0 && (
-									<p className="text-sm text-gray-400 px-2 py-3">{ available.length === 0 ? 'All media is already in this playlist.' : 'No media matches your search.' }</p>
+									<p className="text-sm text-gray-400 px-2 py-3">{ available.length === 0 ? __( 'All media is already in this playlist.' ) : __( 'No media matches your search.' ) }</p>
 								) }
 							</div>
 							<div className="flex justify-end mt-2 pt-2 border-t border-line">
-								<Button variant="ghost" size="sm" onClick={ () => { setAdding( false ); setQuery( '' ); } }>Done</Button>
+								<Button variant="ghost" size="sm" onClick={ () => { setAdding( false ); setQuery( '' ); } }>{ __( 'Done' ) }</Button>
 							</div>
 						</div>
 					) }

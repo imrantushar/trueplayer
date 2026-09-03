@@ -30,7 +30,7 @@ import {
 	TextControl,
 } from '@wordpress/components';
 import { MediaUpload, MediaUploadCheck } from '@wordpress/block-editor';
-import { __, sprintf } from '@wordpress/i18n';
+import { __, sprintf } from '@Utils/translation';
 import {
 	SOURCE_TYPES,
 	brand,
@@ -88,8 +88,8 @@ export default function VideoModal( { video = null, onClose, onSaved } ) {
 			setError(
 				e.message ||
 					( editing
-						? __( 'That video could not be saved.', 'trueplayer' )
-						: __( 'That video could not be created.', 'trueplayer' ) )
+						? __( 'That video could not be saved.' )
+						: __( 'That video could not be created.' ) )
 			);
 			setBusy( false );
 		}
@@ -106,12 +106,12 @@ export default function VideoModal( { video = null, onClose, onSaved } ) {
 				editing
 					? sprintf(
 							/* translators: %s: product name, e.g. TruePlayer. */
-							__( 'Edit %s media', 'trueplayer' ),
+							__( 'Edit %s media' ),
 							brand()
 					  )
 					: sprintf(
 							/* translators: %s: product name, e.g. TruePlayer. */
-							__( 'Add %s media', 'trueplayer' ),
+							__( 'Add %s media' ),
 							brand()
 					  )
 			}
@@ -131,17 +131,17 @@ export default function VideoModal( { video = null, onClose, onSaved } ) {
 					<TextControl
 						__nextHasNoMarginBottom
 						autoFocus
-						label={ __( 'Name', 'trueplayer' ) }
-						help={ __( 'Shown in your library. You can rename it later.', 'trueplayer' ) }
+						label={ __( 'Name' ) }
+						help={ __( 'Shown in your library. You can rename it later.' ) }
 						value={ title }
 						onChange={ setTitle }
-						placeholder={ __( 'e.g. Lesson 1', 'trueplayer' ) }
+						placeholder={ __( 'e.g. Lesson 1' ) }
 					/>
 				</FlexItem>
 
 				<FlexItem>
 					<RadioControl
-						label={ __( 'Source', 'trueplayer' ) }
+						label={ __( 'Source' ) }
 						selected={ type }
 						options={ SOURCE_TYPES.map( ( t ) => ( { label: t.label, value: t.value } ) ) }
 						onChange={ changeType }
@@ -153,14 +153,14 @@ export default function VideoModal( { video = null, onClose, onSaved } ) {
 						<MediaUploadCheck
 							fallback={
 								<Notice status="warning" isDismissible={ false }>
-									{ __( 'You do not have permission to upload files.', 'trueplayer' ) }
+									{ __( 'You do not have permission to upload files.' ) }
 								</Notice>
 							}
 						>
 							<Flex justify="flex-start" gap={ 3 }>
 								<FlexItem>
 									<MediaUpload
-										title={ __( 'Choose a video', 'trueplayer' ) }
+										title={ __( 'Choose a video' ) }
 										allowedTypes={ [ 'video', 'audio' ] }
 										value={ media?.id }
 										// Open on the library, not the upload tab.
@@ -172,8 +172,8 @@ export default function VideoModal( { video = null, onClose, onSaved } ) {
 										render={ ( { open } ) => (
 											<Button variant="secondary" onClick={ open }>
 												{ src
-													? __( 'Replace file', 'trueplayer' )
-													: __( 'Choose a file', 'trueplayer' ) }
+													? __( 'Replace file' )
+													: __( 'Choose a file' ) }
 											</Button>
 										) }
 									/>
@@ -209,15 +209,13 @@ export default function VideoModal( { video = null, onClose, onSaved } ) {
 				<FlexItem>
 					<p style={ { margin: 0, fontSize: '12px', color: '#757575' } }>
 						{ __(
-							'Bunny.net, Mux and HLS sources — and gating, chapters and appearance — are set up in the full editor.',
-							'trueplayer'
-						) }
+							'Bunny.net, Mux and HLS sources — and gating, chapters and appearance — are set up in the full editor.' ) }
 						{ deepLink && ' ' }
 						{ deepLink && (
 							<a href={ deepLink } target="_blank" rel="noreferrer">
 								{ sprintf(
 									/* translators: %s: product name, e.g. TruePlayer. */
-									__( 'Open %s', 'trueplayer' ),
+									__( 'Open %s' ),
 									brand()
 								) }
 							</a>
@@ -229,7 +227,7 @@ export default function VideoModal( { video = null, onClose, onSaved } ) {
 					<Flex justify="flex-end" gap={ 2 }>
 						<FlexItem>
 							<Button variant="tertiary" onClick={ onClose } disabled={ busy }>
-								{ __( 'Cancel', 'trueplayer' ) }
+								{ __( 'Cancel' ) }
 							</Button>
 						</FlexItem>
 						<FlexItem>
@@ -240,8 +238,8 @@ export default function VideoModal( { video = null, onClose, onSaved } ) {
 								disabled={ ! ready || busy }
 							>
 								{ editing
-									? ( busy ? __( 'Saving…', 'trueplayer' ) : __( 'Save', 'trueplayer' ) )
-									: ( busy ? __( 'Creating…', 'trueplayer' ) : __( 'Create', 'trueplayer' ) ) }
+									? ( busy ? __( 'Saving…' ) : __( 'Save' ) )
+									: ( busy ? __( 'Creating…' ) : __( 'Create' ) ) }
 							</Button>
 						</FlexItem>
 					</Flex>

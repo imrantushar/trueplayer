@@ -3,6 +3,7 @@ import { Button, Modal, Field, Input } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
 import { api } from '../api';
+import { __, __sprintf } from '@Utils/translation';
 
 /**
  * The library's single creation surface. Whatever the caller starts on — a
@@ -15,37 +16,46 @@ import { api } from '../api';
  */
 
 const MEDIA_TYPES = [
-	{ value: 'self', label: 'Self-hosted', hint: 'From your media library' },
-	{ value: 'youtube', label: 'YouTube', hint: 'Paste a video link' },
-	{ value: 'vimeo', label: 'Vimeo', hint: 'Paste a video link' },
-	{ value: 'url', label: 'External URL', hint: 'A direct mp4 / webm file' },
-	{ value: 'bunny', label: 'Bunny.net Stream', hint: 'Signed, private delivery', pro: true },
-	{ value: 'bunnyStorage', label: 'Bunny.net Storage', hint: 'A direct file from your zone', pro: true },
-	{ value: 'mux', label: 'Mux', hint: 'Adaptive streaming', pro: true },
-	{ value: 'hls', label: 'HLS stream', hint: 'An .m3u8 playlist', pro: true },
+	{ value: 'self', label: __( 'Self-hosted' ), hint: __( 'From your media library' ) },
+	{ value: 'youtube', label: __( 'YouTube' ), hint: __( 'Paste a video link' ) },
+	{ value: 'vimeo', label: __( 'Vimeo' ), hint: __( 'Paste a video link' ) },
+	{ value: 'url', label: __( 'External URL' ), hint: __( 'A direct mp4 / webm file' ) },
+	{ value: 'bunny', label: __( 'Bunny.net Stream' ), hint: __( 'Signed, private delivery' ), pro: true },
+	{ value: 'bunnyStorage', label: __( 'Bunny.net Storage' ), hint: __( 'A direct file from your zone' ), pro: true },
+	{ value: 'mux', label: __( 'Mux' ), hint: __( 'Adaptive streaming' ), pro: true },
+	{ value: 'hls', label: __( 'HLS stream' ), hint: __( 'An .m3u8 playlist' ), pro: true },
 ];
 
 // H5P category → picker group label + tile icon.
 const CATEGORIES = [
-	[ 'question', 'Questions', 'help' ],
-	[ 'quiz', 'Quizzes', 'quiz' ],
-	[ 'study', 'Study aids', 'cards' ],
-	[ 'content', 'Content', 'playlist' ],
-	[ 'other', 'Also installed', 'spark' ],
+	[ 'question', __( 'Questions' ), 'help' ],
+	[ 'quiz', __( 'Quizzes' ), 'quiz' ],
+	[ 'study', __( 'Study aids' ), 'cards' ],
+	[ 'content', __( 'Content' ), 'playlist' ],
+	[ 'other', __( 'Also installed' ), 'spark' ],
 ];
 
 const iconFor = ( category ) => ( CATEGORIES.find( ( c ) => c[ 0 ] === category ) || [ , , 'spark' ] )[ 2 ];
 
 const KIND_LABEL = {
-	media: 'Media',
-	playlist: 'Playlist',
-	interactive: 'Interactive',
+	media: __( 'Media' ),
+	playlist: __( 'Playlist' ),
+	interactive: __( 'Interactive' ),
+};
+
+// Written out per kind rather than lower-casing KIND_LABEL into a template:
+// case rules and word order differ by language, so the whole heading has to be
+// one translatable string.
+const KIND_HEADING = {
+	media: __( 'Create media' ),
+	playlist: __( 'Create playlist' ),
+	interactive: __( 'Create interactive' ),
 };
 
 const PLACEHOLDER = {
-	media: 'e.g. Lesson 1',
-	playlist: 'e.g. Onboarding course',
-	interactive: 'e.g. Module 1 knowledge check',
+	media: __( 'e.g. Lesson 1' ),
+	playlist: __( 'e.g. Onboarding course' ),
+	interactive: __( 'e.g. Module 1 knowledge check' ),
 };
 
 export default function CreateModal( { initialKind = 'media', kinds = [ 'media', 'playlist' ], onClose, onSubmit, onError } ) {
@@ -64,7 +74,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 		if ( 'interactive' !== kind || types ) {
 			return;
 		}
-		api.h5pContentTypes().then( setTypes ).catch( ( e ) => onError?.( e.message || 'Failed to load content types.' ) );
+		api.h5pContentTypes().then( setTypes ).catch( ( e ) => onError?.( e.message || __( 'Failed to load content types.' ) ) );
 	}, [ kind, types, onError ] );
 
 	const selected = useMemo(
@@ -93,7 +103,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 			await api.h5pInstallType( selected.machineName );
 			setTypes( await api.h5pContentTypes() );
 		} catch ( e ) {
-			onError?.( e.message || 'Install failed.' );
+			onError?.( e.message || __( 'Install failed.' ) );
 		} finally {
 			setBusy( '' );
 		}
@@ -123,21 +133,21 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 
 	return (
 		<Modal
-			title={ `Create ${ KIND_LABEL[ kind ].toLowerCase() }` }
+			title={ KIND_HEADING[ kind ] }
 			className={ 'interactive' === kind ? 'max-w-3xl' : 'max-w-lg' }
 			onClose={ onClose }
 			footer={
 				<>
 					<div className="mr-auto text-[13px] text-muted">
-						{ 'interactive' === kind && ! selected && 'Pick a content type to continue.' }
-						{ needsInstall && `${ selected.title } isn’t installed yet — it downloads once from the H5P Hub.` }
-						{ 'interactive' === kind && selected?.installed && `${ selected.title } is ready to use.` }
+						{ 'interactive' === kind && ! selected && __( 'Pick a content type to continue.' ) }
+						{ needsInstall && __sprintf( '%s isn’t installed yet — it downloads once from the H5P Hub.', selected.title ) }
+						{ 'interactive' === kind && selected?.installed && __sprintf( '%s is ready to use.', selected.title ) }
 					</div>
-					<Button variant="ghost" onClick={ onClose }>Cancel</Button>
+					<Button variant="ghost" onClick={ onClose }>{ __( 'Cancel' ) }</Button>
 					{ needsInstall ? (
-						<Button onClick={ install } disabled={ 'install' === busy }>{ 'install' === busy ? 'Installing…' : 'Install' }</Button>
+						<Button onClick={ install } disabled={ 'install' === busy }>{ 'install' === busy ? __( 'Installing…' ) : __( 'Install' ) }</Button>
 					) : (
-						<Button onClick={ submit } disabled={ ! canCreate || !! busy }>{ 'create' === busy ? 'Creating…' : 'Create' }</Button>
+						<Button onClick={ submit } disabled={ ! canCreate || !! busy }>{ 'create' === busy ? __( 'Creating…' ) : __( 'Create' ) }</Button>
 					) }
 				</>
 			}
@@ -157,14 +167,14 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 				</div>
 			) }
 
-			<Field label="Name" hint="Shown in your library. You can rename it later.">
+			<Field label={ __( 'Name' ) } hint={ __( 'Shown in your library. You can rename it later.' ) }>
 				<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ onKeyDown } placeholder={ PLACEHOLDER[ kind ] } />
 			</Field>
 
 			{ 'media' === kind && (
 				<div className="mb-1">
-					<span className="block text-[13px] font-medium text-ink mb-1.5">Media type</span>
-					<div role="radiogroup" aria-label="Media type" className="grid sm:grid-cols-2 gap-2">
+					<span className="block text-[13px] font-medium text-ink mb-1.5">{ __( 'Media type' ) }</span>
+					<div role="radiogroup" aria-label={ __( 'Media type' ) } className="grid sm:grid-cols-2 gap-2">
 						{ MEDIA_TYPES.map( ( t ) => {
 							const locked = t.pro && ! isPro();
 							return (
@@ -179,7 +189,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 						} ) }
 					</div>
 					<span className="block text-xs text-gray-400 mt-2">
-						{ isPro() ? 'Change the source details in the editor.' : 'Bunny / Mux / HLS need TruePlayer Pro.' }
+						{ isPro() ? __( 'Change the source details in the editor.' ) : __( 'Bunny / Mux / HLS need TruePlayer Pro.' ) }
 					</span>
 				</div>
 			) }
@@ -187,16 +197,16 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 			{ 'interactive' === kind && (
 				<>
 					<div className="flex items-center justify-between mt-5 mb-2">
-						<span className="text-[13px] font-medium text-label">Content type</span>
+						<span className="text-[13px] font-medium text-label">{ __( 'Content type' ) }</span>
 						<div className="relative w-56">
 							<Icon name="search" className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-placeholder" />
-							<Input value={ query } onChange={ ( e ) => setQuery( e.target.value ) } placeholder="Search types" className="!pl-8" />
+							<Input value={ query } onChange={ ( e ) => setQuery( e.target.value ) } placeholder={ __( 'Search types' ) } className="!pl-8" />
 						</div>
 					</div>
 
 					<div className="-mx-1 px-1 pb-1">
-						{ ! types && <div className="py-10 text-center text-muted text-sm">Loading content types…</div> }
-						{ types && 0 === groups.length && <div className="py-10 text-center text-muted text-sm">No content type matches “{ query }”.</div> }
+						{ ! types && <div className="py-10 text-center text-muted text-sm">{ __( 'Loading content types…' ) }</div> }
+						{ types && 0 === groups.length && <div className="py-10 text-center text-muted text-sm">{ __sprintf( 'No content type matches “%s”.', query ) }</div> }
 						{ groups.map( ( [ label, list ] ) => (
 							<div key={ label } className="mb-4 last:mb-0">
 								<div className="text-[11px] font-semibold uppercase tracking-wide text-placeholder mb-2">{ label }</div>
@@ -241,7 +251,7 @@ function RadioOption( { option, active, locked, onPick } ) {
 			<span className="min-w-0 flex-1">
 				<span className="flex items-center gap-1.5">
 					<span className="text-[13px] font-medium text-ink truncate">{ option.label }</span>
-					{ locked && <span className="text-[9px] font-semibold text-brand-500 shrink-0">PRO</span> }
+					{ locked && <span className="text-[9px] font-semibold text-brand-500 shrink-0">{ __( 'PRO' ) }</span> }
 				</span>
 				{ option.hint && <span className="block text-xs text-muted mt-0.5 leading-4">{ option.hint }</span> }
 			</span>
@@ -270,7 +280,7 @@ function TypeTile( { type, active, onPick } ) {
 				<span className="block text-xs text-muted mt-0.5 leading-4">{ type.description || type.machineName }</span>
 				{ ! type.installed && (
 					<span className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-semibold uppercase tracking-wide text-warning">
-						<span className="w-1.5 h-1.5 rounded-full bg-warning" /> Not installed
+						<span className="w-1.5 h-1.5 rounded-full bg-warning" /> { __( 'Not installed' ) }
 					</span>
 				) }
 			</span>

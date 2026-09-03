@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from '@wordpress/element';
+import { createInterpolateElement, useEffect, useMemo, useState } from '@wordpress/element';
+import { __, __sprintf } from '@Utils/translation';
 import { api } from '../api';
 import { Button, Card, Badge, Modal, Pagination, Thumb, sourceMeta, OptionMenu, SplitButton, Toast } from '../components/UI';
 import { Icon } from '../components/icons';
@@ -25,10 +26,10 @@ const h5pAvailable = h5pEnabled;
 
 // Filter chips. All four are the one library route with a different ?kind=.
 const FILTERS = [
-	{ kind: 'all', label: 'All' },
-	{ kind: 'media', label: 'Media' },
-	{ kind: 'playlist', label: 'Playlists' },
-	{ kind: 'interactive', label: 'Interactive' },
+	{ kind: 'all', label: __( 'All' ) },
+	{ kind: 'media', label: __( 'Media' ) },
+	{ kind: 'playlist', label: __( 'Playlists' ) },
+	{ kind: 'interactive', label: __( 'Interactive' ) },
 ];
 
 // navigator.clipboard.writeText needs a secure context; fall back to the
@@ -115,12 +116,12 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 	const submitCreate = async ( { kind: newKind, title, mediaType, machineName } ) => {
 		try {
 			if ( 'media' === newKind ) {
-				const v = await api.createVideo( title || 'Untitled video', { source: { type: mediaType } } );
+				const v = await api.createVideo( title || __( 'Untitled video' ), { source: { type: mediaType } } );
 				setCreate( null );
 				await loadVideos();
 				onEdit( v.id );
 			} else if ( 'playlist' === newKind ) {
-				const p = await api.createPlaylist( title || 'Untitled playlist' );
+				const p = await api.createPlaylist( title || __( 'Untitled playlist' ) );
 				setCreate( null );
 				await loadPlaylists();
 				setEditingPlaylist( p );
@@ -129,7 +130,7 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 				setEditingH5p( { machineName, title } );
 			}
 		} catch ( e ) {
-			setError( e.message || 'Could not create that.' );
+			setError( e.message || __( 'Could not create that.' ) );
 		}
 	};
 
@@ -145,7 +146,7 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 			setConfirming( null );
 			await loadAll();
 		} catch ( e ) {
-			setError( e.message || 'Delete failed.' );
+			setError( e.message || __( 'Delete failed.' ) );
 		} finally {
 			setBusy( false );
 		}
@@ -217,17 +218,17 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 	const defaultKind = ( 'all' === kind || ! createKinds.includes( kind ) ) ? 'media' : kind;
 	const menuKinds = createKinds.filter( ( k ) => k !== defaultKind );
 	const KIND_MENU = {
-		media: { label: 'Media', hint: 'A video or audio player' },
-		playlist: { label: 'Playlist', hint: 'Group players into one embed' },
-		interactive: { label: 'Interactive', hint: 'A quiz, flashcards, and more' },
+		media: { label: __( 'Media' ), hint: __( 'A video or audio player' ) },
+		playlist: { label: __( 'Playlist' ), hint: __( 'Group players into one embed' ) },
+		interactive: { label: __( 'Interactive' ), hint: __( 'A quiz, flashcards, and more' ) },
 	};
 
 	return (
 		<div>
 			<div className="flex items-center justify-between mb-6">
 				<div>
-					<h1 className="text-2xl font-bold text-gray-900">Media</h1>
-					<p className="text-sm text-muted">Watch-verified players, playlists, and interactive content.</p>
+					<h1 className="text-2xl font-bold text-gray-900">{ __( 'Media' ) }</h1>
+					<p className="text-sm text-muted">{ __( 'Watch-verified players, playlists, and interactive content.' ) }</p>
 				</div>
 				<SplitButton
 					onClick={ () => setCreate( defaultKind ) }
@@ -280,19 +281,24 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 
 			{ confirming && (
 				<Modal
-					title="Delete"
+					title={ __( 'Delete' ) }
 					onClose={ () => setConfirming( null ) }
 					footer={
 						<>
-							<Button variant="ghost" onClick={ () => setConfirming( null ) }>Cancel</Button>
-							<Button variant="danger" onClick={ remove } disabled={ busy }>{ busy ? 'Deleting…' : 'Delete' }</Button>
+							<Button variant="ghost" onClick={ () => setConfirming( null ) }>{ __( 'Cancel' ) }</Button>
+							<Button variant="danger" onClick={ remove } disabled={ busy }>{ busy ? __( 'Deleting…' ) : __( 'Delete' ) }</Button>
 						</>
 					}
 				>
 					<p className="text-sm text-ink">
-						Delete <strong>{ confirming.title }</strong>? Any page still using
-						<code className="mx-1 text-xs text-muted">{ confirming.shortcode }</code>
-						will stop showing it.
+						{ createInterpolateElement(
+							__sprintf(
+								'Delete <b>%1$s</b>? Any page still using <c>%2$s</c> will stop showing it.',
+								confirming.title,
+								confirming.shortcode
+							),
+							{ b: <strong />, c: <code className="mx-1 text-xs text-muted" /> }
+						) }
 					</p>
 				</Modal>
 			) }
@@ -303,10 +309,10 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 }
 
 const EMPTY = {
-	all: { icon: 'video', title: 'Nothing here yet', body: 'Create a player, a playlist, or an interactive item — they all embed with a shortcode.' },
-	media: { icon: 'video', title: 'No media yet', body: 'Create your first watch-verified player.' },
-	playlist: { icon: 'playlist', title: 'No playlists yet', body: 'Group players into a grid or sidebar playlist.' },
-	interactive: { icon: 'spark', title: 'No interactive content yet', body: 'Build a quiz, flashcard deck, or drag-the-words exercise and embed it anywhere.' },
+	all: { icon: 'video', title: __( 'Nothing here yet' ), body: __( 'Create a player, a playlist, or an interactive item — they all embed with a shortcode.' ) },
+	media: { icon: 'video', title: __( 'No media yet' ), body: __( 'Create your first watch-verified player.' ) },
+	playlist: { icon: 'playlist', title: __( 'No playlists yet' ), body: __( 'Group players into a grid or sidebar playlist.' ) },
+	interactive: { icon: 'spark', title: __( 'No interactive content yet' ), body: __( 'Build a quiz, flashcard deck, or drag-the-words exercise and embed it anywhere.' ) },
 };
 
 function RowList( { rows, kind, byId, copied, onCopy, onEdit, onViewers, onRemove, onAdd } ) {
@@ -330,7 +336,7 @@ function RowList( { rows, kind, byId, copied, onCopy, onEdit, onViewers, onRemov
 				<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name={ empty.icon } className="w-6 h-6" /></div>
 				<p className="font-semibold text-gray-900">{ empty.title }</p>
 				<p className="text-sm text-muted !mb-6">{ empty.body }</p>
-				<Button onClick={ onAdd }><Icon name="plus" className="w-4 h-4" /> Create</Button>
+				<Button onClick={ onAdd }><Icon name="plus" className="w-4 h-4" /> { __( 'Create' ) }</Button>
 			</Card>
 		);
 	}
@@ -344,16 +350,16 @@ function RowList( { rows, kind, byId, copied, onCopy, onEdit, onViewers, onRemov
 						<div className="font-semibold text-gray-900 truncate">{ row.title }</div>
 						<div className="flex items-center flex-wrap gap-2 mt-1.5">
 							<RowBadges row={ row } />
-							<code className="text-xs text-muted cursor-pointer hover:text-brand-500" onClick={ () => onCopy( row ) } title="Copy shortcode">
-								{ copied === row.key ? <span className="inline-flex items-center gap-1"><Icon name="checkmark" className="w-3.5 h-3.5" /> Copied</span> : row.shortcode }
+							<code className="text-xs text-muted cursor-pointer hover:text-brand-500" onClick={ () => onCopy( row ) } title={ __( 'Copy shortcode' ) }>
+								{ copied === row.key ? <span className="inline-flex items-center gap-1"><Icon name="checkmark" className="w-3.5 h-3.5" /> { __( 'Copied' ) }</span> : row.shortcode }
 							</code>
 						</div>
 					</div>
 					<button
 						type="button"
 						onClick={ () => onEdit( row ) }
-						aria-label="Edit"
-						title="Edit"
+						aria-label={ __( 'Edit' ) }
+						title={ __( 'Edit' ) }
 						className="w-8 h-8 inline-flex items-center justify-center text-muted hover:text-ink hover:bg-gray-100 transition-colors shrink-0 border border-line rounded"
 					>
 						<Icon name="edit" className="w-[18px] h-[18px]" />
@@ -361,8 +367,8 @@ function RowList( { rows, kind, byId, copied, onCopy, onEdit, onViewers, onRemov
 					<OptionMenu items={ [
 						// Analytics is per-player; playlists have no viewer record of
 						// their own and interactive results land on the H5P item.
-						...( 'playlist' === row.kind ? [] : [ { label: 'Analytics', icon: 'analytics', onClick: () => onViewers( row.id ) } ] ),
-						{ label: 'Delete', icon: 'trash', danger: true, onClick: () => onRemove( row ) },
+						...( 'playlist' === row.kind ? [] : [ { label: __( 'Analytics' ), icon: 'analytics', onClick: () => onViewers( row.id ) } ] ),
+						{ label: __( 'Delete' ), icon: 'trash', danger: true, onClick: () => onRemove( row ) },
 					] } />
 				</Card>
 			) ) }
@@ -391,7 +397,7 @@ function RowBadges( { row } ) {
 	if ( 'interactive' === row.kind ) {
 		return (
 			<>
-				<Badge tone="brand">{ row.item.type || 'Interactive' }</Badge>
+				<Badge tone="brand">{ row.item.type || __( 'Interactive' ) }</Badge>
 				{ 'draft' === row.item.status && <Badge tone="amber">draft</Badge> }
 			</>
 		);

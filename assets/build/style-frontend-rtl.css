@@ -638,9 +638,67 @@
 	color: #e5e7eb;
 	font-variant-numeric: tabular-nums;
 }
-.tp-volume {
-	width: 74px;
-	accent-color: var(--tp-accent);
+/* !important: the player is embedded in arbitrary theme/page markup, and a
+   generic host-page reset like `input { width: 100% }` (common in form-
+   styling frameworks) otherwise wins the cascade on this specific property
+   over a single-class selector — accent-color/cursor aren't touched by that
+   kind of rule so they apply fine, but width silently loses, and since this
+   sits in a flex row (.tp-controls-row) an unconstrained width stretches it
+   across the whole bar. flex is pinned too so it can't grow/shrink either. */
+.tp-volume,
+.tp-volume:hover,
+.tp-volume:focus,
+.tp-volume:active {
+	width: 74px !important;
+	flex: 0 0 74px !important;
+	height: 16px; /* comfortable click target; the visible track is drawn thin below */
+	cursor: pointer;
+	/* Taking manual control of the track/thumb below via the WebKit/Moz
+	   pseudo-elements — accent-color only recolors the browser's default
+	   chrome (full-size thumb, solid track block), which read as a second,
+	   heavier control bar rather than a slim volume slider. */
+	-moz-appearance: none;
+	     appearance: none;
+	-webkit-appearance: none;
+    background: transparent;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+}
+.tp-volume::-webkit-slider-runnable-track {
+	height: 3px;
+	border-radius: 2px;
+	background: rgba( 255, 255, 255, 0.4 ) !important;
+    box-shadow: none !important;
+}
+.tp-volume::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 0.4rem;
+	height: 0.4rem;
+	margin-top: -3.5px; /* center the 10px thumb on the 3px track */
+	border-radius: 50%;
+	background: var( --tp-accent );
+	cursor: pointer;
+}
+.tp-volume::-moz-range-track {
+	height: 3px;
+	border-radius: 2px;
+	background: rgba( 255, 255, 255, 0.3 );
+	box-shadow: none !important;
+}
+.tp-volume::-moz-range-progress {
+	height: 8px;
+	border-radius: 8px;
+	background: var( --tp-accent );
+}
+.tp-volume::-moz-range-thumb {
+	width: 0.3rem !important;
+	height: 0.3rem !important;
+	border: 0;
+	border-radius: 50%;
+	background: var( --tp-accent );
 	cursor: pointer;
 }
 
@@ -1438,6 +1496,21 @@
 .tp-quiz-feedback.tp-fail {
 	color: #dc2626;
 }
+/* The final pass/fail/pending outcome of a QuizPress-sourced quiz — given
+   its own banner, not just another feedback line, so it reads as the one
+   unambiguous result rather than blending in with in-progress messages. */
+.tp-quiz-verdict {
+	font-size: 15px;
+	padding: 12px 14px;
+	border-radius: 8px;
+	background: rgba( 0, 0, 0, 0.04 );
+}
+.tp-quiz-verdict.tp-pass {
+	background: rgba( 22, 163, 74, 0.1 );
+}
+.tp-quiz-verdict.tp-fail {
+	background: rgba( 220, 38, 38, 0.08 );
+}
 .tp-quiz-submit {
 	margin-top: 8px;
 	background: var(--tp-accent);
@@ -1451,6 +1524,95 @@
 .tp-quiz-submit:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+/* A QuizPress-sourced quiz's own answer widgets (images, matching pairs,
+   graphs, …) need real room — wider than the compact native quiz card. */
+.tp-quiz--quizpress .tp-quiz-card {
+	max-width: 680px;
+}
+.tp-quiz-qp-progress {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--tp-accent);
+	margin: 0 0 8px;
+}
+.tp-quiz-qp-widget {
+	margin: 12px 0;
+}
+.tp-quiz-qp-nav {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	margin-top: 8px;
+}
+.tp-quiz-qp-prev {
+	background: transparent;
+	color: #374151;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	padding: 11px 20px;
+	font-weight: 600;
+	cursor: pointer;
+}
+.tp-quiz-qp-prev:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.tp-quiz-qp-start p {
+	margin: 0 0 8px;
+	font-size: 14px;
+	color: #374151;
+}
+
+/* ---- opt-in / subscribe ---- */
+.tp-optin-card {
+	background: #fff;
+	color: #111827;
+	border-radius: 12px;
+	padding: 26px;
+	max-width: 420px;
+	width: 100%;
+	text-align: center;
+	box-shadow: 0 12px 40px rgba( 0, 0, 0, 0.3 );
+}
+.tp-optin-title {
+	margin: 0 0 8px;
+	font-size: 19px;
+	font-weight: 700;
+}
+.tp-optin-desc {
+	margin: 0 0 16px;
+	color: #6b7280;
+	font-size: 14px;
+}
+.tp-optin-input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 11px 12px;
+	margin-bottom: 10px;
+	border: 1px solid #d1d5db;
+	border-radius: 8px;
+	font-size: 14px;
+}
+.tp-optin-input:focus {
+	outline: none;
+	border-color: var(--tp-accent);
+}
+.tp-optin-error {
+	color: #dc2626;
+	font-size: 13px;
+	margin: 0 0 10px;
+}
+.tp-optin-skip {
+	display: block;
+	margin: 12px auto 0;
+	background: none;
+	border: 0;
+	color: #6b7280;
+	font-size: 13px;
+	text-decoration: underline;
+	cursor: pointer;
 }
 
 /* ---- spinner ---- */

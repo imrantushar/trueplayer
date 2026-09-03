@@ -2,6 +2,7 @@ import { useState } from '@wordpress/element';
 import { Card, Button, Badge, Toast, Toggle } from '../../components/UI';
 import { Icon } from '../../components/icons';
 import { api } from '../../api';
+import { __ } from '@Utils/translation';
 
 /**
  * Settings → Addons. One row per registered addon, each describing itself.
@@ -26,7 +27,7 @@ export default function AddonsPanel() {
 			await api.setAddonStatus( addon.slug, next );
 			window.location.reload();
 		} catch ( e ) {
-			setToast( { tone: 'danger', message: e.message || 'Could not change the addon status.' } );
+			setToast( { tone: 'danger', message: e.message || __( 'Could not change the addon status.' ) } );
 			setBusy( '' );
 		}
 	};
@@ -34,7 +35,7 @@ export default function AddonsPanel() {
 	if ( ! addons.length ) {
 		return (
 			<Card className="p-8 text-center">
-				<p className="text-sm text-muted m-0">No addons are registered on this site.</p>
+				<p className="text-sm text-muted m-0">{ __( 'No addons are registered on this site.' ) }</p>
 			</Card>
 		);
 	}
@@ -44,10 +45,9 @@ export default function AddonsPanel() {
 			{ toast && <Toast message={ toast.message } tone={ toast.tone } onDismiss={ () => setToast( null ) } /> }
 
 			<Card className="p-6">
-				<h3 className="font-semibold text-gray-900 !mb-1">Addons</h3>
+				<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Addons' ) }</h3>
 				<p className="text-sm text-muted mb-4">
-					Optional features, off until you need them. Enabling one sets up whatever it
-					needs — including its database tables — the moment you switch it on.
+					{ __( 'Optional features, off until you need them. Enabling one sets up whatever it needs — including its database tables — the moment you switch it on.' ) }
 				</p>
 
 				<div className="mt-4 pt-5 border-t border-solid border-line space-y-4">
@@ -63,9 +63,9 @@ export default function AddonsPanel() {
 									<div className="flex items-center gap-2 flex-wrap">
 										<span className="font-medium text-ink">{ addon.label }</span>
 										{ addon.active
-											? <Badge tone="green">Enabled</Badge>
-											: <Badge tone="gray">Disabled</Badge> }
-										{ missing && <Badge tone="amber">Not available in this build</Badge> }
+											? <Badge tone="green">{ __( 'Enabled' ) }</Badge>
+											: <Badge tone="gray">{ __( 'Disabled' ) }</Badge> }
+										{ missing && <Badge tone="amber">{ __( 'Not available in this build' ) }</Badge> }
 									</div>
 									{ addon.description && <p className="text-sm text-muted mt-1 mb-0">{ addon.description }</p> }
 									{ addon.note && <p className="text-xs text-muted mt-2 mb-0">{ addon.note }</p> }
@@ -73,7 +73,7 @@ export default function AddonsPanel() {
 
 								<div className="shrink-0 pt-1">
 									{ busy === addon.slug ? (
-										<span className="text-xs text-muted">Working…</span>
+										<span className="text-xs text-muted">{ __( 'Working…' ) }</span>
 									) : (
 										<Toggle
 											checked={ !! addon.active }

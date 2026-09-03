@@ -2,6 +2,7 @@ import { useState } from '@wordpress/element';
 import { api, EVENT_TYPES } from '../api';
 import { Input, Button, Toggle, Badge } from './UI';
 import { BsTrash } from 'react-icons/bs';
+import { __, __sprintf } from '@Utils/translation';
 
 const uid = () => Math.random().toString( 36 ).slice( 2, 9 );
 
@@ -26,10 +27,10 @@ export function EndpointList( { endpoints, onChange } ) {
 	 */
 	const describeTest = ( res ) => {
 		if ( res.error ) {
-			return { ok: false, text: `Could not reach endpoint: ${ res.error }` };
+			return { ok: false, text: __sprintf( 'Could not reach endpoint: %s', res.error ) };
 		}
 		if ( res.ok ) {
-			return { ok: true, text: `Delivered — HTTP ${ res.code }` };
+			return { ok: true, text: __sprintf( 'Delivered — HTTP %d', res.code ) };
 		}
 		let reason = ( res.response || '' ).trim();
 		try {
@@ -40,12 +41,14 @@ export function EndpointList( { endpoints, onChange } ) {
 		}
 		return {
 			ok: false,
-			text: `Rejected — HTTP ${ res.code }${ reason ? `: ${ reason.slice( 0, 200 ) }` : '' }`,
+			text: reason
+				? __sprintf( 'Rejected — HTTP %1$d: %2$s', res.code, reason.slice( 0, 200 ) )
+				: __sprintf( 'Rejected — HTTP %d', res.code ),
 		};
 	};
 
 	const test = async ( i ) => {
-		setTesting( ( t ) => ( { ...t, [ i ]: { ok: null, text: 'Sending…' } } ) );
+		setTesting( ( t ) => ( { ...t, [ i ]: { ok: null, text: __( 'Sending…' ) } } ) );
 		try {
 			const res = await api.testWebhook( endpoints[ i ].url, endpoints[ i ].secret );
 			setTesting( ( t ) => ( { ...t, [ i ]: describeTest( res ) } ) );
@@ -64,31 +67,31 @@ export function EndpointList( { endpoints, onChange } ) {
 					     with a label saying what it deletes. */ }
 					<div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-line">
 						<span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-							Endpoint { i + 1 }
+							{ __sprintf( 'Endpoint %d', i + 1 ) }
 						</span>
 						<button
 							type="button"
 							onClick={ () => remove( i ) }
-							title={ `Delete endpoint ${ i + 1 }` }
-							aria-label={ `Delete endpoint ${ i + 1 }` }
+							title={ __sprintf( 'Delete endpoint %d', i + 1 ) }
+							aria-label={ __sprintf( 'Delete endpoint %d', i + 1 ) }
 							className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-gray-400 hover:text-danger hover:bg-danger-light transition-colors"
 						>
-							<BsTrash size={ 13 } /> Delete
+							<BsTrash size={ 13 } /> { __( 'Delete' ) }
 						</button>
 					</div>
 					<div className="flex gap-2 items-center mb-3">
 						<Input value={ e.url } onChange={ ( ev ) => set( i, { url: ev.target.value } ) } placeholder="https://your-endpoint.example/hook" />
-						<Button variant="ghost" onClick={ () => test( i ) }>Send test</Button>
+						<Button variant="ghost" onClick={ () => test( i ) }>{ __( 'Send test' ) }</Button>
 					</div>
 					{ testing[ i ] && (
 						<p className={ `text-xs mb-2 ${ testing[ i ].ok === false ? 'text-red-600' : testing[ i ].ok ? 'text-green-600' : 'text-gray-500' }` }>
-							Test: { testing[ i ].text }
+							{ __sprintf( 'Test: %s', testing[ i ].text ) }
 						</p>
 					) }
-					<Input className="mb-3" value={ e.secret || '' } onChange={ ( ev ) => set( i, { secret: ev.target.value } ) } placeholder="Signing secret (optional) — used for X-TruePlayer-Signature" />
-					<Toggle checked={ e.active !== false } onChange={ ( v ) => set( i, { active: v } ) } label="Active" />
+					<Input className="mb-3" value={ e.secret || '' } onChange={ ( ev ) => set( i, { secret: ev.target.value } ) } placeholder={ __( 'Signing secret (optional) — used for X-TruePlayer-Signature' ) } />
+					<Toggle checked={ e.active !== false } onChange={ ( v ) => set( i, { active: v } ) } label={ __( 'Active' ) } />
 					<div className="mt-2">
-						<span className="block text-xs text-gray-500 mb-2">Events (none selected = all)</span>
+						<span className="block text-xs text-gray-500 mb-2">{ __( 'Events (none selected = all)' ) }</span>
 						<div className="flex flex-wrap gap-2">
 							{ EVENT_TYPES.map( ( ev ) => {
 								const on = ( e.events || [] ).includes( ev );
@@ -106,8 +109,8 @@ export function EndpointList( { endpoints, onChange } ) {
 					</div>
 				</div>
 			) ) }
-			{ endpoints.length === 0 && <p className="text-sm text-gray-400 mb-2">No endpoints yet.</p> }
-			<Button variant="ghost" onClick={ add }>+ Add endpoint</Button>
+			{ endpoints.length === 0 && <p className="text-sm text-gray-400 mb-2">{ __( 'No endpoints yet.' ) }</p> }
+			<Button variant="ghost" onClick={ add }>{ __( '+ Add endpoint' ) }</Button>
 		</div>
 	);
 }
