@@ -91,7 +91,12 @@ class GumletVideo {
 			// that already exists, which is why can_upload() and is_configured()
 			// are separate questions.
 			'collectionId'      => isset( $g['collectionId'] ) ? trim( (string) $g['collectionId'] ) : '',
-			'folder'            => isset( $g['folder'] ) ? self::clean_folder( (string) $g['folder'] ) : '',
+			// A Gumlet folder is an existing object addressed by ID, not a path
+			// that gets created on write like a Bunny Storage prefix. It is
+			// passed through verbatim (only trimmed) because nothing here can
+			// validate or normalize an opaque id, and mangling one would turn a
+			// correct value into Gumlet's "folder does not exist".
+			'folder'            => isset( $g['folder'] ) ? trim( (string) $g['folder'] ) : '',
 			'format'            => in_array( $format, self::FORMATS, true ) ? $format : 'ABR',
 			'playbackHost'      => self::host_only( isset( $g['playbackHost'] ) ? (string) $g['playbackHost'] : '' ),
 			// The workspace's signed-URL secret. Only used to sign playback of
@@ -190,6 +195,22 @@ class GumletVideo {
 
 		$asset = self::request( 'POST', '/video/assets/upload', $body );
 		if ( is_wp_error( $asset ) ) {
+			// Gumlet's own wording for a bad folder ("Folder do not exist.
+			// Please create a folder with this name first.") names neither the
+			// setting at fault nor where to change it, and the folder is
+			// optional in the first place — so say which one it is and how to
+			// get past it.
+			if ( '' !== $c['folder'] && false !== stripos( $asset->get_error_message(), 'folder' ) ) {
+				return new \WP_Error(
+					'tp_gumlet_folder',
+					sprintf(
+						/* translators: %s: the configured Gumlet folder ID. */
+						__( 'Gumlet has no folder “%s”. A Gumlet folder must already exist and is identified by its ID, not its name — clear the folder field under Settings → Sources & CDN → Gumlet to upload to the workspace root instead.', 'trueplayer' ),
+						$c['folder']
+					),
+					[ 'status' => 400 ]
+				);
+			}
 			return $asset;
 		}
 
@@ -268,60 +289,6 @@ class GumletVideo {
 				? (string) ( $asset['error'] ?? __( 'Gumlet could not process this video.', 'trueplayer' ) )
 				: '',
 		];
-	}
-
-	/**
-	 * Existing assets in the workspace, for the editor's "pick one I already
-	 * uploaded" browser.
-	 *
-	 * @return array|\WP_Error List of { assetId, title, status, ready, duration, thumbnail }.
-	 */
-	public static function list_assets( int $limit = 100 ) {
-		$c = self::config();
-		if ( '' === $c['collectionId'] ) {
-			return new \WP_Error(
-				'tp_gumlet_unconfigured',
-				__( 'Add your Gumlet collection ID to browse existing videos.', 'trueplayer' ),
-				[ 'status' => 400 ]
-			);
-		}
-
-		$response = self::request(
-			'GET',
-			add_query_arg(
-				[ 'collection_id' => $c['collectionId'], 'limit' => max( 1, min( 500, $limit ) ) ],
-				'/video/assets'
-			)
-		);
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		// Gumlet has returned both a bare list and a wrapped one across API
-		// revisions; accept either rather than break on the shape.
-		$rows = $response['data'] ?? ( $response['assets'] ?? $response );
-		if ( ! is_array( $rows ) ) {
-			return [];
-		}
-
-		$out = [];
-		foreach ( $rows as $row ) {
-			if ( ! is_array( $row ) || empty( $row['asset_id'] ) ) {
-				continue;
-			}
-			$status = strtolower( (string) ( $row['status'] ?? '' ) );
-			$thumbs = $row['output']['thumbnail'] ?? ( $row['thumbnail'] ?? [] );
-			$out[]  = [
-				'assetId'   => (string) $row['asset_id'],
-				'title'     => (string) ( $row['title'] ?? ( $row['description'] ?? $row['asset_id'] ) ),
-				'status'    => $status,
-				'ready'     => in_array( $status, self::READY_STATES, true ),
-				'duration'  => (int) ( $row['output']['duration'] ?? ( $row['duration'] ?? 0 ) ),
-				'thumbnail' => is_array( $thumbs ) ? (string) ( $thumbs[0] ?? '' ) : (string) $thumbs,
-				'src'       => (string) ( $row['output']['playback_url'] ?? '' ),
-			];
-		}
-		return $out;
 	}
 
 	/**

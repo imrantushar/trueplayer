@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from '@wordpress/element';
 import { __, __sprintf } from '@Utils/translation';
-import { Button, Modal, Input } from './UI';
+import { Button, Input } from './UI';
 import { Icon } from './icons';
 import { FilePicker, Warning, formatBytes } from './UploadFieldParts';
 import { api } from '../api';
@@ -30,7 +30,6 @@ export default function GumletField( { value, onChange, type = 'gumletStorage' }
 	const [ status, setStatus ] = useState( null ); // null = still asking
 	const [ upload, setUpload ] = useState( null ); // { name, percent, stage }
 	const [ error, setError ] = useState( '' );
-	const [ browsing, setBrowsing ] = useState( false );
 	const [ pasting, setPasting ] = useState( false );
 	const [ pasted, setPasted ] = useState( '' );
 	const [ resolving, setResolving ] = useState( false );
@@ -144,18 +143,6 @@ export default function GumletField( { value, onChange, type = 'gumletStorage' }
 		} finally {
 			setResolving( false );
 		}
-	};
-
-	/** Adopt a video chosen from the library browser. */
-	const pick = ( a ) => {
-		onChange( {
-			assetId: a.assetId,
-			src: a.src || '',
-			status: a.ready ? 'ready' : 'processing',
-			fileName: a.title,
-			...( a.thumbnail ? { poster: a.thumbnail } : {} ),
-		} );
-		setBrowsing( false );
 	};
 
 	const onDrop = ( e ) => {
@@ -274,14 +261,8 @@ export default function GumletField( { value, onChange, type = 'gumletStorage' }
 					onBlur={ () => resolve( pasted ) }
 					placeholder={ __( 'Gumlet video ID or URL' ) }
 				/>
-				<div className="flex items-center gap-3 !mt-2">
-					<button type="button" className="text-xs text-brand-500 hover:underline" onClick={ () => setBrowsing( true ) }>
-						{ __( 'Browse your Gumlet library' ) }
-					</button>
-				</div>
 				{ resolving && <p className="text-xs text-muted !mt-1.5">{ __( 'Looking it up…' ) }</p> }
 				{ error && <p className="text-xs text-danger !mt-1.5">{ error }</p> }
-				{ browsing && <AssetBrowser onClose={ () => setBrowsing( false ) } onPick={ pick } /> }
 			</>
 		);
 	}
@@ -305,10 +286,6 @@ export default function GumletField( { value, onChange, type = 'gumletStorage' }
 			</button>
 
 			<div className="flex items-center gap-3 !mt-2">
-				<button type="button" className="text-xs text-brand-500 hover:underline" onClick={ () => setBrowsing( true ) }>
-					{ __( 'Browse your Gumlet library' ) }
-				</button>
-				<span className="text-xs text-placeholder">·</span>
 				<button type="button" className="text-xs text-brand-500 hover:underline" onClick={ () => setPasting( ( v ) => ! v ) }>
 					{ __( 'Paste an ID instead' ) }
 				</button>
@@ -329,7 +306,6 @@ export default function GumletField( { value, onChange, type = 'gumletStorage' }
 			<FilePicker inputRef={ inputRef } onPick={ send } accept={ ACCEPTED } />
 			{ error && <p className="text-xs text-danger !mt-1.5">{ error }</p> }
 
-			{ browsing && <AssetBrowser onClose={ () => setBrowsing( false ) } onPick={ pick } /> }
 		</>
 	);
 }
@@ -362,56 +338,5 @@ function NotConnected( { title, body } ) {
 				{ __( 'Open Sources & CDN settings' ) }
 			</Button>
 		</div>
-	);
-}
-
-/** Videos already in the workspace, so an author can reuse one without re-sending it. */
-function AssetBrowser( { onClose, onPick } ) {
-	const [ assets, setAssets ] = useState( null );
-	const [ error, setError ] = useState( '' );
-	const [ query, setQuery ] = useState( '' );
-
-	useEffect( () => {
-		api.gumletAssets()
-			.then( ( r ) => setAssets( r.assets || [] ) )
-			.catch( ( e ) => setError( e.message || __( 'Your Gumlet library could not be listed.' ) ) );
-	}, [] );
-
-	const q = query.trim().toLowerCase();
-	const shown = ( assets || [] ).filter( ( a ) => ! q || ( a.title || '' ).toLowerCase().includes( q ) );
-
-	return (
-		<Modal title={ __( 'Videos in your Gumlet library' ) } onClose={ onClose } className="max-w-lg">
-			<div className="relative mb-3">
-				<Icon name="search" className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-placeholder" />
-				<Input value={ query } onChange={ ( e ) => setQuery( e.target.value ) } placeholder={ __( 'Search videos' ) } className="!pl-8" />
-			</div>
-
-			{ error && <p className="text-sm text-danger">{ error }</p> }
-			{ ! assets && ! error && <p className="text-sm text-muted py-8 text-center">{ __( 'Loading…' ) }</p> }
-			{ assets && 0 === assets.length && (
-				<p className="text-sm text-muted py-8 text-center">{ __( 'Nothing here yet — upload a video and it will appear.' ) }</p>
-			) }
-			{ assets && assets.length > 0 && 0 === shown.length && (
-				<p className="text-sm text-muted py-8 text-center">{ __sprintf( 'No video matches “%s”.', query ) }</p>
-			) }
-
-			<div className="max-h-80 overflow-y-auto -mx-1 px-1">
-				{ shown.map( ( a ) => (
-					<button
-						key={ a.assetId }
-						type="button"
-						onClick={ () => onPick( a ) }
-						className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded border border-line bg-white hover:border-brand-200 hover:bg-gray-50 transition-colors mb-2 last:mb-0"
-					>
-						<Icon name="film" className="w-4 h-4 text-muted shrink-0" />
-						<span className="min-w-0 flex-1 text-[13px] text-ink truncate">{ a.title }</span>
-						{ /* An asset still encoding is offered rather than hidden — it
-						     will be playable by the time anyone visits the page. */ }
-						{ ! a.ready && <span className="text-xs text-warning shrink-0">{ __( 'encoding' ) }</span> }
-					</button>
-				) ) }
-			</div>
-		</Modal>
 	);
 }

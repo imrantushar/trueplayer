@@ -661,8 +661,13 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 															</Select>
 														</Field>
 													</div>
-													<Field label={ __( 'Upload folder' ) } hint={ __( 'Folder inside the collection that uploads land in. Leave empty to use the root.' ) }>
-														<Input value={g.folder || ''} onChange={(e) => setG({ folder: e.target.value.replace(/^\/+|\/+$/g, '') })} placeholder="trueplayer" />
+													{ /* An ID, not a name, and Gumlet will not create it — sending
+													     one that does not exist fails the whole upload with "Folder
+													     do not exist". Empty is the right default: it uploads to the
+													     workspace root, which always exists. The placeholder used to
+													     read "trueplayer", which invited exactly that failure. */ }
+													<Field label={ __( 'Upload folder ID (optional)' ) } hint={ __( 'Must be a folder that already exists in Gumlet, given by its ID rather than its name. Leave empty to upload to the workspace root.' ) }>
+														<Input value={g.folder || ''} onChange={(e) => setG({ folder: e.target.value.trim() })} placeholder={ __( 'Leave empty for the workspace root' ) } />
 													</Field>
 													<Field label={ __( 'Signing secret (optional)' ) } hint={ __( 'Gumlet → your workspace → Video protection → Signed URLs. Only needed to sign playback of videos you mark private. A different value from the API key above.' ) } className='!mb-0'>
 														<Input type="password" value={g.signSecret || ''} onChange={(e) => setG({ signSecret: e.target.value.trim() })} placeholder="••••••••••••••••" />

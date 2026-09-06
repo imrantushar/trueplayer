@@ -77,17 +77,6 @@ class GumletController extends WP_REST_Controller {
 			]
 		);
 
-		// Existing assets, for the "pick one I already uploaded" browser.
-		register_rest_route(
-			$this->namespace,
-			'/' . $this->rest_base . '/assets',
-			[
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => [ $this, 'assets' ],
-				'permission_callback' => [ $this, 'admin' ],
-			]
-		);
-
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base . '/upload/start',
@@ -205,18 +194,6 @@ class GumletController extends WP_REST_Controller {
 			return $list;
 		}
 		return rest_ensure_response( [ 'collections' => $list ] );
-	}
-
-	public function assets( $request ) {
-		$guard = $this->pro_guard();
-		if ( $guard ) {
-			return $guard;
-		}
-		$assets = GumletVideo::list_assets( (int) ( $request->get_param( 'limit' ) ?: 100 ) );
-		if ( is_wp_error( $assets ) ) {
-			return $assets;
-		}
-		return rest_ensure_response( [ 'assets' => $assets ] );
 	}
 
 	/**

@@ -70,7 +70,6 @@ export const api = {
 	gumletStatus: () => rest.get( 'gumlet/status' ),
 	/** Workspaces the saved key can see — Gumlet never shows these ids in its UI. */
 	gumletCollections: () => rest.get( 'gumlet/collections' ),
-	gumletAssets: () => rest.get( 'gumlet/assets' ),
 	/** Resolve a pasted asset id or URL into a playable asset. */
 	gumletAsset: ( id ) => rest.get( `gumlet/asset?id=${ encodeURIComponent( id ) }` ),
 
