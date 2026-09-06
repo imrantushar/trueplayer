@@ -101,8 +101,23 @@ class Pro {
 		return self::active();
 	}
 
+	/**
+	 * Every source type that needs Pro.
+	 *
+	 * The list stays here, in the free plugin, even though the code that talks
+	 * to those CDNs lives in Pro. It has to: enforce_pro_limits() runs on an
+	 * install where Pro is absent, and its whole job is to recognise a premium
+	 * source in a stored config and strip its URL. A list that shipped with Pro
+	 * would be missing exactly when it is needed.
+	 *
+	 * Filterable so an addon can claim a source type of its own.
+	 */
+	public static function premium_sources(): array {
+		return (array) apply_filters( 'trueplayer/premium_sources', self::PREMIUM_SOURCES );
+	}
+
 	public static function is_premium_source( $type ): bool {
-		return in_array( $type, self::PREMIUM_SOURCES, true );
+		return in_array( $type, self::premium_sources(), true );
 	}
 
 	public static function is_premium_skin( $skin ): bool {

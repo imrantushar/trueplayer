@@ -357,67 +357,6 @@ class Helper {
 	}
 
 	/**
-	 * Fill in a Gumlet source's playback URL when the stored config has only an
-	 * asset id.
-	 *
-	 * Two cases land here. A pasted `gumlet` source stores the id alone on
-	 * purpose: the URL is the one part of the integration we construct rather
-	 * than read back from Gumlet, so deriving it every render means correcting
-	 * the template repairs every video at once instead of leaving wrong URLs
-	 * baked into meta. An uploaded `gumletStorage` source normally arrives with
-	 * Gumlet's own URL already stored, and only comes through here when it was
-	 * saved while still transcoding.
-	 *
-	 * The remote lookup is fenced exactly like vimeo_poster() above, for the
-	 * same reason — it sits on a page render. The miss is claimed before the
-	 * request goes out, so a slow Gumlet delays one render rather than every
-	 * concurrent one, and a failure is remembered briefly so a broken asset
-	 * doesn't re-fetch on every view.
-	 */
-	public static function resolve_gumlet_source( array $config ): array {
-		$source = is_array( $config['source'] ?? null ) ? $config['source'] : [];
-		$type   = (string) ( $source['type'] ?? '' );
-		if ( 'gumlet' !== $type && 'gumletStorage' !== $type ) {
-			return $config;
-		}
-		if ( ! empty( $source['src'] ) ) {
-			return $config; // Already resolved, or the author pasted a full URL.
-		}
-
-		$asset_id = (string) ( $source['assetId'] ?? '' );
-		if ( '' === $asset_id ) {
-			return $config;
-		}
-
-		$key    = 'tp_gumlet_src_' . md5( $asset_id );
-		$cached = get_transient( $key );
-		if ( is_string( $cached ) ) {
-			if ( '' !== $cached ) {
-				$config['source']['src'] = $cached;
-			}
-			return $config;
-		}
-		set_transient( $key, '', 15 * MINUTE_IN_SECONDS );
-
-		$state = \TruePlayer\Services\GumletVideo::asset_state( $asset_id );
-		// Gumlet's own URL wins; the constructed template is the fallback, and
-		// only for an asset that has finished transcoding — an unfinished one
-		// has nothing to play yet and must not be cached as though it did. The
-		// asset reports its own collection, which the URL is built from.
-		$src = $state['playbackUrl'];
-		if ( '' === $src && $state['ready'] ) {
-			$src = \TruePlayer\Services\GumletVideo::playback_url( $asset_id, $state['collectionId'] );
-		}
-		if ( '' === $src ) {
-			return $config;
-		}
-
-		set_transient( $key, $src, DAY_IN_SECONDS );
-		$config['source']['src'] = $src;
-		return $config;
-	}
-
-	/**
 	 * The product name shown in the admin and any attribution. White-label (pro)
 	 * hooks `trueplayer/brand_name` to override it.
 	 */
