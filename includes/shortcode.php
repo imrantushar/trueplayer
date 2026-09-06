@@ -170,6 +170,9 @@ class Shortcode {
 			$config = self::prepare_layers( $config );
 			$config = self::prepare_timed_content( $config );
 			$config = self::prepare_watermark( $config );
+			// Before signing: a Gumlet source stored as a bare asset id has no
+			// URL to sign until this has resolved one.
+			$config = Helper::resolve_gumlet_source( $config );
 			$config = PrivateVideo::prepare_source( $config, $video_id );
 		}
 		return self::strip_answer_keys( $config );

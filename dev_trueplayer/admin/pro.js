@@ -26,4 +26,6 @@ export function proFlag( name ) {
 }
 
 export const PRO_SKINS = [ 'floating', 'ambient' ];
-export const PRO_SOURCES = [ 'bunny', 'bunnyStorage', 'mux', 'hls' ];
+// Re-exported so existing importers keep working; the list itself lives with
+// the rest of each type's metadata (see @Utils/source-types).
+export { PRO_SOURCES } from '@Utils/source-types';

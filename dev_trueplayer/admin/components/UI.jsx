@@ -482,20 +482,15 @@ export function Badge( { children, tone = 'gray' } ) {
 	return <span className={ `inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${ tones[ tone ] || tones.gray }` }>{ children }</span>;
 }
 
-/** Per-source-type display metadata (label + badge tone) for a video's source. */
-export function sourceMeta( source = {} ) {
-	const type = source.mediaType === 'audio' ? 'audio' : source.type;
-	const map = {
-		url: { label: 'MP4', tone: 'brand' },
-		hls: { label: 'HLS', tone: 'amber' },
-		youtube: { label: 'YouTube', tone: 'red' },
-		vimeo: { label: 'Vimeo', tone: 'brand' },
-		bunny: { label: 'Bunny', tone: 'green' },
-		mux: { label: 'Mux', tone: 'brand' },
-		audio: { label: __( 'Audio' ), tone: 'gray' },
-	};
-	return map[ type ] || { label: type || __( 'no source' ), tone: 'gray' };
-}
+/**
+ * Per-source-type display metadata (label + badge tone) for a video's source.
+ *
+ * Re-exported rather than defined here: this map used to be its own copy of the
+ * type list and had already fallen behind — a `bunnyStorage` video rendered a
+ * raw "bunnyStorage" badge because nobody remembered this file existed when
+ * the type was added.
+ */
+export { sourceMeta } from '@Utils/source-types';
 
 /**
  * 16:9 poster thumbnail with a graceful fallback tile keyed to the source type.

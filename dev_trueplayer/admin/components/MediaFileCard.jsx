@@ -19,6 +19,8 @@ const ORIGIN = {
 	self: __( 'Media Library' ),
 	url: __( 'External URL' ),
 	bunnyStorage: __( 'Bunny Storage' ),
+	gumlet: __( 'Gumlet' ),
+	gumletStorage: __( 'Gumlet' ),
 };
 
 /** The file's name, from a media-library URL or a typed one. */

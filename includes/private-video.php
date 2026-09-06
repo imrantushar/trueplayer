@@ -61,6 +61,10 @@ class PrivateVideo {
 			$config['source'] = self::sign_bunny_stream( $config['source'] );
 		} elseif ( 'bunnyStorage' === $type ) {
 			$config['source'] = self::sign_bunny_storage( $config['source'] );
+		} elseif ( 'gumlet' === $type || 'gumletStorage' === $type ) {
+			// One branch for both: they are two ways of getting a video into
+			// Gumlet, not two things to serve it from.
+			$config['source'] = self::sign_gumlet( $config['source'] );
 		}
 		return $config;
 	}
@@ -116,6 +120,82 @@ class PrivateVideo {
 			$source['src'] = $signed;
 		}
 		return $source;
+	}
+
+	/**
+	 * Gumlet: a signed playback URL, when the workspace has signed URLs on.
+	 *
+	 * The source may still be holding only an asset id at this point if it was
+	 * saved mid-transcode, so the URL is resolved the same way the render
+	 * pipeline does before there is anything to sign.
+	 */
+	private static function sign_gumlet( array $source ): array {
+		$secret = (string) ( \TruePlayer\Services\GumletVideo::config()['signSecret'] ?? '' );
+		$src    = (string) ( $source['src'] ?? '' );
+		if ( '' === $src ) {
+			$src = \TruePlayer\Services\GumletVideo::playback_url( (string) ( $source['assetId'] ?? '' ) );
+		}
+		// Nothing to sign, or nothing to sign it with: either way the source is
+		// returned untouched so playback falls back to plain rather than to a
+		// URL carrying a token nobody can verify.
+		if ( '' === $src || '' === $secret ) {
+			return $source;
+		}
+
+		$expires = time() + self::ttl();
+		$signed  = self::gumlet_token_url( $src, $secret, $expires );
+		if ( '' !== $signed ) {
+			$source['src'] = $signed;
+			// Reserved for the case where Gumlet's token does not carry over to
+			// the manifest's child segments. hls.js fetches each .ts itself and
+			// this plugin passes it no request hook today, so if segments come
+			// back 403 the fix is to read this in providers/html5.js and append
+			// it per request. Empty until that is known to be needed.
+			$source['hlsQuery'] = '';
+		}
+		return $source;
+	}
+
+	/**
+	 * Append Gumlet's signed-URL token to a playback URL.
+	 *
+	 * The whole of Gumlet's signing scheme lives in this one method, because it
+	 * is the part of the integration that could not be confirmed from public
+	 * documentation. Everything around it — when to sign, what to sign, how
+	 * long for — is settled; only the recipe is provisional. Confining it here
+	 * (and exposing the filter below) means correcting it is a single change
+	 * that needs no other part of the integration revisited, and can be proven
+	 * against a live account from a mu-plugin before it is committed.
+	 *
+	 * @param string $src     Absolute playback URL.
+	 * @param string $secret  The workspace's signing secret (16-byte hex).
+	 * @param int    $expires Unix timestamp the link stops working at.
+	 * @return string The signed URL, or '' if the URL had no usable path.
+	 */
+	private static function gumlet_token_url( string $src, string $secret, int $expires ): string {
+		$path = wp_parse_url( $src, PHP_URL_PATH );
+		if ( ! $path ) {
+			return '';
+		}
+
+		// Documented as a 16-byte hex secret, so the bytes it encodes are what
+		// gets keyed. A value that isn't valid hex is used verbatim rather than
+		// mangled — a mistyped secret should fail to authenticate, not fatal.
+		$key = ( ctype_xdigit( $secret ) && 0 === strlen( $secret ) % 2 )
+			? (string) hex2bin( $secret )
+			: $secret;
+
+		$token = hash_hmac( 'sha256', $path . $expires, $key );
+		$url   = add_query_arg( [ 'token' => $token, 'expires' => $expires ], $src );
+
+		/**
+		 * Override the signed-URL recipe without editing the plugin.
+		 *
+		 * @param string $url     The signed URL as built above.
+		 * @param string $src     The unsigned playback URL.
+		 * @param int    $expires Expiry timestamp.
+		 */
+		return (string) apply_filters( 'trueplayer/gumlet/signed_url', $url, $src, $expires );
 	}
 
 	/**

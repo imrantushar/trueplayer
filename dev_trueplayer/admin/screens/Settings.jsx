@@ -219,12 +219,17 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 	const [dirty, setDirty] = useState(false);
 	const [toolbarSlot, setToolbarSlot] = useState(null);
 	const loadedOnce = useRef(false);
-	// Which Bunny panel is expanded. One at a time on purpose: Storage and
-	// Stream each take a Bunny secret, the two look identical, and nothing
-	// reports a swap until playback or an upload fails — so they are never on
-	// screen together to be pasted into the wrong box. `null` means the seeding
+	// Which CDN panel is expanded. One at a time on purpose: every one of these
+	// takes a provider secret, they all look identical, and nothing reports a
+	// swap until playback or an upload fails — so they are never on screen
+	// together to be pasted into the wrong box. That reasoning is why this is a
+	// single value rather than one open-flag per card. `null` means the seeding
 	// effect below hasn't run yet, which is distinct from '' (all collapsed).
-	const [bunnyPanel, setBunnyPanel] = useState(null);
+	const [cdnPanel, setCdnPanel] = useState(null);
+	// Workspaces read back from Gumlet with the saved key. `null` = not asked
+	// yet or still asking; `[]` = asked and got nothing, which falls back to a
+	// plain text box rather than stranding the author with no way to set it.
+	const [gumletCollections, setGumletCollections] = useState(null);
 
 	useEffect(() => {
 		api.getSettings().then((s) => setSettings(s || {}));
@@ -245,17 +250,42 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 		setDirty(true);
 	}, [settings]);
 
-	// Open whichever Bunny product this site already uses, once the saved
-	// settings arrive. An install with neither opens Storage — it is the one
-	// people come here to set up, and a screen of closed cards hides that.
+	// Open whichever product this site already uses, once the saved settings
+	// arrive. An install with none opens Bunny Storage — it is the one people
+	// come here to set up, and a screen of closed cards hides that.
 	useEffect(() => {
-		if (!settings || bunnyPanel !== null) {
+		if (!settings || cdnPanel !== null) {
 			return;
 		}
 		const st = settings.bunny?.storage || {};
-		const hasStorage = !!(st.zone || st.accessKey || st.pullZone);
-		setBunnyPanel(!hasStorage && settings.bunny?.tokenKey ? 'stream' : 'storage');
-	}, [settings, bunnyPanel]);
+		const hasBunnyStorage = !!(st.zone || st.accessKey || st.pullZone);
+		const hasBunnyStream = !!settings.bunny?.tokenKey;
+		const hasGumlet = !!settings.gumlet?.apiKey;
+
+		if (hasBunnyStorage) {
+			setCdnPanel('bunny-storage');
+		} else if (hasBunnyStream) {
+			setCdnPanel('bunny-stream');
+		} else {
+			// Gumlet before the empty default: a site with Gumlet configured and
+			// no Bunny at all should land on the one it actually uses.
+			setCdnPanel(hasGumlet ? 'gumlet' : 'bunny-storage');
+		}
+	}, [settings, cdnPanel]);
+
+	// Look up the workspaces once, when the Gumlet panel is actually opened and
+	// there is a key to look them up with — not on every Settings load, since
+	// most visits here have nothing to do with Gumlet.
+	useEffect(() => {
+		if (cdnPanel !== 'gumlet' || !settings?.gumlet?.apiKey || gumletCollections !== null) {
+			return;
+		}
+		let live = true;
+		api.gumletCollections()
+			.then((r) => live && setGumletCollections(r.collections || []))
+			.catch(() => live && setGumletCollections([]));
+		return () => { live = false; };
+	}, [cdnPanel, settings, gumletCollections]);
 
 	// Report dirty state up to the app shell so it can warn before navigating
 	// away (Settings has no breadcrumb title/back of its own, unlike the entity
@@ -285,6 +315,11 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 	// a zone is ready that the editor's upload field will then refuse.
 	const bs = settings.bunny?.storage || {};
 	const storageReady = !!(bs.zone && bs.accessKey && bs.pullZone);
+	// "Connected" for Gumlet is just the key: it is all that is needed to play
+	// an asset that already exists. Uploading additionally wants a collection
+	// ID, and the editor's upload field says so rather than this badge lying
+	// about a half-setup being unusable.
+	const gumletReady = !!settings.gumlet?.apiKey;
 
 	return (
 		<>
@@ -516,8 +551,8 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 										title={ __( 'Bunny.net Storage' ) }
 										description={ __( 'Video files you upload to a storage zone and serve through a pull zone. Connect it and videos can be uploaded straight from the editor — the password stays on this server, uploads are proxied, never sent from the browser.' ) }
 										badge={storageReady ? <Badge tone="green">{ __( 'Connected' ) }</Badge> : <Badge tone="gray">{ __( 'Not set up' ) }</Badge>}
-										open={bunnyPanel === 'storage'}
-										onToggle={() => setBunnyPanel((p) => (p === 'storage' ? '' : 'storage'))}
+										open={cdnPanel === 'bunny-storage'}
+										onToggle={() => setCdnPanel((p) => (p === 'bunny-storage' ? '' : 'bunny-storage'))}
 									>
 										{(() => {
 											const st = settings.bunny?.storage || {};
@@ -570,26 +605,85 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 										title={ __( 'Bunny.net Stream' ) }
 										description={ __( "Videos hosted in a Bunny video library. Each video's own pull zone and video ID are set in its Source tab — only the signing key is site-wide." ) }
 										badge={settings.bunny?.tokenKey ? <Badge tone="green">{ __( 'Key saved' ) }</Badge> : <Badge tone="gray">{ __( 'Not set up' ) }</Badge>}
-										open={bunnyPanel === 'stream'}
-										onToggle={() => setBunnyPanel((p) => (p === 'stream' ? '' : 'stream'))}
+										open={cdnPanel === 'bunny-stream'}
+										onToggle={() => setCdnPanel((p) => (p === 'bunny-stream' ? '' : 'bunny-stream'))}
 									>
 										<Field label={ __( 'Token Authentication Key' ) } hint={ __( 'Bunny → CDN → your Stream pull zone → Security → Token Authentication Key. Only needed to sign playback of videos you mark private.' ) } className='!mb-0'>
 											<Input type="password" value={settings.bunny?.tokenKey || ''} onChange={(e) => setSettings((s) => ({ ...s, bunny: { ...(s.bunny || {}), tokenKey: e.target.value.trim() } }))} placeholder="••••••••-••••-••••" />
 										</Field>
 									</CollapsibleCard>
 
+									{ /* One card, not two. Bunny needs a card per product because
+									     Storage and Stream are separate services with separate
+									     secrets; Gumlet Stream and Gumlet upload are two ways into
+									     one workspace behind one API key, so splitting them would
+									     invent a distinction the account doesn't have. */ }
+									<CollapsibleCard
+										title={ __( 'Gumlet' ) }
+										description={ __( 'Videos hosted and transcoded by Gumlet. Connect it and files can be uploaded straight from the editor — the browser sends them directly to Gumlet using a one-time link this server signs, so your API key never leaves the site.' ) }
+										badge={gumletReady ? <Badge tone="green">{ __( 'Connected' ) }</Badge> : <Badge tone="gray">{ __( 'Not set up' ) }</Badge>}
+										open={cdnPanel === 'gumlet'}
+										onToggle={() => setCdnPanel((p) => (p === 'gumlet' ? '' : 'gumlet'))}
+									>
+										{(() => {
+											const g = settings.gumlet || {};
+											const setG = (partial) => setSettings((s) => ({ ...s, gumlet: { ...(s.gumlet || {}), ...partial } }));
+											return (
+												<>
+													<Field label={ __( 'API key' ) } required hint={ __( 'Gumlet → Settings → API keys. Grants full access to your workspace, so it is never exposed to the browser.' ) }>
+														<Input type="password" value={g.apiKey || ''} onChange={(e) => setG({ apiKey: e.target.value.trim() })} placeholder="••••••••-••••-••••" />
+													</Field>
+													<div className="grid grid-cols-2 gap-4">
+														{ /* Only uploads need this. Pasting an asset that already
+														     exists works without it, which is why it isn't marked
+														     required — the editor says so at the point of use. */ }
+														{ /* Gumlet's API calls this a collection, its dashboard calls
+														     it a workspace, and the dashboard never shows the id at all
+														     — so this is looked up with the saved key rather than asked
+														     for. The text box is only the fallback for when that lookup
+														     cannot run. */ }
+														<Field label={ __( 'Video workspace' ) } hint={ __( 'Where uploaded videos land. Needed to upload; using a video you already have works without it.' ) }>
+															{ gumletCollections === null ? (
+																<Input value="" disabled placeholder={ g.apiKey ? __( 'Looking up your workspaces…' ) : __( 'Add your API key first' ) } />
+															) : gumletCollections.length ? (
+																<Select value={g.collectionId || ''} onChange={(e) => setG({ collectionId: e.target.value })}>
+																	<option value="">{ __( '— Select a workspace —' ) }</option>
+																	{gumletCollections.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+																</Select>
+															) : (
+																<Input value={g.collectionId || ''} onChange={(e) => setG({ collectionId: e.target.value.trim() })} placeholder="65f1a2b3c4d5e6f708192a3b" />
+															)}
+														</Field>
+														<Field label={ __( 'Output format' ) } hint={ __( 'ABR streams adaptively and is the right default. MP4 produces a single progressive file.' ) }>
+															<Select value={g.format || 'ABR'} onChange={(e) => setG({ format: e.target.value })}>
+																<option value="ABR">{ __( 'ABR (adaptive streaming)' ) }</option>
+																<option value="MP4">{ __( 'MP4 (single file)' ) }</option>
+															</Select>
+														</Field>
+													</div>
+													<Field label={ __( 'Upload folder' ) } hint={ __( 'Folder inside the collection that uploads land in. Leave empty to use the root.' ) }>
+														<Input value={g.folder || ''} onChange={(e) => setG({ folder: e.target.value.replace(/^\/+|\/+$/g, '') })} placeholder="trueplayer" />
+													</Field>
+													<Field label={ __( 'Signing secret (optional)' ) } hint={ __( 'Gumlet → your workspace → Video protection → Signed URLs. Only needed to sign playback of videos you mark private. A different value from the API key above.' ) } className='!mb-0'>
+														<Input type="password" value={g.signSecret || ''} onChange={(e) => setG({ signSecret: e.target.value.trim() })} placeholder="••••••••••••••••" />
+													</Field>
+												</>
+											);
+										})()}
+									</CollapsibleCard>
+
 									<Card className="p-6">
 										<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Signed link expiry' ) }</h3>
 										<p className="text-sm text-muted mb-4">{ __( 'How long a signed / private playback URL stays valid before it must be re-issued.' ) }</p>
 										<div className='mt-4 pt-5 border-t border-solid border-line'>
-											<Field label={ __( 'Expiry (hours)' ) } hint={ __( 'Applies to private self-hosted files and to both Bunny sources above.' ) } className='!mb-0'>
+											<Field label={ __( 'Expiry (hours)' ) } hint={ __( 'Applies to private self-hosted files and to the Bunny and Gumlet sources above.' ) } className='!mb-0'>
 												<Input type="number" min="1" value={settings.sources?.signedUrlTtlHours || 6} onChange={(e) => setSettings((s) => ({ ...s, sources: { ...(s.sources || {}), signedUrlTtlHours: parseInt(e.target.value, 10) || 0 } }))} />
 											</Field>
 										</div>
 									</Card>
 								</>
 							) : (
-								<UpsellPanel title={ __( 'Private & premium sources' ) } features={[ __( 'Bunny.net token authentication' ), __( 'Signed, expiring playback URLs' ), __( 'Mux & HLS streaming' ) ]} />
+								<UpsellPanel title={ __( 'Private & premium sources' ) } features={[ __( 'Bunny.net & Gumlet hosting' ), __( 'Upload to your CDN from the editor' ), __( 'Signed, expiring playback URLs' ), __( 'Mux & HLS streaming' ) ]} />
 							)}
 						</div>
 					)}

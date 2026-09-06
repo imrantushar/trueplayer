@@ -1,4 +1,5 @@
 import { Card, Field, Toggle, Badge } from '../../components/UI';
+import { PRIVATABLE_SOURCES } from '@Utils/source-types';
 import { __, __sprintf } from '@Utils/translation';
 
 const FIELD_OPTIONS = [
@@ -16,7 +17,9 @@ export default function ProtectionTab( { config, patch } ) {
 	const toggleField = ( f ) =>
 		setWm( { fields: fields.includes( f ) ? fields.filter( ( x ) => x !== f ) : [ ...fields, f ] } );
 
-	const privatable = [ 'self', 'url', 'bunny' ].includes( source.type || 'self' );
+	// Was a hardcoded list that omitted `bunnyStorage`, hiding a signing path
+	// that has worked server-side all along (PrivateVideo::sign_bunny_storage).
+	const privatable = PRIVATABLE_SOURCES.includes( source.type || 'self' );
 
 	return (
 		<div className="space-y-6">
@@ -26,7 +29,7 @@ export default function ProtectionTab( { config, patch } ) {
 					{ source.private && <Badge tone="amber">{ __( 'on' ) }</Badge> }
 				</div>
 				<p className="text-sm text-gray-500 mb-3">
-					{ __( 'The real media URL never appears in the page. Self-hosted files stream through a signed link that expires; Bunny videos get CDN token authentication (set your Token Auth key under Settings → Bunny.net).' ) }
+					{ __( 'The real media URL never appears in the page. Self-hosted files stream through a signed link that expires; Bunny and Gumlet videos get their provider’s own token authentication (set the signing key under Settings → Sources & CDN).' ) }
 				</p>
 				<div className='mt-4 pt-5 border-t border-solid border-line'>
 					{ privatable ? (
@@ -36,7 +39,7 @@ export default function ProtectionTab( { config, patch } ) {
 							label={ __( 'Serve this video through signed, expiring links' ) }
 						/>
 					) : (
-						<p className="text-sm text-gray-400">{ __( 'Available for self-hosted, external-URL and Bunny sources (YouTube/Vimeo embeds are public by nature).' ) }</p>
+						<p className="text-sm text-gray-400">{ __( 'Available for self-hosted, external-URL, Bunny and Gumlet sources (YouTube/Vimeo embeds are public by nature).' ) }</p>
 					) }
 				</div>
 			</Card>

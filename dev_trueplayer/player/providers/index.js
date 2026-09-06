@@ -26,10 +26,15 @@ function resolveMux( source ) {
 }
 
 /**
- * Bunny Storage → a direct file (mp4/webm) or playlist from a pull zone. An
- * .m3u8 plays through hls.js; anything else is a plain progressive file.
+ * A source that is simply a URL, where only the URL says how to play it: an
+ * .m3u8 goes through hls.js, anything else is a plain progressive file.
+ *
+ * Covers Bunny Storage (a file on a pull zone) and both Gumlet types, whose
+ * playback URL the server has already resolved from the asset id — ABR assets
+ * arrive as a manifest, MP4-format ones as a file, and neither needs this
+ * layer to know which.
  */
-function resolveBunnyStorage( source ) {
+function resolveFileOrManifest( source ) {
 	const src = ( source.src || '' ).trim();
 	return { ...source, type: /\.m3u8(\?|$)/i.test( src ) ? 'hls' : 'url', src };
 }
@@ -46,8 +51,8 @@ export async function createProvider( container, source, opts = {} ) {
 	if ( source.type === 'mux' ) {
 		return createHtml5Provider( container, resolveMux( source ), opts );
 	}
-	if ( source.type === 'bunnyStorage' ) {
-		return createHtml5Provider( container, resolveBunnyStorage( source ), opts );
+	if ( [ 'bunnyStorage', 'gumlet', 'gumletStorage' ].includes( source.type ) ) {
+		return createHtml5Provider( container, resolveFileOrManifest( source ), opts );
 	}
 	switch ( source.type ) {
 		case 'youtube': {

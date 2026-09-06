@@ -4,6 +4,7 @@ import { Button, Modal, Input } from './UI';
 import { Icon } from './icons';
 import { api } from '../api';
 import { ACCEPTED, uploadToBunny } from '../utils/bunnyUpload';
+import { FilePicker, Warning, formatBytes } from './UploadFieldParts';
 
 /**
  * The source field for a Bunny.net Storage video.
@@ -123,7 +124,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 					) }
 					<Button variant="ghost" size="sm" onClick={ () => onChange( '' ) }>{ __( 'Remove' ) }</Button>
 				</div>
-				<FilePicker inputRef={ inputRef } onPick={ send } />
+				<FilePicker inputRef={ inputRef } onPick={ send } accept={ ACCEPTED } />
 				{ error && <p className="text-xs text-danger !mt-1.5">{ error }</p> }
 				{ warning && <Warning text={ warning } /> }
 			</>
@@ -194,7 +195,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 				/>
 			) }
 
-			<FilePicker inputRef={ inputRef } onPick={ send } />
+			<FilePicker inputRef={ inputRef } onPick={ send } accept={ ACCEPTED } />
 			{ error && <p className="text-xs text-danger !mt-1.5">{ error }</p> }
 			{ status.streamHost && (
 				<Warning text={ __sprintf(
@@ -213,45 +214,6 @@ export default function BunnyStorageField( { value, onChange } ) {
 				/>
 			) }
 		</>
-	);
-}
-
-/**
- * A problem worth stopping for that isn't a failure — the upload worked, the
- * playback URL is doubtful. Amber rather than red, and never in place of the
- * file: the author still has their upload, they just have a hostname to fix.
- */
-function Warning( { text } ) {
-	return (
-		// The body is `text-ink`, not `text-warning`: #FDB022 on its own 12%
-		// tint is about 1.9:1, which is fine for a one-word badge and
-		// unreadable for a sentence. The amber carries in the icon and border.
-		<div className="flex gap-2 mt-2 p-3 rounded border border-warning/40 bg-warning-light">
-			<Icon name="help" className="w-4 h-4 shrink-0 text-warning mt-px" />
-			<p className="text-xs text-ink leading-5 !m-0">{ text }</p>
-		</div>
-	);
-}
-
-/**
- * The file input itself, kept out of the layout. It is rendered rather than
- * created on demand so the same element can be reused for Replace, and it is
- * reset after every pick — choosing the same file twice in a row fires no
- * change event otherwise, which reads as the button being broken.
- */
-function FilePicker( { inputRef, onPick } ) {
-	return (
-		<input
-			ref={ inputRef }
-			type="file"
-			accept={ ACCEPTED }
-			className="hidden"
-			onChange={ ( e ) => {
-				const file = e.target.files?.[ 0 ];
-				e.target.value = '';
-				onPick( file );
-			} }
-		/>
 	);
 }
 
@@ -302,18 +264,4 @@ function ZoneBrowser( { onClose, onPick } ) {
 			</div>
 		</Modal>
 	);
-}
-
-function formatBytes( bytes ) {
-	if ( ! bytes ) {
-		return '';
-	}
-	const units = [ 'B', 'KB', 'MB', 'GB' ];
-	let n = bytes;
-	let i = 0;
-	while ( n >= 1024 && i < units.length - 1 ) {
-		n /= 1024;
-		i++;
-	}
-	return `${ n >= 10 || 0 === i ? Math.round( n ) : n.toFixed( 1 ) } ${ units[ i ] }`;
 }

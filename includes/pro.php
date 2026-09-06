@@ -38,8 +38,15 @@ class Pro {
 		'lms',             // Academy LMS progression sync
 	];
 
-	/** Premium source types reserved for pro. */
-	const PREMIUM_SOURCES = [ 'bunny', 'bunnyStorage', 'mux', 'hls' ];
+	/**
+	 * Premium source types reserved for pro.
+	 *
+	 * Enforced in Helper::enforce_pro_limits(), which strips the source's
+	 * location on a free install so the media URL never reaches the page.
+	 * Mirrored in the browser by SOURCE_TYPES in
+	 * dev_trueplayer/utils/source-types.js — keep the two in step.
+	 */
+	const PREMIUM_SOURCES = [ 'bunny', 'bunnyStorage', 'mux', 'hls', 'gumlet', 'gumletStorage' ];
 
 	/** Skins available only with pro. */
 	const PREMIUM_SKINS = [ 'floating', 'ambient' ];

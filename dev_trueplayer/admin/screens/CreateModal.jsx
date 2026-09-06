@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from '@wordpress/element';
 import { Button, Modal, Field, Input } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
+import { SOURCE_TYPES } from '@Utils/source-types';
 import { api } from '../api';
 import { __, __sprintf } from '@Utils/translation';
 
@@ -15,16 +16,10 @@ import { __, __sprintf } from '@Utils/translation';
  * once the library lands.
  */
 
-const MEDIA_TYPES = [
-	{ value: 'self', label: __( 'Self-hosted' ), hint: __( 'From your media library' ) },
-	{ value: 'youtube', label: __( 'YouTube' ), hint: __( 'Paste a video link' ) },
-	{ value: 'vimeo', label: __( 'Vimeo' ), hint: __( 'Paste a video link' ) },
-	{ value: 'url', label: __( 'External URL' ), hint: __( 'A direct mp4 / webm file' ) },
-	{ value: 'bunny', label: __( 'Bunny.net Stream' ), hint: __( 'Signed, private delivery' ), pro: true },
-	{ value: 'bunnyStorage', label: __( 'Bunny.net Storage' ), hint: __( 'A direct file from your zone' ), pro: true },
-	{ value: 'mux', label: __( 'Mux' ), hint: __( 'Adaptive streaming' ), pro: true },
-	{ value: 'hls', label: __( 'HLS stream' ), hint: __( 'An .m3u8 playlist' ), pro: true },
-];
+// The tiles come from the shared list so a new source type appears here without
+// anyone remembering this file exists — which is how `bunnyStorage` ended up in
+// three of the five places that used to keep their own copy.
+const MEDIA_TYPES = SOURCE_TYPES;
 
 // H5P category → picker group label + tile icon.
 const CATEGORIES = [
@@ -189,7 +184,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 						} ) }
 					</div>
 					<span className="block text-xs text-gray-400 mt-2">
-						{ isPro() ? __( 'Change the source details in the editor.' ) : __( 'Bunny / Mux / HLS need TruePlayer Pro.' ) }
+						{ isPro() ? __( 'Change the source details in the editor.' ) : __( 'Bunny, Gumlet, Mux and HLS need TruePlayer Pro.' ) }
 					</span>
 				</div>
 			) }

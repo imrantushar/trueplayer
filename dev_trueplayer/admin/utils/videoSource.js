@@ -8,6 +8,13 @@ export function hasVideoSource( source = {} ) {
 			return !! ( source.pullZone && source.videoId );
 		case 'mux':
 			return !! ( source.playbackId || source.src );
+		// A Gumlet video is identified by its asset id. `src` may legitimately
+		// still be empty — an asset saved while Gumlet was still transcoding it
+		// has its playback URL resolved at render time instead — so requiring
+		// one here would report a perfectly good video as sourceless.
+		case 'gumlet':
+		case 'gumletStorage':
+			return !! ( source.assetId || source.src );
 		default:
 			return !! source.src;
 	}
@@ -33,6 +40,9 @@ export function sourceKey( source = {} ) {
 			return `bunny:${ media }:${ source.pullZone || '' }:${ source.videoId || '' }`;
 		case 'mux':
 			return `mux:${ media }:${ source.playbackId || '' }:${ source.src || '' }`;
+		case 'gumlet':
+		case 'gumletStorage':
+			return `${ source.type }:${ media }:${ source.assetId || '' }:${ source.src || '' }`;
 		default:
 			return `${ source.type || '' }:${ media }:${ source.src || '' }`;
 	}

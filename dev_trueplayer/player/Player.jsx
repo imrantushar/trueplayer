@@ -4,6 +4,7 @@ import { CoverageTracker } from './coverage';
 import { resolveCustomize, autoplayMode } from './customize';
 import { gaEvent } from './ga';
 import { rest } from '@Utils/rest';
+import { isEmbedSource, isProSource } from '@Utils/source-types';
 import { __ } from '@Utils/translation';
 import { supportsContainerPiP, cloneStylesInto } from './pip';
 import Controls from './components/Controls';
@@ -136,7 +137,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// "In this video" drawer: chapters (any provider) + transcript (from the
 	// caption track on the html5-backed providers; embeds have no cue access).
 	const chapterList = config.chapters || [];
-	const isEmbedProvider = source.type === 'youtube' || source.type === 'vimeo';
+	const isEmbedProvider = isEmbedSource( source.type );
 	const hasInfo = chapterList.length > 0 || ( ! isEmbedProvider && ( source.subtitles || [] ).length > 0 );
 
 	const [ ready, setReady ] = useState( false );
@@ -192,8 +193,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		setNativeRatio( null );
 
 		( async () => {
-			// Premium sources are pro-only.
-			if ( [ 'bunny', 'mux', 'hls' ].includes( source.type ) && ! gatingOn ) {
+			// Premium sources are pro-only. The server has already stripped the
+			// URL out of the config on a free install (Helper::enforce_pro_limits),
+			// so this is the message rather than the gate — but it has to cover
+			// every premium type or the stripped source reads as a broken video
+			// instead of a locked one. It used to be a hand-kept list that had
+			// already fallen behind by one.
+			if ( isProSource( source.type ) && ! gatingOn ) {
 				setError( __( 'This video source requires TruePlayer Pro.' ) );
 				return;
 			}
@@ -1052,7 +1058,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			     events so their in-frame links — title, "Watch on YouTube", channel,
 			     end-screen suggestions — can't be clicked through to leave the site.
 			     Clicking still toggles play, exactly like the native players. */ }
-			{ ( source.type === 'youtube' || source.type === 'vimeo' ) && ! activeQuiz && ! locked && ! error && (
+			{ isEmbedProvider && ! activeQuiz && ! locked && ! error && (
 				// eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
 				<div className="tp-shield" aria-hidden="true" onClick={ () => ready && playPause() } />
 			) }
