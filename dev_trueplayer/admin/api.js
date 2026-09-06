@@ -65,6 +65,14 @@ export const api = {
 	bunnyStatus: () => rest.get( 'bunny/status' ),
 	bunnyFiles: () => rest.get( 'bunny/files' ),
 
+	// Gumlet (pro) — the upload itself goes straight from the browser to
+	// Gumlet, see utils/gumletUpload.js; these are the surrounding calls.
+	gumletStatus: () => rest.get( 'gumlet/status' ),
+	/** Workspaces the saved key can see — Gumlet never shows these ids in its UI. */
+	gumletCollections: () => rest.get( 'gumlet/collections' ),
+	/** Resolve a pasted asset id or URL into a playable asset. */
+	gumletAsset: ( id ) => rest.get( `gumlet/asset?id=${ encodeURIComponent( id ) }` ),
+
 	// LMS course/lesson options (pro)
 	getLmsOptions: () => rest.get( 'lms/options' ),
 

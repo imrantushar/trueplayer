@@ -1,23 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { Card, Field, FieldGroup, Input, Select, SectionTitle, Toggle } from '../../components/UI';
 import BunnyStorageField from '../../components/BunnyStorageField';
+import GumletField from '../../components/GumletField';
 import MediaFileCard from '../../components/MediaFileCard';
 import PosterField from '../../components/PosterField';
 import { isPro } from '../../pro';
 import { api } from '../../api';
 import { canAutoCaptureFrame, canCaptureFrame, captureVideoFrame } from '../../utils/frameCapture';
+import { SOURCE_TYPES as TYPES, AUDIO_SOURCES } from '@Utils/source-types';
 import { __ } from '@Utils/translation';
-
-const TYPES = [
-	{ value: 'self', label: __( 'Self-hosted (media library)' ) },
-	{ value: 'youtube', label: __( 'YouTube' ) },
-	{ value: 'vimeo', label: __( 'Vimeo' ) },
-	{ value: 'url', label: __( 'External URL (mp4/webm)' ) },
-	{ value: 'bunny', label: __( 'Bunny.net Stream' ), pro: true },
-	{ value: 'bunnyStorage', label: __( 'Bunny.net Storage (file)' ), pro: true },
-	{ value: 'mux', label: __( 'Mux' ), pro: true },
-	{ value: 'hls', label: __( 'HLS stream (.m3u8)' ), pro: true },
-];
 
 /**
  * The fields that say *where the media is*, as opposed to how it is presented.
@@ -25,7 +16,7 @@ const TYPES = [
  * YouTube's field, and a Bunny pull zone is meaningless everywhere else. Set
  * together when the type changes, so no field keeps another type's value.
  */
-const SOURCE_FIELDS = [ 'src', 'pullZone', 'videoId', 'playbackId' ];
+const SOURCE_FIELDS = [ 'src', 'pullZone', 'videoId', 'playbackId', 'assetId' ];
 
 /** Just the source-locating fields of a source, with absent ones as ''. */
 function locatorOf( source = {} ) {
@@ -43,7 +34,7 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 	// only meaningful for the file-backed types — a YouTube or Vimeo source is an
 	// iframe either way. Still shown when it is already on, so a setting made
 	// before a source change never gets stranded somewhere it can't be undone.
-	const canBeAudio = [ 'self', 'url', 'bunnyStorage' ].includes( source.type ) || audio;
+	const canBeAudio = AUDIO_SOURCES.includes( source.type ) || audio;
 
 	const [ capture, setCapture ] = useState( { busy: false, error: '' } );
 	// The src the auto-capture below has already dealt with, so it fires once
@@ -223,6 +214,18 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 			{ source.type === 'bunnyStorage' && (
 				<Field label={ __( 'Video file' ) } required hint={ __( 'Upload straight to your storage zone, reuse a file already in it, or paste a URL.' ) }>
 					<BunnyStorageField value={ source.src || '' } onChange={ ( src ) => set( { src } ) } />
+				</Field>
+			) }
+
+			{ source.type === 'gumletStorage' && (
+				<Field label={ __( 'Video file' ) } required hint={ __( 'Upload straight to Gumlet, reuse a video already in your library, or paste an ID.' ) }>
+					<GumletField type="gumletStorage" value={ source } onChange={ ( partial ) => set( partial ) } />
+				</Field>
+			) }
+
+			{ source.type === 'gumlet' && (
+				<Field label={ __( 'Gumlet video' ) } required hint={ __( 'The video ID from your Gumlet dashboard. A share or playback URL works too — the ID is read out of it.' ) }>
+					<GumletField type="gumlet" value={ source } onChange={ ( partial ) => set( partial ) } />
 				</Field>
 			) }
 

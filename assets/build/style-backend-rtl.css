@@ -302,11 +302,17 @@
 .\!mb-6 {
 		margin-bottom: 1.5rem !important;
 }
+.\!mt-0\.5 {
+		margin-top: 0.125rem !important;
+}
 .\!mt-1\.5 {
 		margin-top: 0.375rem !important;
 }
 .\!mt-2 {
 		margin-top: 0.5rem !important;
+}
+.\!mt-3 {
+		margin-top: 0.75rem !important;
 }
 .-mb-px {
 		margin-bottom: -1px;

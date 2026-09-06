@@ -170,6 +170,21 @@ class Shortcode {
 			$config = self::prepare_layers( $config );
 			$config = self::prepare_timed_content( $config );
 			$config = self::prepare_watermark( $config );
+
+			/**
+			 * Last chance to turn a stored identifier into a playable URL.
+			 *
+			 * Some sources are stored as a provider's own id rather than a URL
+			 * — a Gumlet video saved mid-encode has an asset id and nothing to
+			 * play yet — and only the addon that talks to that provider can
+			 * resolve one. Runs before signing, since there is nothing to sign
+			 * until a URL exists.
+			 *
+			 * @param array $config   The resolved config.
+			 * @param int   $video_id The video being rendered.
+			 */
+			$config = (array) apply_filters( 'trueplayer/source/resolve', $config, $video_id );
+
 			$config = PrivateVideo::prepare_source( $config, $video_id );
 		}
 		return self::strip_answer_keys( $config );

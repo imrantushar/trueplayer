@@ -1,3 +1,8 @@
+// FILE_SOURCES: types whose `src` is a media file a <video> element can decode.
+// Adaptive manifests are excluded below — an .m3u8 needs a streaming library,
+// not a src — so a Gumlet/Bunny asset in ABR form falls out there, while the
+// same provider's progressive MP4 output stays capturable.
+import { FILE_SOURCES as FILE_TYPES } from '@Utils/source-types';
 import { __ } from '@Utils/translation';
 
 /**
@@ -13,10 +18,6 @@ import { __ } from '@Utils/translation';
  * Vimeo) hand back an iframe rather than pixels, and those already derive a
  * poster from the provider's own thumbnail — see utils/poster.js.
  */
-
-// Types whose `src` is a media file a <video> element can decode. Adaptive
-// manifests are excluded below: an .m3u8 needs a streaming library, not a src.
-const FILE_TYPES = [ 'self', 'url', 'bunnyStorage' ];
 
 // Frames are read at these fractions of the runtime, in order. Videos commonly
 // open on black or a fade-in, so a flat first frame falls through to the next

@@ -4,7 +4,7 @@ Tags: video, player, lms, quiz, webhooks, watch tracking
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,9 +18,21 @@ TruePlayer is a native WordPress video/audio player built for enforcement and au
 * **Quiz gating** — attach built-in checkpoint and end-gate questions to a video; failing locks the video until the viewer re-watches and re-attempts.
 * **Webhooks** — signed JSON payloads fire on key events (completed, quiz passed/failed, locked, milestones) for Zapier / automation tools.
 
-Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources (Mux, BunnyCDN), and Gem-ecosystem bridges.
+Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources (Mux, Bunny, Gumlet), and Gem-ecosystem bridges.
 
 == Changelog ==
+
+= 1.3.0 - 06-09-2026 =
+* Added - Gumlet as a video source — upload a file from the editor, or use one already in your Gumlet workspace. Needs Pro.
+* Added - Uploads go straight from the browser to Gumlet, with drag & drop, progress and cancel. PHP's upload size limit no longer applies, and your API key never leaves the server.
+* Added - Gumlet settings under Settings → Sources & CDN, with your workspaces offered as a list.
+* Added - Signed, expiring links for Gumlet videos marked private.
+* Added - A video saved while Gumlet is still encoding starts playing on its own when encoding finishes.
+
+* Fixed - Premium sources leaked their real media URL into the page on free installs. The location is now stripped on the server.
+* Fixed - Bunny.net Storage videos could not be marked private, played on free installs despite being premium, and showed a raw "bunnyStorage" badge.
+* Fixed - HLS video failed to play in Chrome — the player trusted Chrome's claim that it supports HLS and skipped hls.js.
+* Fixed - Playback failures said only "Playback error". They now name the cause.
 
 = 1.2.0 - 03-09-2026 =
 * Added - Direct Bunny.net Storage uploads from the editor with drag & drop, picker, progress bar, and cancel support.

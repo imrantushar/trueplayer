@@ -160,6 +160,24 @@ class Helper {
 		if ( $skin && Pro::is_premium_skin( $skin ) ) {
 			$config['customize']['appearance']['skin'] = 'default';
 		}
+
+		/**
+		 * A premium source keeps its type and loses its location.
+		 *
+		 * The client has always refused to play these (see Player.jsx), but the
+		 * config it refused on still carried the real media URL — a signed Bunny
+		 * manifest included — inline in the page, where anyone could read it out
+		 * of the source. Refusing in the browser is a courtesy; this is the gate.
+		 *
+		 * The type survives on purpose: the player needs it to say *why* it
+		 * won't play. Dropping the source entirely would render as an ordinary
+		 * "no video here" instead of an upgrade prompt.
+		 */
+		$source_type = $config['source']['type'] ?? '';
+		if ( $source_type && Pro::is_premium_source( $source_type ) ) {
+			$config['source'] = [ 'type' => $source_type, 'locked' => true ];
+		}
+
 		// Pro-only config never reaches the free frontend.
 		unset( $config['protection'], $config['timedContent'] );
 		$config['layers'] = self::free_layers( $config['layers'] ?? [] );

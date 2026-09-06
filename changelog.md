@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.3.0 - 2026-09-06
+
+### Added
+
+- Gumlet as a video source — upload a file from the editor, or use one already in your Gumlet workspace. Needs Pro.
+- Uploads go straight from the browser to Gumlet, with drag & drop, progress and cancel. PHP's upload size limit no longer applies, and your API key never leaves the server.
+- Gumlet settings under Settings → Sources & CDN, with your workspaces offered as a list.
+- Signed, expiring links for Gumlet videos marked private.
+- A video saved while Gumlet is still encoding starts playing on its own when encoding finishes.
+
+### Fixed
+
+- Premium sources leaked their real media URL into the page on free installs. The location is now stripped on the server.
+- Bunny.net Storage videos could not be marked private, played on free installs despite being premium, and showed a raw "bunnyStorage" badge.
+- HLS video failed to play in Chrome — the player trusted Chrome's claim that it supports HLS and skipped hls.js.
+- Playback failures said only "Playback error". They now name the cause.
+
+### Changed
+
+- Video source types are defined in one place, so the editor, library and Pro gate can no longer drift apart.
+- Updated the bundled StoreEngine licensing SDK to 1.5.6.
+- Dependencies are now managed with Composer.
+
 ## 1.2.0 - 2026-09-03
 
 ### Added

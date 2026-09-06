@@ -45,7 +45,33 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 	const src = source.src || '';
 	const isHls = source.type === 'hls' || /\.m3u8($|\?)/i.test( src );
 
-	if ( isHls && ! el.canPlayType( 'application/vnd.apple.mpegurl' ) ) {
+	// A source with no URL cannot be played, and must not be handed to the
+	// media element as one: assigning an empty `src` makes the browser resolve
+	// it against the page and fail, which surfaces as a bare "Playback error"
+	// that says nothing about the real problem. A Gumlet video saved while it
+	// was still encoding arrives here exactly like this.
+	if ( ! src ) {
+		setTimeout(
+			() => emitter.emit( 'error', { message: __( 'This video has no playable source yet. If it was just uploaded, it may still be encoding.' ) } ),
+			0
+		);
+	} else if ( isHls ) {
+		/**
+		 * hls.js first, native HLS only as the fallback.
+		 *
+		 * This used to ask `canPlayType('application/vnd.apple.mpegurl')` and use
+		 * hls.js only when the answer was empty — but that answer cannot be
+		 * trusted. Chrome and Chromium builds return "maybe" for the HLS MIME
+		 * type while being entirely unable to play a manifest, so the check
+		 * skipped hls.js and handed a raw .m3u8 to the media element, which fails
+		 * with MEDIA_ERR_SRC_NOT_SUPPORTED once someone presses play. The poster
+		 * paints, so it looks like a working video right up until it isn't.
+		 *
+		 * `Hls.isSupported()` is a real capability test (it checks for Media
+		 * Source Extensions), so it is what decides. Native is then reached only
+		 * where MSE genuinely is not available — iOS Safari — which is exactly
+		 * the browser whose native HLS is worth preferring anyway.
+		 */
 		const Hls = ( await import( /* webpackChunkName: "hlsjs" */ 'hls.js' ) ).default;
 		if ( Hls.isSupported() ) {
 			hls = new Hls( { enableWorker: true } );
@@ -59,8 +85,31 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 				qualities.unshift( { id: 'auto', label: __( 'Auto' ) } );
 				emitter.emit( 'qualitychange', qualities );
 			} );
+			// Without this, an HLS failure is invisible: hls.js reports its own
+			// errors on this event and never touches the media element, so the
+			// only thing the player could ever show was whatever unrelated state
+			// the <video> happened to be in. Non-fatal errors are recovered from
+			// internally and deliberately not surfaced — hls.js retries them.
+			hls.on( Hls.Events.ERROR, ( _evt, data ) => {
+				if ( ! data || ! data.fatal ) {
+					return;
+				}
+				const detail = data.response && data.response.code ? ` (${ data.response.code })` : '';
+				emitter.emit( 'error', {
+					message: __sprintf( 'This video could not be loaded: %s', ( data.details || data.type ) + detail ),
+				} );
+			} );
+		} else if ( el.canPlayType( 'application/vnd.apple.mpegurl' ) ) {
+			// No MSE, but the browser plays HLS itself — iOS Safari.
+			el.src = src;
 		} else {
-			el.src = src; // last-ditch
+			// Neither route exists. Say so, rather than assigning a manifest the
+			// element will reject a moment later with a decode error that reads
+			// like the video is broken.
+			setTimeout(
+				() => emitter.emit( 'error', { message: __( 'This browser cannot play streaming (HLS) video.' ) } ),
+				0
+			);
 		}
 	} else {
 		el.src = src;
@@ -91,7 +140,29 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 	fwd( 'playing' );
 	fwd( 'ratechange' );
 	fwd( 'volumechange' );
-	el.addEventListener( 'error', () => emitter.emit( 'error', el.error ) );
+	/**
+	 * Media-element failures, translated.
+	 *
+	 * `el.error` is a MediaError whose `message` is empty in most browsers, so
+	 * forwarding it raw left the player showing a bare "Playback error" for
+	 * four quite different problems. The code is the only reliable part, so it
+	 * is what gets read.
+	 */
+	el.addEventListener( 'error', () => {
+		const err = el.error;
+		const byCode = {
+			1: __( 'Playback was interrupted.' ),
+			2: __( 'The video could not be downloaded — check the connection or the file’s URL.' ),
+			3: __( 'This video could not be decoded. Its format may not be supported by this browser.' ),
+			4: __( 'This video’s format or URL is not supported by this browser.' ),
+		};
+		emitter.emit( 'error', {
+			code: err && err.code,
+			// A browser that does fill in `message` usually has the most
+			// specific answer, so it wins when present.
+			message: ( err && err.message ) || ( err && byCode[ err.code ] ) || __( 'Playback error.' ),
+		} );
+	} );
 
 	return {
 		kind: 'html5',

@@ -7,7 +7,7 @@ const path = require('path');
 // file webpack actually emitted. Kept in step with the plugin header and
 // TRUEPLAYER_VERSION in trueplayer.php — assets.php builds URLs from that
 // constant, so a mismatch here 404s every script.
-const TRUEPLAYER_VERSION = '1.2.0';
+const TRUEPLAYER_VERSION = '1.3.0';
 
 const config = {
 	...defaultConfig,
