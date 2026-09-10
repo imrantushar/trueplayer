@@ -89,7 +89,17 @@ export class CoverageTracker {
 		return ranges;
 	}
 
-	async flush( final = false ) {
+	/**
+	 * @param {boolean} final     Send even with no new activity — the last flush
+	 *                            of a session.
+	 * @param {boolean} useBeacon Send via sendBeacon: survives the page going
+	 *                            away, but is fire-and-forget, so it returns no
+	 *                            state and the caller cannot know when the server
+	 *                            has applied it. Only correct on unload; a caller
+	 *                            that is about to act on the result (grading a
+	 *                            quiz) must pass false and await this.
+	 */
+	async flush( final = false, useBeacon = final ) {
 		if ( this.preview ) {
 			this.unsent.clear();
 			return;
@@ -118,7 +128,7 @@ export class CoverageTracker {
 		const body = { video: this.videoId, ranges, plays, sessionStart, duration, mediaTime, realElapsed };
 
 		try {
-			if ( final && navigator.sendBeacon ) {
+			if ( useBeacon && navigator.sendBeacon ) {
 				await beacon( 'progress', body );
 			} else {
 				const state = await rest.post( 'progress', body );

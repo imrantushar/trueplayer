@@ -106,7 +106,7 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 							<p className="tp-quiz-feedback tp-fail tp-quiz-verdict">
 								{ result.locked
 									? __sprintf( "You didn't pass (%d%%) — locked. Re-watch the video to try again.", result.score )
-									: result.preview
+									: ( result.preview || null === result.attemptsLeft || undefined === result.attemptsLeft )
 										? __sprintf( "You didn't pass this attempt (%d%%).", result.score )
 										: __sprintf( "You didn't pass this attempt (%1$d%%). Attempts left: %2$d.", result.score, result.attemptsLeft ) }
 							</p>
@@ -162,9 +162,13 @@ export default function Quiz( { videoId, gateId, quiz, title, onPass, onFail, on
 
 				{ result && ! result.passed && ! result.error && (
 					<p className="tp-quiz-feedback tp-fail">
+						{ /* A null `attemptsLeft` means the site never locks on failure, so
+						     there is no countdown to report — see GradingService. */ }
 						{ result.locked
 							? __( 'Locked — you must re-watch the video to try again.' )
-							: __sprintf( 'Not quite (%1$d%%). Attempts left: %2$d.', result.score, result.attemptsLeft ) }
+							: ( null === result.attemptsLeft || undefined === result.attemptsLeft )
+								? __sprintf( 'Not quite (%d%%).', result.score )
+								: __sprintf( 'Not quite (%1$d%%). Attempts left: %2$d.', result.score, result.attemptsLeft ) }
 					</p>
 				) }
 				{ result && result.passed && (

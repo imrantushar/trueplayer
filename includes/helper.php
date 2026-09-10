@@ -404,12 +404,29 @@ class Helper {
 	 * for `requireLogin` into every video the moment anyone opened the Questions
 	 * & gating tab, so the site-wide toggle silently stopped applying.
 	 */
+	/**
+	 * What happens once a viewer has used every quiz attempt.
+	 *
+	 *   lock_retry_after_rewatch — lock the video and wipe the watch coverage, so
+	 *                              re-reaching the completion threshold earns a
+	 *                              fresh set of attempts. The original, and the
+	 *                              default, so no existing site changes.
+	 *   never_lock               — attempts keep being counted and reported, but
+	 *                              running out never locks anything and coverage
+	 *                              is left alone, so the video still resumes.
+	 */
+	const ON_FAIL_POLICIES = [ 'lock_retry_after_rewatch', 'never_lock' ];
+
 	public static function enforcement_defaults(): array {
-		$saved = self::get_settings_section( 'enforcement' );
+		$saved   = self::get_settings_section( 'enforcement' );
+		$on_fail = isset( $saved['onFail'] ) ? (string) $saved['onFail'] : '';
 		return [
 			'completionThreshold' => isset( $saved['completionThreshold'] ) ? (int) $saved['completionThreshold'] : 90,
 			'antiSkip'            => array_key_exists( 'antiSkip', $saved ) ? (bool) $saved['antiSkip'] : true,
 			'maxAttempts'         => isset( $saved['maxAttempts'] ) ? (int) $saved['maxAttempts'] : 3,
+			// Settings are stored verbatim, so an unknown value here would flow
+			// straight into the grading branch — validated back to the default.
+			'onFail'              => in_array( $on_fail, self::ON_FAIL_POLICIES, true ) ? $on_fail : 'lock_retry_after_rewatch',
 			'requireLogin'        => array_key_exists( 'requireLogin', $saved ) ? (bool) $saved['requireLogin'] : false,
 			'strict'              => array_key_exists( 'strict', $saved ) ? (bool) $saved['strict'] : false,
 			'trackGuests'         => array_key_exists( 'trackGuests', $saved ) ? (bool) $saved['trackGuests'] : true,
