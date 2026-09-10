@@ -56,7 +56,11 @@ const PLACEHOLDER = {
 export default function CreateModal( { initialKind = 'media', kinds = [ 'media', 'playlist' ], onClose, onSubmit, onError } ) {
 	const [ kind, setKind ] = useState( initialKind );
 	const [ title, setTitle ] = useState( '' );
-	const [ mediaType, setMediaType ] = useState( 'self' );
+	const [ sourceType, setSourceType ] = useState( 'self' );
+	// Video vs audio — the thing `source.mediaType` actually means. Distinct
+	// from `sourceType` above (self / bunny / youtube …), which is the delivery
+	// method. Conflating the two is what this file used to do.
+	const [ mediaKind, setMediaKind ] = useState( 'video' );
 	const [ busy, setBusy ] = useState( '' ); // '' | 'install' | 'create'
 
 	// Interactive-only state.
@@ -104,6 +108,10 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 		}
 	};
 
+	// Only sources that can carry audio when the Audio tab is showing. This is
+	// AUDIO_SOURCES' second consumer — it had exactly one before.
+	const sourceTiles = 'audio' === mediaKind ? MEDIA_TYPES.filter( ( t ) => t.audio ) : MEDIA_TYPES;
+
 	const needsInstall = 'interactive' === kind && selected && ! selected.installed;
 	const canCreate = 'interactive' === kind ? !! selected?.installed : true;
 
@@ -113,7 +121,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 		}
 		setBusy( 'create' );
 		try {
-			await onSubmit( { kind, title: title.trim(), mediaType, machineName: selected?.machineName || '' } );
+			await onSubmit( { kind, title: title.trim(), sourceType, mediaKind, machineName: selected?.machineName || '' } );
 		} finally {
 			setBusy( '' );
 		}
@@ -168,23 +176,52 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 
 			{ 'media' === kind && (
 				<div className="mb-1">
-					<span className="block text-[13px] font-medium text-ink mb-1.5">{ __( 'Media type' ) }</span>
-					<div role="radiogroup" aria-label={ __( 'Media type' ) } className="grid sm:grid-cols-2 gap-2">
-						{ MEDIA_TYPES.map( ( t ) => {
+					{ /* Which player this becomes. Chosen here rather than left to a
+					     toggle buried in the editor, so an audio item is audio from
+					     the moment it exists. */ }
+					<span className="block text-[13px] font-medium text-ink mb-1.5">{ __( 'What are you adding?' ) }</span>
+					<div className="tp-type-tabs mb-4" role="tablist">
+						{ [ [ 'video', __( 'Video' ) ], [ 'audio', __( 'Audio' ) ] ].map( ( [ value, label ] ) => (
+							<button
+								key={ value }
+								type="button"
+								role="tab"
+								aria-selected={ mediaKind === value }
+								className={ `tp-type-tab ${ mediaKind === value ? 'is-active' : '' }` }
+								onClick={ () => {
+									setMediaKind( value );
+									// The chosen source may not support the new kind
+									// (YouTube can't be audio-only) — fall back to the
+									// first that can.
+									const allowed = 'audio' === value ? SOURCE_TYPES.filter( ( t ) => t.audio ) : SOURCE_TYPES;
+									if ( ! allowed.some( ( t ) => t.value === sourceType ) ) {
+										setSourceType( allowed[ 0 ].value );
+									}
+								} }
+							>{ label }</button>
+						) ) }
+					</div>
+					<span className="block text-[13px] font-medium text-ink mb-1.5">{ __( 'Source' ) }</span>
+					<div role="radiogroup" aria-label={ __( 'Source' ) } className="grid sm:grid-cols-2 gap-2">
+						{ sourceTiles.map( ( t ) => {
 							const locked = t.pro && ! isPro();
 							return (
 								<RadioOption
 									key={ t.value }
 									option={ t }
 									locked={ locked }
-									active={ mediaType === t.value }
-									onPick={ () => ! locked && setMediaType( t.value ) }
+									active={ sourceType === t.value }
+									onPick={ () => ! locked && setSourceType( t.value ) }
 								/>
 							);
 						} ) }
 					</div>
 					<span className="block text-xs text-gray-400 mt-2">
-						{ isPro() ? __( 'Change the source details in the editor.' ) : __( 'Bunny, Gumlet, Mux and HLS need TruePlayer Pro.' ) }
+						{ isPro()
+							? __( 'Change the source details in the editor.' )
+							: ( 'audio' === mediaKind
+								? __( 'Bunny and Gumlet need TruePlayer Pro.' )
+								: __( 'Bunny, Gumlet, Mux and HLS need TruePlayer Pro.' ) ) }
 					</span>
 				</div>
 			) }

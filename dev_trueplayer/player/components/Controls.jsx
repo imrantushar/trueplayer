@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from '@wordpress/element';
 import { formatTime } from '@Utils/format';
+import { CONTROL_DEFAULTS } from '@Utils/controls';
 import { __, __sprintf } from '@Utils/translation';
 
 const Icon = ( { d } ) => (
@@ -17,10 +18,20 @@ const P = {
 	gear: 'M19.4 13a7.8 7.8 0 000-2l2.1-1.6-2-3.4-2.5 1a7.6 7.6 0 00-1.7-1l-.4-2.6h-4l-.4 2.6a7.6 7.6 0 00-1.7 1l-2.5-1-2 3.4L4.6 11a7.8 7.8 0 000 2l-2.1 1.6 2 3.4 2.5-1c.5.4 1.1.7 1.7 1l.4 2.6h4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.4L19.4 13zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z',
 	rewind: 'M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z',
 	forward: 'M13 6v12l8.5-6L13 6zM4 18l8.5-6L4 6v12z',
+	// Track skip — a bar against a triangle, distinct from rewind/forward's
+	// double chevrons so "previous track" doesn't read as "seek back".
+	prev: 'M6 6h2v12H6zm3.5 6l8.5 6V6l-8.5 6z',
+	next: 'M16 6h2v12h-2zm-2.5 6L5 6v12l8.5-6z',
 	download: 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z',
 	list: 'M3 5h13v2H3V5zm0 6h13v2H3v-2zm0 6h9v2H3v-2zm15.5-6L22 13l-3.5 2v-4z',
 	cc: 'M19 4H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm-8.2 6.2H9.3v-.4H7.8v4.4h1.5v-.5h1.5v.8c0 .6-.5 1.1-1.1 1.1H7.4c-.6 0-1.1-.5-1.1-1.1V9.5c0-.6.5-1.1 1.1-1.1h2.3c.6 0 1.1.5 1.1 1.1v.7zm6.9 0h-1.5v-.4h-1.5v4.4h1.5v-.5h1.5v.8c0 .6-.5 1.1-1.1 1.1h-2.3c-.6 0-1.1-.5-1.1-1.1V9.5c0-.6.5-1.1 1.1-1.1h2.3c.6 0 1.1.5 1.1 1.1v.7z',
 };
+
+/** The next rate in the cycle, wrapping back to the first. */
+function nextRate( rates, current ) {
+	const i = rates.indexOf( current );
+	return rates[ ( i + 1 ) % rates.length ] ?? rates[ 0 ];
+}
 
 function buildSegments( chapters, duration ) {
 	if ( ! duration ) {
@@ -53,7 +64,7 @@ function waveBars( seed, n ) {
 	return out;
 }
 
-function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, waveform, waveSeed, disabled } ) {
+function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, waveform, waveSeed, disabled, prefer } ) {
 	const [ hover, setHover ] = useState( null );
 	// While dragging, the thumb/fill follow the pointer immediately instead of
 	// waiting on the provider's (occasionally laggy) timeupdate — this is what
@@ -128,7 +139,13 @@ function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, wa
 	const bpct = duration ? ( buffered / duration ) * 100 : 0;
 	const spct = duration && seekable < duration ? ( seekable / duration ) * 100 : 100;
 
-	const segs = buildSegments( chapters, duration );
+	// Chapters and the waveform are two renderings of the same track and only
+	// one can win. Chapters used to take it unconditionally, which quietly
+	// removed the waveform from any audio item that had them — invisible until
+	// you noticed the bar had changed shape. `prefer` makes the choice explicit:
+	// the minimal audio layout keeps its waveform (there, the waveform IS the
+	// control), everything else still prefers chapter segments.
+	const segs = prefer === 'waveform' ? [] : buildSegments( chapters, duration );
 	const fill = ( value, start, end ) => {
 		const span = end - start;
 		return span > 0 ? Math.min( 100, Math.max( 0, ( ( value - start ) / span ) * 100 ) ) : 0;
@@ -263,10 +280,27 @@ export default function Controls( props ) {
 		playing, current, duration, buffered, muted, volume, rate, quality, track, seekable,
 		chapters, provider, capabilities, controls = {}, speeds, skipSeconds = 10, scrubDisabled, hidePiP,
 		onPlayPause, onSeek, onVolume, onMute, onRate, onQuality, onTrack, onPiP, onFullscreen, onSkip, onDownload,
-		onInfo, hasInfo, infoOpen, audio, title, waveSeed,
+		onInfo, hasInfo, infoOpen, audio, title, waveSeed, onPrev, onNext, scrubberStyle,
 	} = props;
 
-	const show = ( key, fallback = true ) => ( controls[ key ] === undefined ? fallback : controls[ key ] );
+	// Same list the gear menu offers, so the one-tap button and the menu can
+	// never disagree about which rates exist.
+	const rates = speeds && speeds.length ? speeds : [ 0.5, 0.75, 1, 1.25, 1.5, 2 ];
+
+	// A key the caller resolved wins. Otherwise fall back to the registry's
+	// declared default, and only then to `true`.
+	//
+	// The registry step is what makes a newly added control safe: `controls`
+	// normally arrives already resolved (Player passes cz.controls, which is
+	// built on CUSTOMIZE_DEFAULTS), but not every caller does that — and
+	// without the middle step a control declared off, like `speed`, would
+	// render for anyone whose stored config predates it.
+	const show = ( key, fallback = true ) => {
+		if ( controls[ key ] !== undefined ) {
+			return controls[ key ];
+		}
+		return CONTROL_DEFAULTS[ key ] !== undefined ? CONTROL_DEFAULTS[ key ] : fallback;
+	};
 
 	// Read once for the caption button; the Menu reads its own copy for the
 	// language list. Embeds report none, so the button never appears for them.
@@ -280,9 +314,18 @@ export default function Controls( props ) {
 		<div className="tp-controls">
 			{ audio && title && <div className="tp-audio-title" title={ title }>{ title }</div> }
 			{ show( 'progress' ) && (
-				<Scrubber current={ current } duration={ duration } buffered={ buffered } chapters={ chapters } seekable={ seekable } onSeek={ onSeek } waveform={ audio } waveSeed={ waveSeed } disabled={ scrubDisabled } />
+				<Scrubber current={ current } duration={ duration } buffered={ buffered } chapters={ chapters } seekable={ seekable } onSeek={ onSeek } waveform={ audio } waveSeed={ waveSeed } disabled={ scrubDisabled } prefer={ scrubberStyle } />
 			) }
 			<div className="tp-controls-row">
+				{ /* Track navigation. The callback's presence is the availability
+				     signal — a playlist passes one only when there is somewhere to
+				     go, and a standalone player passes neither — so no media-type
+				     or playlist check is needed here. */ }
+				{ show( 'prev' ) && onPrev && (
+					<button className="tp-btn" aria-label={ __( 'Previous track' ) } onClick={ onPrev }>
+						<Icon d={ P.prev } />
+					</button>
+				) }
 				{ show( 'play' ) && (
 					<button className="tp-btn" aria-label={ playing ? __( 'Pause' ) : __( 'Play' ) } onClick={ onPlayPause }>
 						<Icon d={ playing ? P.pause : P.play } />
@@ -298,6 +341,11 @@ export default function Controls( props ) {
 				{ show( 'forward' ) && ! scrubDisabled && (
 					<button className="tp-btn" aria-label={ __( 'Fast forward' ) } onClick={ () => onSkip( skipSeconds ) }>
 						<Icon d={ P.forward } />
+					</button>
+				) }
+				{ show( 'next' ) && onNext && (
+					<button className="tp-btn" aria-label={ __( 'Next track' ) } onClick={ onNext }>
+						<Icon d={ P.next } />
 					</button>
 				) }
 				{ show( 'mute' ) && (
@@ -317,12 +365,24 @@ export default function Controls( props ) {
 				) }
 				{ chapterNow && <span className="tp-chapter-now" title={ chapterNow }>· { chapterNow }</span> }
 				<div className="tp-spacer" />
+				{ /* Playback speed as a one-tap control rather than three levels
+				     into the gear menu — the thing podcast listeners reach for
+				     most. Off by default; the gear menu still lists every rate. */ }
+				{ show( 'speed' ) && capabilities?.rate !== false && (
+					<button
+						className={ `tp-btn tp-speed ${ rate !== 1 ? 'is-active' : '' }` }
+						aria-label={ __( 'Playback speed' ) }
+						onClick={ () => onRate( nextRate( rates, rate ) ) }
+					>
+						{ __sprintf( '%s\u00d7', rate ) }
+					</button>
+				) }
 				{ show( 'download' ) && capabilities?.download && (
 					<button className="tp-btn" aria-label={ __( 'Download' ) } onClick={ onDownload }>
 						<Icon d={ P.download } />
 					</button>
 				) }
-				{ hasInfo && (
+				{ show( 'chapters' ) && hasInfo && (
 					<button className={ `tp-btn ${ infoOpen ? 'is-active' : '' }` } aria-label={ __( 'Chapters & transcript' ) } aria-pressed={ infoOpen } onClick={ onInfo }>
 						<Icon d={ P.list } />
 					</button>

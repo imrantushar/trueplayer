@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from '@wordpress/element';
+import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import Player from './Player';
 import { resolveCustomize } from './customize';
+import { normalizeConfig } from '@Utils/audio';
 import { __, __sprintf } from '@Utils/translation';
 
 /**
@@ -62,7 +63,14 @@ function Facade( { config, onPlay } ) {
  * Clicking an item swaps the active video; autoplay-next advances on end.
  */
 export default function Playlist( { data } ) {
-	const items = data.items || [];
+	// Resolve each member's media type once, up front — the same job
+	// mount.js's readConfig does for a standalone embed. Both the Facade and
+	// the Player below read from these, so doing it here is what keeps them
+	// agreeing about whether an item is audio.
+	const items = useMemo(
+		() => ( data.items || [] ).map( ( item ) => ( { ...item, config: normalizeConfig( item.config || {} ) } ) ),
+		[ data.items ]
+	);
 	const first = items[ 0 ];
 	const initial = first ? resolveLoadStrategy( first.config ) : { strategy: 'eager', autoplay: false };
 
@@ -105,9 +113,23 @@ export default function Playlist( { data } ) {
 		setAutoStart( true );
 		setBooted( true );
 	};
-	const goNext = () => {
-		if ( data.autoplayNext && active < items.length - 1 ) {
+	// "Move to the next track" and "should we move on our own when this one
+	// ends" were one function, which left no way to offer a Next button without
+	// also enabling auto-advance. They are separate now; onEnded still consults
+	// autoplayNext, so end-of-track behaviour is unchanged.
+	const advance = () => {
+		if ( active < items.length - 1 ) {
 			pick( active + 1 );
+		}
+	};
+	const goPrev = () => {
+		if ( active > 0 ) {
+			pick( active - 1 );
+		}
+	};
+	const onTrackEnded = () => {
+		if ( data.autoplayNext ) {
+			advance();
 		}
 	};
 
@@ -132,7 +154,18 @@ export default function Playlist( { data } ) {
 				<div className="tp-pl-main">
 					<div className="trueplayer-mount">
 						{ booted ? (
-							<Player key={ item.videoId } videoId={ item.videoId } config={ item.config } title={ item.title } autoStart={ autoStart } onEnded={ goNext } />
+							<Player
+								key={ item.videoId }
+								videoId={ item.videoId }
+								config={ item.config }
+								title={ item.title }
+								autoStart={ autoStart }
+								onEnded={ onTrackEnded }
+								/* Null at the ends of the list — the player reads the
+								   absence as "no such track" and hides the button. */
+								onPrev={ active > 0 ? goPrev : null }
+								onNext={ active < items.length - 1 ? advance : null }
+							/>
 						) : (
 							<Facade config={ item.config } onPlay={ () => pick( active ) } />
 						) }

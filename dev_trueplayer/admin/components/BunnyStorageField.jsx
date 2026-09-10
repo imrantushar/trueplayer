@@ -20,7 +20,7 @@ import { FilePicker, Warning, formatBytes } from './UploadFieldParts';
  * `onChange` receives the URL string, exactly like MediaPicker, so the caller
  * doesn't care which of the three routes produced it.
  */
-export default function BunnyStorageField( { value, onChange } ) {
+export default function BunnyStorageField( { value, onChange, audio = false } ) {
 	const [ status, setStatus ] = useState( null ); // null = still asking
 	const [ upload, setUpload ] = useState( null ); // { name, percent }
 	const [ error, setError ] = useState( '' );
@@ -114,7 +114,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 		return (
 			<>
 				<div className="flex items-center gap-3 border border-line rounded-card px-3 py-2.5">
-					<Icon name="film" className="w-4 h-4 text-muted shrink-0" />
+					<Icon name={ audio ? 'music' : 'film' } className="w-4 h-4 text-muted shrink-0" />
 					<span className="min-w-0 flex-1">
 						<span className="block text-sm text-ink truncate">{ value.split( '/' ).pop().split( '?' )[ 0 ] }</span>
 						<span className="block text-xs text-muted truncate">{ value }</span>
@@ -145,7 +145,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 				<Input
 					value={ value || '' }
 					onChange={ ( e ) => onChange( e.target.value.trim() ) }
-					placeholder="https://your-zone.b-cdn.net/path/video.mp4"
+					placeholder={ audio ? 'https://your-zone.b-cdn.net/path/episode.mp3' : 'https://your-zone.b-cdn.net/path/video.mp4' }
 				/>
 				<p className="text-xs text-muted !mt-1.5">
 					{ createInterpolateElement(
@@ -167,7 +167,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 				className="w-full border border-dashed border-line rounded-card py-6 text-center text-sm text-muted hover:border-brand-400 hover:text-brand-500 transition-colors"
 			>
 				<span className="block text-xl leading-none mb-1">+</span>
-				{ __( 'Upload a video to Bunny.net' ) }
+				{ audio ? __( 'Upload audio to Bunny.net' ) : __( 'Upload a video to Bunny.net' ) }
 				<span className="block text-xs text-gray-400 mt-1">
 					{ status?.maxBytes
 						? __sprintf( 'or drop it here · up to %s', formatBytes( status.maxBytes ) )
@@ -191,7 +191,7 @@ export default function BunnyStorageField( { value, onChange } ) {
 					autoFocus
 					value={ value || '' }
 					onChange={ ( e ) => onChange( e.target.value.trim() ) }
-					placeholder="https://your-zone.b-cdn.net/path/video.mp4"
+					placeholder={ audio ? 'https://your-zone.b-cdn.net/path/episode.mp3' : 'https://your-zone.b-cdn.net/path/video.mp4' }
 				/>
 			) }
 
@@ -242,7 +242,7 @@ function ZoneBrowser( { onClose, onPick } ) {
 			{ error && <p className="text-sm text-danger">{ error }</p> }
 			{ ! files && ! error && <p className="text-sm text-muted py-8 text-center">{ __( 'Loading…' ) }</p> }
 			{ files && 0 === files.length && (
-				<p className="text-sm text-muted py-8 text-center">{ __( 'Nothing here yet — upload a video and it will appear.' ) }</p>
+				<p className="text-sm text-muted py-8 text-center">{ audio ? __( 'Nothing here yet — upload a file and it will appear.' ) : __( 'Nothing here yet — upload a video and it will appear.' ) }</p>
 			) }
 			{ files && files.length > 0 && 0 === shown.length && (
 				<p className="text-sm text-muted py-8 text-center">{ __sprintf( 'No file matches “%s”.', query ) }</p>
@@ -256,7 +256,7 @@ function ZoneBrowser( { onClose, onPick } ) {
 						onClick={ () => onPick( f ) }
 						className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded border border-line bg-white hover:border-brand-200 hover:bg-gray-50 transition-colors mb-2 last:mb-0"
 					>
-						<Icon name="film" className="w-4 h-4 text-muted shrink-0" />
+						<Icon name={ audio ? 'music' : 'film' } className="w-4 h-4 text-muted shrink-0" />
 						<span className="min-w-0 flex-1 text-[13px] text-ink truncate">{ f.name }</span>
 						<span className="text-xs text-muted shrink-0">{ formatBytes( f.size ) }</span>
 					</button>

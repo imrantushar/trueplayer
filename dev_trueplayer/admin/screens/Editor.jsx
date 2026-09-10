@@ -12,6 +12,7 @@ import ProtectionTab from './editor/ProtectionTab';
 import GatingTab from './editor/GatingTab';
 import EmbedTab from './editor/EmbedTab';
 import PreviewPanel from './editor/PreviewPanel';
+import { isAudioSource } from '@Utils/audio';
 import UpsellPanel from '../components/UpsellPanel';
 import { isPro } from '../pro';
 import { hasVideoSource } from '../utils/videoSource';
@@ -203,7 +204,12 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 	// never advances the step for you.
 	const save = async () => {
 		if ( ! hasVideoSource( video.config?.source || {} ) ) {
-			setToast( { message: __( 'Add a video before saving.' ), tone: 'danger' } );
+			setToast( {
+				message: isAudioSource( video.config?.source || {} )
+					? __( 'Add an audio file before saving.' )
+					: __( 'Add a video before saving.' ),
+				tone: 'danger',
+			} );
 			return;
 		}
 		if ( ! dirty ) {
@@ -340,7 +346,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 					{ /* Column 3 — live preview, pinned so the author sees changes as
 						they edit. */ }
 					<div className="w-full min-w-0 xl:sticky xl:top-[104px]">
-						<PreviewPanel id={ id } config={ config } presets={ presets } onDuration={ setDuration } previewCue={ previewCue } />
+						<PreviewPanel id={ id } config={ config } title={ video?.title || '' } presets={ presets } onDuration={ setDuration } previewCue={ previewCue } />
 					</div>
 				</div>
 			</div>

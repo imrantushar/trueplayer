@@ -6,6 +6,7 @@ import { Icon } from '../components/icons';
 import { PlaylistEditor } from './Playlists';
 import H5pEditor from './H5pEditor';
 import CreateModal from './CreateModal';
+import { isAudioSource } from '@Utils/audio';
 import InteractiveTeaser from '../components/InteractiveTeaser';
 import { h5pEnabled, h5pInstalled } from '../h5p';
 
@@ -113,10 +114,19 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 		}
 	};
 
-	const submitCreate = async ( { kind: newKind, title, mediaType, machineName } ) => {
+	const submitCreate = async ( { kind: newKind, title, sourceType, mediaKind, machineName } ) => {
 		try {
 			if ( 'media' === newKind ) {
-				const v = await api.createVideo( title || __( 'Untitled video' ), { source: { type: mediaType } } );
+				// `mediaType` is written only for audio. Stamping 'video' would be
+				// an explicit opt-out of the extension safety net (see
+				// @Utils/audio), which is not what picking the Video tab means —
+				// that is just the default, and a .mp3 pasted in later should
+				// still be recognised.
+				const source = { type: sourceType };
+				if ( 'audio' === mediaKind ) {
+					source.mediaType = 'audio';
+				}
+				const v = await api.createVideo( title || ( 'audio' === mediaKind ? __( 'Untitled audio' ) : __( 'Untitled video' ) ), { source } );
 				setCreate( null );
 				await loadVideos();
 				onEdit( v.id );
@@ -387,10 +397,10 @@ function RowThumb( { row, byId } ) {
 	if ( 'playlist' === row.kind ) {
 		const first = ( row.item.config?.videos || [] ).map( ( id ) => byId[ id ] ).find( Boolean );
 		const src = first?.config?.source || {};
-		return <Thumb source={ src } type={ 'audio' === src.mediaType ? 'audio' : src.type } />;
+		return <Thumb source={ src } type={ isAudioSource( src ) ? 'audio' : src.type } />;
 	}
 	const src = row.item.config?.source || {};
-	return <Thumb source={ src } type={ 'audio' === src.mediaType ? 'audio' : src.type } />;
+	return <Thumb source={ src } type={ isAudioSource( src ) ? 'audio' : src.type } />;
 }
 
 function RowBadges( { row } ) {

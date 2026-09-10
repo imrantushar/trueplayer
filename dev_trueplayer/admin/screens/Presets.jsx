@@ -3,15 +3,25 @@ import { api } from '../api';
 import { Card, Button, Input, Select, Field, Modal, OptionMenu } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
-import { PRESET_TEMPLATES, templateConfig } from '../data/preset-templates';
+import { templatesFor, templateConfig } from '../data/preset-templates';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import PreviewPanel from './editor/PreviewPanel';
+import { isAudioSource } from '@Utils/audio';
 import { __ } from '@Utils/translation';
 
-// A built-in sample so a preset can be previewed even before any video exists.
+/** A preset's type, defaulting to video for everything made before audio. */
+const presetType = ( p ) => ( 'audio' === p?.type ? 'audio' : 'video' );
+
+// Built-in samples so a preset can be previewed even before any media exists.
+// An audio preset previewed against a video sample shows nothing it controls,
+// so each type gets its own.
 const SAMPLE_SOURCE = { type: 'url', src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', poster: '' };
+const SAMPLE_AUDIO_SOURCE = { type: 'url', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', poster: '', mediaType: 'audio' };
 
 function Editor( { preset, onBack, onSaved, onEditState } ) {
+	// A preset has no `source`, so the type it styles cannot be inferred the way
+	// the video editor infers it — it is carried explicitly.
+	const presetType = 'audio' === preset.type ? 'audio' : 'video';
 	const [ title, setTitle ] = useState( preset.title );
 	const [ config, setConfig ] = useState( preset.config || {} );
 	const [ saving, setSaving ] = useState( false );
@@ -47,11 +57,14 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 	const [ previewId, setPreviewId ] = useState( 0 );
 	useEffect( () => {
 		api.listVideos().then( ( list ) => {
-			const withSrc = ( list || [] ).filter( ( v ) => v.config?.source?.src );
+			// Only offer media of the kind this preset actually styles.
+			const withSrc = ( list || [] ).filter(
+				( v ) => v.config?.source?.src && isAudioSource( v.config.source ) === ( 'audio' === presetType )
+			);
 			setVideos( withSrc );
 			setPreviewId( withSrc[ 0 ]?.id || 0 );
 		} );
-	}, [] );
+	}, [ presetType ] );
 
 	// PlayerOptionsTab edits config.customize / config.branding — the exact shape
 	// a preset stores, so we reuse it directly.
@@ -73,8 +86,12 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 	// The preset's look (config) applied over a real source, for the live player.
 	const previewVideo = videos.find( ( v ) => v.id === previewId );
 	const previewConfig = useMemo(
-		() => ( { ...config, source: previewVideo?.config?.source || SAMPLE_SOURCE, chapters: previewVideo?.config?.chapters || [] } ),
-		[ config, previewVideo ]
+		() => ( {
+			...config,
+			source: previewVideo?.config?.source || ( 'audio' === presetType ? SAMPLE_AUDIO_SOURCE : SAMPLE_SOURCE ),
+			chapters: previewVideo?.config?.chapters || [],
+		} ),
+		[ config, previewVideo, presetType ]
 	);
 
 	return (
@@ -87,11 +104,13 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 				</>,
 				toolbarSlot
 			) }
-			<p className="text-sm text-muted mb-4">{ __( 'These styles & behaviours apply to any video that uses this preset. Individual videos can still override anything.' ) }</p>
+			<p className="text-sm text-muted mb-4">{ 'audio' === presetType
+				? __( 'These styles & behaviours apply to any audio that uses this preset. Individual items can still override anything.' )
+				: __( 'These styles & behaviours apply to any video that uses this preset. Individual videos can still override anything.' ) }</p>
 
 			<div className="flex flex-col xl:flex-row items-start gap-6 mt-6">
 				<div className="flex-1 min-w-0">
-					<PlayerOptionsTab config={ config } patch={ patch } />
+					<PlayerOptionsTab config={ config } patch={ patch } mediaType={ presetType } />
 				</div>
 
 				{ /* Sticky header (top-8) + its h-14 bar are ~88px; top-[104px] clears both with a small gap. */ }
@@ -105,7 +124,7 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 								</Select>
 							</div>
 						) }
-						<PreviewPanel id={ previewId || 0 } config={ previewConfig } />
+						<PreviewPanel id={ previewId || 0 } config={ previewConfig } title={ previewVideo?.title || __( 'Sample track' ) } />
 					</Card>
 				</div>
 			</div>
@@ -116,6 +135,9 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 export default function Presets( { onEditState } ) {
 	const [ presets, setPresets ] = useState( null );
 	const [ title, setTitle ] = useState( '' );
+	// Which half of the list is showing, and which kind the create modal builds.
+	const [ tab, setTab ] = useState( 'video' );
+	const [ newType, setNewType ] = useState( 'video' );
 	const [ template, setTemplate ] = useState( 'default' );
 	const [ adding, setAdding ] = useState( false );
 	const [ busy, setBusy ] = useState( false );
@@ -124,11 +146,19 @@ export default function Presets( { onEditState } ) {
 	const load = () => api.listPresets().then( setPresets );
 	useEffect( () => { load(); }, [] );
 
+	// One fetch, split here — the tab counts need both halves at once, and 200
+	// presets with their configs is a single cheap request either way.
+	const shown = ( presets || [] ).filter( ( p ) => presetType( p ) === tab );
+
 	const create = async () => {
 		setBusy( true );
 		try {
-			const label = PRESET_TEMPLATES.find( ( t ) => t.key === template )?.label || __( 'Untitled preset' );
-			const p = await api.createPreset( title || label, template === 'blank' ? {} : templateConfig( template ) );
+			const label = templatesFor( newType ).find( ( t ) => t.key === template )?.label || __( 'Untitled preset' );
+			const p = await api.createPreset(
+				title || label,
+				template === 'blank' ? {} : templateConfig( template, newType ),
+				newType
+			);
 			setTitle( '' );
 			setAdding( false );
 			await load();
@@ -157,7 +187,7 @@ export default function Presets( { onEditState } ) {
 					<h1 className="text-2xl font-bold text-ink">{ __( 'Player presets' ) }</h1>
 					<p className="text-sm text-muted">{ __( 'Reusable styles & behaviour — brand once, use everywhere.' ) }</p>
 				</div>
-				<Button onClick={ () => { setTitle( '' ); setAdding( true ); } }><Icon name="plus" className="w-4 h-4" /> { __( 'Add preset' ) }</Button>
+				<Button onClick={ () => { setTitle( '' ); setNewType( tab ); setTemplate( 'audio' === tab ? 'podcast' : 'default' ); setAdding( true ); } }><Icon name="plus" className="w-4 h-4" /> { __( 'Add preset' ) }</Button>
 			</div>
 
 			{ adding && (
@@ -171,13 +201,34 @@ export default function Presets( { onEditState } ) {
 						</>
 					}
 				>
+					{ /* The type is fixed at creation — it decides which player the
+					     preset styles, and changing it later would restyle every item
+					     already using it. Hence a choice here, not a setting inside. */ }
+					<Field label={ __( 'Player type' ) } hint={ __( 'Video and audio presets configure different players.' ) }>
+						<div className="tp-type-tabs" role="tablist">
+							{ [ [ 'video', __( 'Video' ) ], [ 'audio', __( 'Audio' ) ] ].map( ( [ value, label ] ) => (
+								<button
+									key={ value }
+									type="button"
+									role="tab"
+									aria-selected={ newType === value }
+									className={ `tp-type-tab ${ newType === value ? 'is-active' : '' }` }
+									onClick={ () => {
+										setNewType( value );
+										// Template keys don't overlap between the two lists.
+										setTemplate( 'audio' === value ? 'podcast' : 'default' );
+									} }
+								>{ label }</button>
+							) ) }
+						</div>
+					</Field>
 					<Field label={ __( 'Preset name' ) }>
-						<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } placeholder={ __( 'e.g. Brand — dark' ) } />
+						<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } placeholder={ 'audio' === newType ? __( 'e.g. Podcast — dark' ) : __( 'e.g. Brand — dark' ) } />
 					</Field>
 					<Field label={ __( 'Start from' ) } hint={ __( 'A predefined look to begin with — you can change everything after.' ) }>
 						<Select value={ template } onChange={ ( e ) => setTemplate( e.target.value ) }>
 							<option value="blank">{ __( 'Blank (defaults)' ) }</option>
-							{ PRESET_TEMPLATES.map( ( t ) => (
+							{ templatesFor( newType ).map( ( t ) => (
 								<option key={ t.key } value={ t.key } disabled={ t.pro && ! isPro() }>
 									{ t.label }{ t.pro && ! isPro() ? __( ' — needs Pro' ) : '' }
 								</option>
@@ -187,24 +238,44 @@ export default function Presets( { onEditState } ) {
 				</Modal>
 			) }
 
+			{ presets !== null && (
+				<div className="tp-type-tabs mb-5" role="tablist">
+					{ [ [ 'video', __( 'Video' ) ], [ 'audio', __( 'Audio' ) ] ].map( ( [ value, label ] ) => (
+						<button
+							key={ value }
+							type="button"
+							role="tab"
+							aria-selected={ tab === value }
+							className={ `tp-type-tab ${ tab === value ? 'is-active' : '' }` }
+							onClick={ () => setTab( value ) }
+						>
+							{ label }
+							<span className="tp-type-tab-count">{ presets.filter( ( p ) => presetType( p ) === value ).length }</span>
+						</button>
+					) ) }
+				</div>
+			) }
+
 			{ presets === null && <p className="text-gray-400">{ __( 'Loading…' ) }</p> }
-			{ presets && presets.length === 0 && (
+			{ presets && shown.length === 0 && (
 				<Card className="p-12 text-center border-dashed">
 					<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="presets" className="w-6 h-6" /></div>
-					<p className="font-semibold text-gray-900">{ __( 'No presets yet' ) }</p>
-					<p className="text-sm text-gray-500">{ __( 'Create one to reuse a consistent player style across videos.' ) }</p>
+					<p className="font-semibold text-gray-900">{ 'audio' === tab ? __( 'No audio presets yet' ) : __( 'No video presets yet' ) }</p>
+					<p className="text-sm text-gray-500">{ 'audio' === tab
+						? __( 'Create one to reuse a consistent audio player style across episodes.' )
+						: __( 'Create one to reuse a consistent player style across videos.' ) }</p>
 				</Card>
 			) }
 
 			<div className="space-y-3">
-				{ ( presets || [] ).map( ( p ) => {
+				{ shown.map( ( p ) => {
 					const accent = p.config?.customize?.appearance?.accent || '#006BFF';
 					return (
 						<Card key={ p.id } className="p-4 flex items-center gap-4 hover:border-brand-200 transition-colors">
 							<span className="w-10 h-10 rounded-lg border border-line shrink-0" style={ { background: accent } } />
 							<div className="flex-1 min-w-0">
 								<div className="font-semibold text-ink truncate">{ p.title }</div>
-								<div className="text-xs text-gray-500">{ __( 'Player preset' ) }</div>
+								<div className="text-xs text-gray-500">{ 'audio' === presetType( p ) ? __( 'Audio preset' ) : __( 'Video preset' ) }</div>
 							</div>
 							<OptionMenu items={ [
 								{ label: __( 'Edit' ), icon: 'edit', onClick: () => setEditing( p ) },

@@ -119,6 +119,17 @@ class Helper {
 	}
 
 	/**
+	 * A preset's media type: 'audio' or 'video'.
+	 *
+	 * Normalized rather than returned raw so an absent meta (every preset made
+	 * before audio existed) and an unexpected value both read as 'video'.
+	 */
+	public static function get_preset_type( $preset_id ): string {
+		$type = get_post_meta( (int) $preset_id, '_trueplayer_preset_type', true );
+		return 'audio' === $type ? 'audio' : 'video';
+	}
+
+	/**
 	 * If a video references a preset (config.presetId), merge the preset's
 	 * customize + branding UNDER the video's own settings so per-video values
 	 * win. Applied at frontend render only — the admin editor edits the raw
@@ -126,13 +137,25 @@ class Helper {
 	 */
 	public static function apply_preset( array $config ): array {
 		$preset_id = isset( $config['presetId'] ) ? (int) $config['presetId'] : 0;
+		$is_audio  = Media::is_audio( $config['source'] ?? [] );
 
 		// Fall back to the site-wide default preset (Settings → General).
+		//
+		// Audio reads its own setting and does NOT fall back to the video one:
+		// a video preset carries a skin, an aspect ratio and a control-bar style
+		// that mean nothing for a bar, so inheriting it would silently restyle
+		// every audio item on the site. No audio default means no default.
 		if ( ! $preset_id ) {
 			$general   = self::get_settings_section( 'general' );
-			$preset_id = isset( $general['defaultPreset'] ) ? (int) $general['defaultPreset'] : 0;
+			$key       = $is_audio ? 'defaultAudioPreset' : 'defaultPreset';
+			$preset_id = isset( $general[ $key ] ) ? (int) $general[ $key ] : 0;
 		}
 		if ( ! $preset_id || get_post_type( $preset_id ) !== TRUEPLAYER_PRESET_POST_TYPE ) {
+			return $config;
+		}
+		// An explicitly chosen preset is always honoured; only a mismatched
+		// *default* is refused, since nobody picked it for this item.
+		if ( ! isset( $config['presetId'] ) && ( self::get_preset_type( $preset_id ) === 'audio' ) !== $is_audio ) {
 			return $config;
 		}
 		$preset = self::get_preset_config( $preset_id );

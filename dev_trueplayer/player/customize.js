@@ -3,22 +3,15 @@
  * object into the video config; here we deep-merge it over defaults so the
  * player and controls can read a complete, safe shape.
  */
+import { CONTROL_DEFAULTS } from '@Utils/controls';
+
 export const CUSTOMIZE_DEFAULTS = {
-	controls: {
-		play: true,
-		rewind: true,
-		forward: true,
-		progress: true,
-		currentTime: true,
-		duration: true,
-		mute: true,
-		volume: true,
-		captions: true,
-		settings: true, // gear menu (speed/quality/captions)
-		pip: true,
-		fullscreen: true,
-		download: false,
-	},
+	// Built from the control registry rather than hand-listed, so a control
+	// cannot exist in the editor's toggle grid without a declared default here.
+	// That mattered: Controls.jsx's show() reads an undefined key as ON, so a
+	// control missing from this object would switch itself on for every
+	// existing item the moment its button was written.
+	controls: CONTROL_DEFAULTS,
 	behavior: {
 		autoplay: false,
 		autoplayMode: '', // '' (derive from autoplay) | off | muted | sound
@@ -37,6 +30,11 @@ export const CUSTOMIZE_DEFAULTS = {
 	},
 	appearance: {
 		skin: 'default', // default | modern | simple | minimal | standard | floating (pro) | ambient (pro)
+		// Audio only — the shape of the audio bar. `compact` is what audio has
+		// always rendered as, so every existing item keeps its current look.
+		// Flat, like the caption keys below and for the same reason: the section
+		// merge is shallow, so a nested object would be overridden wholesale.
+		audioLayout: 'compact', // compact | card | minimal
 		accent: '#4f46e5',
 		hoverColor: '',
 		bigPlay: true,

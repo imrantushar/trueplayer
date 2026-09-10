@@ -213,6 +213,10 @@ function TruePlayerGlobalAdminEmail() {
 
 export default function Settings({ tab = 'general', onTabChange, onEditState }) {
 	const [settings, setSettings] = useState(null);
+	// For the default-preset pickers below. Failure is non-fatal — the rest of
+	// the settings screen has nothing to do with presets.
+	const [presets, setPresets] = useState([]);
+	useEffect(() => { api.listPresets().then((l) => setPresets(l || [])).catch(() => {}); }, []);
 	const setTab = (next) => onTabChange && onTabChange(next);
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
@@ -383,6 +387,31 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 											}))}
 										/>
 									))}
+								</div>
+							</Card>
+
+							<Card className="p-6">
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Default presets' ) }</h3>
+								<p className="text-sm text-muted mb-4">{ __( 'A saved preset applied to every item that has not chosen one of its own. Video and audio are set separately — a video preset would style an audio bar with settings that do nothing.' ) }</p>
+								<div className="grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line">
+									<Field label={ __( 'Video preset' ) } className='!mb-0'>
+										<Select
+											value={settings.general?.defaultPreset || ''}
+											onChange={(e) => setSettings((s) => ({ ...s, general: { ...(s.general || {}), defaultPreset: e.target.value ? parseInt(e.target.value, 10) : undefined } }))}
+										>
+											<option value="">{ __( 'None' ) }</option>
+											{presets.filter((p) => 'audio' !== p.type).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+										</Select>
+									</Field>
+									<Field label={ __( 'Audio preset' ) } className='!mb-0'>
+										<Select
+											value={settings.general?.defaultAudioPreset || ''}
+											onChange={(e) => setSettings((s) => ({ ...s, general: { ...(s.general || {}), defaultAudioPreset: e.target.value ? parseInt(e.target.value, 10) : undefined } }))}
+										>
+											<option value="">{ __( 'None' ) }</option>
+											{presets.filter((p) => 'audio' === p.type).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+										</Select>
+									</Field>
 								</div>
 							</Card>
 

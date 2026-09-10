@@ -17,10 +17,55 @@ export const PRESET_TEMPLATES = [
 	{ key: 'ambient', label: __( 'Ambient' ), pro: true, description: __( 'A blurred glow of the poster spills out behind the player.' ), appearance: { skin: 'ambient', controlBarStyle: 'gradient', playButtonStyle: 'circle', roundness: 8 } },
 ];
 
+/**
+ * Audio starting points. A separate list because the video templates are built
+ * on skins, and a skin is a treatment of a picture — there is no picture in an
+ * audio bar. What varies here instead is the bar's shape (audioLayout) and the
+ * controls a listener actually reaches for.
+ *
+ * `controls` seeds a preset's own defaults; a media item's own toggles still
+ * win over them at render (preset merges UNDER the video).
+ */
+export const AUDIO_PRESET_TEMPLATES = [
+	{
+		key: 'podcast',
+		label: __( 'Podcast' ),
+		description: __( 'Compact bar with cover art, skip buttons and a speed control.' ),
+		appearance: { audioLayout: 'compact', controlBarStyle: 'solid', roundness: 10 },
+		controls: { speed: true, rewind: true, forward: true, chapters: true },
+	},
+	{
+		key: 'album',
+		label: __( 'Album' ),
+		description: __( 'Large square cover art above the title and controls.' ),
+		appearance: { audioLayout: 'card', controlBarStyle: 'solid', roundness: 14 },
+		controls: { speed: false, rewind: false, forward: false, prev: true, next: true },
+	},
+	{
+		key: 'bare',
+		label: __( 'Bare' ),
+		description: __( 'Just a play button and a waveform. No art, time or volume.' ),
+		appearance: { audioLayout: 'minimal', controlBarStyle: 'minimal', roundness: 8 },
+		controls: { speed: false, rewind: false, forward: false, volume: false, mute: false, currentTime: false, duration: false },
+	},
+];
+
+/** Templates for one media type. */
+export function templatesFor( type ) {
+	return 'audio' === type ? AUDIO_PRESET_TEMPLATES : PRESET_TEMPLATES;
+}
+
 // The config object a template seeds (for creating a preset from it).
-export function templateConfig( key ) {
-	const t = PRESET_TEMPLATES.find( ( x ) => x.key === key );
-	return t ? { customize: { appearance: { ...t.appearance } } } : {};
+export function templateConfig( key, type = 'video' ) {
+	const t = templatesFor( type ).find( ( x ) => x.key === key );
+	if ( ! t ) {
+		return {};
+	}
+	const customize = { appearance: { ...t.appearance } };
+	if ( t.controls ) {
+		customize.controls = { ...t.controls };
+	}
+	return { customize };
 }
 
 export const ASPECT_RATIOS = [

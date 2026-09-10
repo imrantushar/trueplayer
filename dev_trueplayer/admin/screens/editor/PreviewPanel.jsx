@@ -4,6 +4,7 @@ import { Card } from '../../components/UI';
 import { hasVideoSource, sourceKey } from '../../utils/videoSource';
 import { withDerivedPoster } from '../../utils/poster';
 import { applyPreset } from '../../utils/preset';
+import { normalizeConfig } from '@Utils/audio';
 import { __ } from '@Utils/translation';
 // NOTE: the player CSS (style-frontend.css) is enqueued on admin pages by PHP.
 // Do NOT import it here — sharing that CSS module across the frontend + admin
@@ -42,12 +43,16 @@ import { __ } from '@Utils/translation';
  * ~1.5x more of it on screen. Raising this again re-shrinks the preview.
  */
 const REFERENCE_WIDTH = 520;
-export default function PreviewPanel( { id, config, presets = [], onDuration, previewCue = null } ) {
+export default function PreviewPanel( { id, config, title = '', presets = [], onDuration, previewCue = null } ) {
 	const [ bump, setBump ] = useState( 0 );
 	// The preset is resolved here rather than into the edited config, so the
 	// preview shows the published result while the fields keep showing the
 	// author's own overrides — the same split the server makes at render.
-	const resolved = applyPreset( config, presets );
+	// Resolve the media type the same way the server does before rendering, so
+	// the preview agrees with what a visitor gets. Without this an item that is
+	// audio only by detection — an .mp3 nobody ticked the box for — previews as
+	// a video player here while the real page shows an audio bar.
+	const resolved = normalizeConfig( applyPreset( config, presets ) );
 	const hasSource = hasVideoSource( resolved.source || {} );
 	const key = `${ sourceKey( resolved.source || {} ) }:${ bump }`;
 
@@ -117,7 +122,7 @@ export default function PreviewPanel( { id, config, presets = [], onDuration, pr
 					>
 						{ /* Preview the provider's own thumbnail when no poster is set,
 						     matching what PHP derives for the real embed. */ }
-						<Player key={ key } videoId={ id } config={ withDerivedPoster( resolved ) } preview onDuration={ onDuration } previewCue={ previewCue } />
+						<Player key={ key } videoId={ id } config={ withDerivedPoster( resolved ) } title={ title } preview onDuration={ onDuration } previewCue={ previewCue } />
 					</div>
 				</div>
 			) }

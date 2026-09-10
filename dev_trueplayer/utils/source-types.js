@@ -17,6 +17,7 @@
  * that is the enforcing copy; this one drives the UI and the client-side
  * courtesy check.
  */
+import { isAudioSource } from './audio';
 import { __ } from './translation';
 
 /**
@@ -135,7 +136,7 @@ export const isEmbedSource = ( type ) => EMBED_SOURCES.includes( type );
  * one has no picture, not which CDN it came from.
  */
 export function sourceMeta( source = {} ) {
-	if ( source.mediaType === 'audio' ) {
+	if ( isAudioSource( source ) ) {
 		return { label: __( 'Audio' ), tone: 'gray' };
 	}
 	const t = byValue[ source.type ];

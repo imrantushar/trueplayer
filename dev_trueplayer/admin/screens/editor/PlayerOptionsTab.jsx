@@ -1,6 +1,8 @@
 import { Card, Field, Input, Select, Toggle, Textarea, ColorInput } from '../../components/UI';
 import { isPro, PRO_SKINS } from '../../pro';
 import { resolveCustomize, CUSTOMIZE_DEFAULTS } from '@Player/customize';
+import { availableControls } from '@Utils/controls';
+import { isAudioSource as isAudioSourceUtil } from '@Utils/audio';
 import { createInterpolateElement } from '@wordpress/element';
 import { __, __sprintf } from '@Utils/translation';
 
@@ -25,6 +27,14 @@ const SKINS = [
 	{ value: 'ambient', label: __( 'Ambient' ) },
 ];
 
+// Audio has no aspect ratio; what it has is a bar shape. See the audio-layout
+// block at the end of player/style.css.
+const AUDIO_LAYOUTS = [
+	{ value: 'compact', label: __( 'Compact bar' ) },
+	{ value: 'card', label: __( 'Card (large cover art)' ) },
+	{ value: 'minimal', label: __( 'Minimal (play + waveform)' ) },
+];
+
 const ASPECT_RATIOS = [
 	{ value: '16:9', label: __( '16:9 (widescreen)' ) },
 	{ value: '9:16', label: __( '9:16 (vertical)' ) },
@@ -34,23 +44,7 @@ const ASPECT_RATIOS = [
 	{ value: 'auto', label: __( 'Auto (native)' ) },
 ];
 
-const CONTROL_LABELS = {
-	play: __( 'Play / pause' ),
-	rewind: __( 'Rewind' ),
-	forward: __( 'Fast-forward' ),
-	progress: __( 'Progress bar' ),
-	currentTime: __( 'Current time' ),
-	duration: __( 'Duration' ),
-	mute: __( 'Mute' ),
-	volume: __( 'Volume slider' ),
-	captions: __( 'Captions' ),
-	settings: __( 'Settings (gear, incl. playback speed)' ),
-	pip: __( 'Picture-in-picture' ),
-	fullscreen: __( 'Fullscreen' ),
-	download: __( 'Download button' ),
-};
-
-export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'appearance' }) {
+export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'appearance', mediaType = null }) {
 	// Resolved exactly the way the player resolves it — built-in defaults, then
 	// the site-wide look from Settings → Default player template, then this
 	// video's own overrides. This form used to resolve against a second copy of
@@ -73,18 +67,20 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 	const controls = cz.controls;
 
 	const source = config.source || {};
-	const isEmbedProvider = source.type === 'youtube' || source.type === 'vimeo';
-	const isAudioSource = source.mediaType === 'audio';
+	// `mediaType` is passed explicitly when there is no source to read from — a
+	// preset's config has none, so its type must be told, not inferred.
+	// Otherwise: detected, not just declared, so an .mp3 that nobody ticked the
+	// audio-only box for is configured with the audio control set here, matching
+	// what the player will actually render for it.
+	const isAudioSource = mediaType ? 'audio' === mediaType : isAudioSourceUtil(source);
 
-	// Which control-bar buttons can ever do anything for the current source —
-	// mirrors the provider capabilities in player/providers/*.js (youtube/vimeo
-	// have no download, youtube has no PiP, audio has no PiP/fullscreen) so we
-	// don't offer a toggle whose control button will just never render.
-	const CONTROL_AVAILABLE = {
-		download: !isEmbedProvider,
-		pip: source.type !== 'youtube' && !isAudioSource,
-		fullscreen: isEmbedProvider || !isAudioSource,
-	};
+	// Which control-bar buttons can ever do anything here. The registry knows
+	// which controls a media type may offer and which source types make one
+	// inert, so we don't offer a toggle whose button would never render.
+	const offeredControls = availableControls({
+		mediaType: isAudioSource ? 'audio' : 'video',
+		sourceType: source.type,
+	});
 
 	// 'off' | 'muted' | 'sound' — same resolution as player/customize.js.
 	const apMode = behavior.autoplayMode || (behavior.autoplay ? 'muted' : 'off');
@@ -107,54 +103,83 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 							<Card className="p-6">
 								<h3 className="font-semibold text-gray-900">{ __( 'Appearance' ) }</h3>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									{presets.length > 0 && (
+									{presets.some((p) => ('audio' === p.type) === isAudioSource) && (
 										<Field label={ __( 'Preset' ) } hint={ __( 'Apply a saved player preset as the starting point — you can still tweak anything below.' ) }>
 											<Select
 												value={config.presetId || ''}
 												onChange={(e) => patch({ presetId: e.target.value ? parseInt(e.target.value, 10) : undefined })}
 											>
 												<option value="">{ __( 'None' ) }</option>
-												{presets.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+												{/* Only presets for this kind of player: an audio preset carries
+												    no skin or aspect ratio, and a video preset's mean nothing
+												    for a bar. */}
+												{presets
+													.filter((p) => ('audio' === p.type) === isAudioSource)
+													.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
 											</Select>
 										</Field>
 									)}
 									<div className="grid md:grid-cols-2 gap-x-6">
-										<Field label={ __( 'Skin' ) } hint={isPro() ? __( 'Overall player theme.' ) : __( 'Floating & Ambient need TruePlayer Pro.' )}>
-											<Select value={appearance.skin} onChange={(e) => setSection('appearance', { skin: e.target.value })}>
-												{SKINS.map((s) => (
-													<option key={s.value} value={s.value} disabled={!isPro() && PRO_SKINS.includes(s.value)}>
-														{s.label}{!isPro() && PRO_SKINS.includes(s.value) ? __( ' (Pro)' ) : ''}
-													</option>
-												))}
-											</Select>
-										</Field>
-										<Field label={ __( 'Aspect ratio' ) } hint={ __( '9:16 for vertical / Shorts-style video.' ) }>
-											<Select value={appearance.aspectRatio} onChange={(e) => setSection('appearance', { aspectRatio: e.target.value })}>
-												{ASPECT_RATIOS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-											</Select>
-										</Field>
+										{/* A skin is a treatment of the picture — the bar fading over it, the
+										    glow behind it. None of that exists in an audio bar, and `ambient`
+										    is already refused outright by Player.jsx. */}
+										{!isAudioSource && (
+											<Field label={ __( 'Skin' ) } hint={isPro() ? __( 'Overall player theme.' ) : __( 'Floating & Ambient need TruePlayer Pro.' )}>
+												<Select value={appearance.skin} onChange={(e) => setSection('appearance', { skin: e.target.value })}>
+													{SKINS.map((s) => (
+														<option key={s.value} value={s.value} disabled={!isPro() && PRO_SKINS.includes(s.value)}>
+															{s.label}{!isPro() && PRO_SKINS.includes(s.value) ? __( ' (Pro)' ) : ''}
+														</option>
+													))}
+												</Select>
+											</Field>
+										)}
+										{/* Audio has no picture to shape, and Player.jsx skips the
+										    aspect-ratio style for it entirely — so the slot shows the
+										    one dimension that IS meaningful for a bar instead of a
+										    field that would silently do nothing. */}
+										{isAudioSource ? (
+											<Field label={ __( 'Audio layout' ) } hint={ __( 'The shape of the audio bar.' ) }>
+												<Select value={appearance.audioLayout} onChange={(e) => setSection('appearance', { audioLayout: e.target.value })}>
+													{AUDIO_LAYOUTS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
+												</Select>
+											</Field>
+										) : (
+											<Field label={ __( 'Aspect ratio' ) } hint={ __( '9:16 for vertical / Shorts-style video.' ) }>
+												<Select value={appearance.aspectRatio} onChange={(e) => setSection('appearance', { aspectRatio: e.target.value })}>
+													{ASPECT_RATIOS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+												</Select>
+											</Field>
+										)}
 										<Field label={ __( 'Accent color' ) } hint={ __( 'Scrubber, buttons, highlights.' ) }>
 											<ColorInput value={appearance.accent} onChange={(v) => setSection('appearance', { accent: v })} />
 										</Field>
 										<Field label={ __( 'Button hover color' ) } hint={ __( 'Optional; default is a light overlay.' ) }>
 											<ColorInput value={appearance.hoverColor} onChange={(v) => setSection('appearance', { hoverColor: v })} placeholder={ __( '(none)' ) } />
 										</Field>
-										<Field label={ __( 'Play button style' ) }>
-											<Select value={appearance.playButtonStyle} onChange={(e) => setSection('appearance', { playButtonStyle: e.target.value })}>
-												<option value="circle">{ __( 'Circle' ) }</option>
-												<option value="soft">{ __( 'Soft (rounded)' ) }</option>
-												<option value="square">{ __( 'Square' ) }</option>
-											</Select>
-										</Field>
-										<Field label={ __( 'Play button size' ) }>
-											<Select value={appearance.playButtonSize} onChange={(e) => setSection('appearance', { playButtonSize: parseInt(e.target.value, 10) })}>
-												<option value="0">{ __( 'Auto (skin default)' ) }</option>
-												<option value="56">{ __( 'Small' ) }</option>
-												<option value="72">{ __( 'Medium' ) }</option>
-												<option value="88">{ __( 'Large' ) }</option>
-												<option value="108">{ __( 'Extra large' ) }</option>
-											</Select>
-										</Field>
+										{/* The centre play button is painted over the picture and Player.jsx
+										    already suppresses it for audio. */}
+										{!isAudioSource && (
+											<Field label={ __( 'Play button style' ) }>
+												<Select value={appearance.playButtonStyle} onChange={(e) => setSection('appearance', { playButtonStyle: e.target.value })}>
+													<option value="circle">{ __( 'Circle' ) }</option>
+													<option value="soft">{ __( 'Soft (rounded)' ) }</option>
+													<option value="square">{ __( 'Square' ) }</option>
+												</Select>
+											</Field>
+										)}
+										{/* Same — no centre play button on an audio bar. */}
+										{!isAudioSource && (
+											<Field label={ __( 'Play button size' ) }>
+												<Select value={appearance.playButtonSize} onChange={(e) => setSection('appearance', { playButtonSize: parseInt(e.target.value, 10) })}>
+													<option value="0">{ __( 'Auto (skin default)' ) }</option>
+													<option value="56">{ __( 'Small' ) }</option>
+													<option value="72">{ __( 'Medium' ) }</option>
+													<option value="88">{ __( 'Large' ) }</option>
+													<option value="108">{ __( 'Extra large' ) }</option>
+												</Select>
+											</Field>
+										)}
 										<Field label={ __( 'Control bar style' ) }>
 											<Select value={appearance.controlBarStyle} onChange={(e) => setSection('appearance', { controlBarStyle: e.target.value })}>
 												<option value="gradient">{ __( 'Gradient' ) }</option>
@@ -166,7 +191,11 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 											<input type="range" min="0" max="28" value={appearance.roundness} onChange={(e) => setSection('appearance', { roundness: parseInt(e.target.value, 10) })} className="w-full accent-brand-500 cursor-pointer" />
 										</Field>
 									</div>
-									<Toggle checked={appearance.bigPlay} onChange={(v) => setSection('appearance', { bigPlay: v })} label={ __( 'Show large center play button' ) } />
+									{/* Player.jsx never renders BigPlay for audio, so the toggle
+									    would be a switch with nothing on the other end. */}
+									{!isAudioSource && (
+										<Toggle checked={appearance.bigPlay} onChange={(v) => setSection('appearance', { bigPlay: v })} label={ __( 'Show large center play button' ) } />
+									)}
 								</div>
 							</Card>
 						)}
@@ -198,8 +227,8 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Controls' ) }</h3>
 								<p className="text-sm text-gray-500">{ __( 'Show or hide each control in the bar.' ) }</p>
 								<div className="grid md:grid-cols-2 gap-6 mt-4 pt-5 border-t border-solid border-line">
-									{Object.keys(CONTROL_LABELS).filter((key) => CONTROL_AVAILABLE[key] !== false).map((key) => (
-										<Toggle key={key} checked={controls[key]} onChange={(v) => setSection('controls', { [key]: v })} label={CONTROL_LABELS[key]} />
+									{offeredControls.map((c) => (
+										<Toggle key={c.key} checked={controls[c.key]} onChange={(v) => setSection('controls', { [c.key]: v })} label={c.label} />
 									))}
 								</div>
 							</Card>

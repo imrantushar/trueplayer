@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import Player from './Player';
 import Playlist from './Playlist';
+import { normalizeConfig } from '@Utils/audio';
 import { __ } from '@Utils/translation';
 
 // Domains to warm (DNS + TLS) so an embed starts fast once clicked.
@@ -46,7 +47,17 @@ function warm( type ) {
 function readConfig( node ) {
 	const configEl = node.querySelector( 'script.trueplayer-config' );
 	try {
-		return configEl ? JSON.parse( configEl.textContent ) : {};
+		const data = configEl ? JSON.parse( configEl.textContent ) : {};
+		// Resolve the media type at THE single entry point, before the config
+		// reaches anything that acts on it. It has to happen here rather than
+		// inside Player: the HTML5 provider picks <audio> vs <video> when it
+		// creates the element, and its effect is keyed on videoId alone — so a
+		// media type that resolved any later would restyle the stage into an
+		// audio bar while a live <video> kept painting behind it.
+		//
+		// This one call covers bootPlayer, the facade branch, the hover preview
+		// and the popup, which all read `data.config` below.
+		return { ...data, config: normalizeConfig( data.config || {} ) };
 	} catch ( e ) {
 		return {};
 	}

@@ -67,17 +67,43 @@ class PresetsController extends WP_REST_Controller {
 		return current_user_can( 'manage_options' );
 	}
 
-	public function index() {
-		$posts = get_posts(
-			[
-				'post_type'      => TRUEPLAYER_PRESET_POST_TYPE,
-				'post_status'    => [ 'publish', 'draft' ],
-				'posts_per_page' => 200,
-				'orderby'        => 'title',
-				'order'          => 'ASC',
-			]
-		);
-		return rest_ensure_response( array_map( [ $this, 'to_item' ], $posts ) );
+	public function index( $request = null ) {
+		$args = [
+			'post_type'      => TRUEPLAYER_PRESET_POST_TYPE,
+			'post_status'    => [ 'publish', 'draft' ],
+			'posts_per_page' => 200,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+		];
+
+		// Optional ?type=video|audio. The admin app fetches unfiltered and splits
+		// the list client-side (it needs both halves at once for the tab counts),
+		// but other REST consumers want to ask for one kind.
+		$type = $request ? sanitize_text_field( (string) $request->get_param( 'type' ) ) : '';
+		if ( 'audio' === $type ) {
+			$args['meta_query'] = [
+				[
+					'key'   => '_trueplayer_preset_type',
+					'value' => 'audio',
+				],
+			];
+		} elseif ( 'video' === $type ) {
+			// NOT EXISTS is load-bearing: a registered default writes no row, so
+			// every preset made before audio existed has no meta to match on.
+			$args['meta_query'] = [
+				'relation' => 'OR',
+				[
+					'key'   => '_trueplayer_preset_type',
+					'value' => 'video',
+				],
+				[
+					'key'     => '_trueplayer_preset_type',
+					'compare' => 'NOT EXISTS',
+				],
+			];
+		}
+
+		return rest_ensure_response( array_map( [ $this, 'to_item' ], get_posts( $args ) ) );
 	}
 
 	public function show( $request ) {
@@ -104,9 +130,19 @@ class PresetsController extends WP_REST_Controller {
 		if ( isset( $body['config'] ) ) {
 			Helper::update_json_meta( $id, '_trueplayer_preset', $body['config'] );
 		}
+		// Set at creation and never afterwards — see update() for why.
+		if ( 'audio' === ( $body['type'] ?? '' ) ) {
+			update_post_meta( $id, '_trueplayer_preset_type', 'audio' );
+		}
 		return rest_ensure_response( $this->to_item( get_post( $id ) ) );
 	}
 
+	/**
+	 * Note: `type` is deliberately NOT updatable. A preset's type decides which
+	 * player it styles, and videos reference presets by id — flipping an audio
+	 * preset to video would silently restyle every item already using it with
+	 * settings that mean nothing for their media. Make a new preset instead.
+	 */
 	public function update( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== TRUEPLAYER_PRESET_POST_TYPE ) {
@@ -137,6 +173,7 @@ class PresetsController extends WP_REST_Controller {
 		return [
 			'id'       => $post->ID,
 			'title'    => $post->post_title,
+			'type'     => Helper::get_preset_type( $post->ID ),
 			'config'   => is_array( $config ) ? $config : [],
 			'modified' => $post->post_modified_gmt,
 		];

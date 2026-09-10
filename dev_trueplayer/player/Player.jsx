@@ -60,7 +60,7 @@ function hasQuizContent( quiz ) {
 	return !! ( quiz.questions && quiz.questions.length );
 }
 
-export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false, previewCue = null } ) {
+export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false, previewCue = null, onPrev = null, onNext = null } ) {
 	const stageRef = useRef( null );
 	const stickySentinelRef = useRef( null );
 	const stickyDismissedRef = useRef( false ); // explicit close, until back at the top
@@ -1014,6 +1014,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		`tp-skin-${ skin }`,
 		idle && ui.playing ? 'is-idle' : '',
 		source.mediaType === 'audio' ? 'is-audio' : '',
+		// The audio bar's shape. It rides the className rather than a wrapper
+		// element on purpose: the provider effect below is keyed on videoId
+		// alone, so anything that changed the element tree when the author
+		// picked a layout would tear down the live media element mid-playback.
+		// A className diff costs nothing and works while playing.
+		source.mediaType === 'audio' ? `tp-audio-${ appearance.audioLayout || 'compact' }` : '',
 		`tp-bar-${ appearance.controlBarStyle }`,
 		`tp-play-${ appearance.playButtonStyle }`,
 		// A real OS PiP window replaces the in-page floating corner — the two
@@ -1214,6 +1220,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					audio={ source.mediaType === 'audio' }
 					title={ title }
 					waveSeed={ videoId }
+					/* Track navigation, forwarded straight from a playlist. Null for
+					   a standalone player, which is what hides the buttons. */
+					onPrev={ onPrev }
+					onNext={ onNext }
+					/* The minimal audio bar IS its waveform, so chapters must not
+					   replace it there the way they do in the other layouts. */
+					scrubberStyle={ source.mediaType === 'audio' && ( appearance.audioLayout || 'compact' ) === 'minimal' ? 'waveform' : undefined }
 				/>
 			) }
 

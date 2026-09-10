@@ -162,7 +162,13 @@ class Shortcode {
 	 * preparation → answer-key strip.
 	 */
 	public static function resolved_config( int $video_id ): array {
-		$config = Helper::apply_preset( Helper::get_video_config( $video_id ) );
+		// Resolve the media type FIRST. Everything downstream branches on it —
+		// the preset merge picks a video or an audio default, the facade picks
+		// its shape — and an item that was never explicitly marked (an import, a
+		// pasted URL, anything predating first-class audio) has no answer until
+		// this runs. Read-time only; nothing is written back.
+		$config = Media::normalize_config( Helper::get_video_config( $video_id ) );
+		$config = Helper::apply_preset( $config );
 		$config = Helper::with_derived_poster( $config );
 		$config = Helper::apply_global_branding( $config );
 		$config = Helper::enforce_pro_limits( $config );
@@ -281,7 +287,10 @@ class Shortcode {
 		$post   = get_post( $video_id );
 		$schema = [
 			'@context'     => 'https://schema.org',
-			'@type'        => 'VideoObject',
+			// An audio item described as a VideoObject is simply wrong data for
+			// search engines, and the thumbnail requirement below reads as cover
+			// art rather than a video still.
+			'@type'        => Media::is_audio( $source ) ? 'AudioObject' : 'VideoObject',
 			'name'         => get_the_title( $video_id ),
 			'description'  => wp_strip_all_tags( $post && $post->post_excerpt ? $post->post_excerpt : get_the_title( $video_id ) ),
 			'thumbnailUrl' => $poster,
@@ -305,8 +314,13 @@ class Shortcode {
 	 * paint it. Skipped when autoplay is on.
 	 */
 	private static function render_facade( array $config ): string {
-		$source   = is_array( $config['source'] ?? null ) ? $config['source'] : [];
-		$is_audio = ( $source['mediaType'] ?? '' ) === 'audio';
+		$source = is_array( $config['source'] ?? null ) ? $config['source'] : [];
+		// Detected, not merely declared. The facade is painted before any script
+		// runs, so if it disagrees with what the player will build the visitor
+		// sees a 16:9 black box collapse into an audio bar on boot. Callers pass
+		// a normalized config already; this re-resolves cheaply so a future one
+		// that doesn't can't reintroduce the flash.
+		$is_audio = Media::is_audio( $source );
 		$poster   = is_string( $source['poster'] ?? null ) ? $source['poster'] : '';
 
 		$accent = $config['customize']['appearance']['accent'] ?? ( $config['branding']['accent'] ?? '' );
@@ -339,7 +353,7 @@ class Shortcode {
 			'<button type="button" class="tp-facade%1$s"%2$s aria-label="%3$s">%4$s<span class="tp-facade-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></button>',
 			$is_audio ? ' is-audio' : '',
 			$style,
-			esc_attr__( 'Play video', 'trueplayer' ),
+			$is_audio ? esc_attr__( 'Play audio', 'trueplayer' ) : esc_attr__( 'Play video', 'trueplayer' ),
 			$img
 		);
 	}
