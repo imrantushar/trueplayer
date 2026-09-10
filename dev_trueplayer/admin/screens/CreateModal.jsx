@@ -48,9 +48,9 @@ const KIND_HEADING = {
 };
 
 const PLACEHOLDER = {
-	media: __( 'e.g. Lesson 1' ),
-	playlist: __( 'e.g. Onboarding course' ),
-	interactive: __( 'e.g. Module 1 knowledge check' ),
+	media: __( 'Title' ),
+	playlist: __( 'Title' ),
+	interactive: __( 'Title' ),
 };
 
 export default function CreateModal( { initialKind = 'media', kinds = [ 'media', 'playlist' ], onClose, onSubmit, onError } ) {
