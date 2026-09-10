@@ -90,5 +90,31 @@ class MetaManager {
 				},
 			]
 		);
+
+		/**
+		 * Whether a preset styles the video player or the audio one.
+		 *
+		 * A dedicated meta rather than a key inside `_trueplayer_preset` for two
+		 * reasons. Everything in that blob is merge payload — Helper::apply_preset
+		 * folds it onto a video — and a preset's own classification must never be
+		 * something a video can inherit. And it is queryable without decoding
+		 * JSON, the same reasoning ENGINE_META documents above.
+		 *
+		 * The registered default is what makes this free of any migration: every
+		 * preset that existed before audio reads as 'video' with no rows written.
+		 */
+		register_post_meta(
+			TRUEPLAYER_PRESET_POST_TYPE,
+			'_trueplayer_preset_type',
+			[
+				'type'          => 'string',
+				'single'        => true,
+				'default'       => 'video',
+				'show_in_rest'  => true,
+				'auth_callback' => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			]
+		);
 	}
 }

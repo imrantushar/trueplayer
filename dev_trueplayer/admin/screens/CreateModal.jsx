@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from '@wordpress/element';
 import { Button, Modal, Field, Input } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
+import { h5pEnabled } from '../h5p';
+import InteractiveTeaser from '../components/InteractiveTeaser';
 import { SOURCE_TYPES } from '@Utils/source-types';
 import { api } from '../api';
 import { __, __sprintf } from '@Utils/translation';
@@ -48,16 +50,26 @@ const KIND_HEADING = {
 };
 
 const PLACEHOLDER = {
-	media: __( 'e.g. Lesson 1' ),
-	playlist: __( 'e.g. Onboarding course' ),
-	interactive: __( 'e.g. Module 1 knowledge check' ),
+	media: __( 'Title' ),
+	playlist: __( 'Title' ),
+	interactive: __( 'Title' ),
 };
 
-export default function CreateModal( { initialKind = 'media', kinds = [ 'media', 'playlist' ], onClose, onSubmit, onError } ) {
+export default function CreateModal( { initialKind = 'media', kinds = [ 'media', 'playlist' ], onClose, onSubmit, onError, onEnableInteractive } ) {
 	const [ kind, setKind ] = useState( initialKind );
 	const [ title, setTitle ] = useState( '' );
-	const [ mediaType, setMediaType ] = useState( 'self' );
+	const [ sourceType, setSourceType ] = useState( 'self' );
+	// Video vs audio — the thing `source.mediaType` actually means. Distinct
+	// from `sourceType` above (self / bunny / youtube …), which is the delivery
+	// method. Conflating the two is what this file used to do.
+	const [ mediaKind, setMediaKind ] = useState( 'video' );
 	const [ busy, setBusy ] = useState( '' ); // '' | 'install' | 'create'
+
+	// The Interactive tab is offered whenever the engine ships in this build, so
+	// the feature is discoverable — but with the addon switched off there is
+	// nothing to pick from and nothing to create, and the teaser stands in for
+	// the type picker. Same split the Library's filter chips already use.
+	const interactiveLocked = 'interactive' === kind && ! h5pEnabled();
 
 	// Interactive-only state.
 	const [ types, setTypes ] = useState( null );
@@ -66,7 +78,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 
 	// Content types are only needed once the interactive branch is opened.
 	useEffect( () => {
-		if ( 'interactive' !== kind || types ) {
+		if ( 'interactive' !== kind || types || ! h5pEnabled() ) {
 			return;
 		}
 		api.h5pContentTypes().then( setTypes ).catch( ( e ) => onError?.( e.message || __( 'Failed to load content types.' ) ) );
@@ -104,8 +116,12 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 		}
 	};
 
+	// Only sources that can carry audio when the Audio tab is showing. This is
+	// AUDIO_SOURCES' second consumer — it had exactly one before.
+	const sourceTiles = 'audio' === mediaKind ? MEDIA_TYPES.filter( ( t ) => t.audio ) : MEDIA_TYPES;
+
 	const needsInstall = 'interactive' === kind && selected && ! selected.installed;
-	const canCreate = 'interactive' === kind ? !! selected?.installed : true;
+	const canCreate = 'interactive' === kind ? ( ! interactiveLocked && !! selected?.installed ) : true;
 
 	const submit = async () => {
 		if ( ! canCreate ) {
@@ -113,7 +129,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 		}
 		setBusy( 'create' );
 		try {
-			await onSubmit( { kind, title: title.trim(), mediaType, machineName: selected?.machineName || '' } );
+			await onSubmit( { kind, title: title.trim(), sourceType, mediaKind, machineName: selected?.machineName || '' } );
 		} finally {
 			setBusy( '' );
 		}
@@ -129,12 +145,11 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 	return (
 		<Modal
 			title={ KIND_HEADING[ kind ] }
-			className={ 'interactive' === kind ? 'max-w-3xl' : 'max-w-lg' }
 			onClose={ onClose }
 			footer={
 				<>
 					<div className="mr-auto text-[13px] text-muted">
-						{ 'interactive' === kind && ! selected && __( 'Pick a content type to continue.' ) }
+						{ 'interactive' === kind && ! interactiveLocked && ! selected && __( 'Pick a content type to continue.' ) }
 						{ needsInstall && __sprintf( '%s isn’t installed yet — it downloads once from the H5P Hub.', selected.title ) }
 						{ 'interactive' === kind && selected?.installed && __sprintf( '%s is ready to use.', selected.title ) }
 					</div>
@@ -162,34 +177,71 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 				</div>
 			) }
 
-			<Field label={ __( 'Name' ) } hint={ __( 'Shown in your library. You can rename it later.' ) }>
-				<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ onKeyDown } placeholder={ PLACEHOLDER[ kind ] } />
-			</Field>
+			{ /* Nothing will be created while the addon is off, so don't ask for a
+			     name for it — the teaser below is the whole content of the tab. */ }
+			{ ! interactiveLocked && (
+				<Field label={ __( 'Name' ) } hint={ __( 'Shown in your library. You can rename it later.' ) }>
+					<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ onKeyDown } placeholder={ PLACEHOLDER[ kind ] } />
+				</Field>
+			) }
 
 			{ 'media' === kind && (
 				<div className="mb-1">
-					<span className="block text-[13px] font-medium text-ink mb-1.5">{ __( 'Media type' ) }</span>
-					<div role="radiogroup" aria-label={ __( 'Media type' ) } className="grid sm:grid-cols-2 gap-2">
-						{ MEDIA_TYPES.map( ( t ) => {
+					{ /* Which player this becomes. Chosen here rather than left to a
+					     toggle buried in the editor, so an audio item is audio from
+					     the moment it exists. */ }
+					<span className="block text-[13px] font-medium text-ink mb-1.5">{ __( 'What are you adding?' ) }</span>
+					<div className="tp-type-tabs mb-4" role="tablist">
+						{ [ [ 'video', __( 'Video' ) ], [ 'audio', __( 'Audio' ) ] ].map( ( [ value, label ] ) => (
+							<button
+								key={ value }
+								type="button"
+								role="tab"
+								aria-selected={ mediaKind === value }
+								className={ `tp-type-tab ${ mediaKind === value ? 'is-active' : '' }` }
+								onClick={ () => {
+									setMediaKind( value );
+									// The chosen source may not support the new kind
+									// (YouTube can't be audio-only) — fall back to the
+									// first that can.
+									const allowed = 'audio' === value ? SOURCE_TYPES.filter( ( t ) => t.audio ) : SOURCE_TYPES;
+									if ( ! allowed.some( ( t ) => t.value === sourceType ) ) {
+										setSourceType( allowed[ 0 ].value );
+									}
+								} }
+							>{ label }</button>
+						) ) }
+					</div>
+					<span className="block text-[13px] font-medium text-ink mb-1.5">{ __( 'Source' ) }</span>
+					<div role="radiogroup" aria-label={ __( 'Source' ) } className="grid sm:grid-cols-2 gap-2">
+						{ sourceTiles.map( ( t ) => {
 							const locked = t.pro && ! isPro();
 							return (
 								<RadioOption
 									key={ t.value }
 									option={ t }
 									locked={ locked }
-									active={ mediaType === t.value }
-									onPick={ () => ! locked && setMediaType( t.value ) }
+									active={ sourceType === t.value }
+									onPick={ () => ! locked && setSourceType( t.value ) }
 								/>
 							);
 						} ) }
 					</div>
 					<span className="block text-xs text-gray-400 mt-2">
-						{ isPro() ? __( 'Change the source details in the editor.' ) : __( 'Bunny, Gumlet, Mux and HLS need TruePlayer Pro.' ) }
+						{ isPro()
+							? __( 'Change the source details in the editor.' )
+							: ( 'audio' === mediaKind
+								? __( 'Bunny and Gumlet need TruePlayer Pro.' )
+								: __( 'Bunny, Gumlet, Mux and HLS need TruePlayer Pro.' ) ) }
 					</span>
 				</div>
 			) }
 
-			{ 'interactive' === kind && (
+			{ interactiveLocked && (
+				<InteractiveTeaser bare onEnable={ onEnableInteractive } />
+			) }
+
+			{ 'interactive' === kind && ! interactiveLocked && (
 				<>
 					<div className="flex items-center justify-between mt-5 mb-2">
 						<span className="text-[13px] font-medium text-label">{ __( 'Content type' ) }</span>

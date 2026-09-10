@@ -6,6 +6,7 @@ import { Icon } from '../components/icons';
 import { PlaylistEditor } from './Playlists';
 import H5pEditor from './H5pEditor';
 import CreateModal from './CreateModal';
+import { isAudioSource } from '@Utils/audio';
 import InteractiveTeaser from '../components/InteractiveTeaser';
 import { h5pEnabled, h5pInstalled } from '../h5p';
 
@@ -113,10 +114,19 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 		}
 	};
 
-	const submitCreate = async ( { kind: newKind, title, mediaType, machineName } ) => {
+	const submitCreate = async ( { kind: newKind, title, sourceType, mediaKind, machineName } ) => {
 		try {
 			if ( 'media' === newKind ) {
-				const v = await api.createVideo( title || __( 'Untitled video' ), { source: { type: mediaType } } );
+				// `mediaType` is written only for audio. Stamping 'video' would be
+				// an explicit opt-out of the extension safety net (see
+				// @Utils/audio), which is not what picking the Video tab means —
+				// that is just the default, and a .mp3 pasted in later should
+				// still be recognised.
+				const source = { type: sourceType };
+				if ( 'audio' === mediaKind ) {
+					source.mediaType = 'audio';
+				}
+				const v = await api.createVideo( title || ( 'audio' === mediaKind ? __( 'Untitled audio' ) : __( 'Untitled video' ) ), { source } );
 				setCreate( null );
 				await loadVideos();
 				onEdit( v.id );
@@ -207,15 +217,22 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 
 	const byId = Object.fromEntries( ( videos || [] ).map( ( v ) => [ v.id, v ] ) );
 	// The tab stays visible while the engine is merely installed, so the feature
-	// is discoverable; creating is gated on it actually being enabled.
+	// is discoverable. That now applies to the create dialog too: hiding the
+	// Interactive tab there meant the only way to find out the addon existed was
+	// to already know to filter the library by it. Opening the tab with the addon
+	// switched off shows the teaser instead of the type picker — creating is
+	// still gated on it actually being enabled (see CreateModal).
 	const filters = FILTERS.filter( ( f ) => 'interactive' !== f.kind || h5pInstalled() );
-	const createKinds = [ 'media', 'playlist', ...( h5pEnabled() ? [ 'interactive' ] : [] ) ];
+	const createKinds = [ 'media', 'playlist', ...( h5pInstalled() ? [ 'interactive' ] : [] ) ];
 	const teasing = 'interactive' === kind && h5pInstalled() && ! h5pEnabled();
 
 	// The split button's default is the kind you're looking at — so the filter
 	// you deep-linked to is also the thing you create in one click. On the
-	// teaser there is nothing to create yet, so it falls back to media.
-	const defaultKind = ( 'all' === kind || ! createKinds.includes( kind ) ) ? 'media' : kind;
+	// teaser there is nothing to create yet, so it falls back to media:
+	// `createKinds` now carries `interactive` even when the addon is off, so
+	// `teasing` is what keeps the one-click action from re-opening the same
+	// teaser the page is already showing. It stays in the dropdown.
+	const defaultKind = ( 'all' === kind || teasing || ! createKinds.includes( kind ) ) ? 'media' : kind;
 	const menuKinds = createKinds.filter( ( k ) => k !== defaultKind );
 	const KIND_MENU = {
 		media: { label: __( 'Media' ), hint: __( 'A video or audio player' ) },
@@ -276,6 +293,7 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 					onClose={ () => setCreate( null ) }
 					onSubmit={ submitCreate }
 					onError={ setError }
+					onEnableInteractive={ () => onNavigate && onNavigate( 'settings', { tab: 'addons' } ) }
 				/>
 			) }
 
@@ -387,10 +405,10 @@ function RowThumb( { row, byId } ) {
 	if ( 'playlist' === row.kind ) {
 		const first = ( row.item.config?.videos || [] ).map( ( id ) => byId[ id ] ).find( Boolean );
 		const src = first?.config?.source || {};
-		return <Thumb source={ src } type={ 'audio' === src.mediaType ? 'audio' : src.type } />;
+		return <Thumb source={ src } type={ isAudioSource( src ) ? 'audio' : src.type } />;
 	}
 	const src = row.item.config?.source || {};
-	return <Thumb source={ src } type={ 'audio' === src.mediaType ? 'audio' : src.type } />;
+	return <Thumb source={ src } type={ isAudioSource( src ) ? 'audio' : src.type } />;
 }
 
 function RowBadges( { row } ) {

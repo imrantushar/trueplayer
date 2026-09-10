@@ -4,7 +4,7 @@ Tags: video, player, lms, quiz, webhooks, watch tracking
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,6 +21,30 @@ TruePlayer is a native WordPress video/audio player built for enforcement and au
 Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources (Mux, Bunny, Gumlet), and Gem-ecosystem bridges.
 
 == Changelog ==
+
+= 1.4.0 - 10-09-2026 =
+* Added - Audio as its own media type — Video / Audio tabs when creating media.
+* Added - Three audio layouts: compact bar, card, and minimal.
+* Added - Audio presets, separate from video ones, with Podcast, Album and Bare starting points.
+* Added - Audio control toggles: previous / next track, playback speed, chapters & transcript.
+* Added - Previous / next track buttons in playlists.
+* Added - Automatic audio detection from the file extension, so imported and pasted audio needs no re-saving.
+* Added - Site-wide default presets for video and audio, under Settings → General.
+* Added - A "When attempts run out" policy — lock and require a re-watch, or never lock. Overridable per video.
+* Added - Audio wording and icons in Bunny.net Storage and Gumlet uploads.
+
+* Fixed - Re-watching after using every quiz attempt gave only one attempt instead of a fresh set.
+* Fixed - A checkpoint before the completion threshold could lock a re-watching viewer out for good.
+* Fixed - Audio items previewed as a video player in the editor.
+* Fixed - The minimal audio layout rendered as an empty white box on light backgrounds.
+* Fixed - Audio was published to search engines as video.
+* Fixed - The audio preset's "Preview with" row did not line up with the preview below it.
+* Fixed - Fields took their border from WordPress instead of the plugin.
+
+* Changed - Player controls are defined in one place, so the editor and player can't drift apart.
+* Changed - The editor hides settings that cannot apply to audio.
+* Changed - The Interactive tab is always shown, with a teaser when the addon is off.
+* Changed - All dialogs open at the same width.
 
 = 1.3.0 - 06-09-2026 =
 * Added - Gumlet as a video source — upload a file from the editor, or use one already in your Gumlet workspace. Needs Pro.

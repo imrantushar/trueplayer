@@ -360,7 +360,11 @@
 	font-size: calc( 1em * var( --tp-cap-scale, 1 ) );
 }
 
-/* ---- skins ---- */
+/* ---- skins ----
+   Audio layout rules live at the END of this file and are written with a
+   three-class prefix (.tp-stage.is-audio.tp-audio-*) so they outrank anything
+   here on specificity rather than on source order. A skin rule that needs to
+   beat them is a bug — fix it there, don't move this block. */
 /* modern: floating-feel solid bar, brighter accents, roomier padding */
 .tp-skin-modern .tp-controls {
 	background: linear-gradient( transparent, rgba( 10, 12, 20, 0.9 ) );
@@ -632,6 +636,20 @@
 }
 .tp-btn:hover {
 	background: var(--tp-hover, rgba( 255, 255, 255, 0.15 ));
+}
+/* The speed button shows text ("1.5\00d7") where the others show a 20px icon,
+   so it needs its own type sizing and room to grow past a fixed 34px square. */
+.tp-btn.tp-speed {
+	width: auto;
+	min-width: 34px;
+	padding: 0 7px;
+	font-size: 12px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+}
+.tp-btn.tp-speed.is-active {
+	color: var( --tp-accent );
 }
 .tp-time {
 	font-size: 12px;
@@ -1909,4 +1927,128 @@
 	animation: tp-timed-in 0.25s ease;
 }
 @keyframes tp-timed-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ==========================================================================
+   Audio layouts — MUST STAY LAST IN THIS FILE.
+
+   Every rule below carries a three-class prefix (.tp-stage.is-audio.tp-audio-*
+   = specificity 0-4-0) so it beats the skin rules (.tp-skin-x .tp-y = 0-2-0)
+   on specificity, not on source order. The base audio block further up this
+   file wins by order alone, which is fragile — anything added between it and
+   the skins would silently lose. These do not have that problem.
+
+   Skins were written for a 16:9 picture; the ones whose rules are actively
+   wrong inside a short bar are neutralised here by name rather than left to
+   cancel out as a side effect of some other rule.
+   ========================================================================== */
+
+/* --- skin neutralisers (audio, any layout) --- */
+
+/* `floating` detaches the bar and pins it inset from the stage edges. Those
+   offsets only do nothing today because .tp-stage.is-audio .tp-controls sets
+   position:static; say so explicitly so a future position change can't
+   resurrect a bar floating outside a 72px box. */
+.tp-stage.is-audio .tp-controls {
+	right: auto;
+	left: auto;
+	bottom: auto;
+}
+
+/* `minimal` paints a translucent pill around the control row — sensible over
+   a picture, but inside an audio bar it reads as a stray button group. */
+.tp-stage.is-audio .tp-controls-row {
+	background: none;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	border-radius: 0;
+	padding: 0;
+}
+
+/* --- compact: the default bar (art tile left, controls right) --- */
+.tp-stage.is-audio.tp-audio-compact {
+	flex-direction: row;
+}
+.tp-stage.is-audio.tp-audio-compact .tp-controls {
+	min-width: 0;
+}
+
+/* --- card: large cover art above a stacked title / scrubber / buttons --- */
+.tp-stage.is-audio.tp-audio-card {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 14px;
+	min-height: 0;
+	padding: 16px;
+}
+/* A square that is min(stage content width, 260px), centred.
+   Capping the WIDTH is what keeps it square: capping max-height instead lets
+   the 100% width win and letterboxes the cover art into a wide, short strip. */
+.tp-stage.is-audio.tp-audio-card .tp-audio-art {
+	width: 100%;
+	max-width: 260px;
+	height: auto;
+	aspect-ratio: 1 / 1;
+	align-self: center;
+	border-radius: 12px;
+}
+.tp-stage.is-audio.tp-audio-card .tp-audio-art img {
+	-o-object-fit: cover;
+	   object-fit: cover;
+}
+.tp-stage.is-audio.tp-audio-card .tp-audio-art svg {
+	width: 38px;
+	height: 38px;
+}
+.tp-stage.is-audio.tp-audio-card .tp-controls {
+	padding: 0;
+	flex: none;
+}
+/* Room to breathe once the bar is no longer a single 72px strip. */
+.tp-stage.is-audio.tp-audio-card .tp-audio-title {
+	font-size: 15px;
+	white-space: normal;
+	margin-bottom: 6px;
+}
+
+/* --- minimal: play button + waveform, nothing else --- */
+/* Keeps the base audio background. It must NOT go transparent: every control
+   in the bar is white (.tp-btn colour, the waveform's rgba(255,255,255,…)), so
+   on any light surface — the editor's preview panel, a light theme — a
+   transparent bar renders as an empty white box. "Minimal" here means fewer
+   parts (no art, title, time or volume) and a shorter bar, not no surface. */
+.tp-stage.is-audio.tp-audio-minimal {
+	min-height: 56px;
+	padding-right: 0;
+	gap: 0;
+}
+.tp-stage.is-audio.tp-audio-minimal .tp-audio-art,
+.tp-stage.is-audio.tp-audio-minimal .tp-audio-title,
+.tp-stage.is-audio.tp-audio-minimal .tp-time,
+.tp-stage.is-audio.tp-audio-minimal .tp-volume {
+	display: none;
+}
+/* One row: the buttons sit left of the scrubber rather than under it. The
+   children are reordered rather than re-rendered, so Controls.jsx stays a
+   single tree for every layout. */
+.tp-stage.is-audio.tp-audio-minimal .tp-controls {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+}
+.tp-stage.is-audio.tp-audio-minimal .tp-controls-row {
+	order: 1;
+	width: auto;
+	flex: none;
+}
+.tp-stage.is-audio.tp-audio-minimal .tp-scrubber {
+	order: 2;
+	flex: 1;
+	min-width: 0;
+}
+/* The spacer exists to push the right-hand button group away from the left
+   one; with the row shrunk to its content it would just add dead space. */
+.tp-stage.is-audio.tp-audio-minimal .tp-spacer {
+	display: none;
+}
 

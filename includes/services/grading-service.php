@@ -184,7 +184,12 @@ class GradingService {
 		// Failed → consume an attempt.
 		$max_attempts = (int) $gating['maxAttempts'];
 		$locked       = false;
-		if ( $attempt_no >= $max_attempts ) {
+		// `never_lock` still counts attempts (they drive the events, analytics
+		// and the LMS pipeline) — it only declines to lock, and leaves the watch
+		// coverage alone so the viewer resumes where they were instead of
+		// restarting. See Helper::ON_FAIL_POLICIES.
+		$may_lock = 'never_lock' !== ( $gating['onFail'] ?? 'lock_retry_after_rewatch' );
+		if ( $may_lock && $attempt_no >= $max_attempts ) {
 			// Lock + reset coverage so the retry requires a full re-watch.
 			ProgressService::upsert(
 				$video_id,
@@ -209,7 +214,10 @@ class GradingService {
 			'passed'       => false,
 			'score'        => $score,
 			'locked'       => $locked,
-			'attemptsLeft' => max( 0, $max_attempts - $attempt_no ),
+			// null, not 0, when nothing can run out: the player prints "Attempts
+			// left: N" from this, and "0 left" beside a quiz you may retry
+			// forever is worse than saying nothing.
+			'attemptsLeft' => $may_lock ? max( 0, $max_attempts - $attempt_no ) : null,
 			'perQuestion'  => $per_q,
 		];
 	}

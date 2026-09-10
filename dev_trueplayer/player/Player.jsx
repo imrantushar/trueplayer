@@ -60,7 +60,7 @@ function hasQuizContent( quiz ) {
 	return !! ( quiz.questions && quiz.questions.length );
 }
 
-export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false, previewCue = null } ) {
+export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false, previewCue = null, onPrev = null, onNext = null } ) {
 	const stageRef = useRef( null );
 	const stickySentinelRef = useRef( null );
 	const stickyDismissedRef = useRef( false ); // explicit close, until back at the top
@@ -664,13 +664,29 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 	};
 
-	const onEnded = () => {
+	const onEnded = async () => {
+		const finalQuiz = gatingOn && hasQuizContent( gating.finalQuiz );
 		if ( coverageRef.current ) {
-			coverageRef.current.flush( true );
+			// The last stretch of coverage has to reach the server BEFORE the
+			// quiz is graded against it. A viewer who was locked out and has
+			// just re-watched earns their fresh attempts on this very flush —
+			// and the beacon path is fire-and-forget, so grading would race it
+			// and read the old, exhausted attempt count, locking them again on
+			// their first mistake. Guaranteed to lose, not merely likely, when
+			// the threshold is 100% (must-watch strict): the unlock can only
+			// happen on the final second.
+			//
+			// Only the quiz waits. Everything else keeps its old timing, and
+			// unload still uses the beacon (see the flush() call sites above).
+			if ( finalQuiz ) {
+				await coverageRef.current.flush( true, false );
+			} else {
+				coverageRef.current.flush( true );
+			}
 		}
 		gaEvent( 'video_complete', { video_id: videoId, video_title: title } );
 		let gated = false;
-		if ( gatingOn && hasQuizContent( gating.finalQuiz ) ) {
+		if ( finalQuiz ) {
 			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || __( 'Final quiz' ) } );
 			gated = true;
 		} else if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
@@ -1014,6 +1030,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		`tp-skin-${ skin }`,
 		idle && ui.playing ? 'is-idle' : '',
 		source.mediaType === 'audio' ? 'is-audio' : '',
+		// The audio bar's shape. It rides the className rather than a wrapper
+		// element on purpose: the provider effect below is keyed on videoId
+		// alone, so anything that changed the element tree when the author
+		// picked a layout would tear down the live media element mid-playback.
+		// A className diff costs nothing and works while playing.
+		source.mediaType === 'audio' ? `tp-audio-${ appearance.audioLayout || 'compact' }` : '',
 		`tp-bar-${ appearance.controlBarStyle }`,
 		`tp-play-${ appearance.playButtonStyle }`,
 		// A real OS PiP window replaces the in-page floating corner — the two
@@ -1214,6 +1236,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					audio={ source.mediaType === 'audio' }
 					title={ title }
 					waveSeed={ videoId }
+					/* Track navigation, forwarded straight from a playlist. Null for
+					   a standalone player, which is what hides the buttons. */
+					onPrev={ onPrev }
+					onNext={ onNext }
+					/* The minimal audio bar IS its waveform, so chapters must not
+					   replace it there the way they do in the other layouts. */
+					scrubberStyle={ source.mediaType === 'audio' && ( appearance.audioLayout || 'compact' ) === 'minimal' ? 'waveform' : undefined }
 				/>
 			) }
 

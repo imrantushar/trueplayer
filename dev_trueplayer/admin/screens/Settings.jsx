@@ -157,7 +157,14 @@ function syncGlobalDefaults(saved) {
 }
 
 // Global defaults so a control is never uncontrolled before first save.
-const ENFORCEMENT_DEFAULTS = { completionThreshold: 90, antiSkip: true, strict: false, maxAttempts: 3, requireLogin: false, trackGuests: true };
+const ENFORCEMENT_DEFAULTS = { completionThreshold: 90, antiSkip: true, strict: false, maxAttempts: 3, onFail: 'lock_retry_after_rewatch', requireLogin: false, trackGuests: true };
+
+// What happens once a viewer has used every attempt. Mirrors
+// Helper::ON_FAIL_POLICIES — the enforcing copy.
+const ON_FAIL_POLICIES = [
+	{ value: 'lock_retry_after_rewatch', label: __( 'Lock the video — re-watch it to earn another try' ) },
+	{ value: 'never_lock', label: __( 'Nothing — let them keep retrying' ) },
+];
 const COMPLIANCE_DEFAULTS = { certIssuer: '', certLogo: '', certSignature: '', certFooter: '', retentionEnabled: false, retentionDays: 365 };
 
 // Bunny.net storage endpoints. Codes must match BunnyStorage::REGIONS in PHP —
@@ -213,6 +220,10 @@ function TruePlayerGlobalAdminEmail() {
 
 export default function Settings({ tab = 'general', onTabChange, onEditState }) {
 	const [settings, setSettings] = useState(null);
+	// For the default-preset pickers below. Failure is non-fatal — the rest of
+	// the settings screen has nothing to do with presets.
+	const [presets, setPresets] = useState([]);
+	useEffect(() => { api.listPresets().then((l) => setPresets(l || [])).catch(() => {}); }, []);
 	const setTab = (next) => onTabChange && onTabChange(next);
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
@@ -387,6 +398,31 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 							</Card>
 
 							<Card className="p-6">
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Default presets' ) }</h3>
+								<p className="text-sm text-muted mb-4">{ __( 'A saved preset applied to every item that has not chosen one of its own. Video and audio are set separately — a video preset would style an audio bar with settings that do nothing.' ) }</p>
+								<div className="grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line">
+									<Field label={ __( 'Video preset' ) } className='!mb-0'>
+										<Select
+											value={settings.general?.defaultPreset || ''}
+											onChange={(e) => setSettings((s) => ({ ...s, general: { ...(s.general || {}), defaultPreset: e.target.value ? parseInt(e.target.value, 10) : undefined } }))}
+										>
+											<option value="">{ __( 'None' ) }</option>
+											{presets.filter((p) => 'audio' !== p.type).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+										</Select>
+									</Field>
+									<Field label={ __( 'Audio preset' ) } className='!mb-0'>
+										<Select
+											value={settings.general?.defaultAudioPreset || ''}
+											onChange={(e) => setSettings((s) => ({ ...s, general: { ...(s.general || {}), defaultAudioPreset: e.target.value ? parseInt(e.target.value, 10) : undefined } }))}
+										>
+											<option value="">{ __( 'None' ) }</option>
+											{presets.filter((p) => 'audio' === p.type).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+										</Select>
+									</Field>
+								</div>
+							</Card>
+
+							<Card className="p-6">
 								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Default aspect ratio' ) }</h3>
 								<p className="text-sm text-muted mb-4">{ __( 'The frame shape new videos use unless overridden per video.' ) }</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
@@ -432,10 +468,20 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 												<Field label={ __( 'Completion threshold (%)' ) } hint={ __( "Coverage required to count as 'watched'." ) }>
 													<Input type="number" min="1" max="100" value={enf.completionThreshold} onChange={(e) => setEnf({ completionThreshold: parseInt(e.target.value, 10) || 0 })} />
 												</Field>
-												<Field label={ __( 'Max quiz attempts' ) } hint={ __( 'Before the video locks.' ) }>
+												<Field label={ __( 'Max quiz attempts' ) } hint={ enf.onFail === 'never_lock' ? __( 'Counted and reported, but never enforced.' ) : __( 'Before the video locks.' ) }>
 													<Input type="number" min="1" value={enf.maxAttempts} onChange={(e) => setEnf({ maxAttempts: parseInt(e.target.value, 10) || 1 })} />
 												</Field>
 											</div>
+											<Field
+												label={ __( 'When attempts run out' ) }
+												hint={ enf.onFail === 'never_lock'
+													? __( 'Attempts are still counted and reported — they just never lock anything, and watch progress is kept so the video resumes.' )
+													: __( 'Locking clears the viewer\u2019s watch progress, so the re-watch has to be genuine.' ) }
+											>
+												<Select value={enf.onFail} onChange={(e) => setEnf({ onFail: e.target.value })}>
+													{ON_FAIL_POLICIES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+												</Select>
+											</Field>
 											<Toggle className="mb-6" checked={enf.antiSkip} onChange={(v) => setEnf({ antiSkip: v })} label={ __( 'Anti-skip (block seeking past unwatched parts)' ) } />
 											<Toggle className="mb-6" checked={enf.strict} onChange={(v) => setEnf({ strict: v })} label={ __( 'Must-watch (strict): force 100% coverage + anti-skip' ) } />
 											<Toggle className="mb-6" checked={enf.requireLogin} onChange={(v) => setEnf({ requireLogin: v })} label={ __( 'Require login to watch (reliable per-person tracking)' ) } />

@@ -19,9 +19,15 @@ const FEATURES = [
 	[ 'webhook', __( 'Results feed the same analytics, webhooks & LMS pipeline as video' ) ],
 ];
 
-export default function InteractiveTeaser( { onEnable } ) {
+/**
+ * `bare` drops the Card shell for callers that already provide a surface — the
+ * create dialog, where a card inside the modal's own card reads as a panel
+ * floating in a panel.
+ */
+export default function InteractiveTeaser( { onEnable, bare = false } ) {
+	const Shell = bare ? 'div' : Card;
 	return (
-		<Card className="p-8 max-w-2xl mx-auto text-center">
+		<Shell className={ bare ? 'text-center' : 'p-8 max-w-2xl mx-auto text-center' }>
 			<span className="inline-flex w-12 h-12 rounded-card bg-brand-100 text-brand-500 items-center justify-center mb-4">
 				<Icon name="spark" className="w-6 h-6" />
 			</span>
@@ -48,6 +54,6 @@ export default function InteractiveTeaser( { onEnable } ) {
 			<p className="text-xs text-muted mt-4 mb-0">
 				{ __( 'Enabling adds the interactive engine’s tables to your database. Turning it back off later leaves anything you’ve built untouched.' ) }
 			</p>
-		</Card>
+		</Shell>
 	);
 }

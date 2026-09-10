@@ -290,7 +290,6 @@ function SeatPicker( { state, busy, onCancel, onConfirm } ) {
 	return (
 		<Modal
 			title={ __( 'Activation limit reached' ) }
-			className="max-w-lg"
 			onClose={ busy ? () => {} : onCancel }
 			footer={
 				<>

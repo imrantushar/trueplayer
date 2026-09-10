@@ -369,13 +369,20 @@ function sitePolicy() {
 		completionThreshold: typeof e.completionThreshold === 'number' ? e.completionThreshold : 90,
 		antiSkip: e.antiSkip !== undefined ? !! e.antiSkip : true,
 		maxAttempts: typeof e.maxAttempts === 'number' ? e.maxAttempts : 3,
+		onFail: 'never_lock' === e.onFail ? 'never_lock' : 'lock_retry_after_rewatch',
 		requireLoginForGate: !! e.requireLogin,
 	};
 }
 
+// Mirrors Helper::ON_FAIL_POLICIES — the enforcing copy.
+const ON_FAIL_POLICIES = [
+	{ value: 'lock_retry_after_rewatch', label: __( 'Lock the video — re-watch it to earn another try' ) },
+	{ value: 'never_lock', label: __( 'Nothing — let them keep retrying' ) },
+];
+
 // Keys this tab inherits from the site policy. Everything else on `gating`
 // (checkpoints, finalQuiz, …) is this video's own content and always persists.
-const POLICY_KEYS = [ 'completionThreshold', 'antiSkip', 'maxAttempts', 'requireLoginForGate' ];
+const POLICY_KEYS = [ 'completionThreshold', 'antiSkip', 'maxAttempts', 'onFail', 'requireLoginForGate' ];
 
 export default function GatingTab( { config, patch } ) {
 	const policy = sitePolicy();
@@ -466,13 +473,23 @@ export default function GatingTab( { config, patch } ) {
 						label={ __( 'Max quiz attempts' ) }
 						hint={
 							anyQuizpress
-								? __( "Before the video locks — a separate limit from QuizPress's own attempt limit on a linked quiz below; both apply independently." )
-								: __( 'Before the video locks.' )
+								? __( "A separate limit from QuizPress's own attempt limit on a linked quiz below; both apply independently." )
+								: ( 'never_lock' === gating.onFail ? __( 'Counted and reported, but never enforced.' ) : __( 'Before the video locks.' ) )
 						}
 					>
 						<Input type="number" min="1" value={ gating.maxAttempts } onChange={ ( e ) => set( { maxAttempts: parseInt( e.target.value, 10 ) || 1 } ) } />
 					</Field>
 				</div>
+				<Field
+					label={ __( 'When attempts run out' ) }
+					hint={ 'never_lock' === gating.onFail
+						? __( 'Attempts are still counted and reported — they just never lock anything, and watch progress is kept so the video resumes.' )
+						: __( 'Locking clears the viewer\u2019s watch progress, so the re-watch has to be genuine.' ) }
+				>
+					<Select value={ gating.onFail } onChange={ ( e ) => set( { onFail: e.target.value } ) }>
+						{ ON_FAIL_POLICIES.map( ( o ) => <option key={ o.value } value={ o.value }>{ o.label }</option> ) }
+					</Select>
+				</Field>
 				<Toggle className="mb-6" checked={ gating.antiSkip } onChange={ ( v ) => set( { antiSkip: v } ) } label={ __( 'Anti-skip (block seeking past unwatched parts)' ) } />
 				<Toggle checked={ gating.requireLoginForGate } onChange={ ( v ) => set( { requireLoginForGate: v } ) } label={ __( 'Require login to watch (reliable per-person tracking)' ) } />
 				<p className="text-xs text-muted mt-4">{ __( 'These start from your site-wide policy (Settings → Enforcement). Change one here and this video keeps your value; leave it and it follows the site.' ) }</p>

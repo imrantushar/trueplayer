@@ -43,9 +43,11 @@ export const api = {
 	getViewerDetail: ( id ) => rest.get( `analytics/viewer?id=${ id }` ),
 	testWebhook: ( url, secret ) => rest.post( 'webhooks/test', { url, secret } ),
 	getIntegrations: () => rest.get( 'integrations' ),
+	// No type filter here on purpose: the Presets screen shows both kinds as
+	// tabs and needs the counts, so it fetches once and splits client-side.
 	listPresets: () => rest.get( 'presets' ),
 	getPreset: ( id ) => rest.get( `presets/${ id }` ),
-	createPreset: ( title, config = {} ) => rest.post( 'presets', { title, config } ),
+	createPreset: ( title, config = {}, type = 'video' ) => rest.post( 'presets', { title, config, type } ),
 	updatePreset: ( id, data ) => rest.put( `presets/${ id }`, data ),
 	deletePreset: ( id ) => rest.del( `presets/${ id }` ),
 	listPlaylists: () => rest.get( 'playlists' ),

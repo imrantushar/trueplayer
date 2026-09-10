@@ -363,9 +363,11 @@ export function SubSidebar( { items, value, onChange, className = '' } ) {
 
 /** Centered modal dialog. Click the backdrop or ✕ to close. */
 export function Modal( { title, onClose, children, footer, className = '' } ) {
-	// Two max-w utilities on one element resolve by stylesheet order, not by
-	// source order — so drop the default whenever the caller supplies its own.
-	const width = className.includes( 'max-w-' ) ? '' : 'max-w-md';
+	// One width for every dialog (48rem), so the shell doesn't resize as you move
+	// between them. A caller can still opt out, and must: two max-w utilities on
+	// one element resolve by stylesheet order, not by source order, so the
+	// default is dropped whenever the caller supplies its own.
+	const width = className.includes( 'max-w-' ) ? '' : 'max-w-3xl';
 	return (
 		<div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6" onClick={ onClose }>
 			{ /* Bounded column: the header and footer stay put and only the body

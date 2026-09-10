@@ -22,7 +22,7 @@ import { ACCEPTED, uploadToGumlet } from '../utils/gumletUpload';
  * Gumlet video is identified by its asset id and may legitimately have no URL
  * yet.
  */
-export default function GumletField( { value, onChange, type = 'gumletStorage' } ) {
+export default function GumletField( { value, onChange, type = 'gumletStorage', audio = false } ) {
 	// The two types want different things from a connected account: pasting an
 	// existing video needs only the API key, uploading a new one also needs to
 	// know which collection it lands in.
@@ -195,7 +195,7 @@ export default function GumletField( { value, onChange, type = 'gumletStorage' }
 		return (
 			<>
 				<div className="flex items-center gap-3 border border-line rounded-card px-3 py-2.5">
-					<Icon name="film" className="w-4 h-4 text-muted shrink-0" />
+					<Icon name={ audio ? 'music' : 'film' } className="w-4 h-4 text-muted shrink-0" />
 					<span className="min-w-0 flex-1">
 						<span className="block text-sm text-ink truncate">{ value.fileName || value.assetId }</span>
 						<span className="block text-xs text-muted truncate">{ value.src || value.assetId }</span>
@@ -207,7 +207,7 @@ export default function GumletField( { value, onChange, type = 'gumletStorage' }
 				</div>
 				<FilePicker inputRef={ inputRef } onPick={ send } accept={ ACCEPTED } />
 				{ error && <p className="text-xs text-danger !mt-1.5">{ error }</p> }
-				{ pending && <Warning text={ __( 'Gumlet is still encoding this video. It is saved and will start playing on its own once encoding finishes — no need to re-upload.' ) } /> }
+				{ pending && <Warning text={ audio ? __( 'Gumlet is still encoding this file. It is saved and will start playing on its own once encoding finishes — no need to re-upload.' ) : __( 'Gumlet is still encoding this video. It is saved and will start playing on its own once encoding finishes — no need to re-upload.' ) } /> }
 			</>
 		);
 	}
@@ -259,7 +259,7 @@ export default function GumletField( { value, onChange, type = 'gumletStorage' }
 					value={ pasted }
 					onChange={ ( e ) => setPasted( e.target.value ) }
 					onBlur={ () => resolve( pasted ) }
-					placeholder={ __( 'Gumlet video ID or URL' ) }
+					placeholder={ audio ? __( 'Gumlet asset ID or URL' ) : __( 'Gumlet video ID or URL' ) }
 				/>
 				{ resolving && <p className="text-xs text-muted !mt-1.5">{ __( 'Looking it up…' ) }</p> }
 				{ error && <p className="text-xs text-danger !mt-1.5">{ error }</p> }
@@ -277,7 +277,7 @@ export default function GumletField( { value, onChange, type = 'gumletStorage' }
 				className="w-full border border-dashed border-line rounded-card px-3 py-7 text-center hover:border-brand-200 hover:bg-gray-50 transition-colors"
 			>
 				<Icon name="upload" className="w-5 h-5 mx-auto text-muted" />
-				<span className="block text-sm text-ink !mt-2">{ __( 'Upload a video to Gumlet' ) }</span>
+				<span className="block text-sm text-ink !mt-2">{ audio ? __( 'Upload audio to Gumlet' ) : __( 'Upload a video to Gumlet' ) }</span>
 				<span className="block text-xs text-muted !mt-0.5">
 					{ status.maxBytes
 						? __sprintf( 'or drop it here · up to %s', formatBytes( status.maxBytes ) )
@@ -297,7 +297,7 @@ export default function GumletField( { value, onChange, type = 'gumletStorage' }
 						value={ pasted }
 						onChange={ ( e ) => setPasted( e.target.value ) }
 						onBlur={ () => resolve( pasted ) }
-						placeholder={ __( 'Gumlet video ID or URL' ) }
+						placeholder={ audio ? __( 'Gumlet asset ID or URL' ) : __( 'Gumlet video ID or URL' ) }
 					/>
 					{ resolving && <p className="text-xs text-muted !mt-1.5">{ __( 'Looking it up…' ) }</p> }
 				</div>

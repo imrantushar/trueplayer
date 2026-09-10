@@ -212,14 +212,18 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 			) }
 
 			{ source.type === 'bunnyStorage' && (
-				<Field label={ __( 'Video file' ) } required hint={ __( 'Upload straight to your storage zone, reuse a file already in it, or paste a URL.' ) }>
-					<BunnyStorageField value={ source.src || '' } onChange={ ( src ) => set( { src } ) } />
+				<Field label={ audio ? __( 'Audio file' ) : __( 'Video file' ) } required hint={ audio
+					? __( 'Upload straight to your storage zone, reuse a file already in it, or paste a URL.' )
+					: __( 'Upload straight to your storage zone, reuse a file already in it, or paste a URL.' ) }>
+					<BunnyStorageField value={ source.src || '' } onChange={ ( src ) => set( { src } ) } audio={ audio } />
 				</Field>
 			) }
 
 			{ source.type === 'gumletStorage' && (
-				<Field label={ __( 'Video file' ) } required hint={ __( 'Upload straight to Gumlet, reuse a video already in your library, or paste an ID.' ) }>
-					<GumletField type="gumletStorage" value={ source } onChange={ ( partial ) => set( partial ) } />
+				<Field label={ audio ? __( 'Audio file' ) : __( 'Video file' ) } required hint={ audio
+					? __( 'Upload straight to Gumlet, reuse a file already in your library, or paste an ID.' )
+					: __( 'Upload straight to Gumlet, reuse a video already in your library, or paste an ID.' ) }>
+					<GumletField type="gumletStorage" value={ source } onChange={ ( partial ) => set( partial ) } audio={ audio } />
 				</Field>
 			) }
 

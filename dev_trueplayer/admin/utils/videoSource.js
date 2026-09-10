@@ -1,3 +1,5 @@
+import { isAudioSource } from '@Utils/audio';
+
 /**
  * A video isn't playable without a source — what "set" means differs per type
  * (bunny needs pullZone+videoId, mux needs a playbackId or a full src url).
@@ -34,7 +36,10 @@ export function hasVideoSource( source = {} ) {
  * while the <video> already on it kept playing its picture straight through.
  */
 export function sourceKey( source = {} ) {
-	const media = source.mediaType === 'audio' ? 'audio' : 'video';
+	// Detected, not just declared: an .mp3 that nobody ticked the audio-only box
+	// for still renders in the audio player, so it still has to remount when it
+	// changes. Reading the raw field here would miss exactly those items.
+	const media = isAudioSource( source ) ? 'audio' : 'video';
 	switch ( source.type ) {
 		case 'bunny':
 			return `bunny:${ media }:${ source.pullZone || '' }:${ source.videoId || '' }`;

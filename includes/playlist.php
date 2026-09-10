@@ -66,7 +66,11 @@ class Playlist {
 		if ( get_post_type( $video_id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
 			return null;
 		}
-		$config = Shortcode::strip_answer_keys( Helper::with_derived_poster( Helper::apply_preset( Helper::get_video_config( $video_id ) ) ) );
+		// Playlist members do not route through Shortcode::resolved_config(), so
+		// the media type is resolved here for the same reason it is there: the
+		// preset merge and the per-item facade both branch on it.
+		$config = Media::normalize_config( Helper::get_video_config( $video_id ) );
+		$config = Shortcode::strip_answer_keys( Helper::with_derived_poster( Helper::apply_preset( $config ) ) );
 		return [
 			'videoId' => $video_id,
 			'title'   => get_the_title( $video_id ),

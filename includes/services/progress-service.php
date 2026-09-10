@@ -134,19 +134,26 @@ class ProgressService {
 		$percent = $row ? (float) $row['percent'] : 0.0;
 		$viewed  = $percent >= (float) $gating['completionThreshold'];
 
-		$status   = $row['status'] ?? 'in_progress';
-		$locked   = 'locked' === $status;
-		$attempts = (int) ( $row['attempts'] ?? 0 );
+		$status     = $row['status'] ?? 'in_progress';
+		$never_lock = 'never_lock' === ( $gating['onFail'] ?? '' );
+		// Someone locked out under the old policy must be released when the site
+		// switches to "never lock" — their coverage was wiped when they were
+		// locked, so the re-watch route that would normally free them is the one
+		// thing they can no longer complete. Read-side only: the row heals itself
+		// on the next progress write rather than making a gate check write.
+		$locked     = 'locked' === $status && ! $never_lock;
+		$attempts   = (int) ( $row['attempts'] ?? 0 );
 
 		return [
-			'status'        => $status,
+			'status'        => $never_lock && 'locked' === $status ? 'in_progress' : $status,
 			'locked'        => $locked,
 			'canPlay'       => true, // Locked videos remain watchable for re-watch.
 			'completed'     => (bool) ( $row['completed'] ?? false ),
 			'viewed'        => $viewed,
 			'percent'       => $percent,
 			'resumeAt'      => (int) ( $row['last_position'] ?? 0 ),
-			'attemptsLeft'  => max( 0, (int) $gating['maxAttempts'] - $attempts ),
+			// null when the policy never locks — see GradingService for why.
+			'attemptsLeft'  => $never_lock ? null : max( 0, (int) $gating['maxAttempts'] - $attempts ),
 			'requireRewatch' => $locked, // must reach threshold again to earn a retry
 			'threshold'     => (float) $gating['completionThreshold'],
 		];
@@ -212,11 +219,31 @@ class ProgressService {
 
 		// Retry-after-rewatch: a locked viewer who re-reaches the threshold
 		// earns a fresh attempt (attempts reset, unlocked).
+		//
+		// Under `never_lock` the release is unconditional: nothing should be
+		// locked under that policy, so a row left over from the previous one is
+		// healed on the first heartbeat rather than waiting for a re-watch the
+		// viewer can no longer complete (their coverage was wiped on lock).
 		$unlocked = false;
-		if ( 'locked' === $prev_status && $viewed ) {
+		if ( 'locked' === $prev_status && ( $viewed || 'never_lock' === ( $gating['onFail'] ?? '' ) ) ) {
 			$new_status = 'in_progress';
 			$attempts   = 0;
 			$unlocked   = true;
+		} elseif ( 'locked' === $prev_status && $attempts > 0 && $percent > 0 ) {
+			// The re-watch has STARTED but not yet reached the threshold, and the
+			// fresh attempts have to be granted now rather than at the end.
+			//
+			// Checkpoint quizzes are graded on the way through — a checkpoint
+			// sitting before the completion threshold would otherwise be judged
+			// against the exhausted count and re-lock the viewer on their first
+			// mistake, with no way out: the unlock needs coverage they cannot
+			// reach without first passing the checkpoint that keeps locking them.
+			// The lock wiped coverage to 0, so any percent above it means real
+			// re-watching has happened.
+			//
+			// The status stays `locked` until the threshold is genuinely met, so
+			// this grants attempts without granting completion.
+			$attempts = 0;
 		}
 
 		// Watch-verification completion: when there is no final quiz, reaching
@@ -359,7 +386,7 @@ class ProgressService {
 				'completionThreshold' => $enf['completionThreshold'],
 				'antiSkip'            => $enf['antiSkip'],
 				'maxAttempts'         => $enf['maxAttempts'],
-				'onFail'              => 'lock_retry_after_rewatch',
+				'onFail'              => $enf['onFail'],
 				'checkpoints'         => [],
 				'finalQuiz'           => null,
 				'requireLoginForGate' => $enf['requireLogin'],

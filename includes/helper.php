@@ -119,6 +119,17 @@ class Helper {
 	}
 
 	/**
+	 * A preset's media type: 'audio' or 'video'.
+	 *
+	 * Normalized rather than returned raw so an absent meta (every preset made
+	 * before audio existed) and an unexpected value both read as 'video'.
+	 */
+	public static function get_preset_type( $preset_id ): string {
+		$type = get_post_meta( (int) $preset_id, '_trueplayer_preset_type', true );
+		return 'audio' === $type ? 'audio' : 'video';
+	}
+
+	/**
 	 * If a video references a preset (config.presetId), merge the preset's
 	 * customize + branding UNDER the video's own settings so per-video values
 	 * win. Applied at frontend render only — the admin editor edits the raw
@@ -126,13 +137,25 @@ class Helper {
 	 */
 	public static function apply_preset( array $config ): array {
 		$preset_id = isset( $config['presetId'] ) ? (int) $config['presetId'] : 0;
+		$is_audio  = Media::is_audio( $config['source'] ?? [] );
 
 		// Fall back to the site-wide default preset (Settings → General).
+		//
+		// Audio reads its own setting and does NOT fall back to the video one:
+		// a video preset carries a skin, an aspect ratio and a control-bar style
+		// that mean nothing for a bar, so inheriting it would silently restyle
+		// every audio item on the site. No audio default means no default.
 		if ( ! $preset_id ) {
 			$general   = self::get_settings_section( 'general' );
-			$preset_id = isset( $general['defaultPreset'] ) ? (int) $general['defaultPreset'] : 0;
+			$key       = $is_audio ? 'defaultAudioPreset' : 'defaultPreset';
+			$preset_id = isset( $general[ $key ] ) ? (int) $general[ $key ] : 0;
 		}
 		if ( ! $preset_id || get_post_type( $preset_id ) !== TRUEPLAYER_PRESET_POST_TYPE ) {
+			return $config;
+		}
+		// An explicitly chosen preset is always honoured; only a mismatched
+		// *default* is refused, since nobody picked it for this item.
+		if ( ! isset( $config['presetId'] ) && ( self::get_preset_type( $preset_id ) === 'audio' ) !== $is_audio ) {
 			return $config;
 		}
 		$preset = self::get_preset_config( $preset_id );
@@ -381,12 +404,29 @@ class Helper {
 	 * for `requireLogin` into every video the moment anyone opened the Questions
 	 * & gating tab, so the site-wide toggle silently stopped applying.
 	 */
+	/**
+	 * What happens once a viewer has used every quiz attempt.
+	 *
+	 *   lock_retry_after_rewatch — lock the video and wipe the watch coverage, so
+	 *                              re-reaching the completion threshold earns a
+	 *                              fresh set of attempts. The original, and the
+	 *                              default, so no existing site changes.
+	 *   never_lock               — attempts keep being counted and reported, but
+	 *                              running out never locks anything and coverage
+	 *                              is left alone, so the video still resumes.
+	 */
+	const ON_FAIL_POLICIES = [ 'lock_retry_after_rewatch', 'never_lock' ];
+
 	public static function enforcement_defaults(): array {
-		$saved = self::get_settings_section( 'enforcement' );
+		$saved   = self::get_settings_section( 'enforcement' );
+		$on_fail = isset( $saved['onFail'] ) ? (string) $saved['onFail'] : '';
 		return [
 			'completionThreshold' => isset( $saved['completionThreshold'] ) ? (int) $saved['completionThreshold'] : 90,
 			'antiSkip'            => array_key_exists( 'antiSkip', $saved ) ? (bool) $saved['antiSkip'] : true,
 			'maxAttempts'         => isset( $saved['maxAttempts'] ) ? (int) $saved['maxAttempts'] : 3,
+			// Settings are stored verbatim, so an unknown value here would flow
+			// straight into the grading branch — validated back to the default.
+			'onFail'              => in_array( $on_fail, self::ON_FAIL_POLICIES, true ) ? $on_fail : 'lock_retry_after_rewatch',
 			'requireLogin'        => array_key_exists( 'requireLogin', $saved ) ? (bool) $saved['requireLogin'] : false,
 			'strict'              => array_key_exists( 'strict', $saved ) ? (bool) $saved['strict'] : false,
 			'trackGuests'         => array_key_exists( 'trackGuests', $saved ) ? (bool) $saved['trackGuests'] : true,
