@@ -1673,6 +1673,58 @@ body[class*="page_trueplayer"] #wpbody-content {
 	appearance: none;
 	margin: 0;
 }
+
+/* Video | Audio switcher — used by the Presets list and both create modals.
+   A segmented control rather than the sub-nav pills those screens use for
+   sections, because this picks WHICH set of things you are looking at, not
+   which part of one thing. */
+.tp-admin .tp-type-tabs {
+	display: inline-flex;
+	gap: 2px;
+	padding: 3px;
+	border-radius: 8px;
+	background: #f3f4f6;
+	border: 1px solid #e5e7eb;
+}
+.tp-admin .tp-type-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 14px;
+	border: 0;
+	border-radius: 6px;
+	background: transparent;
+	color: #6b7280;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1;
+	cursor: pointer;
+}
+.tp-admin .tp-type-tab:hover {
+	color: #111827;
+}
+.tp-admin .tp-type-tab.is-active {
+	background: #fff;
+	color: #111827;
+	box-shadow: 0 1px 2px rgba( 0, 0, 0, 0.06 );
+}
+.tp-admin .tp-type-tab-count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 5px;
+	border-radius: 9px;
+	background: #e5e7eb;
+	color: #6b7280;
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+}
+.tp-admin .tp-type-tab.is-active .tp-type-tab-count {
+	background: #dbeafe;
+	color: #1d4ed8;
+}
 .placeholder\:text-placeholder::-moz-placeholder {
 		--tw-text-opacity: 1;
 		color: rgb(162 173 185 / var(--tw-text-opacity, 1));
