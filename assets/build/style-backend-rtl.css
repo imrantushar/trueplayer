@@ -653,12 +653,6 @@
 .max-w-full {
 		max-width: 100%;
 }
-.max-w-lg {
-		max-width: 32rem;
-}
-.max-w-md {
-		max-width: 28rem;
-}
 .max-w-sm {
 		max-width: 24rem;
 }
@@ -1644,8 +1638,75 @@ body[class*="page_trueplayer"] #wpbody-content {
 	margin: 0;
 }
 
-/* Number fields are ordinary fields.
-   Chrome and Safari paint stepper arrows inside `type="number"`, which eat the
+/* Every field wears our border, not WordPress's.
+   wp-admin/css/forms.css styles form controls by attribute
+   (`input[type="text"], … , textarea, select`), which is specificity 0-1-1 and
+   therefore beats a utility class like `border-line` (0-1-0). So a field could
+   render at WP's 2px radius and #949494 border while the component beside it
+   used ours — that is what happened to number inputs, which used to be fixed
+   here on their own. Listing every type WP styles fixes the whole class of
+   problem instead of one member of it at a time.
+   Colour comes from `--tp-line`, the token declared on `.tp-admin` above (and
+   the mirror of `line` in tailwind.config.js), so the border colour still has
+   exactly one definition.
+   Deliberately NOT listed: range, radio and checkbox, which are not boxes and
+   must keep their native rendering. */
+.tp-admin input[type='text'],
+.tp-admin input[type='search'],
+.tp-admin input[type='url'],
+.tp-admin input[type='tel'],
+.tp-admin input[type='email'],
+.tp-admin input[type='password'],
+.tp-admin input[type='number'],
+.tp-admin input[type='date'],
+.tp-admin input[type='datetime-local'],
+.tp-admin input[type='month'],
+.tp-admin input[type='week'],
+.tp-admin input[type='time'],
+.tp-admin input[type='color'],
+.tp-admin textarea,
+.tp-admin select {
+	border: 1px solid var( --tp-line, #e5e7eb );
+	border-radius: 4px;
+}
+
+/* The hover/focus accent has to be restated too: the rule above outranks the
+   `hover:border-brand-500` / `focus:border-brand-500` utilities the Input and
+   Textarea components carry, so without this a field would go inert on focus. */
+.tp-admin input[type='text']:hover,
+.tp-admin input[type='search']:hover,
+.tp-admin input[type='url']:hover,
+.tp-admin input[type='tel']:hover,
+.tp-admin input[type='email']:hover,
+.tp-admin input[type='password']:hover,
+.tp-admin input[type='number']:hover,
+.tp-admin input[type='date']:hover,
+.tp-admin input[type='datetime-local']:hover,
+.tp-admin input[type='month']:hover,
+.tp-admin input[type='week']:hover,
+.tp-admin input[type='time']:hover,
+.tp-admin input[type='color']:hover,
+.tp-admin textarea:hover,
+.tp-admin select:hover,
+.tp-admin input[type='text']:focus,
+.tp-admin input[type='search']:focus,
+.tp-admin input[type='url']:focus,
+.tp-admin input[type='tel']:focus,
+.tp-admin input[type='email']:focus,
+.tp-admin input[type='password']:focus,
+.tp-admin input[type='number']:focus,
+.tp-admin input[type='date']:focus,
+.tp-admin input[type='datetime-local']:focus,
+.tp-admin input[type='month']:focus,
+.tp-admin input[type='week']:focus,
+.tp-admin input[type='time']:focus,
+.tp-admin input[type='color']:focus,
+.tp-admin textarea:focus,
+.tp-admin select:focus {
+	border-color: var( --tp-primary, #006bff );
+}
+
+/* Chrome and Safari paint stepper arrows inside `type="number"`, which eat the
    right-hand padding and give those inputs a different silhouette from the text
    inputs beside them — visible wherever the two sit in one row (a layer's
    "Show from" next to its "Headline", the hotspot geometry row). The value is
@@ -1655,17 +1716,6 @@ body[class*="page_trueplayer"] #wpbody-content {
 	-moz-appearance: textfield;
 	-webkit-appearance: textfield;
 	        appearance: textfield;
-	/* WordPress styles number inputs where it does not style text ones
-	   (wp-admin/css/forms.css) — `input[type="number"]` outranks a utility
-	   class, and Tailwind's preflight is off here, so a number field was
-	   rendering at WP's 2px radius and #949494 border while every text field
-	   beside it used ours. Restated at matching specificity. */
-	border-radius: 4px;
-	border: 1px solid #e5e7eb;
-}
-.tp-admin input[type='number']:hover,
-.tp-admin input[type='number']:focus {
-	border-color: #006bff;
 }
 .tp-admin input[type='number']::-webkit-outer-spin-button,
 .tp-admin input[type='number']::-webkit-inner-spin-button {

@@ -2011,11 +2011,15 @@
 }
 
 /* --- minimal: play button + waveform, nothing else --- */
+/* Keeps the base audio background. It must NOT go transparent: every control
+   in the bar is white (.tp-btn colour, the waveform's rgba(255,255,255,…)), so
+   on any light surface — the editor's preview panel, a light theme — a
+   transparent bar renders as an empty white box. "Minimal" here means fewer
+   parts (no art, title, time or volume) and a shorter bar, not no surface. */
 .tp-stage.is-audio.tp-audio-minimal {
 	min-height: 56px;
 	padding-right: 0;
 	gap: 0;
-	background: transparent;
 }
 .tp-stage.is-audio.tp-audio-minimal .tp-audio-art,
 .tp-stage.is-audio.tp-audio-minimal .tp-audio-title,
