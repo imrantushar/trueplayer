@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.4.0 - 2026-09-10
+
+### Added
+
+- Audio as its own media type — Video / Audio tabs when creating media.
+- Three audio layouts: compact bar, card, and minimal.
+- Audio presets, separate from video ones, with Podcast, Album and Bare starting points.
+- Audio control toggles: previous / next track, playback speed, chapters & transcript.
+- Previous / next track buttons in playlists.
+- Automatic audio detection from the file extension, so imported and pasted audio needs no re-saving.
+- Site-wide default presets for video and audio, under Settings → General.
+- A "When attempts run out" policy — lock and require a re-watch, or never lock. Overridable per video.
+- Audio wording and icons in Bunny.net Storage and Gumlet uploads.
+
+### Fixed
+
+- Re-watching after using every quiz attempt gave only one attempt instead of a fresh set.
+- A checkpoint before the completion threshold could lock a re-watching viewer out for good.
+- Audio items previewed as a video player in the editor.
+- The minimal audio layout rendered as an empty white box on light backgrounds.
+- Audio was published to search engines as video.
+- The audio preset's "Preview with" row did not line up with the preview below it.
+- Fields took their border from WordPress instead of the plugin.
+
+### Changed
+
+- Player controls are defined in one place, so the editor and player can't drift apart.
+- The editor hides settings that cannot apply to audio.
+- The Interactive tab is always shown, with a teaser when the addon is off.
+- All dialogs open at the same width.
+
 ## 1.3.0 - 2026-09-06
 
 ### Added
