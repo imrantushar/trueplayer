@@ -223,7 +223,7 @@ export default function Presets( { onEditState } ) {
 						</div>
 					</Field>
 					<Field label={ __( 'Preset name' ) }>
-						<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } placeholder={ 'audio' === newType ? __( 'e.g. Podcast — dark' ) : __( 'e.g. Brand — dark' ) } />
+						<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ ( e ) => e.key === 'Enter' && create() } placeholder={ 'audio' === newType ? __( 'Name' ) : __( 'Name' ) } />
 					</Field>
 					<Field label={ __( 'Start from' ) } hint={ __( 'A predefined look to begin with — you can change everything after.' ) }>
 						<Select value={ template } onChange={ ( e ) => setTemplate( e.target.value ) }>

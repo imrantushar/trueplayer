@@ -233,7 +233,7 @@ function ZoneBrowser( { onClose, onPick } ) {
 	const shown = ( files || [] ).filter( ( f ) => ! q || f.name.toLowerCase().includes( q ) );
 
 	return (
-		<Modal title={ __( 'Files in your storage zone' ) } onClose={ onClose } className="max-w-lg">
+		<Modal title={ __( 'Files in your storage zone' ) } onClose={ onClose }>
 			<div className="relative mb-3">
 				<Icon name="search" className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-placeholder" />
 				<Input value={ query } onChange={ ( e ) => setQuery( e.target.value ) } placeholder={ __( 'Search files' ) } className="!pl-8" />

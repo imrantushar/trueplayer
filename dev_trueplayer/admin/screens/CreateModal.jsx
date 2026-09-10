@@ -137,7 +137,6 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 	return (
 		<Modal
 			title={ KIND_HEADING[ kind ] }
-			className={ 'interactive' === kind ? 'max-w-3xl' : 'max-w-lg' }
 			onClose={ onClose }
 			footer={
 				<>

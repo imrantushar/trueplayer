@@ -253,7 +253,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 				<Toast message={ toast?.message } tone={ toast?.tone } onDismiss={ () => setToast( null ) } />
 
 				{ embedOpen && (
-					<Modal title={ __( 'Embed this media' ) } onClose={ () => setEmbedOpen( false ) } className="max-w-lg">
+					<Modal title={ __( 'Embed this media' ) } onClose={ () => setEmbedOpen( false ) }>
 						<EmbedTab
 							video={ video }
 							config={ config }
