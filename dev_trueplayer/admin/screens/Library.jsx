@@ -217,15 +217,22 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 
 	const byId = Object.fromEntries( ( videos || [] ).map( ( v ) => [ v.id, v ] ) );
 	// The tab stays visible while the engine is merely installed, so the feature
-	// is discoverable; creating is gated on it actually being enabled.
+	// is discoverable. That now applies to the create dialog too: hiding the
+	// Interactive tab there meant the only way to find out the addon existed was
+	// to already know to filter the library by it. Opening the tab with the addon
+	// switched off shows the teaser instead of the type picker — creating is
+	// still gated on it actually being enabled (see CreateModal).
 	const filters = FILTERS.filter( ( f ) => 'interactive' !== f.kind || h5pInstalled() );
-	const createKinds = [ 'media', 'playlist', ...( h5pEnabled() ? [ 'interactive' ] : [] ) ];
+	const createKinds = [ 'media', 'playlist', ...( h5pInstalled() ? [ 'interactive' ] : [] ) ];
 	const teasing = 'interactive' === kind && h5pInstalled() && ! h5pEnabled();
 
 	// The split button's default is the kind you're looking at — so the filter
 	// you deep-linked to is also the thing you create in one click. On the
-	// teaser there is nothing to create yet, so it falls back to media.
-	const defaultKind = ( 'all' === kind || ! createKinds.includes( kind ) ) ? 'media' : kind;
+	// teaser there is nothing to create yet, so it falls back to media:
+	// `createKinds` now carries `interactive` even when the addon is off, so
+	// `teasing` is what keeps the one-click action from re-opening the same
+	// teaser the page is already showing. It stays in the dropdown.
+	const defaultKind = ( 'all' === kind || teasing || ! createKinds.includes( kind ) ) ? 'media' : kind;
 	const menuKinds = createKinds.filter( ( k ) => k !== defaultKind );
 	const KIND_MENU = {
 		media: { label: __( 'Media' ), hint: __( 'A video or audio player' ) },
@@ -286,6 +293,7 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 					onClose={ () => setCreate( null ) }
 					onSubmit={ submitCreate }
 					onError={ setError }
+					onEnableInteractive={ () => onNavigate && onNavigate( 'settings', { tab: 'addons' } ) }
 				/>
 			) }
 

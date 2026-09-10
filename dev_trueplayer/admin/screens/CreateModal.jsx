@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from '@wordpress/element';
 import { Button, Modal, Field, Input } from '../components/UI';
 import { Icon } from '../components/icons';
 import { isPro } from '../pro';
+import { h5pEnabled } from '../h5p';
+import InteractiveTeaser from '../components/InteractiveTeaser';
 import { SOURCE_TYPES } from '@Utils/source-types';
 import { api } from '../api';
 import { __, __sprintf } from '@Utils/translation';
@@ -53,7 +55,7 @@ const PLACEHOLDER = {
 	interactive: __( 'Title' ),
 };
 
-export default function CreateModal( { initialKind = 'media', kinds = [ 'media', 'playlist' ], onClose, onSubmit, onError } ) {
+export default function CreateModal( { initialKind = 'media', kinds = [ 'media', 'playlist' ], onClose, onSubmit, onError, onEnableInteractive } ) {
 	const [ kind, setKind ] = useState( initialKind );
 	const [ title, setTitle ] = useState( '' );
 	const [ sourceType, setSourceType ] = useState( 'self' );
@@ -63,6 +65,12 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 	const [ mediaKind, setMediaKind ] = useState( 'video' );
 	const [ busy, setBusy ] = useState( '' ); // '' | 'install' | 'create'
 
+	// The Interactive tab is offered whenever the engine ships in this build, so
+	// the feature is discoverable — but with the addon switched off there is
+	// nothing to pick from and nothing to create, and the teaser stands in for
+	// the type picker. Same split the Library's filter chips already use.
+	const interactiveLocked = 'interactive' === kind && ! h5pEnabled();
+
 	// Interactive-only state.
 	const [ types, setTypes ] = useState( null );
 	const [ picked, setPicked ] = useState( '' );
@@ -70,7 +78,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 
 	// Content types are only needed once the interactive branch is opened.
 	useEffect( () => {
-		if ( 'interactive' !== kind || types ) {
+		if ( 'interactive' !== kind || types || ! h5pEnabled() ) {
 			return;
 		}
 		api.h5pContentTypes().then( setTypes ).catch( ( e ) => onError?.( e.message || __( 'Failed to load content types.' ) ) );
@@ -113,7 +121,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 	const sourceTiles = 'audio' === mediaKind ? MEDIA_TYPES.filter( ( t ) => t.audio ) : MEDIA_TYPES;
 
 	const needsInstall = 'interactive' === kind && selected && ! selected.installed;
-	const canCreate = 'interactive' === kind ? !! selected?.installed : true;
+	const canCreate = 'interactive' === kind ? ( ! interactiveLocked && !! selected?.installed ) : true;
 
 	const submit = async () => {
 		if ( ! canCreate ) {
@@ -141,7 +149,7 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 			footer={
 				<>
 					<div className="mr-auto text-[13px] text-muted">
-						{ 'interactive' === kind && ! selected && __( 'Pick a content type to continue.' ) }
+						{ 'interactive' === kind && ! interactiveLocked && ! selected && __( 'Pick a content type to continue.' ) }
 						{ needsInstall && __sprintf( '%s isn’t installed yet — it downloads once from the H5P Hub.', selected.title ) }
 						{ 'interactive' === kind && selected?.installed && __sprintf( '%s is ready to use.', selected.title ) }
 					</div>
@@ -169,9 +177,13 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 				</div>
 			) }
 
-			<Field label={ __( 'Name' ) } hint={ __( 'Shown in your library. You can rename it later.' ) }>
-				<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ onKeyDown } placeholder={ PLACEHOLDER[ kind ] } />
-			</Field>
+			{ /* Nothing will be created while the addon is off, so don't ask for a
+			     name for it — the teaser below is the whole content of the tab. */ }
+			{ ! interactiveLocked && (
+				<Field label={ __( 'Name' ) } hint={ __( 'Shown in your library. You can rename it later.' ) }>
+					<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ onKeyDown } placeholder={ PLACEHOLDER[ kind ] } />
+				</Field>
+			) }
 
 			{ 'media' === kind && (
 				<div className="mb-1">
@@ -225,7 +237,11 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 				</div>
 			) }
 
-			{ 'interactive' === kind && (
+			{ interactiveLocked && (
+				<InteractiveTeaser bare onEnable={ onEnableInteractive } />
+			) }
+
+			{ 'interactive' === kind && ! interactiveLocked && (
 				<>
 					<div className="flex items-center justify-between mt-5 mb-2">
 						<span className="text-[13px] font-medium text-label">{ __( 'Content type' ) }</span>
