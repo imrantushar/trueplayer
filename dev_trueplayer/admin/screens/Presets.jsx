@@ -114,18 +114,24 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 				</div>
 
 				{ /* Sticky header (top-8) + its h-14 bar are ~88px; top-[104px] clears both with a small gap. */ }
-				<div className="w-full xl:w-[400px] shrink-0 xl:sticky xl:top-[104px]">
-					<Card className="p-4">
-						{ videos.length > 0 && (
-							<div className="flex items-center gap-2 mb-3">
-								<span className="text-xs text-muted whitespace-nowrap">{ __( 'Preview with' ) }</span>
-								<Select value={ previewId } onChange={ ( e ) => setPreviewId( parseInt( e.target.value, 10 ) ) } className="h-9 text-[13px]">
-									{ videos.map( ( v ) => <option key={ v.id } value={ v.id }>{ v.title }</option> ) }
-								</Select>
-							</div>
-						) }
-						<PreviewPanel id={ previewId || 0 } config={ previewConfig } title={ previewVideo?.title || __( 'Sample track' ) } />
-					</Card>
+				{ /* No Card wrapper here: PreviewPanel renders its own, and nesting
+				     the two indented the preview's header by the outer padding —
+				     "Preview with" and "Live preview" ended up on different left
+				     edges. The video editor renders PreviewPanel bare for the same
+				     reason; this column now matches it. */ }
+				<div className="w-full xl:w-[400px] shrink-0 xl:sticky xl:top-[104px] space-y-3">
+					{ videos.length > 0 && (
+						<div className="flex items-center gap-2">
+							<span className="text-xs text-muted whitespace-nowrap">{ __( 'Preview with' ) }</span>
+							{ /* Fills the rest of the row so its right edge lands on the
+							     preview card's, instead of ending wherever the longest
+							     title happens to. */ }
+							<Select value={ previewId } onChange={ ( e ) => setPreviewId( parseInt( e.target.value, 10 ) ) } className="flex-1 min-w-0">
+								{ videos.map( ( v ) => <option key={ v.id } value={ v.id }>{ v.title }</option> ) }
+							</Select>
+						</div>
+					) }
+					<PreviewPanel id={ previewId || 0 } config={ previewConfig } title={ previewVideo?.title || __( 'Sample track' ) } />
 				</div>
 			</div>
 		</div>
