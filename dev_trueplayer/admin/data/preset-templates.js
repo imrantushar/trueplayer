@@ -42,11 +42,45 @@ export const AUDIO_PRESET_TEMPLATES = [
 		controls: { speed: false, rewind: false, forward: false, prev: true, next: true },
 	},
 	{
+		// Key stays `bare` although the label reads "Minimal": the key is what a
+		// site has already stored in `general.defaultAudioTemplate`, so renaming
+		// it would silently deselect the tile on every install that chose this
+		// one. The label is the only part an author ever sees.
 		key: 'bare',
-		label: __( 'Bare' ),
+		label: __( 'Minimal' ),
 		description: __( 'Just a play button and a waveform. No art, time or volume.' ),
 		appearance: { audioLayout: 'minimal', controlBarStyle: 'minimal', roundness: 8 },
 		controls: { speed: false, rewind: false, forward: false, volume: false, mute: false, currentTime: false, duration: false },
+	},
+	{
+		key: 'audiobook',
+		label: __( 'Audiobook' ),
+		description: __( 'Long-form listening: 30-second skips, speed control and chapter navigation.' ),
+		// Shares `compact` with Podcast rather than needing a shape of its own —
+		// what makes an audiobook an audiobook is the CONTROLS, not the bar.
+		appearance: { audioLayout: 'compact', controlBarStyle: 'solid', roundness: 10 },
+		// Volume off: a listener on headphones uses the device volume, and the
+		// slider is the first thing worth trading for room on a long-form bar.
+		controls: { speed: true, rewind: true, forward: true, chapters: true, volume: false, prev: false, next: false },
+		// 30s rather than the 10s default — the audiobook convention, and the
+		// reason the skip buttons are worth having at this length.
+		skipSeconds: 30,
+	},
+	{
+		key: 'playlist',
+		label: __( 'Playlist' ),
+		description: __( 'For episodes inside a playlist: previous / next track, nothing competing for space.' ),
+		appearance: { audioLayout: 'compact', controlBarStyle: 'solid', roundness: 10 },
+		// The track list itself belongs to the playlist wrapper (tp_playlist —
+		// see includes/playlist.php), not to any one item. What an item can do
+		// is offer the transport that MOVES through that list, which is exactly
+		// what prev/next are, and stay quiet otherwise: speed and chapters are
+		// per-item concerns that clutter a bar being used as a queue.
+		//
+		// The player only renders prev/next when a playlist actually passes the
+		// callbacks, so this template is inert — not broken — on an item that
+		// never joins one.
+		controls: { prev: true, next: true, speed: false, chapters: false, rewind: false, forward: false },
 	},
 ];
 
@@ -64,6 +98,13 @@ export function templateConfig( key, type = 'video' ) {
 	const customize = { appearance: { ...t.appearance } };
 	if ( t.controls ) {
 		customize.controls = { ...t.controls };
+	}
+	// `skipSeconds` sits beside appearance/controls rather than inside them —
+	// it is its own top-level key in the customize shape (see
+	// CUSTOMIZE_DEFAULTS), so a template that sets it has to seed it there too
+	// or the skip buttons it just switched on would still jump the default 10s.
+	if ( t.skipSeconds ) {
+		customize.skipSeconds = t.skipSeconds;
 	}
 	return { customize };
 }

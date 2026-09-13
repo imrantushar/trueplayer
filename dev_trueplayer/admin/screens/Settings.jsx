@@ -118,6 +118,42 @@ function AudioTemplateCard({ template, selected, disabled, accent, onSelect }) {
 	const a = template.appearance;
 	const layout = a.audioLayout || 'compact';
 	const radius = Math.max(4, a.roundness ?? 8);
+	// A template only lists what it changes, so an absent key means "leave the
+	// default" — which for every control drawn here is ON. Hence `!== false`
+	// at the call sites rather than a plain truthiness test.
+	const c = template.controls || {};
+	const skip = template.skipSeconds;
+	// Previous / next TRACK — a bar with a triangle, distinct from the circled
+	// seek-skip glyph below, exactly as the two read in the real control bar.
+	const trackGlyph = (dir) => (
+		<span key={`t${dir}`} className="flex items-center shrink-0" style={{ gap: 1, flexDirection: dir === 'back' ? 'row' : 'row-reverse' }}>
+			<span className="block" style={{ width: 1.5, height: 7, background: 'rgba(255,255,255,0.65)' }} />
+			<span
+				style={{
+					width: 0, height: 0,
+					borderTop: '3.5px solid transparent',
+					borderBottom: '3.5px solid transparent',
+					[dir === 'back' ? 'borderRight' : 'borderLeft']: '5px solid rgba(255,255,255,0.65)',
+				}}
+			/>
+		</span>
+	);
+	const skipGlyph = (dir) => (
+		<span
+			key={dir}
+			className="flex items-center justify-center rounded-full"
+			style={{ width: 8, height: 8, border: '1px solid rgba(255,255,255,0.45)' }}
+		>
+			<span
+				style={{
+					width: 0, height: 0,
+					borderTop: '2px solid transparent',
+					borderBottom: '2px solid transparent',
+					[dir === 'back' ? 'borderRight' : 'borderLeft']: '3px solid rgba(255,255,255,0.65)',
+				}}
+			/>
+		</span>
+	);
 	const art = (size, iconSize) => (
 		<span
 			className="flex items-center justify-center shrink-0"
@@ -167,12 +203,28 @@ function AudioTemplateCard({ template, selected, disabled, accent, onSelect }) {
 						<span className="flex-1 min-w-0">
 							<span className="block rounded-sm bg-white/70 mb-1.5" style={{ width: '55%', height: 4 }} />
 							{track()}
+							{/* Driven by the template's own controls, because two
+							    templates can share `compact` — Podcast and Audiobook
+							    both do — and tiles that drew the same picture would
+							    make them indistinguishable in the picker. */}
 							<span className="flex items-center gap-1.5 mt-1.5">
+								{/* Track skips bracket the play button, as they do in
+								    the real bar; the seek skips sit after it. */}
+								{c.prev && trackGlyph('back')}
 								{playBtn(14)}
-								<span className="block rounded-sm bg-white/40" style={{ width: 6, height: 6 }} />
-								<span className="block rounded-sm bg-white/40" style={{ width: 6, height: 6 }} />
+								{c.next && trackGlyph('fwd')}
+								{c.rewind !== false && skipGlyph('back')}
+								{c.forward !== false && skipGlyph('fwd')}
 								<span className="flex-1" />
-								<span className="block rounded-sm bg-white/30" style={{ width: 12, height: 3 }} />
+								{c.speed && (
+									<span
+										className="text-[7px] font-bold leading-none px-1 py-[2px] rounded text-white/80"
+										style={{ background: 'rgba(255,255,255,0.16)' }}
+									>
+										{ skip ? `${ skip }s` : '1×' }
+									</span>
+								)}
+								{c.volume !== false && <span className="block rounded-sm bg-white/30" style={{ width: 12, height: 3 }} />}
 							</span>
 						</span>
 					</span>
@@ -185,9 +237,9 @@ function AudioTemplateCard({ template, selected, disabled, accent, onSelect }) {
 							<span className="block rounded-sm bg-white/70 mb-1.5 mx-auto" style={{ width: '48%', height: 4 }} />
 							{track('38%')}
 							<span className="flex items-center justify-center gap-2 mt-2">
-								<span className="block rounded-sm bg-white/40" style={{ width: 6, height: 6 }} />
+								{c.prev ? trackGlyph('back') : <span className="block rounded-sm bg-white/40" style={{ width: 6, height: 6 }} />}
 								{playBtn(16)}
-								<span className="block rounded-sm bg-white/40" style={{ width: 6, height: 6 }} />
+								{c.next ? trackGlyph('fwd') : <span className="block rounded-sm bg-white/40" style={{ width: 6, height: 6 }} />}
 							</span>
 						</span>
 					</span>
@@ -573,6 +625,10 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 															// "Podcast" would promise skip and speed
 															// buttons it never switched on.
 															...(tpl.controls ? { controls: { ...(s[blobKey]?.controls || {}), ...tpl.controls } } : {}),
+															// Same reason: "Audiobook" names 30-second
+															// skips, so it has to set the skip length
+															// and not just the buttons.
+															...(tpl.skipSeconds ? { skipSeconds: tpl.skipSeconds } : {}),
 														},
 													}));
 													return isAudioTab

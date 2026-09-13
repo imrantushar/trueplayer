@@ -177,6 +177,12 @@ export function resolveCustomize( config = {} ) {
 		speeds: ( Array.isArray( c.speeds ) && c.speeds.length && c.speeds ) ||
 			( Array.isArray( global.speeds ) && global.speeds.length && global.speeds ) ||
 			CUSTOMIZE_DEFAULTS.speeds,
-		skipSeconds: c.skipSeconds || global.skipSeconds || CUSTOMIZE_DEFAULTS.skipSeconds,
+		// The audio blob gets a say here too: an audio default named for its skip
+		// length ("Audiobook", 30s) has to be able to set it site-wide, not only
+		// when it is applied as a saved preset.
+		skipSeconds: c.skipSeconds ||
+			( isAudio ? ( g.player_defaults_audio || {} ).skipSeconds : 0 ) ||
+			global.skipSeconds ||
+			CUSTOMIZE_DEFAULTS.skipSeconds,
 	};
 }
