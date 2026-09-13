@@ -9,7 +9,7 @@ import { hasLicenseApi } from '../license';
 import LicensePanel from './settings/LicensePanel';
 import AddonsPanel from './settings/AddonsPanel';
 import MediaPicker from '../components/MediaPicker';
-import { PRESET_TEMPLATES, ASPECT_RATIOS } from '../data/preset-templates';
+import { templatesFor, ASPECT_RATIOS } from '../data/preset-templates';
 import { __, __sprintf } from '@Utils/translation';
 
 /**
@@ -44,6 +44,7 @@ function TemplateCard({ template, selected, disabled, accent, onSelect }) {
 	return (
 		<button
 			type="button"
+			disabled={disabled}
 			onClick={() => !disabled && onSelect(template)}
 			className={`text-left transition ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
 		>
@@ -90,6 +91,114 @@ function TemplateCard({ template, selected, disabled, accent, onSelect }) {
 				</span>
 
 				{template.pro && <span className="absolute top-1.5 right-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white/90 text-brand-500">{ __( 'PRO' ) }</span>}
+			</div>
+
+			<div className="flex items-center gap-1.5 mt-2">
+				{selected && <Icon name="check" className="w-4 h-4 text-brand-500 shrink-0" />}
+				<span className={`text-sm font-medium ${selected ? 'text-brand-500' : 'text-ink'}`}>{template.label}</span>
+			</div>
+			{template.description && <p className="text-xs text-muted mt-0.5 leading-snug">{template.description}</p>}
+		</button>
+	);
+}
+
+/**
+ * The audio counterpart of TemplateCard.
+ *
+ * A separate component rather than a branch inside that one: the video tile is
+ * a 16:9 picture with a bar laid over it, and every trait it draws (skin, big
+ * play button, poster bloom) is a treatment of that picture. An audio template
+ * varies something else entirely — the SHAPE of the bar (audioLayout) — so the
+ * two share no drawing code, only the selected/disabled chrome.
+ *
+ * Each branch mirrors a real rule in the audio-layouts block at the end of
+ * player/style.css, so the tile shows what the listener will actually get.
+ */
+function AudioTemplateCard({ template, selected, disabled, accent, onSelect }) {
+	const a = template.appearance;
+	const layout = a.audioLayout || 'compact';
+	const radius = Math.max(4, a.roundness ?? 8);
+	const art = (size, iconSize) => (
+		<span
+			className="flex items-center justify-center shrink-0"
+			style={{ width: size, height: size, borderRadius: size > 40 ? 8 : 5, background: 'rgba(255,255,255,0.08)' }}
+		>
+			<svg viewBox="0 0 24 24" width={iconSize} height={iconSize} fill={accent}><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" /></svg>
+		</span>
+	);
+	const playBtn = (size) => (
+		<span className="flex items-center justify-center shrink-0" style={{ width: size, height: size, borderRadius: '9999px', background: accent }}>
+			<svg viewBox="0 0 24 24" width={Math.round(size * 0.46)} height={Math.round(size * 0.46)} fill="#fff"><path d="M8 5v14l11-7z" /></svg>
+		</span>
+	);
+	const track = (played = '45%') => (
+		<span className="block relative w-full" style={{ height: 3, borderRadius: 9999, background: 'rgba(255,255,255,0.3)' }}>
+			<span className="absolute left-0 top-0" style={{ width: played, height: 3, borderRadius: 9999, background: accent }} />
+		</span>
+	);
+	// `minimal` shows a waveform in place of the plain scrubber — the one
+	// scrubberStyle override the player makes for audio (see Player.jsx).
+	const waveform = (
+		<span className="flex items-center gap-[2px] w-full" style={{ height: 14 }}>
+			{[5, 9, 14, 7, 11, 4, 13, 8, 6, 12, 5, 10, 7, 3, 9, 6].map((h, i) => (
+				<span
+					key={i}
+					className="block flex-1"
+					style={{ height: h, borderRadius: 1, background: i < 7 ? accent : 'rgba(255,255,255,0.28)' }}
+				/>
+			))}
+		</span>
+	);
+
+	return (
+		<button
+			type="button"
+			disabled={disabled}
+			onClick={() => !disabled && onSelect(template)}
+			className={`text-left transition ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+		>
+			<div
+				className={`relative aspect-video overflow-hidden border-2 flex flex-col justify-center ${selected ? 'border-brand-500' : 'border-line'}`}
+				style={{ borderRadius: radius, background: '#111318', padding: layout === 'card' ? 10 : 12 }}
+			>
+				{layout === 'compact' && (
+					<span className="flex items-center gap-2.5">
+						{art(34, 17)}
+						<span className="flex-1 min-w-0">
+							<span className="block rounded-sm bg-white/70 mb-1.5" style={{ width: '55%', height: 4 }} />
+							{track()}
+							<span className="flex items-center gap-1.5 mt-1.5">
+								{playBtn(14)}
+								<span className="block rounded-sm bg-white/40" style={{ width: 6, height: 6 }} />
+								<span className="block rounded-sm bg-white/40" style={{ width: 6, height: 6 }} />
+								<span className="flex-1" />
+								<span className="block rounded-sm bg-white/30" style={{ width: 12, height: 3 }} />
+							</span>
+						</span>
+					</span>
+				)}
+
+				{layout === 'card' && (
+					<span className="flex flex-col items-center gap-2">
+						{art(46, 22)}
+						<span className="w-full">
+							<span className="block rounded-sm bg-white/70 mb-1.5 mx-auto" style={{ width: '48%', height: 4 }} />
+							{track('38%')}
+							<span className="flex items-center justify-center gap-2 mt-2">
+								<span className="block rounded-sm bg-white/40" style={{ width: 6, height: 6 }} />
+								{playBtn(16)}
+								<span className="block rounded-sm bg-white/40" style={{ width: 6, height: 6 }} />
+							</span>
+						</span>
+					</span>
+				)}
+
+				{layout === 'minimal' && (
+					<span className="flex items-center gap-2.5">
+						{playBtn(20)}
+						{waveform}
+					</span>
+				)}
 			</div>
 
 			<div className="flex items-center gap-1.5 mt-2">
@@ -223,6 +332,10 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 	// For the default-preset pickers below. Failure is non-fatal — the rest of
 	// the settings screen has nothing to do with presets.
 	const [presets, setPresets] = useState([]);
+	// Which player the "Default player look" card is configuring. Local UI state
+	// only — nothing about it is saved, since both types' settings are written
+	// whichever tab is open.
+	const [lookType, setLookType] = useState('video');
 	useEffect(() => { api.listPresets().then((l) => setPresets(l || [])).catch(() => {}); }, []);
 	const setTab = (next) => onTabChange && onTabChange(next);
 	const [saving, setSaving] = useState(false);
@@ -376,55 +489,123 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 
 					{tab === 'general' && (
 						<div className="space-y-6">
-							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Default player template' ) }</h3>
-								<p className="text-sm text-muted mb-4">{ __( "The look applied to every video by default. A video's own preset or settings still override it." ) }</p>
-								<div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4 pt-5 border-t border-solid border-line">
-									{PRESET_TEMPLATES.map((t) => (
-										<TemplateCard
-											key={t.key}
-											template={t}
-											accent={settings.customize?.appearance?.accent || '#006BFF'}
-											selected={(settings.general?.defaultTemplate || 'default') === t.key}
-											disabled={t.pro && !isPro()}
-											onSelect={(tpl) => setSettings((s) => ({
-												...s,
-												general: { ...(s.general || {}), defaultTemplate: tpl.key },
-												customize: { ...(s.customize || {}), appearance: { ...(s.customize?.appearance || {}), ...tpl.appearance } },
-											}))}
-										/>
-									))}
-								</div>
-							</Card>
+							{(() => {
+								// One card per media type rather than two parallel ones.
+								// A template and a default preset answer the same
+								// question — "what should this player look like?" — and
+								// the preset wins, so showing them as separate sections
+								// let an author pick a template that silently did
+								// nothing. Here the losing control says so.
+								const isAudioTab = 'audio' === lookType;
+								// Where this type's site-wide appearance lives. Audio has
+								// its own blob because the two players share almost no
+								// appearance vocabulary — see VIDEO_ONLY_APPEARANCE in
+								// player/customize.js, which is what keeps them apart at
+								// render.
+								const blobKey = isAudioTab ? 'customizeAudio' : 'customize';
+								const markerKey = isAudioTab ? 'defaultAudioTemplate' : 'defaultTemplate';
+								const presetKey = isAudioTab ? 'defaultAudioPreset' : 'defaultPreset';
+								const fallbackTemplate = isAudioTab ? 'podcast' : 'default';
+								const activePreset = settings.general?.[presetKey] || '';
+								const typePresets = presets.filter((p) => ('audio' === p.type) === isAudioTab);
+								// The accent is shared across both players, so the tiles
+								// always preview it from the one place it is set.
+								const accent = settings.customize?.appearance?.accent || '#006BFF';
+
+								return (
+									<Card className="p-6">
+										<div className="flex flex-wrap items-start justify-between gap-3 mb-1">
+											<h3 className="font-semibold text-gray-900 !mb-0">{ __( 'Default player look' ) }</h3>
+											<div className="tp-type-tabs" role="tablist">
+												{[['video', __( 'Video' )], ['audio', __( 'Audio' )]].map(([value, label]) => (
+													<button
+														key={value}
+														type="button"
+														role="tab"
+														aria-selected={lookType === value}
+														className={`tp-type-tab ${lookType === value ? 'is-active' : ''}`}
+														onClick={() => setLookType(value)}
+													>
+														{label}
+													</button>
+												))}
+											</div>
+										</div>
+										<p className="text-sm text-muted mb-4">{ isAudioTab
+											? __( 'Applied to every audio item that has not chosen a look of its own. Set separately from video — a video skin and aspect ratio mean nothing for a bar.' )
+											: __( 'Applied to every video that has not chosen a look of its own. Any single item still overrides it.' ) }</p>
+
+										<div className="mt-4 pt-5 border-t border-solid border-line">
+											{!!activePreset && (
+												<div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-4 text-sm">
+													<Icon name="help" className="w-4 h-4 text-muted shrink-0" />
+													<span className="text-muted">{ __( 'A default preset is in control, so these starting points are not applied.' ) }</span>
+													<button
+														type="button"
+														className="text-brand-500 font-medium underline bg-transparent border-0 p-0 cursor-pointer"
+														onClick={() => setSettings((s) => ({ ...s, general: { ...(s.general || {}), [presetKey]: undefined } }))}
+													>
+														{ __( 'Use a starting point instead' ) }
+													</button>
+												</div>
+											)}
+
+											<div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+												{templatesFor(lookType).map((t) => {
+													const selected = (settings.general?.[markerKey] || fallbackTemplate) === t.key;
+													// Really disabled, not just dimmed: a
+													// pointer-events-none tile stays in the tab
+													// order, so a keyboard user would land on a
+													// control that silently does nothing.
+													const locked = !!activePreset || ( t.pro && ! isPro() );
+													// The marker is what makes the right tile
+													// read as chosen; nothing consumes it at
+													// render, where the appearance keys below
+													// do the actual work.
+													const onSelect = (tpl) => setSettings((s) => ({
+														...s,
+														general: { ...(s.general || {}), [markerKey]: tpl.key },
+														[blobKey]: {
+															...(s[blobKey] || {}),
+															appearance: { ...(s[blobKey]?.appearance || {}), ...tpl.appearance },
+															// Audio templates are defined partly by
+															// which controls they expose; without this
+															// "Podcast" would promise skip and speed
+															// buttons it never switched on.
+															...(tpl.controls ? { controls: { ...(s[blobKey]?.controls || {}), ...tpl.controls } } : {}),
+														},
+													}));
+													return isAudioTab
+														? <AudioTemplateCard key={t.key} template={t} accent={accent} selected={selected} disabled={locked} onSelect={onSelect} />
+														: <TemplateCard key={t.key} template={t} accent={accent} selected={selected} disabled={locked} onSelect={onSelect} />;
+												})}
+											</div>
+
+											<div className="mt-5 pt-5 border-t border-solid border-line">
+												<Field
+													label={ __( '…or use a saved preset' ) }
+													hint={ typePresets.length
+														? __( 'A preset overrides the starting points above for every item that has not chosen one of its own.' )
+														: __( 'No presets of this type yet — create one under Presets to reuse a look across items.' ) }
+													className='!mb-0'
+												>
+													<Select
+														value={activePreset}
+														onChange={(e) => setSettings((s) => ({ ...s, general: { ...(s.general || {}), [presetKey]: e.target.value ? parseInt(e.target.value, 10) : undefined } }))}
+													>
+														<option value="">{ __( 'None' ) }</option>
+														{typePresets.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+													</Select>
+												</Field>
+											</div>
+										</div>
+									</Card>
+								);
+							})()}
 
 							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Default presets' ) }</h3>
-								<p className="text-sm text-muted mb-4">{ __( 'A saved preset applied to every item that has not chosen one of its own. Video and audio are set separately — a video preset would style an audio bar with settings that do nothing.' ) }</p>
-								<div className="grid md:grid-cols-2 gap-x-6 mt-4 pt-5 border-t border-solid border-line">
-									<Field label={ __( 'Video preset' ) } className='!mb-0'>
-										<Select
-											value={settings.general?.defaultPreset || ''}
-											onChange={(e) => setSettings((s) => ({ ...s, general: { ...(s.general || {}), defaultPreset: e.target.value ? parseInt(e.target.value, 10) : undefined } }))}
-										>
-											<option value="">{ __( 'None' ) }</option>
-											{presets.filter((p) => 'audio' !== p.type).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
-										</Select>
-									</Field>
-									<Field label={ __( 'Audio preset' ) } className='!mb-0'>
-										<Select
-											value={settings.general?.defaultAudioPreset || ''}
-											onChange={(e) => setSettings((s) => ({ ...s, general: { ...(s.general || {}), defaultAudioPreset: e.target.value ? parseInt(e.target.value, 10) : undefined } }))}
-										>
-											<option value="">{ __( 'None' ) }</option>
-											{presets.filter((p) => 'audio' === p.type).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
-										</Select>
-									</Field>
-								</div>
-							</Card>
-
-							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Default aspect ratio' ) }</h3>
-								<p className="text-sm text-muted mb-4">{ __( 'The frame shape new videos use unless overridden per video.' ) }</p>
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Default video aspect ratio' ) }</h3>
+								<p className="text-sm text-muted mb-4">{ __( 'The frame shape new videos use unless overridden per video. Audio has no frame, so this never reaches an audio item.' ) }</p>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
 									<Field label={ __( 'Aspect ratio' ) } className='!mb-0'>
 										<Select value={settings.customize?.appearance?.aspectRatio || '16:9'} onChange={(e) => setSettings((s) => ({ ...s, customize: { ...(s.customize || {}), appearance: { ...(s.customize?.appearance || {}), aspectRatio: e.target.value } } }))}>
