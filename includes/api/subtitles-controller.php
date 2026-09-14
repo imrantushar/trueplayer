@@ -90,7 +90,11 @@ class SubtitlesController {
 	/** Convert YouTube timedtext XML to WebVTT. */
 	private static function xml_to_vtt( string $xml ): string {
 		$prev = libxml_use_internal_errors( true );
-		$doc  = simplexml_load_string( $xml );
+		// LIBXML_NONET: this parses a document fetched over the network, so no
+		// entity in it is ever allowed to pull another one. Entity substitution
+		// is already off by default (LIBXML_NOENT is not passed) — this closes
+		// the other half rather than relying on a default staying put.
+		$doc  = simplexml_load_string( $xml, 'SimpleXMLElement', LIBXML_NONET );
 		libxml_use_internal_errors( $prev );
 		if ( ! $doc || ! isset( $doc->text ) ) {
 			return '';

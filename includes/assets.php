@@ -197,6 +197,22 @@ class Assets {
 					// the placeholder on that setting so the default is visible
 					// rather than merely described.
 					'admin_email'     => (string) get_option( 'admin_email' ),
+					// The site-wide "default player look" choice — admin only.
+					//
+					// applyPreset (admin/utils/preset.js) falls back to the preset
+					// ids so the editor preview mirrors what Helper::apply_preset
+					// will really render. It already read
+					// `TruePlayerGlobal.settings.general` — but nothing ever sent
+					// that key, so the fallback was dead and the preview showed no
+					// preset for every item relying on the site default, which is
+					// exactly the case a newly created item is in.
+					//
+					// Only these four keys are published, not the whole `general`
+					// section: pinning the shape here means a future setting added
+					// beside them cannot start leaking into the page by accident.
+					'settings'        => [
+						'general' => self::default_look_settings(),
+					],
 				]
 			)
 		);
@@ -206,41 +222,45 @@ class Assets {
 		global $trueplayer_addons;
 
 		return [
-			'nonce'            => wp_create_nonce( 'wp_rest' ),
-			'trueplayer_nonce' => wp_create_nonce( 'trueplayer_nonce' ),
-			'rest_url'         => rest_url(),
-			'namespace'        => TRUEPLAYER_PLUGIN_SLUG . '/v1/',
-			'plugin_root_url'  => TRUEPLAYER_PLUGIN_ROOT_URI,
-			'ajax_url'         => esc_url( admin_url( 'admin-ajax.php' ) ),
-			'site_url'         => site_url(),
-			'admin_url'        => admin_url(),
-			'is_login'         => (bool) is_user_logged_in(),
-			'user_id'          => get_current_user_id(),
-			'is_admin'         => (bool) current_user_can( 'manage_options' ),
-			'addons'           => $trueplayer_addons,
+			'nonce'                 => wp_create_nonce( 'wp_rest' ),
+			'trueplayer_nonce'      => wp_create_nonce( 'trueplayer_nonce' ),
+			'rest_url'              => rest_url(),
+			'namespace'             => TRUEPLAYER_PLUGIN_SLUG . '/v1/',
+			'plugin_root_url'       => TRUEPLAYER_PLUGIN_ROOT_URI,
+			'ajax_url'              => esc_url( admin_url( 'admin-ajax.php' ) ),
+			'site_url'              => site_url(),
+			'admin_url'             => admin_url(),
+			'is_login'              => (bool) is_user_logged_in(),
+			'user_id'               => get_current_user_id(),
+			'is_admin'              => (bool) current_user_can( 'manage_options' ),
+			'addons'                => $trueplayer_addons,
 			// Installing Pro is what unlocks its features; the licence buys
 			// updates and support and is reported separately (license_status),
 			// so a missing key never reads as "you don't have Pro".
-			'is_pro_active'    => \TruePlayer\Pro::active(),
+			'is_pro_active'         => \TruePlayer\Pro::active(),
 			// Distinct from is_pro_active: the pro plugin can be running on the
 			// permissive pre-license default, and the settings screen must not
 			// call that "your license is valid". See Pro::license_status().
-			'license_status'   => \TruePlayer\Pro::license_status(),
-			'license_url'      => \TruePlayer\Pro::license_page_url(),
-			'feature_flags'    => \TruePlayer\Pro::feature_flags(),
+			'license_status'        => \TruePlayer\Pro::license_status(),
+			'license_url'           => \TruePlayer\Pro::license_page_url(),
+			'feature_flags'         => \TruePlayer\Pro::feature_flags(),
 			// The site's own name/mark when white-label is on, so the React
 			// admin matches the WP menu instead of always saying "TruePlayer".
-			'brand'            => [
+			'brand'                 => [
 				'name' => \TruePlayer\Helper::brand_name(),
 				'logo' => \TruePlayer\Helper::brand_logo(),
 			],
 			// The site-wide watch-verification policy. The per-video gating tab
 			// seeds from this so opening it can't silently overwrite the site
 			// setting with a hardcoded default (see Helper::enforcement_defaults).
-			'enforcement'      => \TruePlayer\Helper::enforcement_defaults(),
+			'enforcement'           => \TruePlayer\Helper::enforcement_defaults(),
 			// Site-wide player customization defaults. Per-video config is
-			// layered over this on the client (resolveCustomize).
-			'player_defaults'  => self::player_defaults(),
+			// layered over this on the client (resolveCustomize). Audio keeps
+			// its own appearance blob — the two players share almost no
+			// appearance vocabulary — while controls, behavior and the shared
+			// brand keys still come from `player_defaults` for both.
+			'player_defaults'       => self::player_defaults(),
+			'player_defaults_audio' => self::player_defaults_audio(),
 		];
 	}
 
@@ -249,9 +269,54 @@ class Assets {
 	 * under `customize`. Empty by default (client falls back to built-ins).
 	 */
 	public static function player_defaults(): array {
+		return self::settings_blob( 'customize' );
+	}
+
+	/**
+	 * The site-wide AUDIO player defaults (Settings → General → Audio), stored
+	 * separately under `customizeAudio`.
+	 *
+	 * Its own key rather than a branch inside `customize` because the two
+	 * players share almost no appearance vocabulary: a skin and an aspect ratio
+	 * are treatments of a picture, and an audio bar has no picture. The client
+	 * layers the shared keys from `customize` and then this blob on top — see
+	 * resolveCustomize() in dev_trueplayer/player/customize.js.
+	 *
+	 * Empty on an install that has never set an audio default, which is exactly
+	 * the pre-1.4 behaviour.
+	 */
+	public static function player_defaults_audio(): array {
+		return self::settings_blob( 'customizeAudio' );
+	}
+
+	/**
+	 * The site-wide "default player look" choice, per media type.
+	 *
+	 * Two pairs: the preset id that wins if set, and the starting-point template
+	 * key that applies otherwise. Audio has its own of each because a video
+	 * preset's skin and aspect ratio mean nothing for a bar — the same split
+	 * Helper::apply_preset enforces.
+	 *
+	 * The template keys are markers, not render inputs: the template's values
+	 * are already baked into `customize` / `customizeAudio` when it is chosen.
+	 * They are published so the admin can NAME the active look — in the Settings
+	 * picker and in the create dialog — rather than only apply it silently.
+	 */
+	public static function default_look_settings(): array {
+		$general = self::settings_blob( 'general' );
+		return [
+			'defaultPreset'        => (int) ( $general['defaultPreset'] ?? 0 ),
+			'defaultAudioPreset'   => (int) ( $general['defaultAudioPreset'] ?? 0 ),
+			'defaultTemplate'      => (string) ( $general['defaultTemplate'] ?? '' ),
+			'defaultAudioTemplate' => (string) ( $general['defaultAudioTemplate'] ?? '' ),
+		];
+	}
+
+	/** One top-level settings key, decoded, guaranteed to be an array. */
+	private static function settings_blob( string $key ): array {
 		$settings = json_decode( get_option( TRUEPLAYER_SETTINGS_NAME, '{}' ), true );
-		return ( is_array( $settings ) && ! empty( $settings['customize'] ) && is_array( $settings['customize'] ) )
-			? $settings['customize']
+		return ( is_array( $settings ) && ! empty( $settings[ $key ] ) && is_array( $settings[ $key ] ) )
+			? $settings[ $key ]
 			: [];
 	}
 }

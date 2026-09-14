@@ -110,7 +110,11 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 
 			<div className="flex flex-col xl:flex-row items-start gap-6 mt-6">
 				<div className="flex-1 min-w-0">
-					<PlayerOptionsTab config={ config } patch={ patch } mediaType={ presetType } />
+					{ /* Templates are offered here and only here: a preset IS the
+					     plugin's reusable named look, so seeding one from a template
+					     is the same kind of thing. The media editor deliberately does
+					     not get this — see the note in PlayerOptionsTab. */ }
+					<PlayerOptionsTab config={ config } patch={ patch } mediaType={ presetType } offerTemplates />
 				</div>
 
 				{ /* Sticky header (top-8) + its h-14 bar are ~88px; top-[104px] clears both with a small gap. */ }

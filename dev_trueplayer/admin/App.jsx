@@ -227,6 +227,14 @@ export default function App() {
 
 			{ confirmNav && (
 				<Modal
+					// The only dialog that opts out of the shared 48rem. Every other
+					// one holds a form; this one holds a single sentence and two
+					// buttons, and at 48rem that sentence floated in a wide empty
+					// band with the buttons stranded at the far edge — it read as a
+					// page, not as a question that wants an answer now. 28rem is
+					// about two lines of this text, so the dialog is the size of
+					// what it is asking.
+					className="max-w-md"
 					title={ __( 'Unsaved changes' ) }
 					onClose={ () => setConfirmNav( null ) }
 					footer={

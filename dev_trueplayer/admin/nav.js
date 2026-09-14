@@ -20,7 +20,10 @@ const LEGACY_KIND = {
 	[ SLUG + '-interactive' ]: 'interactive',
 };
 
-const KINDS = [ 'all', 'media', 'playlist', 'interactive' ];
+// `media` is kept although no chip offers it any more: it is what every link
+// and bookmark made before Video/Audio were split still carries, and it still
+// means exactly what it did — both kinds of player.
+const KINDS = [ 'all', 'media', 'video', 'audio', 'playlist', 'interactive' ];
 
 /** Settings sections, in the order the screen lists them (see Settings.jsx). */
 export const SETTINGS_TABS = [

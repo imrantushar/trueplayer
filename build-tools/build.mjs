@@ -230,7 +230,16 @@ async function buildPot(cfg) {
   // Exclude everything the .pot never needs (mirrors .distignore intent).
   const exclude = (cfg.pot.exclude ||
     ['node_modules', 'vendor', 'vendor-prefixed', 'build', 'dist', '.git', 'tests', cfg.languages]).join(',');
-  run(`${wp} i18n make-pot . "${path.relative(ROOT, dest)}" --domain=${cfg.textdomain} --exclude=${exclude} --skip-audit`);
+
+  // `pot.ignoreDomain` — needed by any plugin whose call sites do not write the
+  // text domain out. make-pot matches the domain in the SECOND argument, so a
+  // project with its own `__()` wrapper that supplies the domain internally
+  // (see dev_trueplayer/utils/translation.js) reads to make-pot as calls with
+  // no domain at all, and every one of them is skipped. Scoped by `exclude`,
+  // which already keeps the scan inside this plugin's own source.
+  const ignoreDomain = cfg.pot.ignoreDomain ? ' --ignore-domain' : '';
+
+  run(`${wp} i18n make-pot . "${path.relative(ROOT, dest)}" --domain=${cfg.textdomain}${ignoreDomain} --exclude=${exclude} --skip-audit`);
 }
 
 // ---------------------------------------------------------------------------

@@ -304,7 +304,23 @@ class Shortcode {
 		if ( empty( $schema ) || ! is_array( $schema ) ) {
 			return '';
 		}
-		return sprintf( '<script type="application/ld+json">%s</script>', wp_json_encode( $schema, JSON_UNESCAPED_SLASHES ) );
+		/**
+		 * JSON_HEX_TAG is load-bearing, not tidiness.
+		 *
+		 * json_encode does not escape `<` or `>`, and JSON_UNESCAPED_SLASHES
+		 * stops `/` being escaped too — so any schema string containing the
+		 * literal text `</script>` closed this block early and everything after
+		 * it was parsed as HTML. `name` is the raw post title, and the
+		 * `trueplayer/seo_schema` filter lets an addon put anything it likes in
+		 * here, so "no input path can produce that" is not a property this
+		 * function can rely on. HEX_TAG encodes both angle brackets as \u003C /
+		 * \u003E, which is still valid JSON-LD and cannot break out; the
+		 * slashes stay unescaped so URLs read normally.
+		 */
+		return sprintf(
+			'<script type="application/ld+json">%s</script>',
+			wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG )
+		);
 	}
 
 	/**

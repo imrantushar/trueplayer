@@ -70,7 +70,24 @@ class Playlist {
 		// the media type is resolved here for the same reason it is there: the
 		// preset merge and the per-item facade both branch on it.
 		$config = Media::normalize_config( Helper::get_video_config( $video_id ) );
-		$config = Shortcode::strip_answer_keys( Helper::with_derived_poster( Helper::apply_preset( $config ) ) );
+		$config = Helper::with_derived_poster( Helper::apply_preset( $config ) );
+
+		/**
+		 * The free clamp, in the same position the shortcode puts it.
+		 *
+		 * It was missing here, and this payload is JSON printed into the page —
+		 * so on a free install every member of a playlist arrived ungated: a
+		 * premium skin or audio layout rendered, pro-only `protection` and
+		 * `timedContent` shipped, and a premium source kept its real URL.
+		 * enforce_pro_limits() reduces that source to `[ type, locked ]`
+		 * precisely so the media location never reaches the page, and the
+		 * playlist route was handing it over anyway — signed manifest included.
+		 *
+		 * Verified on a free install before the fix: an `hls` member came out
+		 * with its full `src` in the playlist JSON.
+		 */
+		$config = Helper::enforce_pro_limits( $config );
+		$config = Shortcode::strip_answer_keys( $config );
 		return [
 			'videoId' => $video_id,
 			'title'   => get_the_title( $video_id ),

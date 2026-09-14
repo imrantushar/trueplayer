@@ -1,8 +1,9 @@
 import { Card, Field, Input, Select, Toggle, Textarea, ColorInput } from '../../components/UI';
-import { isPro, PRO_SKINS } from '../../pro';
+import { isPro, PRO_SKINS, PRO_AUDIO_LAYOUTS } from '../../pro';
 import { resolveCustomize, CUSTOMIZE_DEFAULTS } from '@Player/customize';
 import { availableControls } from '@Utils/controls';
 import { isAudioSource as isAudioSourceUtil } from '@Utils/audio';
+import { templatesFor, applyTemplateToBlob } from '../../data/preset-templates';
 import { createInterpolateElement } from '@wordpress/element';
 import { __, __sprintf } from '@Utils/translation';
 
@@ -27,12 +28,24 @@ const SKINS = [
 	{ value: 'ambient', label: __( 'Ambient' ) },
 ];
 
-// Audio has no aspect ratio; what it has is a bar shape. See the audio-layout
-// block at the end of player/style.css.
-const AUDIO_LAYOUTS = [
-	{ value: 'compact', label: __( 'Compact bar' ) },
-	{ value: 'card', label: __( 'Card (large cover art)' ) },
-	{ value: 'minimal', label: __( 'Minimal (play + waveform)' ) },
+// The audio player's skins. Same control, same word and same slot as the video
+// Skin dropdown above — an author configuring two players should not have to
+// learn that one of them calls its look a "layout".
+//
+// Stored under `appearance.audioLayout`, not `appearance.skin`: the two lists
+// share no values, `skin` is video-only by declaration (VIDEO_ONLY_APPEARANCE
+// in player/customize.js) and Player.jsx refuses `ambient` for audio outright.
+// Merging the keys would undo that separation to save a word. So the KEY stays
+// what it has always been — every stored config keeps working — and only the
+// vocabulary in front of the author changes.
+//
+// Each entry is a real block at the end of player/style.css.
+const AUDIO_SKINS = [
+	{ value: 'compact', label: __( 'Compact' ), hint: __( 'A single bar: cover art, title and controls in one row.' ) },
+	{ value: 'card', label: __( 'Card' ), hint: __( 'Large square cover art above the title and controls.' ) },
+	{ value: 'minimal', label: __( 'Minimal' ), hint: __( 'Play button and a waveform, nothing else.' ) },
+	{ value: 'podcast', label: __( 'Podcast' ), hint: __( 'A taller bar with large cover art and room for the episode title.' ) },
+	{ value: 'audiobook', label: __( 'Audiobook' ), hint: __( 'The transport centred and enlarged for hours of listening.' ) },
 ];
 
 const ASPECT_RATIOS = [
@@ -44,7 +57,7 @@ const ASPECT_RATIOS = [
 	{ value: 'auto', label: __( 'Auto (native)' ) },
 ];
 
-export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'appearance', mediaType = null }) {
+export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'appearance', mediaType = null, offerTemplates = false }) {
 	// Resolved exactly the way the player resolves it — built-in defaults, then
 	// the site-wide look from Settings → Default player template, then this
 	// video's own overrides. This form used to resolve against a second copy of
@@ -103,6 +116,64 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 							<Card className="p-6">
 								<h3 className="font-semibold text-gray-900">{ __( 'Appearance' ) }</h3>
 								<div className='mt-4 pt-5 border-t border-solid border-line'>
+									{/* Preset builder only — `offerTemplates` is passed by
+									    Presets.jsx and by nothing else.
+									
+									    A template is a STARTING POINT, and a preset is the thing
+									    the plugin already has for "a named look I reuse". Offering
+									    templates on a single media item as well put the same
+									    decision on two screens and quietly changed what it meant:
+									    on a preset it seeds something reusable, on one item it
+									    stamps a copy that then stops following the preset or the
+									    site default at all. One home for it, and this is the one.
+									
+									    An action, not a stored choice — which is why it is a row
+									    of buttons and not a dropdown with a selected value. A
+									    template is a bundle of ordinary fields (Skin, the control
+									    bar, roundness, and for audio the controls and the skip
+									    length); once applied, those fields are the truth and any
+									    of them can be changed. A control claiming the preset still
+									    "is" Audiobook after you switched its skips off would be
+									    lying.
+									
+									    No tiles here, unlike Settings: the live preview is on
+									    screen beside this, so a thumbnail of the result would be
+									    a worse copy of something the author can already see. */}
+									{offerTemplates && (
+									<Field
+										label={ __( 'Start from a template' ) }
+										hint={ __( 'Applies a complete look in one click. Every field below stays editable afterwards.' ) }
+									>
+										<div className="flex flex-wrap gap-2">
+											{templatesFor(isAudioSource ? 'audio' : 'video').map((t) => {
+												const locked = t.pro && ! isPro();
+												return (
+													<button
+														key={t.key}
+														type="button"
+														disabled={locked}
+														title={t.description || ''}
+														// Replaces the keys a template owns rather than
+														// merging over them — same rule as the Settings
+														// picker, and the same helper, so "Playlist" means
+														// Playlist here too and not Playlist wearing
+														// whatever the last template left behind.
+														onClick={() => patch({ customize: applyTemplateToBlob(config.customize, t, isAudioSource ? 'audio' : 'video') })}
+														className={`px-3 py-1.5 rounded border border-solid text-[13px] font-medium transition-colors ${
+															locked
+																? 'border-line bg-gray-50 text-muted opacity-60 cursor-not-allowed'
+																: 'border-line bg-white text-ink hover:border-brand-400 hover:text-brand-500 cursor-pointer'
+														}`}
+													>
+														{t.label}
+														{locked && <span className="ml-1 text-[9px] font-semibold text-brand-500">{ __( 'PRO' ) }</span>}
+													</button>
+												);
+											})}
+										</div>
+									</Field>
+									)}
+
 									{presets.some((p) => ('audio' === p.type) === isAudioSource) && (
 										<Field label={ __( 'Preset' ) } hint={ __( 'Apply a saved player preset as the starting point — you can still tweak anything below.' ) }>
 											<Select
@@ -139,9 +210,18 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 										    one dimension that IS meaningful for a bar instead of a
 										    field that would silently do nothing. */}
 										{isAudioSource ? (
-											<Field label={ __( 'Audio layout' ) } hint={ __( 'The shape of the audio bar.' ) }>
+											<Field
+												label={ __( 'Skin' ) }
+												hint={ isPro()
+													? ( AUDIO_SKINS.find( ( l ) => l.value === appearance.audioLayout ) || AUDIO_SKINS[ 0 ] ).hint
+													: __( 'Podcast & Audiobook need TruePlayer Pro.' ) }
+											>
 												<Select value={appearance.audioLayout} onChange={(e) => setSection('appearance', { audioLayout: e.target.value })}>
-													{AUDIO_LAYOUTS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
+													{AUDIO_SKINS.map((l) => (
+														<option key={l.value} value={l.value} disabled={!isPro() && PRO_AUDIO_LAYOUTS.includes(l.value)}>
+															{l.label}{!isPro() && PRO_AUDIO_LAYOUTS.includes(l.value) ? __( ' (Pro)' ) : ''}
+														</option>
+													))}
 												</Select>
 											</Field>
 										) : (

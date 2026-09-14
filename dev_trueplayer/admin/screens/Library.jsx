@@ -25,13 +25,38 @@ const PER_PAGE = 10;
 // Interactive tab needs in order to offer the teaser instead of vanishing.
 const h5pAvailable = h5pEnabled;
 
-// Filter chips. All four are the one library route with a different ?kind=.
+// Filter chips. All five are the one library route with a different ?kind=.
+//
+// Video and Audio in place of a single "Media": they are two different players
+// with their own presets, their own site-wide default and their own tab in the
+// create dialog, and the library was the last screen that still pretended they
+// were one bucket — so a site with a large video library had no way to reach
+// its audio at all. `media` remains a valid kind for old links; it just has no
+// chip of its own now that its two halves each have one.
 const FILTERS = [
 	{ kind: 'all', label: __( 'All' ) },
-	{ kind: 'media', label: __( 'Media' ) },
+	{ kind: 'video', label: __( 'Video' ) },
+	{ kind: 'audio', label: __( 'Audio' ) },
 	{ kind: 'playlist', label: __( 'Playlists' ) },
 	{ kind: 'interactive', label: __( 'Interactive' ) },
 ];
+
+/** Kinds that draw from the media list. */
+const MEDIA_KINDS = [ 'all', 'media', 'video', 'audio' ];
+
+/**
+ * Does this item belong under the current filter?
+ *
+ * `isAudioSource` is the same predicate the player, the editor and PHP all use,
+ * so the chip agrees with what the item actually renders as — including the
+ * legacy .mp3 that nobody ever ticked the audio box for.
+ */
+function matchesMediaKind( kind, video ) {
+	if ( 'video' !== kind && 'audio' !== kind ) {
+		return true;
+	}
+	return isAudioSource( video.config?.source || {} ) === ( 'audio' === kind );
+}
 
 // navigator.clipboard.writeText needs a secure context; fall back to the
 // classic textarea + execCommand trick (e.g. plain-http local dev sites).
@@ -87,8 +112,13 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 	// delete flow don't have to branch per source.
 	const rows = useMemo( () => {
 		const out = [];
-		if ( 'all' === kind || 'media' === kind ) {
-			( videos || [] ).forEach( ( v ) => out.push( { kind: 'media', key: `v${ v.id }`, id: v.id, title: v.title, shortcode: v.shortcode, modified: v.modified, item: v } ) );
+		if ( MEDIA_KINDS.includes( kind ) ) {
+			( videos || [] )
+				.filter( ( v ) => matchesMediaKind( kind, v ) )
+				// The row's own kind stays 'media': it is what the edit, copy and
+				// delete handlers branch on, and those do not care which player
+				// this one turns out to be.
+				.forEach( ( v ) => out.push( { kind: 'media', key: `v${ v.id }`, id: v.id, title: v.title, shortcode: v.shortcode, modified: v.modified, item: v } ) );
 		}
 		if ( 'all' === kind || 'playlist' === kind ) {
 			( playlists || [] ).forEach( ( p ) => out.push( { kind: 'playlist', key: `p${ p.id }`, id: p.id, title: p.title, shortcode: p.shortcode, modified: p.modified, item: p } ) );
@@ -100,7 +130,7 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 	}, [ kind, videos, playlists, interactive ] );
 
 	// Still loading if any source this filter needs hasn't landed yet.
-	const loading = ( ( 'all' === kind || 'media' === kind ) && null === videos )
+	const loading = ( MEDIA_KINDS.includes( kind ) && null === videos )
 		|| ( ( 'all' === kind || 'playlist' === kind ) && null === playlists )
 		|| ( ( 'all' === kind || 'interactive' === kind ) && null === interactive );
 
@@ -289,6 +319,10 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 			{ create && (
 				<CreateModal
 					initialKind={ create }
+					// Creating while filtered to Audio means creating audio. Without
+					// this the dialog opened on Video every time, so the one action
+					// the empty Audio state offers produced the wrong kind of item.
+					initialMediaKind={ 'audio' === kind ? 'audio' : 'video' }
 					kinds={ createKinds }
 					onClose={ () => setCreate( null ) }
 					onSubmit={ submitCreate }
@@ -329,6 +363,11 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 const EMPTY = {
 	all: { icon: 'video', title: __( 'Nothing here yet' ), body: __( 'Create a player, a playlist, or an interactive item — they all embed with a shortcode.' ) },
 	media: { icon: 'video', title: __( 'No media yet' ), body: __( 'Create your first watch-verified player.' ) },
+	video: { icon: 'video', title: __( 'No video yet' ), body: __( 'Create your first watch-verified video player.' ) },
+	// `music` rather than `video`: the empty state is the one place the chip
+	// cannot tell you which half of the library you are looking at, since there
+	// is nothing on screen to look at.
+	audio: { icon: 'music', title: __( 'No audio yet' ), body: __( 'Create a podcast episode, an album track or an audiobook chapter.' ) },
 	playlist: { icon: 'playlist', title: __( 'No playlists yet' ), body: __( 'Group players into a grid or sidebar playlist.' ) },
 	interactive: { icon: 'spark', title: __( 'No interactive content yet' ), body: __( 'Build a quiz, flashcard deck, or drag-the-words exercise and embed it anywhere.' ) },
 };

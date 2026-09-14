@@ -26,6 +26,11 @@ export function proFlag( name ) {
 }
 
 export const PRO_SKINS = [ 'floating', 'ambient' ];
+// The audio half. Mirrors TruePlayer\Pro::PREMIUM_AUDIO_LAYOUTS, which is the
+// enforcing copy — Helper::enforce_pro_limits() resets one of these to
+// `compact` at render on a free install. This list only decides what the
+// editor offers; keep the two in step.
+export const PRO_AUDIO_LAYOUTS = [ 'podcast', 'audiobook' ];
 // Re-exported so existing importers keep working; the list itself lives with
 // the rest of each type's metadata (see @Utils/source-types).
 export { PRO_SOURCES } from '@Utils/source-types';

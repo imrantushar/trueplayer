@@ -31,7 +31,7 @@ class Pro {
 		'layer_rules',     // conditional display rules on layers
 		'premium_sources', // bunny / mux / hls / signed
 		'playlists',       // grid + sidebar
-		'premium_skins',   // floating / ambient + reusable presets
+		'premium_skins',   // floating / ambient, the podcast / audiobook audio bars, + reusable presets
 		'layers',          // interactive layers: hotspots / banners / forms / shortcodes
 		'protection',      // dynamic watermark + private video / expiring links
 		'instant_pages',   // standalone public video pages
@@ -48,8 +48,33 @@ class Pro {
 	 */
 	const PREMIUM_SOURCES = [ 'bunny', 'bunnyStorage', 'mux', 'hls', 'gumlet', 'gumletStorage' ];
 
-	/** Skins available only with pro. */
+	/**
+	 * Skins available only with pro.
+	 *
+	 * Enforced in Helper::enforce_pro_limits(), which resets a premium skin to
+	 * `default` at render, so a preset cannot smuggle one past the gate either.
+	 * Mirrored in the browser by PRO_SKINS in dev_trueplayer/admin/pro.js.
+	 */
 	const PREMIUM_SKINS = [ 'floating', 'ambient' ];
+
+	/**
+	 * The audio equivalent: bar shapes reserved for pro.
+	 *
+	 * These earned a gate by becoming layouts. As control bundles over `compact`
+	 * — the shape the free Playlist template also uses — Podcast and Audiobook
+	 * had no value of their own to refuse, so "Pro" could only ever mean a
+	 * locked tile in the admin while a free user hand-built the same bar. Each
+	 * now names its own layout with its own CSS, which is what makes the line
+	 * below a real gate rather than a note about one.
+	 *
+	 * Reset to `compact` (not `minimal`) when Pro is absent: compact is what
+	 * audio has always rendered as, so a free install sees the ordinary bar
+	 * rather than losing its cover art and time readout as well.
+	 *
+	 * Mirrored in the browser by PRO_AUDIO_LAYOUTS in
+	 * dev_trueplayer/admin/pro.js — keep the two in step.
+	 */
+	const PREMIUM_AUDIO_LAYOUTS = [ 'podcast', 'audiobook' ];
 
 	/**
 	 * The feature gate: is Pro installed?
@@ -120,8 +145,39 @@ class Pro {
 		return in_array( $type, self::premium_sources(), true );
 	}
 
+	/**
+	 * Filterable for the same reason premium_sources() is: an addon shipping a
+	 * skin of its own has to be able to claim it. Previously this list was read
+	 * straight off the constant, so Pro could add a CDN but not a look.
+	 */
+	public static function premium_skins(): array {
+		return (array) apply_filters( 'trueplayer/premium_skins', self::PREMIUM_SKINS );
+	}
+
 	public static function is_premium_skin( $skin ): bool {
-		return in_array( $skin, self::PREMIUM_SKINS, true );
+		return in_array( $skin, self::premium_skins(), true );
+	}
+
+	/**
+	 * Audio bar shapes that need Pro, and the audio half of the same gate.
+	 *
+	 * Here rather than in Pro for the reason spelled out above PREMIUM_SOURCES:
+	 * enforce_pro_limits() runs precisely when Pro is absent, so a list that
+	 * shipped with Pro would be missing exactly when it is needed. What lives in
+	 * Pro is functionality — the addons that talk to Bunny and Gumlet, sign a
+	 * URL, collect analytics. A layout has none: its CSS is in the free
+	 * stylesheet, exactly as `floating` and `ambient` are, and the whole feature
+	 * is one stored value plus the gate that refuses it.
+	 *
+	 * `trueplayer/premium_audio_layouts` is the hook an addon uses to add its
+	 * own, or to hand one back to free.
+	 */
+	public static function premium_audio_layouts(): array {
+		return (array) apply_filters( 'trueplayer/premium_audio_layouts', self::PREMIUM_AUDIO_LAYOUTS );
+	}
+
+	public static function is_premium_audio_layout( $layout ): bool {
+		return in_array( $layout, self::premium_audio_layouts(), true );
 	}
 
 	/** Feature-flag map exposed to React + the frontend player. */
