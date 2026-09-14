@@ -4,7 +4,7 @@ Tags: video, player, lms, quiz, webhooks, watch tracking
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,6 +21,35 @@ TruePlayer is a native WordPress video/audio player built for enforcement and au
 Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources (Mux, Bunny, Gumlet), and Gem-ecosystem bridges.
 
 == Changelog ==
+
+= 1.5.0 - 14-09-2026 =
+* Added - Two more audio starting points: Audiobook and Playlist.
+* Added - Podcast and Audiobook are now audio bars of their own, not just switched-on controls. Need Pro.
+* Added - Video and Audio filters in the media library.
+* Added - The create dialog names the look a new item will use.
+* Added - "Start from a template" in the preset builder — a whole look in one click.
+* Added - The site-wide default look is now set separately for video and audio.
+* Added - A short description on every template tile, on hover or keyboard focus.
+
+* Fixed - A site-wide video template pushed its skin and aspect ratio onto audio items.
+* Fixed - Choosing a template added to the saved look instead of replacing it.
+* Fixed - A site-wide default preset never showed in the editor preview.
+* Fixed - Saving Settings did not refresh the audio defaults until the page was reloaded.
+* Fixed - A default preset overrode the template tiles with nothing on screen to say so.
+* Fixed - Template tiles showed a PRO badge even with TruePlayer Pro active.
+* Fixed - Audio items offered "Generate from video" for cover art, which could only fail.
+* Fixed - The unsaved-changes dialog opened at full width for a single sentence.
+* Fixed - The Minimal audio bar and the Simple video skin looked alike in the picker.
+
+* Security - Videos inside a playlist skipped the free-plan clamp, leaking premium source URLs into the page.
+* Security - A video title containing markup could break out of the SEO data block and run script.
+* Security - Hardened the importer, an interactive-engine query, and imported caption parsing.
+
+* Changed - Template tiles redesigned: light preview, and a brand-blue tick on the chosen one.
+* Changed - The audio bar's shape is now called "Skin", the same as video.
+* Changed - Free starting points sit above the Pro ones, which are grouped and labelled.
+* Changed - The default audio look is Minimal, so a fresh install starts on something it can use.
+* Changed - The default aspect ratio setting now says it never reaches an audio item.
 
 = 1.4.0 - 10-09-2026 =
 * Added - Audio as its own media type — Video / Audio tabs when creating media.
