@@ -9,8 +9,153 @@ import { hasLicenseApi } from '../license';
 import LicensePanel from './settings/LicensePanel';
 import AddonsPanel from './settings/AddonsPanel';
 import MediaPicker from '../components/MediaPicker';
-import { templatesFor, ASPECT_RATIOS } from '../data/preset-templates';
+import { templatesFor, applyTemplateToBlob, ASPECT_RATIOS } from '../data/preset-templates';
 import { __, __sprintf } from '@Utils/translation';
+
+// The stand-in for the author's own video. Light on purpose: these tiles are
+// previews of a control bar, and every bar the plugin draws is dark, so a dark
+// tile hid the very thing being compared. On a light poster the gradient wash,
+// the solid deck and the floating panel separate at a glance — and a grid of
+// light tiles sits in a light admin instead of punching six black holes in it.
+// Deliberately neutral grey rather than a blue-grey: the accent play button,
+// the scrubber fill and the selected ring are all brand blue, and a blue-tinted
+// poster underneath them flattened the one colour that has to mean "chosen".
+const TILE_POSTER = 'linear-gradient(157deg,#f1f2f4 0%,#dfe1e6 55%,#d3d6dc 100%)';
+
+// Visually hidden, still announced. See the tooltip below for why it cannot
+// just be unmounted or `display: none`.
+const SR_ONLY = {
+	position: 'absolute',
+	width: 1,
+	height: 1,
+	padding: 0,
+	margin: -1,
+	overflow: 'hidden',
+	clip: 'rect(0,0,0,0)',
+	whiteSpace: 'nowrap',
+	border: 0,
+};
+
+// The popover sits over the top of the next row of tiles — every tooltip in a
+// grid does — so it has to carry enough lift to read as something floating in
+// front rather than a panel that replaced what was there. Inline for the same
+// reason SR_ONLY is: arbitrary shadow utilities do not survive this build.
+const TOOLTIP_LIFT = { boxShadow: '0 8px 24px rgba(16,24,40,0.30)' };
+
+/** Circled "i" — the affordance that says a description is one hover away. */
+function InfoDot() {
+	return (
+		<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" className="shrink-0 text-placeholder">
+			<circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" strokeWidth="1.3" />
+			<circle cx="8" cy="5" r="0.95" fill="currentColor" />
+			<path d="M8 7.2v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+		</svg>
+	);
+}
+
+/**
+ * The chrome every template tile shares: the frame, the selected state, the pro
+ * flag, the label and the description.
+ *
+ * Split out because the video and audio tiles draw completely different
+ * pictures inside it (a skin over a poster vs the shape of a bar) but have to
+ * agree on everything around it — they appear in the same grid, one tab apart,
+ * and a selection mark that moved or changed colour between them would read as
+ * two different controls.
+ *
+ * Selection is a brand ring plus a corner tick rather than a coloured caption:
+ * the tick sits ON the thing that is chosen, so "which one is on" is answered
+ * without reading, which is the whole job of a picker.
+ *
+ * The description moved out of a paragraph under every tile and into a popover
+ * on this one. It still has to exist — "Modern / Simple / Standard" tells an
+ * author nothing about which to pick — but as standing text it tripled the
+ * height of the grid and buried the pictures it was describing. It is wired
+ * through `aria-describedby`, so focusing the tile both reveals and announces
+ * it; the popover is not a hover-only secret.
+ */
+function TemplateTile({ template, selected, disabled, onSelect, children }) {
+	const descId = `tp-tpl-${ template.key }-desc`;
+	// Hover/focus tracked in state rather than through `group-hover:` /
+	// `group-focus-within:` utilities: this build's Tailwind emits neither, so
+	// the tooltip silently never appeared. State is also the honest tool here —
+	// the popover has to answer to focus as well as hover, and one flag covers
+	// both without depending on which variants happen to be enabled.
+	const [ peek, setPeek ] = useState( false );
+	const open = peek && !! template.description;
+
+	return (
+		<div
+			className="relative"
+			onMouseEnter={() => setPeek(true)}
+			onMouseLeave={() => setPeek(false)}
+		>
+			<button
+				type="button"
+				disabled={disabled}
+				aria-pressed={selected}
+				aria-describedby={template.description ? descId : undefined}
+				onFocus={() => setPeek(true)}
+				onBlur={() => setPeek(false)}
+				onClick={() => !disabled && onSelect(template)}
+				className={`w-full text-left rounded-card transition ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+			>
+				<div
+					className={`relative aspect-video overflow-hidden rounded-card border-2 border-solid transition-colors ${
+						selected
+							? 'border-brand-500'
+							: ( peek && ! disabled ? 'border-brand-300' : 'border-line' )
+					}`}
+					style={{ background: TILE_POSTER }}
+				>
+					{children}
+
+					{/* Top-left, because the tick owns the opposite corner. Gone once
+					    Pro is active: here the mark means "you cannot pick this",
+					    and on a licensed site that is simply false — it would be
+					    flagging two perfectly available templates as locked. */}
+					{template.pro && ! isPro() && (
+						<span className="absolute top-1.5 left-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white/90 text-brand-500">
+							{ __( 'PRO' ) }
+						</span>
+					)}
+
+					{selected && (
+						<span className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center shadow-sm">
+							<Icon name="check" className="w-3.5 h-3.5 text-white" />
+						</span>
+					)}
+				</div>
+
+				<span className="flex items-center gap-1.5 mt-2">
+					<span className={`text-sm font-medium truncate ${selected ? 'text-brand-500' : 'text-ink'}`}>{template.label}</span>
+					{template.description && <InfoDot />}
+				</span>
+			</button>
+
+			{template.description && (
+				<span
+					id={descId}
+					role="tooltip"
+					// Closed means visually hidden, NOT `display: none` and not
+					// unmounted: `aria-describedby` has to resolve to a node that is
+					// still in the accessibility tree, and `display: none` takes it
+					// out of that tree as surely as removing it would. So a sighted
+					// user gets the popover on hover or focus, and a screen-reader
+					// user gets the same sentence read with the tile either way.
+					// Inline rather than `sr-only` because this build's Tailwind is
+					// already proven to drop utilities this file is the only user of.
+					style={ open ? TOOLTIP_LIFT : SR_ONLY }
+					className={ open
+						? 'pointer-events-none absolute left-0 right-0 top-full z-20 mt-1 rounded px-2 py-1.5 bg-ink text-white text-[11px] leading-snug'
+						: '' }
+				>
+					{template.description}
+				</span>
+			)}
+		</div>
+	);
+}
 
 /**
  * A mini player preview rendered in the template's own style.
@@ -18,7 +163,7 @@ import { __, __sprintf } from '@Utils/translation';
  * Every tile used to draw the same picture — one accent play button over one
  * progress bar — so the six looks were indistinguishable and the names carried
  * the whole explanation. Each trait below mirrors a real rule in
- * player/style.css, so the tile shows the difference and the caption states it.
+ * player/style.css, so the tile shows the difference and the popover states it.
  */
 function TemplateCard({ template, selected, disabled, accent, onSelect }) {
 	const a = template.appearance;
@@ -42,22 +187,14 @@ function TemplateCard({ template, selected, disabled, accent, onSelect }) {
 				: 'linear-gradient(transparent, rgba(10,12,20,0.9))';
 
 	return (
-		<button
-			type="button"
-			disabled={disabled}
-			onClick={() => !disabled && onSelect(template)}
-			className={`text-left transition ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-		>
-			<div
-				className={`relative aspect-video overflow-hidden border-2 ${selected ? 'border-brand-500' : 'border-line'}`}
-				style={{ borderRadius: Math.max(4, a.roundness ?? 8), background: '#111318' }}
-			>
+		<TemplateTile template={template} selected={selected} disabled={disabled} onSelect={onSelect}>
+			<>
 				{/* Ambient's whole point is light escaping the frame; at tile size
 				    that reads as a soft accent bloom behind the picture. */}
 				{skin === 'ambient' && (
 					<span
 						className="absolute inset-0"
-						style={{ background: `radial-gradient(120% 90% at 50% 55%, ${accent}55, transparent 70%)`, filter: 'blur(6px)' }}
+						style={{ background: `radial-gradient(120% 90% at 50% 55%, ${accent}66, transparent 70%)`, filter: 'blur(6px)' }}
 					/>
 				)}
 
@@ -71,11 +208,11 @@ function TemplateCard({ template, selected, disabled, accent, onSelect }) {
 					className="absolute flex flex-col justify-end"
 					style={ floating
 						? { left: 8, right: 8, bottom: 8, borderRadius: 9, background: 'rgba(15,17,26,0.82)', boxShadow: '0 4px 14px rgba(0,0,0,0.45)', padding: '5px 7px' }
-						: { left: 0, right: 0, bottom: 0, background: barBg, padding: minimal ? '0 8px 7px' : '10px 7px 6px' } }
+						: { left: 0, right: 0, bottom: 0, background: barBg, padding: minimal ? '0 22px 9px' : '10px 7px 6px' } }
 				>
 					{/* Minimal parks its controls in a rounded pill and drops the
 					    time and volume readouts entirely. */}
-					<span style={ minimal ? { background: 'rgba(0,0,0,0.5)', borderRadius: 7, padding: '4px 6px' } : undefined }>
+					<span style={ minimal ? { display: 'block', background: 'rgba(13,17,26,0.82)', borderRadius: 999, padding: '5px 8px' } : undefined }>
 						<span className="block relative" style={{ height: trackH, borderRadius: trackRadius, background: 'rgba(255,255,255,0.3)' }}>
 							<span className="absolute left-0 top-0" style={{ width: '45%', height: trackH, borderRadius: trackRadius, background: accent }} />
 						</span>
@@ -90,15 +227,8 @@ function TemplateCard({ template, selected, disabled, accent, onSelect }) {
 					</span>
 				</span>
 
-				{template.pro && <span className="absolute top-1.5 right-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white/90 text-brand-500">{ __( 'PRO' ) }</span>}
-			</div>
-
-			<div className="flex items-center gap-1.5 mt-2">
-				{selected && <Icon name="check" className="w-4 h-4 text-brand-500 shrink-0" />}
-				<span className={`text-sm font-medium ${selected ? 'text-brand-500' : 'text-ink'}`}>{template.label}</span>
-			</div>
-			{template.description && <p className="text-xs text-muted mt-0.5 leading-snug">{template.description}</p>}
-		</button>
+			</>
+		</TemplateTile>
 	);
 }
 
@@ -174,28 +304,32 @@ function AudioTemplateCard({ template, selected, disabled, accent, onSelect }) {
 	);
 	// `minimal` shows a waveform in place of the plain scrubber — the one
 	// scrubberStyle override the player makes for audio (see Player.jsx).
+	// Enough bars, thin enough, to read as a waveform. Sixteen fat ones stretched
+	// across the tile read as a barcode instead — and "waveform, not a scrubber"
+	// is the entire thing this template is showing.
+	const WAVE = [ 5, 9, 14, 7, 11, 4, 13, 8, 6, 12, 5, 10, 7, 3, 9, 6, 11, 4, 13, 7, 9, 5, 12, 8, 6, 10, 4, 7 ];
 	const waveform = (
-		<span className="flex items-center gap-[2px] w-full" style={{ height: 14 }}>
-			{[5, 9, 14, 7, 11, 4, 13, 8, 6, 12, 5, 10, 7, 3, 9, 6].map((h, i) => (
+		<span className="flex items-center w-full" style={{ height: 14, gap: 1 }}>
+			{WAVE.map((h, i) => (
 				<span
 					key={i}
 					className="block flex-1"
-					style={{ height: h, borderRadius: 1, background: i < 7 ? accent : 'rgba(255,255,255,0.28)' }}
+					style={{ height: h, borderRadius: 1, background: i < 12 ? accent : 'rgba(255,255,255,0.28)' }}
 				/>
 			))}
 		</span>
 	);
 
 	return (
-		<button
-			type="button"
-			disabled={disabled}
-			onClick={() => !disabled && onSelect(template)}
-			className={`text-left transition ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-		>
-			<div
-				className={`relative aspect-video overflow-hidden border-2 flex flex-col justify-center ${selected ? 'border-brand-500' : 'border-line'}`}
-				style={{ borderRadius: radius, background: '#111318', padding: layout === 'card' ? 10 : 12 }}
+		<TemplateTile template={template} selected={selected} disabled={disabled} onSelect={onSelect}>
+			{/* The bar is inset on the light tile rather than filling it, because
+			    that is what an audio player actually is on a page: a dark bar
+			    with the page showing around it. Filling the tile turned the
+			    player's own rounding — the one appearance key these templates
+			    differ on besides layout — into an invisible property. */}
+			<span
+				className="absolute inset-2 flex flex-col justify-center overflow-hidden"
+				style={{ borderRadius: radius, background: '#14171f', padding: layout === 'card' ? 8 : 10 }}
 			>
 				{layout === 'compact' && (
 					<span className="flex items-center gap-2.5">
@@ -251,16 +385,46 @@ function AudioTemplateCard({ template, selected, disabled, accent, onSelect }) {
 						{waveform}
 					</span>
 				)}
-			</div>
-
-			<div className="flex items-center gap-1.5 mt-2">
-				{selected && <Icon name="check" className="w-4 h-4 text-brand-500 shrink-0" />}
-				<span className={`text-sm font-medium ${selected ? 'text-brand-500' : 'text-ink'}`}>{template.label}</span>
-			</div>
-			{template.description && <p className="text-xs text-muted mt-0.5 leading-snug">{template.description}</p>}
-		</button>
+			</span>
+		</TemplateTile>
 	);
 }
+
+/**
+ * How each media type presents itself in the "Default player look" card.
+ *
+ * The card is one control answering one question twice, and the only thing
+ * that said which time you were looking at was a two-word toggle in the top
+ * corner — so an author could tune the audio bar for a while under the
+ * impression they were tuning video, and nothing on screen argued. Colour is
+ * carrying that now: the heading names the type, an icon repeats it, and the
+ * whole tile surface changes hue. Any one of the three is enough to answer
+ * "which player is this?" from across the desk.
+ *
+ * Inline values rather than Tailwind classes because they are read from a
+ * lookup at render; a class name built by string concatenation would be purged
+ * from the build.
+ */
+const TYPE_LOOK = {
+	video: {
+		icon: 'video',
+		heading: __( 'Default video look' ),
+		blurb: __( 'Applied to every video that has not chosen a look of its own. Any single item still overrides it.' ),
+		surface: '#f7f9fc',
+		line: '#e3e9f2',
+		tint: '#e0edff',
+		ink: '#0b5cd5',
+	},
+	audio: {
+		icon: 'music',
+		heading: __( 'Default audio look' ),
+		blurb: __( 'Applied to every audio item that has not chosen a look of its own. Set separately from video — a skin and an aspect ratio are treatments of a picture, and an audio bar has none.' ),
+		surface: '#fbf7ff',
+		line: '#ece0f8',
+		tint: '#efe2ff',
+		ink: '#7c3aed',
+	},
+};
 
 const NAV_GROUPS = [
 	{
@@ -303,8 +467,17 @@ const NAV_GROUPS = [
  * template until a hard reload.
  *
  * Mirrors what PHP sends, key for key: `player_defaults` is `settings.customize`
- * (Assets::player_defaults) and `enforcement` is the enforcement section, whose
- * gaps both Helper::enforcement_defaults and sitePolicy() fill themselves.
+ * (Assets::player_defaults), `player_defaults_audio` is `settings.customizeAudio`
+ * (Assets::player_defaults_audio), `settings.general` is the two default preset
+ * ids (Assets::default_preset_ids) and `enforcement` is the enforcement section,
+ * whose gaps both Helper::enforcement_defaults and sitePolicy() fill themselves.
+ *
+ * Every key PHP localizes that this screen can change has to be refreshed here.
+ * Both of the audio/preset keys below were missing, and each had the same
+ * symptom from a different direction: pick an audio look (or a default preset),
+ * save, create an item — and that editor resolved against the pre-save snapshot,
+ * so the one screen where the choice should first show up was the one screen
+ * that ignored it until a full page reload.
  *
  * @param {Object} saved The settings object the save endpoint echoed back.
  */
@@ -313,7 +486,23 @@ function syncGlobalDefaults(saved) {
 	if (!g || !saved) {
 		return;
 	}
-	g.player_defaults = saved.customize && typeof saved.customize === 'object' ? saved.customize : {};
+	const section = (key) => (saved[key] && typeof saved[key] === 'object' ? saved[key] : {});
+	g.player_defaults = section('customize');
+	g.player_defaults_audio = section('customizeAudio');
+	// The same narrow shape PHP publishes — these four keys, nothing else from
+	// `general`. The template markers are here because the create dialog NAMES
+	// the look a new item will inherit (utils/default-look), so a stale marker
+	// would have it confidently announce the template you just replaced.
+	const general = section('general');
+	g.settings = {
+		...(g.settings || {}),
+		general: {
+			defaultPreset: parseInt(general.defaultPreset, 10) || 0,
+			defaultAudioPreset: parseInt(general.defaultAudioPreset, 10) || 0,
+			defaultTemplate: general.defaultTemplate || '',
+			defaultAudioTemplate: general.defaultAudioTemplate || '',
+		},
+	};
 	g.enforcement = { ...(g.enforcement || {}), ...(saved.enforcement || {}) };
 }
 
@@ -563,11 +752,20 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								// The accent is shared across both players, so the tiles
 								// always preview it from the one place it is set.
 								const accent = settings.customize?.appearance?.accent || '#006BFF';
+								const look = TYPE_LOOK[lookType];
 
 								return (
 									<Card className="p-6">
 										<div className="flex flex-wrap items-start justify-between gap-3 mb-1">
-											<h3 className="font-semibold text-gray-900 !mb-0">{ __( 'Default player look' ) }</h3>
+											<h3 className="font-semibold text-gray-900 !mb-0 flex items-center gap-2">
+												<span
+													className="w-6 h-6 rounded flex items-center justify-center shrink-0"
+													style={{ background: look.tint, color: look.ink }}
+												>
+													<Icon name={look.icon} className="w-3.5 h-3.5" />
+												</span>
+												{look.heading}
+											</h3>
 											<div className="tp-type-tabs" role="tablist">
 												{[['video', __( 'Video' )], ['audio', __( 'Audio' )]].map(([value, label]) => (
 													<button
@@ -578,16 +776,21 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 														className={`tp-type-tab ${lookType === value ? 'is-active' : ''}`}
 														onClick={() => setLookType(value)}
 													>
+														<Icon name={TYPE_LOOK[value].icon} className="w-3.5 h-3.5" />
 														{label}
 													</button>
 												))}
 											</div>
 										</div>
-										<p className="text-sm text-muted mb-4">{ isAudioTab
-											? __( 'Applied to every audio item that has not chosen a look of its own. Set separately from video — a video skin and aspect ratio mean nothing for a bar.' )
-											: __( 'Applied to every video that has not chosen a look of its own. Any single item still overrides it.' ) }</p>
+										<p className="text-sm text-muted mb-4">{look.blurb}</p>
 
-										<div className="mt-4 pt-5 border-t border-solid border-line">
+										{ /* The tinted panel is the type indicator that survives
+										     scrolling: the heading can be off-screen by the time
+										     you reach the bottom row of tiles, the hue cannot. */ }
+										<div
+											className="mt-4 p-5 rounded-card border border-solid"
+											style={{ background: look.surface, borderColor: look.line }}
+										>
 											{!!activePreset && (
 												<div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-4 text-sm">
 													<Icon name="help" className="w-4 h-4 text-muted shrink-0" />
@@ -614,22 +817,23 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 													// read as chosen; nothing consumes it at
 													// render, where the appearance keys below
 													// do the actual work.
+													// Replaces the keys a template owns rather
+													// than merging over them — see
+													// applyTemplateToBlob. The merge version left
+													// this site saved as "Playlist" while actually
+													// rendering Playlist's layout with Minimal's
+													// hidden volume and Audiobook's 30-second skip,
+													// because each click only ever added.
+													//
+													// Audio templates are defined partly by which
+													// controls they expose and how far they skip, so
+													// both travel with the appearance — otherwise
+													// "Podcast" would promise skip buttons it never
+													// switched on.
 													const onSelect = (tpl) => setSettings((s) => ({
 														...s,
 														general: { ...(s.general || {}), [markerKey]: tpl.key },
-														[blobKey]: {
-															...(s[blobKey] || {}),
-															appearance: { ...(s[blobKey]?.appearance || {}), ...tpl.appearance },
-															// Audio templates are defined partly by
-															// which controls they expose; without this
-															// "Podcast" would promise skip and speed
-															// buttons it never switched on.
-															...(tpl.controls ? { controls: { ...(s[blobKey]?.controls || {}), ...tpl.controls } } : {}),
-															// Same reason: "Audiobook" names 30-second
-															// skips, so it has to set the skip length
-															// and not just the buttons.
-															...(tpl.skipSeconds ? { skipSeconds: tpl.skipSeconds } : {}),
-														},
+														[blobKey]: applyTemplateToBlob(s[blobKey], tpl, lookType),
 													}));
 													return isAudioTab
 														? <AudioTemplateCard key={t.key} template={t} accent={accent} selected={selected} disabled={locked} onSelect={onSelect} />
@@ -637,7 +841,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 												})}
 											</div>
 
-											<div className="mt-5 pt-5 border-t border-solid border-line">
+											<div className="mt-5 pt-5 border-t border-solid" style={{ borderColor: look.line }}>
 												<Field
 													label={ __( '…or use a saved preset' ) }
 													hint={ typePresets.length
@@ -655,6 +859,16 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 												</Field>
 											</div>
 										</div>
+
+										{ /* What this actually does to a new item, stated rather than left
+										     to be discovered. Nothing is copied into an item at creation —
+										     it is resolved at playback (resolveCustomize, and
+										     Helper::apply_preset for the preset branch). That is why
+										     editing this later still moves every item that never overrode
+										     it, and why one that did override it does not snap back. */ }
+										<p className="text-xs text-muted mt-3 leading-relaxed">
+											{ __( 'New items are not given a copy of this — they read it at playback. So changing it later still updates every item that has not set a look of its own, and never disturbs one that has.' ) }
+										</p>
 									</Card>
 								);
 							})()}

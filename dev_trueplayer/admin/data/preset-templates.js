@@ -89,6 +89,73 @@ export function templatesFor( type ) {
 	return 'audio' === type ? AUDIO_PRESET_TEMPLATES : PRESET_TEMPLATES;
 }
 
+/**
+ * Every key any template of this type is allowed to own.
+ *
+ * Applying a template has to CLEAR these before writing its own values, or a
+ * settings blob accumulates residue from every template ever clicked: pick
+ * Minimal, then Playlist, and what is saved is Playlist's layout still wearing
+ * Minimal's switched-off volume and time readouts — under a tile that says
+ * "Playlist". A template names a complete look, so choosing one has to mean
+ * "this", not "this on top of the last one".
+ *
+ * Derived from the lists rather than written out, so a template that starts
+ * setting a new key is cleaned up by that fact alone. Anything outside the
+ * union is not a template's to touch and survives: the brand accent, the
+ * default aspect ratio, the custom CSS.
+ *
+ * @param {string} type 'video' | 'audio'.
+ * @return {{appearance: string[], controls: string[], skipSeconds: boolean}}
+ */
+export function templateKeys( type = 'video' ) {
+	const appearance = new Set();
+	const controls = new Set();
+	let skipSeconds = false;
+	templatesFor( type ).forEach( ( t ) => {
+		Object.keys( t.appearance || {} ).forEach( ( k ) => appearance.add( k ) );
+		Object.keys( t.controls || {} ).forEach( ( k ) => controls.add( k ) );
+		skipSeconds = skipSeconds || undefined !== t.skipSeconds;
+	} );
+	return { appearance: [ ...appearance ], controls: [ ...controls ], skipSeconds };
+}
+
+/**
+ * The settings blob that results from choosing `template`, given the current
+ * one. Shared by nothing else today, but it is the rule the picker has to obey
+ * and it is worth being able to test without a React tree.
+ *
+ * @param {Object} blob     The current `customize` / `customizeAudio` object.
+ * @param {Object} template The chosen template.
+ * @param {string} type     'video' | 'audio'.
+ * @return {Object} A new blob.
+ */
+export function applyTemplateToBlob( blob, template, type = 'video' ) {
+	const owned = templateKeys( type );
+	const strip = ( obj, keys ) => {
+		const out = { ...( obj || {} ) };
+		keys.forEach( ( k ) => delete out[ k ] );
+		return out;
+	};
+
+	const out = { ...( blob || {} ) };
+	out.appearance = { ...strip( out.appearance, owned.appearance ), ...template.appearance };
+	// Video templates own no controls, so they leave the section alone rather
+	// than stamping an empty object over it.
+	if ( owned.controls.length ) {
+		out.controls = { ...strip( out.controls, owned.controls ), ...( template.controls || {} ) };
+	}
+	if ( owned.skipSeconds ) {
+		// A template that does not name a skip length means the built-in 10s —
+		// not whatever the last template that did name one left behind.
+		if ( template.skipSeconds ) {
+			out.skipSeconds = template.skipSeconds;
+		} else {
+			delete out.skipSeconds;
+		}
+	}
+	return out;
+}
+
 // The config object a template seeds (for creating a preset from it).
 export function templateConfig( key, type = 'video' ) {
 	const t = templatesFor( type ).find( ( x ) => x.key === key );

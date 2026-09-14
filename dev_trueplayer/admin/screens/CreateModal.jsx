@@ -5,6 +5,7 @@ import { isPro } from '../pro';
 import { h5pEnabled } from '../h5p';
 import InteractiveTeaser from '../components/InteractiveTeaser';
 import { SOURCE_TYPES } from '@Utils/source-types';
+import { defaultLook } from '../utils/default-look';
 import { api } from '../api';
 import { __, __sprintf } from '@Utils/translation';
 
@@ -55,14 +56,18 @@ const PLACEHOLDER = {
 	interactive: __( 'Title' ),
 };
 
-export default function CreateModal( { initialKind = 'media', kinds = [ 'media', 'playlist' ], onClose, onSubmit, onError, onEnableInteractive } ) {
+export default function CreateModal( { initialKind = 'media', initialMediaKind = 'video', kinds = [ 'media', 'playlist' ], onClose, onSubmit, onError, onEnableInteractive } ) {
 	const [ kind, setKind ] = useState( initialKind );
 	const [ title, setTitle ] = useState( '' );
+	// 'self' carries both kinds (SOURCE_TYPES), so it is a valid starting point
+	// whichever tab opens first.
 	const [ sourceType, setSourceType ] = useState( 'self' );
 	// Video vs audio — the thing `source.mediaType` actually means. Distinct
 	// from `sourceType` above (self / bunny / youtube …), which is the delivery
 	// method. Conflating the two is what this file used to do.
-	const [ mediaKind, setMediaKind ] = useState( 'video' );
+	// Seeded by the caller so the library's Audio filter opens this on Audio —
+	// the dialog is reached from a screen that already knows which it wants.
+	const [ mediaKind, setMediaKind ] = useState( initialMediaKind );
 	const [ busy, setBusy ] = useState( '' ); // '' | 'install' | 'create'
 
 	// The Interactive tab is offered whenever the engine ships in this build, so
@@ -212,6 +217,25 @@ export default function CreateModal( { initialKind = 'media', kinds = [ 'media',
 							>{ label }</button>
 						) ) }
 					</div>
+					{ /* Which site-wide look this item will come out wearing. The
+					     setting has always applied at this moment; it was just
+					     never said, so the first sight of it was the finished
+					     player — and an author who wanted something else had no
+					     reason to suspect a site default existed at all. Named
+					     per type, because the two are answered separately. */ }
+					{ ( () => {
+						const look = defaultLook( mediaKind );
+						return (
+							<p className="flex items-start gap-1.5 text-xs text-muted mb-4 -mt-2">
+								<Icon name="sliders" className="w-3.5 h-3.5 shrink-0 mt-px" />
+								<span>
+									{ look.preset
+										? __sprintf( 'It will use %s until you give it a look of its own.', look.label )
+										: __sprintf( 'It will use the %s look until you give it one of its own.', look.label ) }
+								</span>
+							</p>
+						);
+					} )() }
 					<span className="block text-[13px] font-medium text-ink mb-1.5">{ __( 'Source' ) }</span>
 					<div role="radiogroup" aria-label={ __( 'Source' ) } className="grid sm:grid-cols-2 gap-2">
 						{ sourceTiles.map( ( t ) => {

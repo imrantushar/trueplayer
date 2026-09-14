@@ -3,6 +3,7 @@
 // not a src — so a Gumlet/Bunny asset in ABR form falls out there, while the
 // same provider's progressive MP4 output stays capturable.
 import { FILE_SOURCES as FILE_TYPES } from '@Utils/source-types';
+import { isAudioSource } from '@Utils/audio';
 import { __ } from '@Utils/translation';
 
 /**
@@ -38,6 +39,15 @@ const SEEK_TIMEOUT = 30000;
 export function canCaptureFrame( source = {} ) {
 	const src = String( source.src || '' );
 	if ( ! src || ! FILE_TYPES.includes( source.type ) ) {
+		return false;
+	}
+	// An audio file has no frames. The type check above let one through — an
+	// .mp3 picked from the media library is `self` with a real src — so the
+	// Cover art panel offered "Generate from video" on every audio item, and
+	// the auto-capture effect quietly attempted it on every audio pick. Both
+	// could only ever fail. Refused here rather than at the two call sites so
+	// there is one answer to "can a frame come out of this".
+	if ( isAudioSource( source ) ) {
 		return false;
 	}
 	return ! /\.m3u8($|\?)/i.test( src );

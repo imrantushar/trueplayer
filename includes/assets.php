@@ -197,6 +197,22 @@ class Assets {
 					// the placeholder on that setting so the default is visible
 					// rather than merely described.
 					'admin_email'     => (string) get_option( 'admin_email' ),
+					// The site-wide "default player look" choice — admin only.
+					//
+					// applyPreset (admin/utils/preset.js) falls back to the preset
+					// ids so the editor preview mirrors what Helper::apply_preset
+					// will really render. It already read
+					// `TruePlayerGlobal.settings.general` — but nothing ever sent
+					// that key, so the fallback was dead and the preview showed no
+					// preset for every item relying on the site default, which is
+					// exactly the case a newly created item is in.
+					//
+					// Only these four keys are published, not the whole `general`
+					// section: pinning the shape here means a future setting added
+					// beside them cannot start leaking into the page by accident.
+					'settings'        => [
+						'general' => self::default_look_settings(),
+					],
 				]
 			)
 		);
@@ -271,6 +287,29 @@ class Assets {
 	 */
 	public static function player_defaults_audio(): array {
 		return self::settings_blob( 'customizeAudio' );
+	}
+
+	/**
+	 * The site-wide "default player look" choice, per media type.
+	 *
+	 * Two pairs: the preset id that wins if set, and the starting-point template
+	 * key that applies otherwise. Audio has its own of each because a video
+	 * preset's skin and aspect ratio mean nothing for a bar — the same split
+	 * Helper::apply_preset enforces.
+	 *
+	 * The template keys are markers, not render inputs: the template's values
+	 * are already baked into `customize` / `customizeAudio` when it is chosen.
+	 * They are published so the admin can NAME the active look — in the Settings
+	 * picker and in the create dialog — rather than only apply it silently.
+	 */
+	public static function default_look_settings(): array {
+		$general = self::settings_blob( 'general' );
+		return [
+			'defaultPreset'        => (int) ( $general['defaultPreset'] ?? 0 ),
+			'defaultAudioPreset'   => (int) ( $general['defaultAudioPreset'] ?? 0 ),
+			'defaultTemplate'      => (string) ( $general['defaultTemplate'] ?? '' ),
+			'defaultAudioTemplate' => (string) ( $general['defaultAudioTemplate'] ?? '' ),
+		];
 	}
 
 	/** One top-level settings key, decoded, guaranteed to be an array. */
