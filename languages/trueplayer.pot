@@ -2,17 +2,16 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: TruePlayer 1.2.0\n"
+"Project-Id-Version: TruePlayer 1.5.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/trueplayer\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-03T14:55:22+00:00\n"
+"POT-Creation-Date: 2026-09-14T10:43:54+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
-"X-Domain: trueplayer\n"
 
 #. Plugin Name of the plugin
 #: trueplayer.php
@@ -56,6 +55,7 @@ msgid "That content type is not installed."
 msgstr ""
 
 #: addons/interactive/api/controller.php:266
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:142
 msgid "Untitled interactive"
 msgstr ""
 
@@ -98,6 +98,7 @@ msgid "The interactive content runtime is not bundled in this build."
 msgstr ""
 
 #: addons/interactive/interactive.php:131
+#: dev_trueplayer/admin/components/InteractiveTeaser.jsx:35
 msgid "Interactive content"
 msgstr ""
 
@@ -150,80 +151,32 @@ msgid "This addon cannot be activated right now."
 msgstr ""
 
 #: includes/admin/menu.php:72
+#: dev_trueplayer/admin/App.jsx:152
+#: dev_trueplayer/admin/screens/Dashboard.jsx:69
 msgid "Dashboard"
 msgstr ""
 
 #: includes/admin/menu.php:73
+#: dev_trueplayer/admin/App.jsx:150
+#: dev_trueplayer/admin/App.jsx:154
+#: dev_trueplayer/admin/App.jsx:155
+#: dev_trueplayer/admin/screens/CreateModal.jsx:39
+#: dev_trueplayer/admin/screens/Library.jsx:268
+#: dev_trueplayer/admin/screens/Library.jsx:277
 msgid "Media"
 msgstr ""
 
 #: includes/admin/menu.php:74
+#: dev_trueplayer/admin/App.jsx:161
+#: dev_trueplayer/admin/App.jsx:162
 msgid "Presets"
 msgstr ""
 
 #: includes/admin/menu.php:75
+#: dev_trueplayer/admin/App.jsx:163
+#: dev_trueplayer/admin/screens/Settings.jsx:707
+#: dev_trueplayer/player/components/Controls.jsx:240
 msgid "Settings"
-msgstr ""
-
-#: includes/api/bunny-controller.php:123
-msgid "Bunny.net Storage needs TruePlayer Pro."
-msgstr ""
-
-#: includes/api/bunny-controller.php:176
-msgid "Add your Bunny.net storage zone, key and pull-zone hostname under Settings → Sources & CDN first."
-msgstr ""
-
-#. translators: %s: comma-separated list of file extensions.
-#: includes/api/bunny-controller.php:190
-#, php-format
-msgid "That file type cannot be uploaded. Allowed types: %s."
-msgstr ""
-
-#. translators: %s: formatted maximum file size, e.g. "5 GB".
-#: includes/api/bunny-controller.php:202
-#, php-format
-msgid "That file is empty or larger than the %s limit."
-msgstr ""
-
-#: includes/api/bunny-controller.php:221
-msgid "The server could not open a temporary file for the upload."
-msgstr ""
-
-#: includes/api/bunny-controller.php:266
-msgid "That upload chunk arrived empty."
-msgstr ""
-
-#: includes/api/bunny-controller.php:273
-#: includes/api/bunny-controller.php:388
-msgid "This upload expired. Please start it again."
-msgstr ""
-
-#: includes/api/bunny-controller.php:278
-msgid "That upload chunk arrived out of order."
-msgstr ""
-
-#: includes/api/bunny-controller.php:284
-msgid "The upload sent more data than it declared."
-msgstr ""
-
-#: includes/api/bunny-controller.php:289
-msgid "The server could not write the upload to disk."
-msgstr ""
-
-#: includes/api/bunny-controller.php:325
-msgid "The upload finished short of its full size. Please try again."
-msgstr ""
-
-#: includes/api/bunny-controller.php:383
-msgid "That upload session is not valid."
-msgstr ""
-
-#: includes/api/bunny-controller.php:393
-msgid "That upload session belongs to someone else."
-msgstr ""
-
-#: includes/api/bunny-controller.php:423
-msgid "The uploads folder is not writable."
 msgstr ""
 
 #: includes/api/gate-controller.php:46
@@ -252,10 +205,12 @@ msgid "Could not subscribe."
 msgstr ""
 
 #: includes/api/playlists-controller.php:64
+#: dev_trueplayer/admin/screens/Library.jsx:164
 msgid "Untitled playlist"
 msgstr ""
 
-#: includes/api/presets-controller.php:93
+#: includes/api/presets-controller.php:119
+#: dev_trueplayer/admin/screens/Presets.jsx:166
 msgid "Untitled preset"
 msgstr ""
 
@@ -299,6 +254,7 @@ msgstr ""
 #: includes/api/videos-controller.php:315
 #: includes/api/videos-controller.php:557
 #: includes/api/videos-controller.php:594
+#: dev_trueplayer/admin/screens/Library.jsx:159
 msgid "Untitled video"
 msgstr ""
 
@@ -342,6 +298,7 @@ msgid "Video Tags"
 msgstr ""
 
 #: includes/database/post-type.php:47
+#: dev_trueplayer/admin/screens/Dashboard.jsx:79
 msgid "Videos"
 msgstr ""
 
@@ -379,6 +336,7 @@ msgid "Mailchimp rejected the subscription."
 msgstr ""
 
 #: includes/integrations/wp-mail.php:31
+#: dev_trueplayer/admin/screens/Settings.jsx:1231
 msgid "Email notification"
 msgstr ""
 
@@ -421,81 +379,4590 @@ msgid "Site: %s"
 msgstr ""
 
 #: includes/playlist.php:32
+#: dev_trueplayer/admin/screens/Dashboard.jsx:80
+#: dev_trueplayer/admin/screens/Library.jsx:40
 msgid "Playlists"
-msgstr ""
-
-#. translators: %s: the configured pull-zone hostname.
-#: includes/services/bunny-storage.php:118
-#, php-format
-msgid "The file uploaded, but %s is a Bunny Stream pull zone — it serves a video library, not your storage zone, so this file cannot be played from it. In Bunny, open Storage → your zone → Connected pull zones and use that hostname under Settings → Sources & CDN."
-msgstr ""
-
-#: includes/services/bunny-storage.php:122
-msgid "The file uploaded, but the pull zone refused to serve it. If Token Authentication is enabled on that zone, add its key under Settings → Sources & CDN and mark the video private — otherwise the zone blocks unsigned requests."
-msgstr ""
-
-#. translators: %s: the configured pull-zone hostname.
-#: includes/services/bunny-storage.php:126
-#, php-format
-msgid "The file uploaded, but %s returned \"not found\" for it. Check that this pull zone is the one connected to your storage zone."
-msgstr ""
-
-#. translators: %s: the configured pull-zone hostname.
-#: includes/services/bunny-storage.php:132
-#, php-format
-msgid "The file uploaded, but %s did not serve it back. Check the pull-zone hostname under Settings → Sources & CDN."
-msgstr ""
-
-#: includes/services/bunny-storage.php:236
-msgid "Bunny.net Storage is not set up. Add your zone, key and pull zone under Settings → Sources & CDN."
-msgstr ""
-
-#: includes/services/bunny-storage.php:241
-msgid "The upload could not be read back for sending."
-msgstr ""
-
-#: includes/services/bunny-storage.php:257
-msgid "This file is too large to send from a server without cURL. Ask your host to enable the cURL extension."
-msgstr ""
-
-#. translators: %d: HTTP status code returned by Bunny.net.
-#: includes/services/bunny-storage.php:286
-#, php-format
-msgid "Bunny.net rejected the upload (HTTP %d). Check the storage zone name, region and key."
-msgstr ""
-
-#: includes/services/bunny-storage.php:306
-msgid "The upload could not be opened for sending."
-msgstr ""
-
-#. translators: %s: transport error message.
-#: includes/services/bunny-storage.php:338
-#, php-format
-msgid "The upload could not reach Bunny.net: %s"
-msgstr ""
-
-#: includes/services/bunny-storage.php:339
-msgid "connection failed"
-msgstr ""
-
-#: includes/services/bunny-storage.php:359
-msgid "Bunny.net Storage is not set up."
-msgstr ""
-
-#: includes/services/bunny-storage.php:378
-msgid "Bunny.net refused the storage key. Check it under Settings → Sources & CDN."
-msgstr ""
-
-#. translators: %d: HTTP status code returned by Bunny.net.
-#: includes/services/bunny-storage.php:388
-#, php-format
-msgid "Bunny.net could not list the zone (HTTP %d)."
 msgstr ""
 
 #: includes/shortcode.php:72
 msgid "Watch video"
 msgstr ""
 
-#: includes/shortcode.php:327
+#: includes/shortcode.php:372
+msgid "Play audio"
+msgstr ""
+
+#: includes/shortcode.php:372
+#: dev_trueplayer/player/Playlist.jsx:52
 msgid "Play video"
+msgstr ""
+
+#: dev_trueplayer/admin/api.js:123
+#: dev_trueplayer/admin/screens/settings/AddonsPanel.jsx:30
+msgid "Could not change the addon status."
+msgstr ""
+
+#: dev_trueplayer/admin/App.jsx:159
+#: dev_trueplayer/admin/screens/Analytics.jsx:103
+#: dev_trueplayer/admin/screens/Analytics.jsx:159
+#: dev_trueplayer/admin/screens/Library.jsx:427
+#: dev_trueplayer/admin/screens/Settings.jsx:447
+msgid "Analytics"
+msgstr ""
+
+#: dev_trueplayer/admin/App.jsx:238
+msgid "Unsaved changes"
+msgstr ""
+
+#: dev_trueplayer/admin/App.jsx:242
+msgid "Keep editing"
+msgstr ""
+
+#: dev_trueplayer/admin/App.jsx:243
+msgid "Discard changes"
+msgstr ""
+
+#: dev_trueplayer/admin/App.jsx:247
+msgid "You have unsaved changes. If you leave now, they’ll be lost."
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:71
+#: dev_trueplayer/admin/components/GumletField.jsx:115
+msgid "That file could not be uploaded."
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:99
+#: dev_trueplayer/admin/components/GumletField.jsx:174
+#: dev_trueplayer/admin/screens/CreateModal.jsx:161
+#: dev_trueplayer/admin/screens/Library.jsx:340
+#: dev_trueplayer/admin/screens/Presets.jsx:209
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:296
+#: dev_trueplayer/block/VideoModal.jsx:230
+msgid "Cancel"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:106
+msgid "Sending to your storage zone — keep this tab open."
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:106
+msgid "Finishing up…"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:123
+#: dev_trueplayer/admin/components/GumletField.jsx:204
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:96
+#: dev_trueplayer/admin/components/MediaPicker.jsx:24
+#: dev_trueplayer/admin/components/PosterField.jsx:57
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:137
+#: dev_trueplayer/block/edit.jsx:143
+msgid "Replace"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:125
+#: dev_trueplayer/admin/components/GumletField.jsx:206
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:97
+#: dev_trueplayer/admin/components/MediaPicker.jsx:25
+#: dev_trueplayer/admin/components/PosterField.jsx:61
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:138
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:204
+msgid "Remove"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:138
+msgid "Checking your storage zone…"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:152
+msgid "Connect your storage zone under <b>Settings → Sources & CDN</b> to upload files straight from here."
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:170
+msgid "Upload audio to Bunny.net"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:170
+msgid "Upload a video to Bunny.net"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:174
+#: dev_trueplayer/admin/components/GumletField.jsx:284
+msgid "or drop it here"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:180
+msgid "Browse your zone"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:184
+msgid "Paste a URL instead"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:229
+msgid "Your storage zone could not be listed."
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:236
+msgid "Files in your storage zone"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:239
+msgid "Search files"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:243
+#: dev_trueplayer/admin/screens/Analytics.jsx:293
+#: dev_trueplayer/admin/screens/Dashboard.jsx:93
+#: dev_trueplayer/admin/screens/Editor.jsx:231
+#: dev_trueplayer/admin/screens/Presets.jsx:269
+#: dev_trueplayer/admin/screens/Settings.jsx:564
+#: dev_trueplayer/admin/screens/Settings.jsx:681
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:213
+msgid "Loading…"
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:245
+msgid "Nothing here yet — upload a file and it will appear."
+msgstr ""
+
+#: dev_trueplayer/admin/components/BunnyStorageField.jsx:245
+msgid "Nothing here yet — upload a video and it will appear."
+msgstr ""
+
+#: dev_trueplayer/admin/components/EndpointList.jsx:51
+msgid "Sending…"
+msgstr ""
+
+#: dev_trueplayer/admin/components/EndpointList.jsx:79
+#: dev_trueplayer/admin/screens/Library.jsx:336
+#: dev_trueplayer/admin/screens/Library.jsx:341
+#: dev_trueplayer/admin/screens/Library.jsx:428
+#: dev_trueplayer/admin/screens/Presets.jsx:292
+msgid "Delete"
+msgstr ""
+
+#: dev_trueplayer/admin/components/EndpointList.jsx:84
+msgid "Send test"
+msgstr ""
+
+#: dev_trueplayer/admin/components/EndpointList.jsx:91
+msgid "Signing secret (optional) — used for X-TruePlayer-Signature"
+msgstr ""
+
+#: dev_trueplayer/admin/components/EndpointList.jsx:92
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:222
+msgid "Active"
+msgstr ""
+
+#: dev_trueplayer/admin/components/EndpointList.jsx:94
+msgid "Events (none selected = all)"
+msgstr ""
+
+#: dev_trueplayer/admin/components/EndpointList.jsx:112
+msgid "No endpoints yet."
+msgstr ""
+
+#: dev_trueplayer/admin/components/EndpointList.jsx:113
+msgid "+ Add endpoint"
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:142
+msgid "That video could not be found in your Gumlet workspace."
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:185
+msgid "Uploaded. Gumlet is encoding it now — you can save and carry on; it will play once encoding finishes."
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:186
+msgid "Sending to Gumlet — keep this tab open."
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:210
+msgid "Gumlet is still encoding this file. It is saved and will start playing on its own once encoding finishes — no need to re-upload."
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:210
+msgid "Gumlet is still encoding this video. It is saved and will start playing on its own once encoding finishes — no need to re-upload."
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:219
+msgid "Checking your Gumlet workspace…"
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:233
+msgid "Gumlet isn’t connected yet"
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:234
+msgid "Add your Gumlet API key and this source will be ready to use. Nothing else about this video is affected in the meantime."
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:245
+msgid "Gumlet needs a collection ID"
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:246
+msgid "Uploading has to know which workspace the video lands in. Add your collection ID to upload from here — or switch this video’s source type to Gumlet Stream to use a video you have already uploaded."
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:262
+#: dev_trueplayer/admin/components/GumletField.jsx:300
+msgid "Gumlet asset ID or URL"
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:262
+#: dev_trueplayer/admin/components/GumletField.jsx:300
+msgid "Gumlet video ID or URL"
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:264
+#: dev_trueplayer/admin/components/GumletField.jsx:302
+msgid "Looking it up…"
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:280
+msgid "Upload audio to Gumlet"
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:280
+msgid "Upload a video to Gumlet"
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:290
+msgid "Paste an ID instead"
+msgstr ""
+
+#: dev_trueplayer/admin/components/GumletField.jsx:338
+msgid "Open Sources & CDN settings"
+msgstr ""
+
+#: dev_trueplayer/admin/components/Header.jsx:37
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:165
+msgid "Untitled"
+msgstr ""
+
+#: dev_trueplayer/admin/components/Header.jsx:39
+#: dev_trueplayer/admin/screens/CreateModal.jsx:54
+#: dev_trueplayer/admin/screens/CreateModal.jsx:55
+#: dev_trueplayer/admin/screens/CreateModal.jsx:56
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:352
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:544
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:161
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:141
+msgid "Title"
+msgstr ""
+
+#: dev_trueplayer/admin/components/InteractiveTeaser.jsx:16
+msgid "Multiple choice, true/false & fill in the blanks"
+msgstr ""
+
+#: dev_trueplayer/admin/components/InteractiveTeaser.jsx:17
+msgid "Flashcards, drag the words & mark the words"
+msgstr ""
+
+#: dev_trueplayer/admin/components/InteractiveTeaser.jsx:18
+msgid "Accordions and other rich content blocks"
+msgstr ""
+
+#: dev_trueplayer/admin/components/InteractiveTeaser.jsx:19
+msgid "Results feed the same analytics, webhooks & LMS pipeline as video"
+msgstr ""
+
+#: dev_trueplayer/admin/components/InteractiveTeaser.jsx:36
+msgid "Not enabled"
+msgstr ""
+
+#: dev_trueplayer/admin/components/InteractiveTeaser.jsx:39
+msgid "Build quizzes, flashcards and other interactive activities alongside your videos, and embed them anywhere with a shortcode."
+msgstr ""
+
+#: dev_trueplayer/admin/components/InteractiveTeaser.jsx:52
+msgid "Enable in Settings → Addons"
+msgstr ""
+
+#: dev_trueplayer/admin/components/InteractiveTeaser.jsx:55
+msgid "Enabling adds the interactive engine’s tables to your database. Turning it back off later leaves anything you’ve built untouched."
+msgstr ""
+
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:19
+msgid "Media Library"
+msgstr ""
+
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:20
+#: dev_trueplayer/block/data.js:37
+msgid "External URL"
+msgstr ""
+
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:21
+#: dev_trueplayer/utils/source-types.js:76
+msgid "Bunny Storage"
+msgstr ""
+
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:22
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:23
+#: dev_trueplayer/admin/screens/Settings.jsx:1151
+msgid "Gumlet"
+msgstr ""
+
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:59
+msgid "Choose an audio file"
+msgstr ""
+
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:59
+#: dev_trueplayer/block/VideoModal.jsx:163
+msgid "Choose a video"
+msgstr ""
+
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:62
+msgid "MP3, M4A, OGG or WAV from your media library."
+msgstr ""
+
+#: dev_trueplayer/admin/components/MediaFileCard.jsx:62
+msgid "MP4, WebM or MOV from your media library."
+msgstr ""
+
+#: dev_trueplayer/admin/components/MediaPicker.jsx:10
+#: dev_trueplayer/admin/h5p/SemanticsForm.jsx:157
+#: dev_trueplayer/admin/h5p/SemanticsForm.jsx:172
+msgid "Upload"
+msgstr ""
+
+#: dev_trueplayer/admin/components/PosterField.jsx:18
+msgid "cover art"
+msgstr ""
+
+#: dev_trueplayer/admin/components/PosterField.jsx:18
+msgid "poster"
+msgstr ""
+
+#: dev_trueplayer/admin/components/PosterField.jsx:23
+msgid "Grabbing a frame…"
+msgstr ""
+
+#: dev_trueplayer/admin/components/PosterField.jsx:24
+msgid "Regenerate from video"
+msgstr ""
+
+#: dev_trueplayer/admin/components/PosterField.jsx:24
+msgid "Generate from video"
+msgstr ""
+
+#: dev_trueplayer/admin/components/PosterField.jsx:57
+msgid "Choose image"
+msgstr ""
+
+#: dev_trueplayer/admin/components/PosterField.jsx:78
+msgid "Grabbed from the video."
+msgstr ""
+
+#: dev_trueplayer/admin/components/UI.jsx:261
+msgid "More create options"
+msgstr ""
+
+#: dev_trueplayer/admin/components/UI.jsx:313
+msgid "More actions"
+msgstr ""
+
+#: dev_trueplayer/admin/components/UI.jsx:378
+#: dev_trueplayer/admin/components/WhatsNew.jsx:125
+#: dev_trueplayer/admin/screens/Analytics.jsx:54
+#: dev_trueplayer/player/components/InfoPanel.jsx:101
+#: dev_trueplayer/player/components/Overlay.jsx:14
+#: dev_trueplayer/player/mount.js:281
+#: dev_trueplayer/player/Player.jsx:1058
+msgid "Close"
+msgstr ""
+
+#: dev_trueplayer/admin/components/UI.jsx:402
+msgid "Dismiss"
+msgstr ""
+
+#: dev_trueplayer/admin/components/UI.jsx:465
+msgid "Previous page"
+msgstr ""
+
+#: dev_trueplayer/admin/components/UI.jsx:470
+msgid "Next page"
+msgstr ""
+
+#: dev_trueplayer/admin/components/UpsellPanel.jsx:18
+msgid "This is a Pro feature. Unlock the intelligence layer of TruePlayer."
+msgstr ""
+
+#: dev_trueplayer/admin/components/UpsellPanel.jsx:28
+msgid "Upgrade to Pro"
+msgstr ""
+
+#: dev_trueplayer/admin/components/WhatsNew.jsx:21
+msgid "Added"
+msgstr ""
+
+#: dev_trueplayer/admin/components/WhatsNew.jsx:22
+msgid "Improvement"
+msgstr ""
+
+#: dev_trueplayer/admin/components/WhatsNew.jsx:23
+msgid "Fix"
+msgstr ""
+
+#: dev_trueplayer/admin/components/WhatsNew.jsx:24
+msgid "Security"
+msgstr ""
+
+#: dev_trueplayer/admin/components/WhatsNew.jsx:25
+msgid "Removed"
+msgstr ""
+
+#: dev_trueplayer/admin/components/WhatsNew.jsx:34
+msgid "today"
+msgstr ""
+
+#: dev_trueplayer/admin/components/WhatsNew.jsx:112
+#: dev_trueplayer/admin/components/WhatsNew.jsx:113
+#: dev_trueplayer/admin/components/WhatsNew.jsx:124
+msgid "What's New"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:11
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:210
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:22
+msgid "Default"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:11
+msgid "Gradient bar fading over the picture. The balanced baseline."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:12
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:23
+msgid "Modern"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:12
+msgid "Roomier bar, thicker scrubber and a larger play button."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:13
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:24
+msgid "Simple"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:13
+msgid "Flat solid bar, tight padding — quiet and unobtrusive."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:14
+#: dev_trueplayer/admin/data/preset-templates.js:40
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:25
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:46
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:267
+msgid "Minimal"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:14
+msgid "Controls in a small pill. Time and volume are hidden."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:15
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:26
+msgid "Standard"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:15
+msgid "Opaque deck with square edges — the classic player look."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:16
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:27
+msgid "Floating"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:16
+msgid "The bar detaches from the edge as a blurred, rounded panel."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:17
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:28
+msgid "Ambient"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:17
+msgid "A blurred glow of the poster spills out behind the player."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:41
+msgid "Just a play button and a waveform. No art, time or volume."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:47
+msgid "Album"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:48
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:45
+msgid "Large square cover art above the title and controls."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:54
+#: dev_trueplayer/admin/screens/CreateModal.jsx:40
+#: dev_trueplayer/admin/screens/Library.jsx:269
+msgid "Playlist"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:55
+msgid "For episodes inside a playlist: previous / next track, nothing competing for space."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:85
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:47
+msgid "Podcast"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:87
+msgid "Roomier bar with large cover art, skip buttons and a speed control."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:93
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:48
+msgid "Audiobook"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:95
+msgid "Long-form listening: 30-second skips, speed control and chapter navigation."
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:203
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:52
+msgid "16:9 (widescreen)"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:204
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:53
+msgid "9:16 (vertical)"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:205
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:54
+msgid "4:3 (classic)"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:206
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:55
+msgid "1:1 (square)"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:207
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:56
+msgid "21:9 (cinematic)"
+msgstr ""
+
+#: dev_trueplayer/admin/data/preset-templates.js:208
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:57
+msgid "Auto (native)"
+msgstr ""
+
+#: dev_trueplayer/admin/h5p/SemanticsForm.jsx:284
+msgid "Item"
+msgstr ""
+
+#: dev_trueplayer/admin/h5p/SemanticsForm.jsx:351
+msgid "item"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:49
+msgid "Viewer detail"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:52
+msgid "Reset / unlock"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:62
+msgid "Their replay heatmap"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:71
+msgid "Quiz attempts"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:75
+msgid "pass"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:75
+msgid "fail"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:106
+msgid "Deep video analytics"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:108
+msgid "Audience retention curve"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:109
+msgid "Replay heatmap — which parts get re-watched"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:110
+msgid "Completion funnel & views over time"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:111
+msgid "Per-viewer watch drill-down"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:112
+#: dev_trueplayer/admin/screens/Analytics.jsx:221
+msgid "Quiz performance"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:120
+msgid "Loading analytics…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:139
+msgid "Views"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:152
+msgid "Overview"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:153
+msgid "Viewers"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:154
+msgid "Attestations"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:173
+msgid "Unique viewers"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:174
+msgid "Total views"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:175
+msgid "Completion rate"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:176
+msgid "Avg watch time"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:179
+msgid "Audience retention"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:179
+msgid "% of viewers still watching across the timeline"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:185
+msgid "Replay heatmap"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:185
+msgid "How many times each segment was played (repeats included)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:192
+msgid "Completion funnel"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:197
+msgid "Views over time"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:201
+msgid "No data yet."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:207
+msgid "Devices"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:209
+msgid "No data."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:213
+msgid "New vs returning"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:215
+msgid "New"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:216
+msgid "Returning"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:218
+msgid "Engagement score / 100"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:222
+msgid "No quiz attempts yet."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:241
+msgid "Viewer"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:241
+msgid "Coverage"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:242
+msgid "Sessions"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:242
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:221
+msgid "Status"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:243
+msgid "Device"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:254
+msgid "View →"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:257
+msgid "No viewers yet."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:266
+msgid "Tamper-evident proof of completion — verified from watch-tracking & quiz results."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:268
+msgid "Export CSV"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:275
+#: dev_trueplayer/admin/screens/CreateModal.jsx:188
+#: dev_trueplayer/admin/screens/Presets.jsx:236
+#: dev_trueplayer/block/VideoModal.jsx:134
+#: dev_trueplayer/player/components/EmailForm.jsx:86
+msgid "Name"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:275
+msgid "Watched"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:276
+msgid "Completed"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:276
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:237
+msgid "Quiz"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:286
+msgid "failed"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:288
+msgid "Certificate →"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Analytics.jsx:292
+msgid "No completions yet."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:29
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:226
+msgid "Questions"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:30
+msgid "Quizzes"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:31
+msgid "Study aids"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:32
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:254
+#: dev_trueplayer/admin/screens/editor/TimedContentTab.jsx:57
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:44
+msgid "Content"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:33
+msgid "Also installed"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:41
+#: dev_trueplayer/admin/screens/Dashboard.jsx:82
+#: dev_trueplayer/admin/screens/Library.jsx:41
+#: dev_trueplayer/admin/screens/Library.jsx:270
+#: dev_trueplayer/admin/screens/Library.jsx:457
+msgid "Interactive"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:48
+#: dev_trueplayer/admin/screens/Dashboard.jsx:98
+msgid "Create media"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:49
+msgid "Create playlist"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:50
+msgid "Create interactive"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:89
+msgid "Failed to load content types."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:118
+msgid "Install failed."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:157
+msgid "Pick a content type to continue."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:163
+msgid "Installing…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:163
+msgid "Install"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:165
+#: dev_trueplayer/admin/screens/Presets.jsx:210
+#: dev_trueplayer/block/VideoModal.jsx:242
+msgid "Creating…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:165
+#: dev_trueplayer/admin/screens/Library.jsx:396
+#: dev_trueplayer/block/VideoModal.jsx:242
+msgid "Create"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:188
+#: dev_trueplayer/block/VideoModal.jsx:135
+msgid "Shown in your library. You can rename it later."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:198
+msgid "What are you adding?"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:200
+#: dev_trueplayer/admin/screens/Library.jsx:38
+#: dev_trueplayer/admin/screens/Presets.jsx:219
+#: dev_trueplayer/admin/screens/Presets.jsx:253
+#: dev_trueplayer/admin/screens/Settings.jsx:781
+#: dev_trueplayer/block/edit.jsx:124
+msgid "Video"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:200
+#: dev_trueplayer/admin/screens/Library.jsx:39
+#: dev_trueplayer/admin/screens/Presets.jsx:219
+#: dev_trueplayer/admin/screens/Presets.jsx:253
+#: dev_trueplayer/admin/screens/Settings.jsx:781
+#: dev_trueplayer/utils/source-types.js:140
+msgid "Audio"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:239
+#: dev_trueplayer/admin/screens/CreateModal.jsx:240
+#: dev_trueplayer/admin/screens/Editor.jsx:40
+#: dev_trueplayer/block/VideoModal.jsx:144
+msgid "Source"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:256
+msgid "Change the source details in the editor."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:258
+msgid "Bunny and Gumlet need TruePlayer Pro."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:259
+msgid "Bunny, Gumlet, Mux and HLS need TruePlayer Pro."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:271
+msgid "Content type"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:274
+msgid "Search types"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:279
+msgid "Loading content types…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:325
+#: dev_trueplayer/admin/screens/Editor.jsx:304
+#: dev_trueplayer/admin/screens/Editor.jsx:320
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:50
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:169
+#: dev_trueplayer/admin/screens/Settings.jsx:119
+msgid "PRO"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/CreateModal.jsx:354
+msgid "Not installed"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:70
+msgid "Your watch-verified media library at a glance."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:73
+msgid "New playlist"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:74
+msgid "New media"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:83
+msgid "Quiz-gated"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:84
+msgid "With chapters"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:90
+msgid "Recent media"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:91
+msgid "View all →"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:97
+msgid "No media yet — add your first one."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:120
+msgid "Quick start"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:122
+msgid "Add a video"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:123
+msgid "Build a playlist"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:124
+msgid "Create interactive content"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:125
+msgid "Player defaults"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:130
+msgid "Unlock Pro"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:135
+msgid "Prove students watched, gate with quizzes, and see deep analytics."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Dashboard.jsx:140
+msgid "See Pro features"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:24
+msgid "Call to action"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:28
+msgid "Layers"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:29
+#: dev_trueplayer/admin/screens/Editor.jsx:71
+#: dev_trueplayer/admin/screens/editor/TimedContentTab.jsx:26
+msgid "Timed content"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:35
+msgid "Verification & quiz"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:36
+msgid "Protection"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:41
+#: dev_trueplayer/admin/screens/Settings.jsx:437
+msgid "Player"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:42
+msgid "Chapters & branding"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:43
+msgid "Interactions"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:44
+#: dev_trueplayer/admin/screens/Editor.jsx:49
+msgid "Access & gating"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:51
+msgid "Watch-verification (prove they watched, anti-skip)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:52
+msgid "Checkpoint & final quizzes, lock on failure"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:53
+msgid "Private video with signed, expiring links"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:73
+msgid "A content region below the player that changes with the video"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:74
+msgid "Time-synced forms, buttons & text"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:209
+msgid "Add an audio file before saving."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:210
+msgid "Add a video before saving."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:224
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:127
+#: dev_trueplayer/admin/screens/Playlists.jsx:131
+#: dev_trueplayer/admin/screens/Presets.jsx:102
+#: dev_trueplayer/admin/screens/Settings.jsx:700
+msgid "Saved"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:244
+msgid "Unsaved"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:245
+#: dev_trueplayer/admin/screens/Playlists.jsx:148
+msgid "Embed"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:247
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:102
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:127
+#: dev_trueplayer/admin/screens/Playlists.jsx:132
+#: dev_trueplayer/admin/screens/Presets.jsx:103
+#: dev_trueplayer/admin/screens/Settings.jsx:701
+#: dev_trueplayer/block/VideoModal.jsx:241
+msgid "Saving…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:247
+msgid "Update"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Editor.jsx:256
+msgid "Embed this media"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:25
+msgid "−1 second"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:34
+msgid "+1 second"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:55
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:63
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:207
+msgid "English"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:80
+msgid "English (YouTube)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:81
+msgid "Imported captions from YouTube."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:83
+msgid "No captions available for this video."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:86
+msgid "Import failed."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:98
+msgid "No timestamps found. Use lines like \"1:30 Chapter title\" or paste a WebVTT file."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:121
+msgid "Couldn't read the caption file (it may block cross-origin requests). Paste its contents instead."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:130
+msgid "Logo / watermark"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:147
+#: dev_trueplayer/admin/screens/Settings.jsx:996
+#: dev_trueplayer/admin/screens/Settings.jsx:1322
+msgid "Upload a logo"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:153
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:323
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:548
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:66
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:151
+#: dev_trueplayer/admin/screens/Settings.jsx:1326
+msgid "Position"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:155
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:22
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:17
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:391
+#: dev_trueplayer/admin/screens/Settings.jsx:1329
+msgid "Top right"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:156
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:22
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:17
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:392
+#: dev_trueplayer/admin/screens/Settings.jsx:1328
+msgid "Top left"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:157
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:24
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:19
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:389
+#: dev_trueplayer/admin/screens/Settings.jsx:1331
+msgid "Bottom right"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:158
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:24
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:19
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:390
+#: dev_trueplayer/admin/screens/Settings.jsx:1330
+msgid "Bottom left"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:165
+#: dev_trueplayer/admin/screens/Settings.jsx:1338
+msgid "Click-through link"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:165
+#: dev_trueplayer/admin/screens/Settings.jsx:1338
+msgid "Optional — makes the logo clickable."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:175
+msgid "Captions & subtitles"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:178
+msgid "Importing…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:178
+msgid "Import from YouTube"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:185
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:189
+msgid "WebVTT tracks for self-hosted, HLS & Bunny video."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:186
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:217
+msgid "+ Add subtitle track"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:196
+msgid "Upload .vtt file"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:200
+msgid "Change"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:207
+msgid "Label"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:208
+msgid "Lang"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:223
+msgid "Description below player"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:224
+msgid "Shown directly under the player wherever it's embedded. Basic HTML allowed."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:230
+msgid "What this video covers, links, resources…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:238
+#: dev_trueplayer/player/components/InfoPanel.jsx:92
+msgid "Chapters"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:242
+msgid "Chapters segment the scrubber and appear in the “In this video” panel. Times are mm:ss."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:246
+msgid "Import"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:247
+msgid "+ Add"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:253
+msgid "Paste timestamps or a WebVTT file"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:258
+msgid ""
+"0:00 Intro\n"
+"1:30 Getting started\n"
+"4:05 Wrap up"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:262
+msgid "Replace chapters"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:263
+msgid "Add to existing"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:266
+msgid "Reading…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:266
+msgid "Generate from caption file"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:275
+msgid "No chapters yet — add one or import a list."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:281
+msgid "Chapter title"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:63
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:17
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:583
+msgid "Shortcode"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:66
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:73
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:110
+#: dev_trueplayer/admin/screens/Library.jsx:411
+#: dev_trueplayer/admin/screens/Playlists.jsx:150
+msgid "Copied"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:66
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:73
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:110
+msgid "Copy"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:70
+msgid "Block (paste into any post)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:75
+msgid "Or search “TruePlayer” in the block inserter."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:79
+msgid "Instant video page"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:80
+#: dev_trueplayer/admin/screens/Settings.jsx:1350
+msgid "Pro"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:82
+msgid "A clean, shareable standalone page for this video — no post needed."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:88
+msgid "Enable the instant page"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:97
+msgid "Save this video to publish its page."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:98
+msgid "Save this video to take its page down."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:102
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:129
+#: dev_trueplayer/admin/screens/Playlists.jsx:132
+#: dev_trueplayer/admin/screens/Presets.jsx:103
+#: dev_trueplayer/admin/screens/Settings.jsx:701
+#: dev_trueplayer/block/VideoModal.jsx:241
+msgid "Save"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/EmbedTab.jsx:115
+msgid "Available with TruePlayer Pro."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:41
+msgid "Course completion (LMS)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:42
+msgid "Install Academy LMS to link this video to a course lesson."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:49
+msgid "Course completion (Academy LMS)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:50
+msgid "Link this video to a lesson: gate it by enrollment and mark it complete when watched/passed."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:51
+msgid "Link to an Academy course"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:55
+msgid "Course"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:59
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:72
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:239
+msgid "— select —"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:64
+msgid "Lesson"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:65
+msgid "Pick a course first."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:65
+msgid "This course has no lessons in its curriculum yet."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:65
+msgid "Marked complete when the viewer completes this video."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:77
+msgid "Block playback for non-enrolled viewers"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:138
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:167
+msgid "True / False"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:138
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:166
+msgid "Multiple choice"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:153
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:337
+#: dev_trueplayer/admin/screens/Playlists.jsx:171
+msgid "Drag to reorder"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:170
+msgid "Question prompt…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:173
+msgid "Correct answer"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:175
+msgid "— pick —"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:176
+#: dev_trueplayer/player/components/Quiz.jsx:147
+msgid "True"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:177
+#: dev_trueplayer/player/components/Quiz.jsx:147
+msgid "False"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:182
+msgid "Options (select the correct one)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:192
+msgid "+ Option"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:200
+msgid "+ Add question"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:206
+msgid "one attempt only"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:207
+msgid "retries allowed"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:232
+msgid "Author here"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:233
+msgid "Use a QuizPress quiz"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:237
+msgid "Question types, scoring and feedback all come from QuizPress."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:242
+msgid " — has manual-review questions"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:251
+msgid "Install QuizPress to link a quiz here."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:265
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:244
+msgid "Unlimited"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:274
+msgid "Set on the quiz itself in QuizPress — this checkpoint's own \"Pass %\" field isn't used for a QuizPress quiz. QuizPress's attempt limit above is separate from TruePlayer's own \"Max quiz attempts\" (Watch verification, above): that one still applies too and locks the whole video (requiring a rewatch) independently, once it's reached."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:281
+msgid "<b>Heads up:</b> this quiz includes a manually-reviewed question type (short answer, paragraph, date, or number). QuizPress won't mark an attempt passed or failed until an admin reviews it in <i>QuizPress → Quiz Insights</i> — until then, a viewer gated on this quiz can't complete the video."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:321
+msgid "No QuizPress quiz selected yet"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:348
+msgid "At (seconds)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:350
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:546
+msgid "Pass %"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:352
+msgid "Checkpoint"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:379
+#: dev_trueplayer/admin/screens/Settings.jsx:521
+msgid "Lock the video — re-watch it to earn another try"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:380
+#: dev_trueplayer/admin/screens/Settings.jsx:522
+msgid "Nothing — let them keep retrying"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:455
+#: dev_trueplayer/player/Player.jsx:690
+msgid "Final quiz"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:467
+msgid "Watch verification"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:469
+#: dev_trueplayer/admin/screens/Settings.jsx:951
+msgid "Completion threshold (%)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:469
+#: dev_trueplayer/admin/screens/Settings.jsx:951
+msgid "Coverage required to count as 'watched'."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:473
+#: dev_trueplayer/admin/screens/Settings.jsx:954
+msgid "Max quiz attempts"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:476
+msgid "A separate limit from QuizPress's own attempt limit on a linked quiz below; both apply independently."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:477
+#: dev_trueplayer/admin/screens/Settings.jsx:954
+msgid "Counted and reported, but never enforced."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:477
+#: dev_trueplayer/admin/screens/Settings.jsx:954
+msgid "Before the video locks."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:484
+#: dev_trueplayer/admin/screens/Settings.jsx:959
+msgid "When attempts run out"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:486
+#: dev_trueplayer/admin/screens/Settings.jsx:961
+msgid "Attempts are still counted and reported — they just never lock anything, and watch progress is kept so the video resumes."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:487
+#: dev_trueplayer/admin/screens/Settings.jsx:962
+msgid "Locking clears the viewer’s watch progress, so the re-watch has to be genuine."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:493
+#: dev_trueplayer/admin/screens/Settings.jsx:968
+msgid "Anti-skip (block seeking past unwatched parts)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:494
+#: dev_trueplayer/admin/screens/Settings.jsx:970
+msgid "Require login to watch (reliable per-person tracking)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:495
+msgid "These start from your site-wide policy (Settings → Enforcement). Change one here and this video keeps your value; leave it and it follows the site."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:501
+msgid "Checkpoint questions"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:504
+msgid "Pause playback at a timestamp and require a correct answer to continue. Drag ⠿ to reorder, click a row to expand it."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:505
+msgid "Pause playback at a timestamp and require a correct answer to continue. Click a row to expand it."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:508
+msgid "+ Checkpoint"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:529
+msgid "No checkpoints yet."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:536
+msgid "Final quiz (end gate)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:537
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:29
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:50
+msgid "on"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:539
+msgid "Enable"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:15
+msgid "Hotspot"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:15
+msgid "A pulsing clickable region over the picture."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:16
+msgid "Banner"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:16
+msgid "An image (optionally linked) shown during a window."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:17
+msgid "Any WordPress shortcode, rendered over the video."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:18
+msgid "Email form"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:18
+msgid "Inline email capture (uses your Subscribe integration)."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:22
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:17
+msgid "Top center"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:23
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:18
+msgid "Middle left"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:23
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:18
+msgid "Center"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:23
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:18
+msgid "Middle right"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:24
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:19
+msgid "Bottom center"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:28
+msgid "Viewer is logged in"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:29
+msgid "Is a CRM contact"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:30
+msgid "Has CRM tag"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:31
+msgid "In CRM list"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:32
+msgid "Has submitted email"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:33
+msgid "URL parameter"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:34
+msgid "Has seen layer (id)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:35
+msgid "Completed layer (id)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:67
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:417
+msgid "Display rules"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:72
+msgid "Match all"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:73
+msgid "Match any"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:77
+msgid "Always shown. Add a rule to target specific viewers."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:93
+msgid "is"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:94
+msgid "is not"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:95
+msgid "contains"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:98
+msgid "param key"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:102
+msgid "yes"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:103
+msgid "no"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:106
+msgid "value"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:111
+msgid "Remove rule"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:119
+msgid "+ Add rule"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:145
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:345
+msgid "Subscribe to keep watching"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:147
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:346
+#: dev_trueplayer/player/components/EmailForm.jsx:101
+msgid "Subscribe"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:178
+msgid "Hours"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:178
+msgid "Minutes"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:178
+msgid "Seconds"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:205
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:72
+msgid "Background"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:206
+msgid "Headline colour"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:207
+msgid "Description colour"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:208
+msgid "Button background"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:208
+msgid "player accent"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:209
+msgid "Button text colour"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:214
+msgid "Leave a field empty to keep the player’s own."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:221
+msgid "Button corner radius (px)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:254
+msgid "Style"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:305
+msgid "Mode"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:305
+msgid "Covers the video and pauses it."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:305
+msgid "A panel beside the picture; the video keeps playing."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:307
+msgid "Gate — pause and ask"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:308
+msgid "Inline — alongside the video"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:312
+msgid "When to show"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:314
+msgid "Before playback"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:315
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:173
+msgid "At a timestamp"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:316
+msgid "When the video ends"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:324
+msgid "A gate covers the video; position applies to the inline mode."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:324
+msgid "Where the panel sits over the picture."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:334
+msgid "Show at"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:334
+msgid "How far into the video the gate appears."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:339
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:544
+msgid "Show from"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:339
+msgid "The form stays until the video ends."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:345
+msgid "Headline"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:346
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:64
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:186
+msgid "Button label"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:349
+msgid "Description"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:349
+msgid "Optional line under the headline."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:349
+msgid "Enter your email to continue."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:350
+msgid "Email placeholder"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:350
+#: dev_trueplayer/player/components/EmailForm.jsx:97
+msgid "you@email.com"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:353
+msgid "Thank-you message"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:353
+msgid "Shown in place of the form once someone subscribes."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:354
+#: dev_trueplayer/player/components/EmailForm.jsx:41
+msgid "Thanks — you’re in!"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:358
+msgid "Send contacts to"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:358
+msgid "Where a submitted address goes."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:360
+msgid "— Select a provider —"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:363
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:202
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:222
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:174
+msgid " (Pro)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:363
+msgid " (not installed)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:370
+msgid "Lists"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:370
+msgid "The contact is added to the selected lists."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:398
+msgid "Required — the viewer can’t continue without subscribing"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:399
+msgid "Required — the viewer can’t dismiss the form"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:401
+msgid "Also ask for a name"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:405
+msgid "Ask only once per viewer"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:421
+msgid "Showing a layer only to certain viewers — logged in, a CRM contact, carrying a URL parameter — needs TruePlayer Pro. Without it the layer is shown to everyone."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:477
+msgid "Interactive layers"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:478
+msgid "Timed elements over the video — hotspots, banners, shortcodes and email forms."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:483
+msgid "No layers yet."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:484
+msgid "Add a hotspot, banner, shortcode or email form below."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:495
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:102
+msgid "end"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:518
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:519
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:127
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:128
+msgid "Hide it from the live preview"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:518
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:519
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:127
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:128
+msgid "Show this in the live preview"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:544
+msgid "How far into the video this appears."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:548
+msgid "Where it sits over the picture."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:560
+msgid "Left (%)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:561
+msgid "Top (%)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:562
+msgid "Width (%)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:563
+msgid "Height (%)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:566
+msgid "Tooltip"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:566
+msgid "See the product"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:567
+msgid "Link URL"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:574
+msgid "Image"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:575
+msgid "Upload an image"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:577
+msgid "Link URL (optional)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:584
+msgid "Rendered on the server when the page loads. Best for self-contained markup — a shortcode whose JavaScript starts up on page load (video players, sliders, some forms) will show its markup but not run, because the layer only enters the page when the playhead reaches it."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/LayersTab.jsx:617
+msgid "+ Add layer"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:13
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:186
+msgid "Learn more"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:47
+msgid "Action bar"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:48
+msgid "A persistent, clickable bar over the player — text plus a button."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:50
+msgid "On"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:50
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:339
+#: dev_trueplayer/player/components/Controls.jsx:264
+msgid "Off"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:55
+msgid "Show the action bar"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:56
+msgid "Keep a persistent CTA visible while the video plays."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:62
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:109
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:158
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:184
+msgid "Text"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:62
+msgid "Limited offer — 30% off the full course"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:64
+msgid "Get it now"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:65
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:187
+msgid "Button URL"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:68
+msgid "Bottom"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:69
+msgid "Top"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:72
+msgid "Defaults to the accent color."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:73
+msgid "(accent)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:82
+msgid "Overlays"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:83
+msgid "CTA cards pause for attention; text overlays label the picture during a window."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:88
+msgid "No overlays yet."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:89
+msgid "Add a CTA card to promote an offer, or a text overlay to title a section."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:105
+msgid "End screen"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:109
+msgid "CTA"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:120
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:224
+msgid "Text overlay"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:120
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:220
+msgid "CTA card"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:145
+msgid "Show from (seconds)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:148
+#: dev_trueplayer/admin/screens/editor/TimedContentTab.jsx:53
+msgid "Until (seconds)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:148
+#: dev_trueplayer/admin/screens/editor/TimedContentTab.jsx:53
+msgid "Empty = until the end."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:157
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:183
+msgid "Heading"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:157
+msgid "Chapter 2 — Setup"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:158
+msgid "Optional supporting line"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:160
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:294
+msgid "Background color"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:171
+msgid "Trigger"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:174
+msgid "At the end (end screen)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:178
+msgid "Show at (seconds)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:183
+msgid "Ready for the next step?"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:184
+msgid "Join the full course to keep learning."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:190
+msgid "Pause the video while showing"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:192
+msgid "Let viewers dismiss it (× close)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:213
+msgid "+ Add overlay"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:221
+msgid "Pauses the video to promote an offer."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:225
+msgid "Labels the picture during a time window."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:13
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:117
+msgid "Appearance"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:14
+#: dev_trueplayer/utils/controls.js:56
+msgid "Captions"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:15
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:307
+msgid "Controls"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:16
+msgid "Behaviour"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:17
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:417
+msgid "Playback"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:18
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:438
+#: dev_trueplayer/admin/screens/Settings.jsx:921
+msgid "Custom CSS"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:44
+msgid "Compact"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:44
+msgid "A single bar: cover art, title and controls in one row."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:45
+msgid "Card"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:46
+msgid "Play button and a waveform, nothing else."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:47
+msgid "A taller bar with large cover art and room for the episode title."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:48
+msgid "The transport centred and enlarged for hours of listening."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:144
+msgid "Start from a template"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:145
+msgid "Applies a complete look in one click. Every field below stays editable afterwards."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:178
+msgid "Preset"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:178
+msgid "Apply a saved player preset as the starting point — you can still tweak anything below."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:183
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:400
+#: dev_trueplayer/admin/screens/Settings.jsx:888
+msgid "None"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:198
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:214
+msgid "Skin"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:198
+msgid "Overall player theme."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:198
+msgid "Floating & Ambient need TruePlayer Pro."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:217
+msgid "Podcast & Audiobook need TruePlayer Pro."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:228
+#: dev_trueplayer/admin/screens/Settings.jsx:912
+msgid "Aspect ratio"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:228
+msgid "9:16 for vertical / Shorts-style video."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:234
+#: dev_trueplayer/admin/screens/Settings.jsx:1300
+msgid "Accent color"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:234
+msgid "Scrubber, buttons, highlights."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:237
+#: dev_trueplayer/admin/screens/Settings.jsx:1306
+msgid "Button hover color"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:237
+msgid "Optional; default is a light overlay."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:238
+#: dev_trueplayer/admin/screens/Settings.jsx:1309
+msgid "(none)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:243
+msgid "Play button style"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:245
+msgid "Circle"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:246
+msgid "Soft (rounded)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:247
+msgid "Square"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:253
+msgid "Play button size"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:255
+msgid "Auto (skin default)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:256
+msgid "Small"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:257
+msgid "Medium"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:258
+msgid "Large"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:259
+msgid "Extra large"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:263
+msgid "Control bar style"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:265
+msgid "Gradient"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:266
+msgid "Solid"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:277
+msgid "Show large center play button"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:285
+msgid "Subtitle style"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:286
+msgid "How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:291
+msgid "Text color"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:308
+msgid "Show or hide each control in the bar."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:320
+msgid "Behavior"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:322
+msgid "Autoplay"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:322
+msgid "“With sound” falls back to muted when the browser blocks it."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:340
+msgid "On, muted"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:341
+msgid "On, with sound"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:346
+msgid "Start muted"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:348
+msgid "Loop"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:353
+msgid "Reset to start when finished"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:353
+msgid "Loop already restarts the video, and keeps it playing."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:358
+msgid "Save & resume playback position"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:359
+msgid "Auto-hide controls while playing"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:363
+msgid "Float player when scrolling away"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:363
+msgid "Test on a real page — the preview is scaled, so it can’t float."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:369
+msgid "Prevent skipping ahead (no jumping to unwatched parts)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:369
+msgid "Test on a real page — the preview stays scrubbable on purpose."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:374
+msgid "Disable the timeline entirely (no click or drag, forward or back)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:380
+msgid "Muted preview on hover (self-hosted video)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:380
+msgid "Test on a real page — it needs the click-to-load poster."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:387
+msgid "Float position"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:396
+msgid "Preload"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:396
+msgid "How much to load before play."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:398
+msgid "Metadata only"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:399
+msgid "Auto (full)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:403
+msgid "Load strategy"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:403
+msgid "When the player boots — keeps below-the-fold pages fast."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:405
+msgid "On click (poster until played)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:406
+msgid "When scrolled into view"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:407
+msgid "Immediately on page load"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:419
+msgid "Playback speeds"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:419
+msgid "Comma-separated, e.g. 0.5, 1, 1.5, 2"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:428
+msgid "Skip interval (seconds)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:428
+msgid "Rewind / fast-forward + arrow keys."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:441
+msgid "Printed with this player on the frontend. Scope rules with <mount>.trueplayer-mount</mount> (all players) or <stage>.tp-stage</stage>."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PreviewPanel.jsx:97
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:168
+msgid "Live preview"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PreviewPanel.jsx:102
+msgid "Reload"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/PreviewPanel.jsx:109
+msgid "Add a video under <strong>Source</strong> to preview it."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:6
+msgid "Viewer email"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:7
+msgid "Viewer name"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:8
+msgid "IP address"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:28
+msgid "Private video / expiring links"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:32
+msgid "The real media URL never appears in the page. Self-hosted files stream through a signed link that expires; Bunny and Gumlet videos get their provider’s own token authentication (set the signing key under Settings → Sources & CDN)."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:39
+msgid "Serve this video through signed, expiring links"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:42
+msgid "Available for self-hosted, external-URL, Bunny and Gumlet sources (YouTube/Vimeo embeds are public by nature)."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:49
+msgid "Dynamic watermark"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:53
+msgid "Burn the viewer's identity over the picture to deter screen recording. Resolved on the server for the logged-in viewer."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:56
+msgid "Show a dynamic watermark"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:59
+msgid "Watermark contents"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:71
+msgid "Slowly drift around the picture"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:65
+msgid "Could not create a thumbnail from this video."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:153
+msgid "Source Configuration"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:161
+msgid "Names this media in your library, and labels it in the player."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:170
+msgid "Source type"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:170
+msgid "Bunny.net & HLS streaming require TruePlayer Pro."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:182
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:215
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:223
+msgid "Audio file"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:182
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:215
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:223
+msgid "Video file"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:185
+msgid "Pick an uploaded audio file from the media library."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:186
+msgid "Pick an uploaded video from the media library. A thumbnail is grabbed from it automatically."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:199
+#: dev_trueplayer/admin/screens/Settings.jsx:1107
+msgid "Pull-zone hostname"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:199
+msgid "Your Bunny Stream CDN hostname, e.g. vz-abc123.b-cdn.net"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:202
+msgid "Video ID"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:202
+msgid "The Bunny library video GUID. We build the HLS URL and play it with your custom controls."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:203
+msgid "e.g. 8f3b…-video-guid"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:209
+msgid "Mux playback ID"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:209
+msgid "From your Mux asset. Or paste a full signed .m3u8 URL below."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:210
+msgid "e.g. a4nOgmxGWg6gULfcBbAa00…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:216
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:217
+msgid "Upload straight to your storage zone, reuse a file already in it, or paste a URL."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:224
+msgid "Upload straight to Gumlet, reuse a file already in your library, or paste an ID."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:225
+msgid "Upload straight to Gumlet, reuse a video already in your library, or paste an ID."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:231
+msgid "Gumlet video"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:231
+msgid "The video ID from your Gumlet dashboard. A share or playback URL works too — the ID is read out of it."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:238
+msgid "Video URL or ID"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:238
+msgid "Signed playlist URL (optional)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:238
+#: dev_trueplayer/block/data.js:72
+msgid "Media URL"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:245
+msgid "Cover art"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:245
+msgid "Poster image"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:260
+msgid "Audio-only (podcast) player"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/SourceTab.jsx:261
+msgid "Hide video screen and switch to audio player mode."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/TimedContentTab.jsx:28
+msgid "Show a block of content under the player during a time range — a form when the demo ends, a coupon at the pitch, notes that track the lesson. Any shortcode works."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/TimedContentTab.jsx:30
+msgid "Enable timed content region"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/TimedContentTab.jsx:50
+msgid "From (seconds)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/TimedContentTab.jsx:57
+msgid "HTML or a shortcode, e.g. [contact-form-7 id=\"12\"]."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/TimedContentTab.jsx:58
+msgid "<h3>Grab the worksheet</h3> or [your_shortcode]"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/TimedContentTab.jsx:66
+msgid "+ Add segment"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/WebhooksTab.jsx:9
+msgid "Per-video webhooks"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/editor/WebhooksTab.jsx:11
+msgid "Fire signed JSON payloads to external URLs when this video's events happen — for Zapier, automation, or your own endpoint. Global webhooks (all videos) live under Settings."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:78
+msgid "Failed to load the content type."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:100
+msgid "Save failed."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:112
+msgid "Loading builder…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:122
+msgid "← Back"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:141
+msgid "Shown in your Media library (not to viewers)."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:171
+msgid "Refresh"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:178
+msgid "H5P preview"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:185
+msgid "Start editing — your interactive content will preview here."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/H5pEditor.jsx:189
+msgid "Changes save automatically and refresh the preview."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:37
+msgid "All"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:159
+msgid "Untitled audio"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:173
+msgid "Could not create that."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:189
+msgid "Delete failed."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:268
+msgid "A video or audio player"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:269
+msgid "Group players into one embed"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:270
+msgid "A quiz, flashcards, and more"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:278
+msgid "Watch-verified players, playlists, and interactive content."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:341
+msgid "Deleting…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:364
+msgid "Nothing here yet"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:364
+msgid "Create a player, a playlist, or an interactive item — they all embed with a shortcode."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:365
+msgid "No media yet"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:365
+msgid "Create your first watch-verified player."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:366
+msgid "No video yet"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:366
+msgid "Create your first watch-verified video player."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:370
+msgid "No audio yet"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:370
+msgid "Create a podcast episode, an album track or an audiobook chapter."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:371
+msgid "No playlists yet"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:371
+msgid "Group players into a grid or sidebar playlist."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:372
+msgid "No interactive content yet"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:372
+msgid "Build a quiz, flashcard deck, or drag-the-words exercise and embed it anywhere."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:410
+#: dev_trueplayer/admin/screens/Playlists.jsx:149
+msgid "Copy shortcode"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Library.jsx:418
+#: dev_trueplayer/admin/screens/Library.jsx:419
+#: dev_trueplayer/admin/screens/Presets.jsx:291
+#: dev_trueplayer/block/edit.jsx:147
+#: dev_trueplayer/block/edit.jsx:162
+msgid "Edit"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:138
+msgid "Playlist settings"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:139
+msgid "Layout"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:141
+msgid "Sidebar (player + list)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:142
+msgid "Grid (cards)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:145
+msgid "Autoplay the next video"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:146
+msgid "Show video titles"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:156
+msgid "Media in this playlist"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:176
+msgid "Move up"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:177
+msgid "Move down"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:183
+msgid "No media yet — add one below."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:187
+msgid "+ Add media"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:190
+msgid "Search media to add…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:203
+msgid "All media is already in this playlist."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:203
+msgid "No media matches your search."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Playlists.jsx:207
+msgid "Done"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:108
+msgid "These styles & behaviours apply to any audio that uses this preset. Individual items can still override anything."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:109
+msgid "These styles & behaviours apply to any video that uses this preset. Individual videos can still override anything."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:129
+msgid "Preview with"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:138
+msgid "Sample track"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:182
+msgid "Delete this preset? Videos using it fall back to defaults."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:197
+msgid "Player presets"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:198
+msgid "Reusable styles & behaviour — brand once, use everywhere."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:200
+msgid "Add preset"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:205
+#: dev_trueplayer/admin/screens/Presets.jsx:210
+msgid "Create preset"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:217
+msgid "Player type"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:217
+msgid "Video and audio presets configure different players."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:235
+msgid "Preset name"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:238
+msgid "Start from"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:238
+msgid "A predefined look to begin with — you can change everything after."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:240
+msgid "Blank (defaults)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:243
+msgid " — needs Pro"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:273
+msgid "No audio presets yet"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:273
+msgid "No video presets yet"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:275
+msgid "Create one to reuse a consistent audio player style across episodes."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:276
+msgid "Create one to reuse a consistent player style across videos."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:288
+msgid "Audio preset"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Presets.jsx:288
+msgid "Video preset"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:417
+msgid "Default video look"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:418
+msgid "Applied to every video that has not chosen a look of its own. Any single item still overrides it."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:426
+msgid "Default audio look"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:427
+msgid "Applied to every audio item that has not chosen a look of its own. Set separately from video — a skin and an aspect ratio are treatments of a picture, and an audio bar has none."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:438
+msgid "General"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:439
+msgid "Branding"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:440
+msgid "Sources & CDN"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:444
+msgid "Trust & data"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:445
+msgid "Enforcement"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:446
+#: dev_trueplayer/admin/screens/Settings.jsx:1031
+msgid "Compliance & privacy"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:451
+msgid "Connect"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:452
+msgid "Integrations"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:453
+#: dev_trueplayer/admin/screens/Settings.jsx:1403
+msgid "Global webhooks"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:454
+msgid "Webhook logs"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:458
+msgid "Account"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:459
+#: dev_trueplayer/admin/screens/settings/AddonsPanel.jsx:48
+msgid "Addons"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:460
+#: dev_trueplayer/admin/screens/Settings.jsx:1437
+msgid "License"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:534
+msgid "Default — Falkenstein, DE"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:535
+msgid "New York, US"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:536
+msgid "Los Angeles, US"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:537
+msgid "London, UK"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:538
+msgid "Stockholm, SE"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:539
+msgid "Singapore"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:540
+msgid "Sydney, AU"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:541
+msgid "São Paulo, BR"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:542
+msgid "Johannesburg, ZA"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:552
+msgid "When"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:552
+msgid "Event"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:552
+msgid "Endpoint"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:552
+msgid "Result"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:560
+msgid "error"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:563
+msgid "No deliveries logged yet."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:708
+msgid "Site-wide defaults. Any single video can override these in its own editor."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:808
+msgid "A default preset is in control, so these starting points are not applied."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:814
+msgid "Use a starting point instead"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:829
+msgid "With TruePlayer Pro"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:878
+msgid "…or use a saved preset"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:880
+msgid "A preset overrides the starting points above for every item that has not chosen one of its own."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:881
+msgid "No presets of this type yet — create one under Presets to reuse a look across items."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:902
+msgid "New items are not given a copy of this — they read it at playback. So changing it later still updates every item that has not set a look of its own, and never disturbs one that has."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:909
+msgid "Default video aspect ratio"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:910
+msgid "The frame shape new videos use unless overridden per video. Audio has no frame, so this never reaches an audio item."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:924
+msgid "Injected on every page a TruePlayer player renders. Target <c>.tp-*</c> classes."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:938
+msgid "Enforcement defaults"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:941
+msgid "The watch-verification & gating policy applied to new videos. Any video can override these in its own <b>Questions & gating</b> tab."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:969
+msgid "Must-watch (strict): force 100% coverage + anti-skip"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:971
+msgid "Track logged-out guests (cookie-based, best-effort)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:977
+msgid "Enforcement policy"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:977
+msgid "Site-wide watch-verification defaults"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:977
+msgid "Anti-skip & must-watch (strict) mode"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:977
+msgid "Quiz lock-on-fail & login gating"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:985
+msgid "Certificate branding"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:986
+msgid "Shown on completion certificates & the public verification page."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:992
+msgid "Issuer name"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:992
+msgid "Defaults to your site name."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:993
+msgid "Your organization"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:995
+msgid "Logo"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:998
+msgid "Signature line"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:998
+msgid "e.g. a name / title printed under the certificate."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:999
+msgid "Jane Doe, Head of Training"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1001
+msgid "Footer note"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1002
+msgid "This certificate can be verified online."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1010
+msgid "Data retention"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1011
+msgid "Automatically purge watch & quiz records older than a set age — for privacy & GDPR compliance."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1017
+msgid "Auto-purge old records"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1020
+msgid "Keep records for (days)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1020
+msgid "Progress + quiz attempts past this age are deleted daily."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1031
+msgid "White-labelled completion certificates"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1031
+msgid "Public verification page"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1031
+msgid "Data-retention auto-purge (GDPR)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1038
+msgid "Analytics collection"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1039
+msgid "Retention, replay heatmap & daily rollups. Turning this off keeps watch-verification working but stops aggregate data collection."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1044
+msgid "Collect video analytics"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1049
+msgid "Data retention (auto-purge) is under <b>Compliance & privacy</b>."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1056
+msgid "Video analytics"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1056
+msgid "Audience retention & replay heatmap"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1056
+msgid "Completion funnel & per-viewer drill-down"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1056
+msgid "Toggle collection site-wide"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1063
+#: dev_trueplayer/block/data.js:35
+#: dev_trueplayer/utils/source-types.js:46
+msgid "YouTube"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1064
+msgid "Privacy-enhanced mode plays via youtube-nocookie.com — no cookies until a visitor presses play."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1066
+msgid "Enable privacy-enhanced mode (no-cookie)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1080
+#: dev_trueplayer/block/data.js:41
+msgid "Bunny.net Storage"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1081
+msgid "Video files you upload to a storage zone and serve through a pull zone. Connect it and videos can be uploaded straight from the editor — the password stays on this server, uploads are proxied, never sent from the browser."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1082
+#: dev_trueplayer/admin/screens/Settings.jsx:1153
+msgid "Connected"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1082
+#: dev_trueplayer/admin/screens/Settings.jsx:1136
+#: dev_trueplayer/admin/screens/Settings.jsx:1153
+msgid "Not set up"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1092
+msgid "Storage zone name"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1092
+msgid "As it appears in your Bunny dashboard."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1095
+msgid "Region"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1095
+msgid "The zone's main storage region."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1101
+msgid "Storage password"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1101
+msgid "Bunny → Storage → your zone → FTP & API Access → Password. Not the same as a Token Authentication Key. Grants full access to the zone, so it is never exposed to the browser."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1107
+msgid "Bunny → Storage → your zone → Connected pull zones. Uploads need this to produce a playable URL."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1116
+msgid "That is a <b>Stream</b> pull zone (Bunny names them <c>vz-…</c>). It serves a video library, not your storage zone — files uploaded here will not play from it. Use the hostname under <s>Storage → your zone → Connected pull zones</s> instead."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1122
+msgid "Upload folder"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1122
+msgid "Folder inside the zone that uploads land in. Leave empty to use the zone root."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1125
+msgid "Token Authentication Key (optional)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1125
+msgid "Bunny → CDN → this storage pull zone → Security → Token Authentication Key. Only needed to sign playback of videos you mark private."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1134
+#: dev_trueplayer/block/data.js:40
+#: dev_trueplayer/utils/source-types.js:67
+msgid "Bunny.net Stream"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1135
+msgid "Videos hosted in a Bunny video library. Each video's own pull zone and video ID are set in its Source tab — only the signing key is site-wide."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1136
+msgid "Key saved"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1140
+msgid "Token Authentication Key"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1140
+msgid "Bunny → CDN → your Stream pull zone → Security → Token Authentication Key. Only needed to sign playback of videos you mark private."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1152
+msgid "Videos hosted and transcoded by Gumlet. Connect it and files can be uploaded straight from the editor — the browser sends them directly to Gumlet using a one-time link this server signs, so your API key never leaves the site."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1162
+msgid "API key"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1162
+msgid "Gumlet → Settings → API keys. Grants full access to your workspace, so it is never exposed to the browser."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1174
+msgid "Video workspace"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1174
+msgid "Where uploaded videos land. Needed to upload; using a video you already have works without it."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1176
+msgid "Looking up your workspaces…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1176
+msgid "Add your API key first"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1179
+msgid "— Select a workspace —"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1186
+msgid "Output format"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1186
+msgid "ABR streams adaptively and is the right default. MP4 produces a single progressive file."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1188
+msgid "ABR (adaptive streaming)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1189
+msgid "MP4 (single file)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1198
+msgid "Upload folder ID (optional)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1198
+msgid "Must be a folder that already exists in Gumlet, given by its ID rather than its name. Leave empty to upload to the workspace root."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1199
+msgid "Leave empty for the workspace root"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1201
+msgid "Signing secret (optional)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1201
+msgid "Gumlet → your workspace → Video protection → Signed URLs. Only needed to sign playback of videos you mark private. A different value from the API key above."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1210
+msgid "Signed link expiry"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1211
+msgid "How long a signed / private playback URL stays valid before it must be re-issued."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1213
+msgid "Expiry (hours)"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1213
+msgid "Applies to private self-hosted files and to the Bunny and Gumlet sources above."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1220
+msgid "Private & premium sources"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1220
+msgid "Bunny.net & Gumlet hosting"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1220
+msgid "Upload to your CDN from the editor"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1220
+msgid "Signed, expiring playback URLs"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1220
+msgid "Mux & HLS streaming"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1232
+msgid "Where captured addresses are sent when a video's email form has no CRM provider selected."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1234
+msgid "Send notifications to"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1234
+msgid "Leave empty to use this site's admin email address."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1248
+msgid "Mailchimp"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1249
+msgid "Send in-player opt-ins to Mailchimp audiences. Paste your API key (Account → Extras → API keys)."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1251
+msgid "Mailchimp API key"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1251
+msgid "Looks like abc123…-us21. Stored on your site only."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1259
+msgid "Once saved, Mailchimp audiences appear in each video’s Subscribe tab."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1264
+msgid "Google Analytics"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1265
+msgid "Send player events (video_start, video_complete) to GA4. Uses your existing site tag, or loads one from a measurement ID."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1270
+msgid "Send player events to Google Analytics"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1274
+msgid "Measurement ID"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1274
+msgid "Optional — leave blank to use the site's existing GA tag."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1283
+msgid "CRM & email integrations"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1283
+msgid "Mailchimp audiences"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1283
+msgid "Google Analytics events"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1283
+msgid "GemCRM / FluentCRM opt-in capture"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1297
+msgid "Brand colors"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1298
+msgid "The default accent for the scrubber, buttons & highlights. Any video or preset can override it."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1306
+msgid "Optional."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1316
+msgid "Player logo"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1317
+msgid "A watermark logo shown on every player by default."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1321
+msgid "Logo image"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1349
+msgid "White-label"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1352
+msgid "Replace the TruePlayer name across the admin and hide the player attribution."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1359
+msgid "Enable white-label"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1364
+msgid "Brand name"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1364
+msgid "Shown in the admin menu & titles."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1368
+msgid "Acme Video"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1374
+msgid "Brand logo"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1374
+msgid "Square works best (used at 20px in the WordPress menu). Leave empty to keep the default mark."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1379
+msgid "Upload a mark"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1384
+msgid "Takes effect on the next page load after saving."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1387
+msgid "Upgrade to TruePlayer Pro to rebrand the admin and remove player attribution."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1397
+msgid "Webhook delivery logs"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1397
+msgid "Every delivery attempt recorded"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1397
+msgid "See failures & status codes"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1404
+msgid "Fire for every video, in addition to per-video webhooks."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1413
+msgid "Automation & webhooks"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1413
+msgid "Signed webhooks on every player event"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1413
+msgid "Site-wide + per-video endpoints"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1438
+msgid "Free"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1439
+msgid "Pro plugin active"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1440
+msgid "License activated"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1441
+msgid "License not activated"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1446
+msgid "You’re on the free player. Install <b>TruePlayer Pro</b> and activate a license to unlock watch-verification, quiz-gating, analytics, automation, premium sources and playlists."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1452
+msgid "TruePlayer Pro is active and your license key is valid."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1456
+msgid "TruePlayer Pro is running and every feature is available. Activating a license adds automatic updates and priority support — it doesn’t unlock anything."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1461
+msgid "TruePlayer Pro is active. This build has no license server configured, so there’s no key to activate."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1467
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:205
+msgid "Manage license"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:1467
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:196
+msgid "Activate license"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/AddonsPanel.jsx:38
+msgid "No addons are registered on this site."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/AddonsPanel.jsx:50
+msgid "Optional features, off until you need them. Enabling one sets up whatever it needs — including its database tables — the moment you switch it on."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/AddonsPanel.jsx:66
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:256
+msgid "Enabled"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/AddonsPanel.jsx:67
+msgid "Disabled"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/AddonsPanel.jsx:68
+msgid "Not available in this build"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/AddonsPanel.jsx:76
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:298
+msgid "Working…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:62
+msgid "License status refreshed."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:66
+msgid "Could not reach the license server."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:86
+msgid "Enter your license key first."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:97
+msgid "License activated."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:104
+msgid "Could not activate that license key."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:122
+msgid "License deactivated."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:124
+msgid "Could not deactivate this license."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:148
+msgid "Automatic updates and priority support are switched on for this site."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:149
+msgid "Activate your license to get automatic updates and priority support straight from your WordPress dashboard."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:179
+msgid "Enter your license key to activate"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:187
+msgid "License key"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:191
+msgid "Deactivating…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:191
+msgid "Deactivate license"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:196
+msgid "Activating…"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:211
+msgid "Don’t have a license key?"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:212
+msgid "Purchase one here"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:224
+msgid "Last checked"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:226
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:240
+msgid "Never"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:231
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:232
+msgid "Check license status now"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:239
+msgid "Expires"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:242
+msgid "Activations remaining"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:251
+msgid "Automatic updates"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:254
+msgid "New versions are delivered from your account while this license is active. Unattended installs are a separate WordPress setting, under Plugins."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:292
+msgid "Activation limit reached"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:298
+msgid "Release & activate here"
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:310
+msgid "This license has reached its activation limit. Choose which site to deactivate so this site can take a seat."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:315
+msgid "The store didn’t report any other active sites. Deactivate one from your account dashboard, then try again."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:338
+msgid "(unknown site)"
+msgstr ""
+
+#: dev_trueplayer/admin/utils/bunnyUpload.js:56
+#: dev_trueplayer/admin/utils/gumletUpload.js:79
+#: dev_trueplayer/admin/utils/gumletUpload.js:130
+#: dev_trueplayer/admin/utils/gumletUpload.js:143
+msgid "Upload cancelled."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/default-look.js:31
+msgid "your saved default preset"
+msgstr ""
+
+#: dev_trueplayer/admin/utils/frameCapture.js:87
+msgid "That video is served from another domain that doesn’t allow reading its frames. Upload the file to your media library, or choose a poster image yourself."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/frameCapture.js:90
+msgid "Could not read a frame from this video."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/frameCapture.js:123
+msgid "That video is on another domain and could not be read. Its host has to allow cross-origin requests, or the file can be uploaded to this site’s media library instead."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/frameCapture.js:124
+msgid "This video file could not be loaded."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/frameCapture.js:126
+msgid "The video took too long to load. A very large file over a slow connection can outrun this — try again, or set a poster image yourself."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/frameCapture.js:159
+msgid "Could not seek this video."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/frameCapture.js:162
+msgid "Could not read a frame from this video — the server may not support range requests for media files."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/frameCapture.js:177
+msgid "This file has no picture to capture — it may be audio only."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/frameCapture.js:214
+msgid "Could not encode the captured frame."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/gumletUpload.js:74
+msgid "Gumlet rejected the upload."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/gumletUpload.js:78
+msgid "Could not reach Gumlet. Check your connection and that uploads are allowed from this site."
+msgstr ""
+
+#: dev_trueplayer/admin/utils/media.js:15
+msgid "Select media"
+msgstr ""
+
+#: dev_trueplayer/block/data.js:34
+#: dev_trueplayer/utils/source-types.js:41
+msgid "Self-hosted"
+msgstr ""
+
+#: dev_trueplayer/block/data.js:36
+#: dev_trueplayer/utils/source-types.js:53
+msgid "Vimeo"
+msgstr ""
+
+#: dev_trueplayer/block/data.js:38
+msgid "HLS stream"
+msgstr ""
+
+#: dev_trueplayer/block/data.js:39
+#: dev_trueplayer/utils/source-types.js:95
+msgid "Mux"
+msgstr ""
+
+#: dev_trueplayer/block/data.js:62
+msgid "YouTube URL or video ID"
+msgstr ""
+
+#: dev_trueplayer/block/data.js:67
+msgid "Vimeo URL or video ID"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:56
+msgid "The video library could not be loaded."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:84
+msgid "That video could not be loaded."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:118
+msgid "— Select a video —"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:133
+msgid "Create new"
+msgstr ""
+
+#. translators: %s: product name, e.g. TruePlayer.
+#: dev_trueplayer/block/edit.jsx:172
+#, js-format
+msgid "Open in %s"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:177
+msgid "gating, chapters, appearance and more."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:226
+msgid "Show a video from your library, or add a new one."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:238
+msgid "That video is no longer in your library. Choose another one."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:251
+msgid "There are no videos yet. An administrator can add one."
+msgstr ""
+
+#: dev_trueplayer/block/index.js:13
+msgid "Watch-verified, quiz-gated video."
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:91
+msgid "That video could not be saved."
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:92
+msgid "That video could not be created."
+msgstr ""
+
+#. translators: %s: product name, e.g. TruePlayer.
+#: dev_trueplayer/block/VideoModal.jsx:109
+#, js-format
+msgid "Edit %s media"
+msgstr ""
+
+#. translators: %s: product name, e.g. TruePlayer.
+#: dev_trueplayer/block/VideoModal.jsx:114
+#, js-format
+msgid "Add %s media"
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:138
+msgid "e.g. Lesson 1"
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:156
+msgid "You do not have permission to upload files."
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:175
+msgid "Replace file"
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:176
+msgid "Choose a file"
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:211
+msgid "Bunny.net, Mux and HLS sources — and gating, chapters and appearance — are set up in the full editor."
+msgstr ""
+
+#. translators: %s: product name, e.g. TruePlayer.
+#: dev_trueplayer/block/VideoModal.jsx:218
+#, js-format
+msgid "Open %s"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:245
+msgid "Speed"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:248
+msgid "Normal"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:253
+msgid "Quality"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:263
+#: dev_trueplayer/player/components/Controls.jsx:398
+msgid "Subtitles"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:325
+msgid "Previous track"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:330
+msgid "Pause"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:330
+#: dev_trueplayer/player/components/Overlays.jsx:32
+msgid "Play"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:337
+#: dev_trueplayer/utils/controls.js:45
+msgid "Rewind"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:342
+msgid "Fast forward"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:347
+msgid "Next track"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:352
+msgid "Unmute"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:352
+#: dev_trueplayer/utils/controls.js:50
+msgid "Mute"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:357
+msgid "Volume"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:374
+msgid "Playback speed"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:381
+msgid "Download"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:386
+#: dev_trueplayer/utils/controls.js:61
+msgid "Chapters & transcript"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:409
+msgid "Picture in picture"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:414
+#: dev_trueplayer/utils/controls.js:64
+msgid "Fullscreen"
+msgstr ""
+
+#: dev_trueplayer/player/components/EmailForm.jsx:53
+msgid "Please enter a valid email address."
+msgstr ""
+
+#: dev_trueplayer/player/components/EmailForm.jsx:68
+msgid "Something went wrong."
+msgstr ""
+
+#: dev_trueplayer/player/components/EmailForm.jsx:85
+msgid "Your name"
+msgstr ""
+
+#: dev_trueplayer/player/components/EmailForm.jsx:98
+msgid "Email"
+msgstr ""
+
+#: dev_trueplayer/player/components/EmailForm.jsx:101
+msgid "Subscribing…"
+msgstr ""
+
+#: dev_trueplayer/player/components/EmailForm.jsx:112
+msgid "No thanks"
+msgstr ""
+
+#: dev_trueplayer/player/components/InfoPanel.jsx:87
+msgid "Chapters and transcript"
+msgstr ""
+
+#: dev_trueplayer/player/components/InfoPanel.jsx:97
+msgid "Transcript"
+msgstr ""
+
+#: dev_trueplayer/player/components/InfoPanel.jsx:128
+msgid "No transcript available for this video."
+msgstr ""
+
+#: dev_trueplayer/player/components/Layers.jsx:88
+msgid "Runs on the page, not in this preview."
+msgstr ""
+
+#: dev_trueplayer/player/components/Overlay.jsx:21
+msgid "↺ Replay"
+msgstr ""
+
+#: dev_trueplayer/player/components/Overlays.jsx:14
+msgid "Video locked"
+msgstr ""
+
+#: dev_trueplayer/player/components/Overlays.jsx:17
+msgid "You used all your attempts. Re-watch the full video to earn another try."
+msgstr ""
+
+#: dev_trueplayer/player/components/Overlays.jsx:18
+msgid "This video is locked."
+msgstr ""
+
+#: dev_trueplayer/player/components/Overlays.jsx:22
+msgid "Re-watch to unlock"
+msgstr ""
+
+#: dev_trueplayer/player/components/Overlays.jsx:49
+msgid "Loading"
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:11
+msgid "Log in to have this attempt count."
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:12
+msgid "Finish the quiz above first."
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:13
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:216
+msgid "This quiz isn't available right now."
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:14
+msgid "This quiz isn't set up correctly — contact the site owner."
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:15
+msgid "This feature requires TruePlayer Pro."
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:92
+msgid "Checking your result…"
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:101
+msgid "Your answers are awaiting manual review. You'll be able to continue once they're graded."
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:117
+msgid "Try again"
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:125
+msgid "Save your changes to preview grading."
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:168
+msgid "Locked — you must re-watch the video to try again."
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:183
+msgid "Checking…"
+msgstr ""
+
+#: dev_trueplayer/player/components/Quiz.jsx:183
+msgid "Submit"
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:42
+msgid "Request failed"
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:58
+msgid "This question type isn't available right now."
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:192
+msgid "This question requires an answer."
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:210
+msgid "Log in to take this quiz."
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:235
+msgid "Starting…"
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:235
+msgid "Retake quiz"
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:235
+msgid "Start quiz"
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:238
+msgid "No attempts remaining."
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:261
+msgid "Previous"
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:264
+msgid "Finish"
+msgstr ""
+
+#: dev_trueplayer/player/components/QuizpressQuiz.jsx:264
+msgid "Next"
+msgstr ""
+
+#: dev_trueplayer/player/Player.jsx:203
+msgid "This video source requires TruePlayer Pro."
+msgstr ""
+
+#: dev_trueplayer/player/Player.jsx:224
+msgid "Please log in to watch this video."
+msgstr ""
+
+#: dev_trueplayer/player/Player.jsx:225
+msgid "Enroll in this course to watch."
+msgstr ""
+
+#: dev_trueplayer/player/Player.jsx:226
+msgid "Purchase this course to watch."
+msgstr ""
+
+#: dev_trueplayer/player/Player.jsx:228
+msgid "This video is not available."
+msgstr ""
+
+#: dev_trueplayer/player/Player.jsx:252
+msgid "Unable to load the player."
+msgstr ""
+
+#: dev_trueplayer/player/Player.jsx:420
+#: dev_trueplayer/player/providers/html5.js:163
+msgid "Playback error."
+msgstr ""
+
+#: dev_trueplayer/player/Player.jsx:503
+msgid "Checkpoint question"
+msgstr ""
+
+#: dev_trueplayer/player/Player.jsx:1275
+msgid "Playing in a floating window"
+msgstr ""
+
+#: dev_trueplayer/player/Player.jsx:1276
+msgid "Bring back"
+msgstr ""
+
+#: dev_trueplayer/player/providers/html5.js:55
+msgid "This video has no playable source yet. If it was just uploaded, it may still be encoding."
+msgstr ""
+
+#: dev_trueplayer/player/providers/html5.js:85
+msgid "Auto"
+msgstr ""
+
+#: dev_trueplayer/player/providers/html5.js:110
+msgid "This browser cannot play streaming (HLS) video."
+msgstr ""
+
+#: dev_trueplayer/player/providers/html5.js:154
+msgid "Playback was interrupted."
+msgstr ""
+
+#: dev_trueplayer/player/providers/html5.js:155
+msgid "The video could not be downloaded — check the connection or the file’s URL."
+msgstr ""
+
+#: dev_trueplayer/player/providers/html5.js:156
+msgid "This video could not be decoded. Its format may not be supported by this browser."
+msgstr ""
+
+#: dev_trueplayer/player/providers/html5.js:157
+msgid "This video’s format or URL is not supported by this browser."
+msgstr ""
+
+#: dev_trueplayer/player/providers/youtube.js:58
+msgid "That YouTube link doesn’t contain a valid video ID."
+msgstr ""
+
+#: dev_trueplayer/player/providers/youtube.js:59
+msgid "YouTube couldn’t play this video in the browser."
+msgstr ""
+
+#: dev_trueplayer/player/providers/youtube.js:60
+msgid "That YouTube video was removed, or is private."
+msgstr ""
+
+#: dev_trueplayer/player/providers/youtube.js:61
+#: dev_trueplayer/player/providers/youtube.js:62
+msgid "The owner of that YouTube video doesn’t allow it to be embedded."
+msgstr ""
+
+#: dev_trueplayer/player/providers/youtube.js:118
+msgid "This YouTube video could not be played."
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:42
+msgid "Play / pause"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:43
+msgid "Previous track (playlists)"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:44
+msgid "Next track (playlists)"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:46
+msgid "Fast-forward"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:47
+msgid "Progress bar"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:48
+msgid "Current time"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:49
+msgid "Duration"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:51
+msgid "Volume slider"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:55
+msgid "Playback speed button"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:62
+msgid "Settings (gear, incl. playback speed)"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:63
+msgid "Picture-in-picture"
+msgstr ""
+
+#: dev_trueplayer/utils/controls.js:65
+msgid "Download button"
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:39
+msgid "Self-hosted (media library)"
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:40
+msgid "A file already in this site’s media library."
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:47
+msgid "Paste a YouTube link."
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:54
+msgid "Paste a Vimeo link."
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:60
+msgid "External URL (mp4/webm)"
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:61
+msgid "A media file hosted anywhere."
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:68
+msgid "A video in a Bunny.net video library."
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:74
+msgid "Bunny.net Storage (file)"
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:75
+msgid "Upload straight to your Bunny.net storage zone."
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:81
+msgid "Gumlet Stream"
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:82
+msgid "A video that already exists in your Gumlet workspace."
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:88
+msgid "Gumlet (upload a file)"
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:89
+msgid "Upload a file and let Gumlet transcode it for streaming."
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:90
+msgid "Gumlet Upload"
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:96
+msgid "A Mux playback ID."
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:102
+msgid "HLS stream (.m3u8)"
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:103
+msgid "Any adaptive HLS manifest."
+msgstr ""
+
+#: dev_trueplayer/utils/source-types.js:143
+msgid "no source"
 msgstr ""

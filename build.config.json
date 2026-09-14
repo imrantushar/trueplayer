@@ -13,7 +13,9 @@
   "js": { "install": "auto", "installCommand": "npm ci --legacy-peer-deps", "buildScript": "build" },
 
   "pot": {
-    "exclude": ["node_modules", "assets/build", "dev_trueplayer", "openspec", "tests", "test-results", ".git", "languages"]
+    "//": "dev_trueplayer is scanned, not excluded: it is where the admin app's strings live, and assets/build is the compiled copy of the same ones. ignoreDomain is required because the app calls __('text') through a wrapper that adds the domain itself.",
+    "ignoreDomain": true,
+    "exclude": ["node_modules", "assets/build", "openspec", "tests", "test-results", ".git", "languages"]
   },
 
   "autoDownloadTools": true,
