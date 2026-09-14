@@ -32,9 +32,11 @@ export function defaultLook( type = 'video' ) {
 	}
 
 	// The fallbacks match Settings.jsx's own: an install that has never opened
-	// that card still renders something, and it is these.
+	// that card still renders something, and it is these. Audio is Minimal, not
+	// Podcast — Podcast is Pro, and this sentence must never promise a free
+	// install a look it cannot have.
 	const key = ( isAudio ? general.defaultAudioTemplate : general.defaultTemplate )
-		|| ( isAudio ? 'podcast' : 'default' );
+		|| ( isAudio ? 'bare' : 'default' );
 	const template = templatesFor( type ).find( ( t ) => t.key === key );
 	return { preset: false, key, label: template ? template.label : key };
 }

@@ -28,24 +28,14 @@ export const PRESET_TEMPLATES = [
  */
 export const AUDIO_PRESET_TEMPLATES = [
 	{
-		key: 'podcast',
-		label: __( 'Podcast' ),
-		description: __( 'Compact bar with cover art, skip buttons and a speed control.' ),
-		appearance: { audioLayout: 'compact', controlBarStyle: 'solid', roundness: 10 },
-		controls: { speed: true, rewind: true, forward: true, chapters: true },
-	},
-	{
-		key: 'album',
-		label: __( 'Album' ),
-		description: __( 'Large square cover art above the title and controls.' ),
-		appearance: { audioLayout: 'card', controlBarStyle: 'solid', roundness: 14 },
-		controls: { speed: false, rewind: false, forward: false, prev: true, next: true },
-	},
-	{
 		// Key stays `bare` although the label reads "Minimal": the key is what a
 		// site has already stored in `general.defaultAudioTemplate`, so renaming
 		// it would silently deselect the tile on every install that chose this
 		// one. The label is the only part an author ever sees.
+		//
+		// First, and the free default: the list is ordered free-then-pro (see
+		// `pro` below), and the tile a free install lands on has to be one it can
+		// actually use.
 		key: 'bare',
 		label: __( 'Minimal' ),
 		description: __( 'Just a play button and a waveform. No art, time or volume.' ),
@@ -53,18 +43,11 @@ export const AUDIO_PRESET_TEMPLATES = [
 		controls: { speed: false, rewind: false, forward: false, volume: false, mute: false, currentTime: false, duration: false },
 	},
 	{
-		key: 'audiobook',
-		label: __( 'Audiobook' ),
-		description: __( 'Long-form listening: 30-second skips, speed control and chapter navigation.' ),
-		// Shares `compact` with Podcast rather than needing a shape of its own —
-		// what makes an audiobook an audiobook is the CONTROLS, not the bar.
-		appearance: { audioLayout: 'compact', controlBarStyle: 'solid', roundness: 10 },
-		// Volume off: a listener on headphones uses the device volume, and the
-		// slider is the first thing worth trading for room on a long-form bar.
-		controls: { speed: true, rewind: true, forward: true, chapters: true, volume: false, prev: false, next: false },
-		// 30s rather than the 10s default — the audiobook convention, and the
-		// reason the skip buttons are worth having at this length.
-		skipSeconds: 30,
+		key: 'album',
+		label: __( 'Album' ),
+		description: __( 'Large square cover art above the title and controls.' ),
+		appearance: { audioLayout: 'card', controlBarStyle: 'solid', roundness: 14 },
+		controls: { speed: false, rewind: false, forward: false, prev: true, next: true },
 	},
 	{
 		key: 'playlist',
@@ -81,6 +64,46 @@ export const AUDIO_PRESET_TEMPLATES = [
 		// callbacks, so this template is inert — not broken — on an item that
 		// never joins one.
 		controls: { prev: true, next: true, speed: false, chapters: false, rewind: false, forward: false },
+	},
+
+	// ── Pro ───────────────────────────────────────────────────────────────
+	// The two long-form templates. `pro` is read by both pickers (Settings and
+	// the preset builder) to lock the tile and mark it, exactly as the video
+	// list has always done for Floating and Ambient.
+	//
+	// Note what this gate is and is not. A premium *skin* is a capability —
+	// `skin: floating` is one stored value naming CSS that only ships with Pro,
+	// and Helper::enforce_pro_limits() resets it at render. These two are
+	// bundles of ordinary free controls over a layout (`compact`) that the free
+	// Playlist template also uses, so there is nothing for the render gate to
+	// strip and deliberately no entry added to Pro::PREMIUM_SKINS. The gate is
+	// the one-click bundle, not the result — a free user can still assemble the
+	// same bar by hand. Making it enforceable would mean giving each of these a
+	// layout of its own with its own CSS.
+	{
+		key: 'podcast',
+		label: __( 'Podcast' ),
+		pro: true,
+		description: __( 'Roomier bar with large cover art, skip buttons and a speed control.' ),
+		appearance: { audioLayout: 'podcast', controlBarStyle: 'solid', roundness: 10 },
+		controls: { speed: true, rewind: true, forward: true, chapters: true },
+	},
+	{
+		key: 'audiobook',
+		label: __( 'Audiobook' ),
+		pro: true,
+		description: __( 'Long-form listening: 30-second skips, speed control and chapter navigation.' ),
+		// Its own layout, not compact with switches flipped: the transport is
+		// centred and enlarged because it is what a listener reaches for across
+		// hours. That is also what makes the Pro gate real — there is a stored
+		// value for Helper::enforce_pro_limits() to refuse.
+		appearance: { audioLayout: 'audiobook', controlBarStyle: 'solid', roundness: 10 },
+		// Volume off: a listener on headphones uses the device volume, and the
+		// slider is the first thing worth trading for room on a long-form bar.
+		controls: { speed: true, rewind: true, forward: true, chapters: true, volume: false, prev: false, next: false },
+		// 30s rather than the 10s default — the audiobook convention, and the
+		// reason the skip buttons are worth having at this length.
+		skipSeconds: 30,
 	},
 ];
 

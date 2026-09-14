@@ -1,5 +1,5 @@
 import { Card, Field, Input, Select, Toggle, Textarea, ColorInput } from '../../components/UI';
-import { isPro, PRO_SKINS } from '../../pro';
+import { isPro, PRO_SKINS, PRO_AUDIO_LAYOUTS } from '../../pro';
 import { resolveCustomize, CUSTOMIZE_DEFAULTS } from '@Player/customize';
 import { availableControls } from '@Utils/controls';
 import { isAudioSource as isAudioSourceUtil } from '@Utils/audio';
@@ -44,6 +44,8 @@ const AUDIO_SKINS = [
 	{ value: 'compact', label: __( 'Compact' ), hint: __( 'A single bar: cover art, title and controls in one row.' ) },
 	{ value: 'card', label: __( 'Card' ), hint: __( 'Large square cover art above the title and controls.' ) },
 	{ value: 'minimal', label: __( 'Minimal' ), hint: __( 'Play button and a waveform, nothing else.' ) },
+	{ value: 'podcast', label: __( 'Podcast' ), hint: __( 'A taller bar with large cover art and room for the episode title.' ) },
+	{ value: 'audiobook', label: __( 'Audiobook' ), hint: __( 'The transport centred and enlarged for hours of listening.' ) },
 ];
 
 const ASPECT_RATIOS = [
@@ -210,10 +212,16 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 										{isAudioSource ? (
 											<Field
 												label={ __( 'Skin' ) }
-												hint={ ( AUDIO_SKINS.find( ( l ) => l.value === appearance.audioLayout ) || AUDIO_SKINS[ 0 ] ).hint }
+												hint={ isPro()
+													? ( AUDIO_SKINS.find( ( l ) => l.value === appearance.audioLayout ) || AUDIO_SKINS[ 0 ] ).hint
+													: __( 'Podcast & Audiobook need TruePlayer Pro.' ) }
 											>
 												<Select value={appearance.audioLayout} onChange={(e) => setSection('appearance', { audioLayout: e.target.value })}>
-													{AUDIO_SKINS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
+													{AUDIO_SKINS.map((l) => (
+														<option key={l.value} value={l.value} disabled={!isPro() && PRO_AUDIO_LAYOUTS.includes(l.value)}>
+															{l.label}{!isPro() && PRO_AUDIO_LAYOUTS.includes(l.value) ? __( ' (Pro)' ) : ''}
+														</option>
+													))}
 												</Select>
 											</Field>
 										) : (

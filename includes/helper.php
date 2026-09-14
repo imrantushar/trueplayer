@@ -184,6 +184,15 @@ class Helper {
 			$config['customize']['appearance']['skin'] = 'default';
 		}
 
+		// The audio half of the same gate. `compact` is the free fallback for the
+		// reason given above Pro::PREMIUM_AUDIO_LAYOUTS: it is what audio has
+		// always rendered as, so a free install lands on the ordinary bar instead
+		// of also losing its cover art and time readout.
+		$audio_layout = $config['customize']['appearance']['audioLayout'] ?? '';
+		if ( $audio_layout && Pro::is_premium_audio_layout( $audio_layout ) ) {
+			$config['customize']['appearance']['audioLayout'] = 'compact';
+		}
+
 		/**
 		 * A premium source keeps its type and loses its location.
 		 *

@@ -331,7 +331,13 @@ function AudioTemplateCard({ template, selected, disabled, accent, onSelect }) {
 				className="absolute inset-2 flex flex-col justify-center overflow-hidden"
 				style={{ borderRadius: radius, background: '#14171f', padding: layout === 'card' ? 8 : 10 }}
 			>
-				{layout === 'compact' && (
+				{/* Everything that is not card or minimal draws the bar form: that
+				    is compact and the two Pro layouts built on it, which differ in
+				    the room they take and where the transport sits — neither of
+				    which survives at tile size anyway. The branch is written as
+				    "not the other two" rather than a list of names so a layout
+				    added later renders instead of leaving a blank tile. */}
+				{'card' !== layout && 'minimal' !== layout && (
 					<span className="flex items-center gap-2.5">
 						{art(34, 17)}
 						<span className="flex-1 min-w-0">
@@ -746,7 +752,12 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								const blobKey = isAudioTab ? 'customizeAudio' : 'customize';
 								const markerKey = isAudioTab ? 'defaultAudioTemplate' : 'defaultTemplate';
 								const presetKey = isAudioTab ? 'defaultAudioPreset' : 'defaultPreset';
-								const fallbackTemplate = isAudioTab ? 'podcast' : 'default';
+								// The tile that reads as chosen before anything is stored.
+								// Audio points at Minimal rather than Podcast because Podcast
+								// is Pro now, and a free install must not open on a locked
+								// tile. Mirrored in utils/default-look.js, which names the
+								// same fallback in the create dialog.
+								const fallbackTemplate = isAudioTab ? 'bare' : 'default';
 								const activePreset = settings.general?.[presetKey] || '';
 								const typePresets = presets.filter((p) => ('audio' === p.type) === isAudioTab);
 								// The accent is shared across both players, so the tiles
@@ -805,8 +816,27 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 												</div>
 											)}
 
+											{/* Free first, Pro in its own labelled group below, rather
+											    than one run of tiles with the locked ones wherever the
+											    row happens to break. Two reasons: a free install sees
+											    what it can use without reading badges, and the Pro row
+											    reads as an offer instead of as three arbitrary tiles
+											    that refuse to click. Grouped rather than ordered so it
+											    survives the narrow two-column grid, where sorting
+											    alone would still leave a Pro tile sharing a row. */}
+											{[
+												[ null, templatesFor(lookType).filter((t) => ! t.pro) ],
+												[ __( 'With TruePlayer Pro' ), templatesFor(lookType).filter((t) => !! t.pro) ],
+											].filter(([ , list ]) => list.length > 0).map(([ groupLabel, list ]) => (
+											<div key={groupLabel || 'free'} className={groupLabel ? 'mt-5' : ''}>
+											{groupLabel && (
+												<div className="flex items-center gap-2 mb-3">
+													<span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{groupLabel}</span>
+													<span className="flex-1 h-px" style={{ background: look.line }} />
+												</div>
+											)}
 											<div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-												{templatesFor(lookType).map((t) => {
+												{list.map((t) => {
 													const selected = (settings.general?.[markerKey] || fallbackTemplate) === t.key;
 													// Really disabled, not just dimmed: a
 													// pointer-events-none tile stays in the tab
@@ -840,6 +870,8 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 														: <TemplateCard key={t.key} template={t} accent={accent} selected={selected} disabled={locked} onSelect={onSelect} />;
 												})}
 											</div>
+											</div>
+											))}
 
 											<div className="mt-5 pt-5 border-t border-solid" style={{ borderColor: look.line }}>
 												<Field
