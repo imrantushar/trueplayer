@@ -686,7 +686,13 @@ class Framework implements \H5PFrameworkInterface {
 
 	public function getNumContent( $libraryId, $skip = null ) {
 		global $wpdb;
-		$skip_query = empty( $skip ) ? '' : " AND id NOT IN ($skip)";
+		// `$skip` is an id list interpolated straight into the statement — the
+		// one spot in this file that is not either a literal table name or a
+		// prepared placeholder. No caller passes it today, which is exactly why
+		// it is worth closing now rather than after one appears: forced through
+		// intval so the clause can only ever be integers.
+		$skip_ids   = array_filter( array_map( 'intval', preg_split( '/\s*,\s*/', (string) $skip, -1, PREG_SPLIT_NO_EMPTY ) ) );
+		$skip_query = $skip_ids ? ' AND id NOT IN (' . implode( ',', $skip_ids ) . ')' : '';
 		return (int) $wpdb->get_var(
 			$wpdb->prepare( "SELECT COUNT(id) FROM {$this->tbl}contents WHERE library_id = %d {$skip_query}", $libraryId )
 		);

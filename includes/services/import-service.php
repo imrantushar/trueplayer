@@ -170,7 +170,14 @@ class ImportService {
 	/** FluentPlayer: source lives in the `settings` post meta array. */
 	private static function from_fluentplayer( $post ): ?array {
 		$settings = get_post_meta( $post->ID, 'settings', true );
-		$settings = maybe_unserialize( $settings );
+		// get_post_meta already unserializes, so a STRING here means the value
+		// was serialized twice. Unwrap that case — some FluentPlayer versions
+		// store it that way — but never let it instantiate a class: a second
+		// unserialize over meta this plugin did not write is the classic PHP
+		// object-injection gadget, and nothing in that array is ever an object.
+		if ( is_string( $settings ) && '' !== $settings ) {
+			$settings = unserialize( $settings, [ 'allowed_classes' => false ] ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize -- classes refused above.
+		}
 		if ( ! is_array( $settings ) ) {
 			return null;
 		}
