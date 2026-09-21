@@ -48,6 +48,31 @@ function hexToRgba( hex, alpha ) {
 	return `rgba(${ ( n >> 16 ) & 255 },${ ( n >> 8 ) & 255 },${ n & 255 },${ alpha })`;
 }
 
+/**
+ * The viewer's remembered quality choice.
+ *
+ * Site-wide rather than per-video (unlike `tp_pos_{id}`, which is a position
+ * and only means anything for one video): a quality preference is about the
+ * connection, and a per-video key would mean the choice never actually sticks.
+ * Both accessors are guarded — localStorage throws outright in some privacy
+ * modes, and losing the preference must never break playback.
+ */
+const QUALITY_KEY = 'tp_quality';
+
+function storedQuality() {
+	try {
+		return window.localStorage.getItem( QUALITY_KEY ) || '';
+	} catch ( e ) {
+		return '';
+	}
+}
+
+function rememberQuality( id ) {
+	try {
+		window.localStorage.setItem( QUALITY_KEY, id );
+	} catch ( e ) {}
+}
+
 // A checkpoint/final quiz has something to show either way: native questions
 // authored here, or a QuizPress quiz picked in place of them.
 function hasQuizContent( quiz ) {
@@ -145,7 +170,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ started, setStarted ] = useState( false );
 	const [ ui, setUi ] = useState( {
 		playing: false, current: 0, duration: 0, buffered: 0,
-		muted: !! ( behavior.muted || ( autoplayOn && apMode !== 'sound' ) ), volume: 1, rate: 1, quality: 'auto', track: 'off',
+		muted: !! ( behavior.muted || ( autoplayOn && apMode !== 'sound' ) ), volume: 1, rate: 1, quality: 'auto', activeQuality: '', track: 'off',
 	} );
 	// Report the media duration up (used by the editor to clamp chapter/overlay times).
 	useEffect( () => {
@@ -167,6 +192,18 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ infoOpen, setInfoOpen ] = useState( false );
 	// The media's real intrinsic ratio ('1920 / 1080'), once it can be read.
 	const [ nativeRatio, setNativeRatio ] = useState( null );
+	/**
+	 * The quality levels the current provider offers.
+	 *
+	 * React state rather than a call to provider.getQualities() at render time:
+	 * every provider fills its list asynchronously (an HLS manifest parse, a
+	 * Vimeo round-trip, YouTube's first PLAYING state), so the list arrives
+	 * well after mount and nothing else would tell React it had. The menu used
+	 * to read the provider directly and only appeared because `timeupdate`
+	 * happens to re-render constantly — which meant it never appeared at all
+	 * for a viewer who opened the menu before pressing play.
+	 */
+	const [ qualities, setQualities ] = useState( [] );
 
 	const getCues = useCallback( () => ( providerRef.current?.getCues ? providerRef.current.getCues() : [] ), [] );
 
@@ -184,6 +221,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			muted: p.isMuted(),
 			volume: p.getVolume(),
 			rate: p.getRate(),
+			// Reconciled, not trusted. setQuality() writes this optimistically,
+			// but a provider is free to refuse (YouTube's setPlaybackQuality is
+			// advisory) or to move the level itself under `auto`. Only the
+			// forced selection is sticky, so 'auto' is preserved as a selection
+			// while getActiveQuality() supplies what it resolved to.
+			activeQuality: p.getActiveQuality ? p.getActiveQuality() : '',
 		} ) );
 	}, [] );
 
@@ -412,6 +455,25 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			provider.on( 'waiting', sync );
 			provider.on( 'ratechange', sync );
 			provider.on( 'volumechange', sync );
+			/**
+			 * Quality levels arrived (or the active one moved).
+			 *
+			 * Also the point where a remembered preference is applied: the
+			 * levels do not exist until now, so there is nothing to match
+			 * against any earlier. Re-applied on every list change because a
+			 * provider can replace its list mid-playback (YouTube repopulates
+			 * as the video buffers).
+			 */
+			provider.on( 'qualitychange', ( list ) => {
+				const next = list || [];
+				setQualities( next );
+				const want = storedQuality();
+				if ( want && 'auto' !== want && next.some( ( q ) => q.id === want ) ) {
+					provider.setQuality( want );
+					setUi( ( s ) => ( { ...s, quality: want } ) );
+				}
+				sync();
+			} );
 			provider.on( 'ended', onEnded );
 			// Providers that know why they failed say so — YouTube's embed-disabled
 			// case is the one an author most needs named, since the video plays
@@ -419,6 +481,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			provider.on( 'error', ( detail ) => setError(
 				( detail && detail.message ) || __( 'Playback error.' )
 			) );
+
+			// A provider whose list was already filled before the subscription
+			// above existed (a cached manifest parses fast) would otherwise
+			// never announce it — nothing re-emits on subscribe.
+			const levels = provider.getQualities ? provider.getQualities() : [];
+			if ( levels.length ) {
+				setQualities( levels );
+			}
 		} )();
 
 		return () => {
@@ -805,7 +875,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const setVolume = ( v ) => { providerRef.current.setVolume( v ); providerRef.current.setMuted( v === 0 ); };
 	const toggleMute = () => providerRef.current.setMuted( ! providerRef.current.isMuted() );
 	const setRate = ( r ) => providerRef.current.setRate( r );
-	const setQuality = ( q ) => { providerRef.current.setQuality( q ); setUi( ( s ) => ( { ...s, quality: q } ) ); };
+	const setQuality = ( q ) => {
+		providerRef.current.setQuality( q );
+		rememberQuality( q );
+		// Optimistic, then reconciled by sync() from getActiveQuality() — a
+		// provider may refuse or override the request.
+		setUi( ( s ) => ( { ...s, quality: q } ) );
+	};
 	const setTrack = ( id ) => { providerRef.current.setTextTrack( id === 'off' ? -1 : id ); setUi( ( s ) => ( { ...s, track: id } ) ); };
 	const closePiP = () => {
 		if ( pipWinRef.current ) {
@@ -1216,6 +1292,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					capabilities={ { ...providerRef.current?.capabilities, pip: pipAvailable } }
 					controls={ cz.controls }
 					speeds={ cz.speeds }
+					qualities={ qualities }
 					skipSeconds={ cz.skipSeconds }
 					scrubDisabled={ !! behavior.disableSeek }
 					hidePiP={ sticky && ! pipWin }

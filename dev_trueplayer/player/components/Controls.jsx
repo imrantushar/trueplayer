@@ -25,6 +25,8 @@ const P = {
 	download: 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z',
 	list: 'M3 5h13v2H3V5zm0 6h13v2H3v-2zm0 6h9v2H3v-2zm15.5-6L22 13l-3.5 2v-4z',
 	cc: 'M19 4H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm-8.2 6.2H9.3v-.4H7.8v4.4h1.5v-.5h1.5v.8c0 .6-.5 1.1-1.1 1.1H7.4c-.6 0-1.1-.5-1.1-1.1V9.5c0-.6.5-1.1 1.1-1.1h2.3c.6 0 1.1.5 1.1 1.1v.7zm6.9 0h-1.5v-.4h-1.5v4.4h1.5v-.5h1.5v.8c0 .6-.5 1.1-1.1 1.1h-2.3c-.6 0-1.1-.5-1.1-1.1V9.5c0-.6.5-1.1 1.1-1.1h2.3c.6 0 1.1.5 1.1 1.1v.7z',
+	// Points down when the group is closed; CSS rotates it 180° when open.
+	chevron: 'M7.4 8.6L12 13.2l4.6-4.6L18 10l-6 6-6-6z',
 };
 
 /** The next rate in the cycle, wrapping back to the first. */
@@ -213,15 +215,17 @@ export function currentChapter( chapters, current, duration ) {
 	return seg && seg.label ? seg.label : '';
 }
 
-function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, speeds } ) {
-	const [ open, setOpen ] = useState( false );
-	const wrapRef = useRef( null );
-	const rates = speeds && speeds.length ? speeds : [ 0.5, 0.75, 1, 1.25, 1.5, 2 ];
-	const qualities = provider?.getQualities?.() || [];
-	const tracks = provider?.getTextTracks?.() || [];
-
-	// Closes on an outside click — the gear button's own click still toggles
-	// normally, since that click lands inside wrapRef too.
+/**
+ * Close a popup when a pointer lands outside it.
+ *
+ * Shared by the gear menu and the quality button's own popup. The trigger's own
+ * click still toggles normally, since that click lands inside `wrapRef` too.
+ *
+ * @param {boolean}  open    Whether the popup is showing.
+ * @param {Function} setOpen State setter for that.
+ * @param {Object}   wrapRef Ref on the element that wraps trigger + popup.
+ */
+function useCloseOnOutside( open, setOpen, wrapRef ) {
 	useEffect( () => {
 		if ( ! open ) {
 			return;
@@ -234,6 +238,139 @@ function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, 
 		document.addEventListener( 'pointerdown', onOutside );
 		return () => document.removeEventListener( 'pointerdown', onOutside );
 	}, [ open ] );
+}
+
+/**
+ * The one-tap quality control: the current level, as a button in the bar.
+ *
+ * Its own popup rather than a jump into the gear menu — a quality ladder is too
+ * long to cycle through the way the speed button cycles rates, and reaching
+ * into the gear menu's open state from out here would couple two popups that
+ * are otherwise independent. Off by default; the gear menu still lists every
+ * level either way.
+ */
+function QualityMenu( { qualities, quality, activeQuality, setQuality } ) {
+	const [ open, setOpen ] = useState( false );
+	const wrapRef = useRef( null );
+	useCloseOnOutside( open, setOpen, wrapRef );
+
+	const activeLabel = qualities.find( ( q ) => q.id === activeQuality )?.label || '';
+	const selected = qualities.find( ( q ) => q.id === quality );
+	// Under 'auto' the button names what is actually playing, not "Auto" — the
+	// point of putting it in the bar is to see the answer without opening
+	// anything.
+	const buttonLabel = ( 'auto' === quality ? activeLabel : selected?.label ) || __( 'Auto' );
+
+	return (
+		<div className="tp-menu-wrap" ref={ wrapRef }>
+			<button
+				className={ `tp-btn tp-speed ${ 'auto' !== quality ? 'is-active' : '' }` }
+				aria-label={ __( 'Quality' ) }
+				aria-expanded={ open }
+				onClick={ () => setOpen( ! open ) }
+			>
+				{ buttonLabel }
+			</button>
+			{ open && (
+				<div className="tp-menu">
+					<div className="tp-menu-section">{ __( 'Quality' ) }</div>
+					{ qualities.map( ( q ) => (
+						<button key={ q.id } className={ `tp-menu-item ${ q.id === quality ? 'is-active' : '' }` } onClick={ () => { setQuality( q.id ); setOpen( false ); } }>
+							{ 'auto' === q.id && activeLabel
+								? __sprintf( '%1$s (%2$s)', q.label, activeLabel )
+								: q.label }
+						</button>
+					) ) }
+				</div>
+			) }
+		</div>
+	);
+}
+
+/**
+ * One collapsible group in the gear menu.
+ *
+ * The header carries the group's CURRENT value, so a collapsed group still
+ * answers what it is set to — without that, closing a group hides the very
+ * thing the viewer opened the menu to check.
+ *
+ * The options stay mounted-on-demand (`open &&`) rather than hidden with CSS:
+ * a closed group's buttons must not be reachable by Tab.
+ *
+ * @param {Object}   props
+ * @param {string}   props.label    Group heading.
+ * @param {string}   props.value    Current selection, shown on the header.
+ * @param {boolean}  props.open     Whether the group is expanded.
+ * @param {Function} props.onToggle Fired when the header is clicked.
+ * @param {Object}   props.children The option rows.
+ */
+function MenuGroup( { label, value, open, onToggle, children } ) {
+	return (
+		<div className="tp-menu-group">
+			<button
+				type="button"
+				className="tp-menu-toggle"
+				aria-expanded={ open }
+				onClick={ onToggle }
+			>
+				<span>{ label }</span>
+				{ !! value && <span className="tp-menu-toggle-value">{ value }</span> }
+				<svg className="tp-menu-chevron" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+					<path d={ P.chevron } />
+				</svg>
+			</button>
+			{ open && children }
+		</div>
+	);
+}
+
+function Menu( { provider, rate, setRate, quality, activeQuality, setQuality, track, setTrack, speeds, qualities: qualityList } ) {
+	const [ open, setOpen ] = useState( false );
+	const wrapRef = useRef( null );
+	const rates = speeds && speeds.length ? speeds : [ 0.5, 0.75, 1, 1.25, 1.5, 2 ];
+	// Player owns the list (it arrives asynchronously and has to re-render the
+	// menu when it does); the provider is only a fallback for the very first
+	// render, before the qualitychange event has been seen.
+	const qualities = qualityList && qualityList.length ? qualityList : ( provider?.getQualities?.() || [] );
+	const tracks = provider?.getTextTracks?.() || [];
+	// What `Auto` actually settled on, so the row reads "Auto (720p)" the way
+	// every other player labels it, instead of hiding the answer.
+	const activeLabel = qualities.find( ( q ) => q.id === activeQuality )?.label || '';
+
+	/**
+	 * Which groups are expanded, keyed by name.
+	 *
+	 * Independent toggles rather than an accordion: the panel is a fixed size
+	 * and scrolls, so opening one group has no reason to close another, and a
+	 * viewer comparing speed against quality would otherwise be fighting it.
+	 * All start collapsed — the whole point of the group headers is that the
+	 * menu opens as a short list of what can be changed.
+	 */
+	const [ groups, setGroups ] = useState( {} );
+	const toggleGroup = ( name ) => setGroups( ( g ) => ( { ...g, [ name ]: ! g[ name ] } ) );
+
+	// Reset to all-collapsed each time the menu is dismissed, so it always
+	// opens in the same state rather than however it was left.
+	useEffect( () => {
+		if ( ! open ) {
+			setGroups( {} );
+		}
+	}, [ open ] );
+
+	const qualityLabel = ( () => {
+		const sel = qualities.find( ( q ) => q.id === quality );
+		if ( ! sel ) {
+			return '';
+		}
+		return 'auto' === sel.id && activeLabel
+			? __sprintf( '%1$s (%2$s)', sel.label, activeLabel )
+			: sel.label;
+	} )();
+	const trackLabel = 'off' === track
+		? __( 'Off' )
+		: ( tracks.find( ( t ) => t.id === track )?.label || __( 'Off' ) );
+
+	useCloseOnOutside( open, setOpen, wrapRef );
 
 	return (
 		<div className="tp-menu-wrap" ref={ wrapRef }>
@@ -241,33 +378,57 @@ function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, 
 				<Icon d={ P.gear } />
 			</button>
 			{ open && (
-				<div className="tp-menu">
-					<div className="tp-menu-section">{ __( 'Speed' ) }</div>
-					{ rates.map( ( r ) => (
-						<button key={ r } className={ `tp-menu-item ${ r === rate ? 'is-active' : '' }` } onClick={ () => { setRate( r ); setOpen( false ); } }>
-							{ r === 1 ? __( 'Normal' ) : __sprintf( '%s×', r ) }
-						</button>
-					) ) }
+				<div className="tp-menu is-settings">
+					{ /* Quality first: it is what a viewer on a struggling
+					     connection opens this menu for, and burying it under the
+					     speed list puts it below the fold on a short player.
+					     Picking an option no longer closes the whole menu — the
+					     group is a place to make several changes in. */ }
 					{ qualities.length > 0 && (
-						<>
-							<div className="tp-menu-section">{ __( 'Quality' ) }</div>
+						<MenuGroup
+							label={ __( 'Quality' ) }
+							value={ qualityLabel }
+							open={ !! groups.quality }
+							onToggle={ () => toggleGroup( 'quality' ) }
+						>
 							{ qualities.map( ( q ) => (
-								<button key={ q.id } className={ `tp-menu-item ${ q.id === quality ? 'is-active' : '' }` } onClick={ () => { setQuality( q.id ); setOpen( false ); } }>
-									{ q.label }
+								<button key={ q.id } className={ `tp-menu-item ${ q.id === quality ? 'is-active' : '' }` } onClick={ () => setQuality( q.id ) }>
+									{ 'auto' === q.id && activeLabel
+										? __sprintf( '%1$s (%2$s)', q.label, activeLabel )
+										: q.label }
 								</button>
 							) ) }
-						</>
+						</MenuGroup>
 					) }
+					<MenuGroup
+						label={ __( 'Speed' ) }
+						value={ 1 === rate ? __( 'Normal' ) : __sprintf( '%s×', rate ) }
+						open={ !! groups.speed }
+						onToggle={ () => toggleGroup( 'speed' ) }
+					>
+						{ rates.map( ( r ) => (
+							<button key={ r } className={ `tp-menu-item ${ r === rate ? 'is-active' : '' }` } onClick={ () => setRate( r ) }>
+								{ r === 1 ? __( 'Normal' ) : __sprintf( '%s×', r ) }
+							</button>
+						) ) }
+					</MenuGroup>
+					{ /* Subtitles gets the same treatment, not because it was
+					     asked for but because a flat list under two collapsed
+					     headers reads as a rendering fault. */ }
 					{ tracks.length > 0 && (
-						<>
-							<div className="tp-menu-section">{ __( 'Subtitles' ) }</div>
-							<button className={ `tp-menu-item ${ track === 'off' ? 'is-active' : '' }` } onClick={ () => { setTrack( 'off' ); setOpen( false ); } }>{ __( 'Off' ) }</button>
+						<MenuGroup
+							label={ __( 'Subtitles' ) }
+							value={ trackLabel }
+							open={ !! groups.subtitles }
+							onToggle={ () => toggleGroup( 'subtitles' ) }
+						>
+							<button className={ `tp-menu-item ${ track === 'off' ? 'is-active' : '' }` } onClick={ () => setTrack( 'off' ) }>{ __( 'Off' ) }</button>
 							{ tracks.map( ( t ) => (
-								<button key={ t.id } className={ `tp-menu-item ${ t.id === track ? 'is-active' : '' }` } onClick={ () => { setTrack( t.id ); setOpen( false ); } }>
+								<button key={ t.id } className={ `tp-menu-item ${ t.id === track ? 'is-active' : '' }` } onClick={ () => setTrack( t.id ) }>
 									{ t.label }
 								</button>
 							) ) }
-						</>
+						</MenuGroup>
 					) }
 				</div>
 			) }
@@ -277,8 +438,8 @@ function Menu( { provider, rate, setRate, quality, setQuality, track, setTrack, 
 
 export default function Controls( props ) {
 	const {
-		playing, current, duration, buffered, muted, volume, rate, quality, track, seekable,
-		chapters, provider, capabilities, controls = {}, speeds, skipSeconds = 10, scrubDisabled, hidePiP,
+		playing, current, duration, buffered, muted, volume, rate, quality, activeQuality, track, seekable,
+		chapters, provider, capabilities, controls = {}, speeds, qualities = [], skipSeconds = 10, scrubDisabled, hidePiP,
 		onPlayPause, onSeek, onVolume, onMute, onRate, onQuality, onTrack, onPiP, onFullscreen, onSkip, onDownload,
 		onInfo, hasInfo, infoOpen, audio, title, waveSeed, onPrev, onNext, scrubberStyle,
 	} = props;
@@ -377,6 +538,9 @@ export default function Controls( props ) {
 						{ __sprintf( '%s\u00d7', rate ) }
 					</button>
 				) }
+				{ show( 'quality' ) && capabilities?.quality && qualities.length > 0 && (
+					<QualityMenu qualities={ qualities } quality={ quality } activeQuality={ activeQuality } setQuality={ onQuality } />
+				) }
 				{ show( 'download' ) && capabilities?.download && (
 					<button className="tp-btn" aria-label={ __( 'Download' ) } onClick={ onDownload }>
 						<Icon d={ P.download } />
@@ -403,7 +567,7 @@ export default function Controls( props ) {
 					</button>
 				) }
 				{ show( 'settings' ) && (
-					<Menu provider={ provider } rate={ rate } setRate={ onRate } quality={ quality } setQuality={ onQuality } track={ track } setTrack={ onTrack } speeds={ speeds } />
+					<Menu provider={ provider } rate={ rate } setRate={ onRate } quality={ quality } activeQuality={ activeQuality } setQuality={ onQuality } track={ track } setTrack={ onTrack } speeds={ speeds } qualities={ qualities } />
 				) }
 				{ show( 'pip' ) && capabilities?.pip && ! hidePiP && (
 					<button className="tp-btn" aria-label={ __( 'Picture in picture' ) } onClick={ onPiP }>
