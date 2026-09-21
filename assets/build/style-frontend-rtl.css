@@ -892,12 +892,65 @@
 	padding: 6px;
 	box-shadow: 0 6px 24px rgba( 0, 0, 0, 0.4 );
 }
+/* The gear menu specifically: a fixed window rather than a popup that resizes
+   as sections are opened and closed. Collapsing a group would otherwise make
+   the panel jump under the pointer, moving the next row out from under it.
+   box-sizing so the rendered box is exactly 312x250 including the padding. */
+.tp-menu.is-settings {
+	box-sizing: border-box;
+	width: 312px;
+	height: 250px;
+	max-height: none;
+}
 .tp-menu-section {
 	font-size: 10px;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
 	color: #9ca3af;
 	padding: 6px 8px 2px;
+}
+/* ---- collapsible group header (gear menu) ---- */
+.tp-menu-toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	text-align: right;
+	background: transparent;
+	border: 0;
+	color: #e5e7eb;
+	padding: 9px 8px;
+	border-radius: 6px;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+}
+.tp-menu-toggle:hover {
+	background: rgba( 255, 255, 255, 0.1 );
+}
+/* The current value, so a collapsed group still answers what it is set to. */
+.tp-menu-toggle-value {
+	margin-right: auto;
+	color: #9ca3af;
+	font-size: 12px;
+	font-weight: 400;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 140px;
+}
+.tp-menu-chevron {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	transition: transform 0.15s ease;
+}
+.tp-menu-toggle[aria-expanded='true'] .tp-menu-chevron {
+	transform: rotate( -180deg );
+}
+/* Indented so an option reads as belonging to the group above it. */
+.tp-menu-group .tp-menu-item {
+	padding-right: 24px;
 }
 .tp-menu-item {
 	display: flex;
