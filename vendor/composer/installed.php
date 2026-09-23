@@ -20,9 +20,9 @@
             'dev_requirement' => false,
         ),
         'storeengine/wordpress-sdk' => array(
-            'pretty_version' => 'v1.5.6',
-            'version' => '1.5.6.0',
-            'reference' => 'c2fd07992ea0fb79d9b64d4398c55e234a0922af',
+            'pretty_version' => 'v1.5.9',
+            'version' => '1.5.9.0',
+            'reference' => '8d92b2139477f6d7018a9f8e603992b225a5d583',
             'type' => 'library',
             'install_path' => __DIR__ . '/../storeengine/wordpress-sdk',
             'aliases' => array(),
