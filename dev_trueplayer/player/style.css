@@ -761,6 +761,19 @@
 .tp-scrubber.is-disabled {
 	cursor: not-allowed;
 }
+/* The Rapid Engage Bar is locked, but it must not LOOK locked: `not-allowed`
+   is an affordance announcing that something is being refused, which is the
+   one thing a bar pretending to be an ordinary timeline cannot afford to
+   announce. It reads as a plain progress indicator instead — default cursor,
+   no thumb to reach for, no hover response. Wins on specificity over
+   .is-disabled above, which Player.jsx always sets alongside it. */
+.tp-scrubber.is-rapid,
+.tp-scrubber.is-rapid.is-disabled {
+	cursor: default;
+}
+.tp-scrubber.is-rapid .tp-scrubber-thumb {
+	display: none;
+}
 .tp-scrubber-track {
 	position: relative;
 	height: 5px;

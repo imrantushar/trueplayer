@@ -14,6 +14,20 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 	el.playsInline = true;
 	const behavior = opts.behavior || {};
 	el.preload = behavior.preload || 'metadata';
+	// Rapid Engage hardening. The simulated bar is drawn by our controls, but
+	// the <video> underneath still has the browser's own — reachable in one
+	// right-click ("Show controls") on every Chromium build, complete with the
+	// real elapsed/total readout the bar exists to hide. `controlsList` alone
+	// does not cover it, so the context menu goes too.
+	//
+	// Keyed off the CONFIGURED style, not the runtime-eligible one: the element
+	// is built before any duration is known, and hardening a source that turns
+	// out to be live costs nothing.
+	if ( 'rapid-engage' === ( opts.appearance || {} ).seekBarStyle && ! isAudio ) {
+		el.controlsList = 'nodownload noplaybackrate noremoteplayback';
+		el.disablePictureInPicture = true;
+		el.addEventListener( 'contextmenu', ( e ) => e.preventDefault() );
+	}
 	// Looping is deliberately NOT the native `loop` attribute: a looping
 	// media element never fires `ended`, and `ended` is the single trigger
 	// for the final quiz, the end-screen overlay, the end email gate,

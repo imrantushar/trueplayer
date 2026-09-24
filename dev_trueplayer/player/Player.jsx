@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback, createPortal } from '@wordpre
 import { createProvider } from './providers';
 import { CoverageTracker } from './coverage';
 import { resolveCustomize, autoplayMode } from './customize';
+import { rapidEligible, isMobileViewer, resolveRapidSpeed } from './rapid-engage';
 import { gaEvent } from './ga';
 import { rest } from '@Utils/rest';
 import { isEmbedSource, isProSource } from '@Utils/source-types';
@@ -184,6 +185,11 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ locked, setLocked ] = useState( false );
 	const [ frontier, setFrontier ] = useState( 0 );
 	const [ idle, setIdle ] = useState( false );
+	// Which Rapid Engage speed applies. Tracked as state rather than read at
+	// render because a tablet rotating, or a desktop window narrowing past the
+	// fallback breakpoint, changes the answer mid-playback — and the bar would
+	// otherwise keep drawing the old curve until something else re-rendered it.
+	const [ isMobile, setIsMobile ] = useState( isMobileViewer );
 	const [ sticky, setSticky ] = useState( false );
 	const [ pipWin, setPipWin ] = useState( null );
 	const [ activeOptin, setActiveOptin ] = useState( false );
@@ -285,7 +291,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					autoplay: autoplayOn,
 					autoplaySound: apMode === 'sound',
 				};
-				provider = await createProvider( containerRef.current, source, { behavior: providerBehavior, autoStart } );
+				provider = await createProvider( containerRef.current, source, { behavior: providerBehavior, appearance, autoStart } );
 			} catch ( e ) {
 				// Surface the real cause — a blocked/neutered YouTube IFrame API,
 				// a failed lazy provider chunk and a bad source URL all look
@@ -809,6 +815,34 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 	};
 
+	// The Rapid Engage Bar, resolved in ONE place because three separate things
+	// hang off it — the scrubber's drawing mode, the locked timeline, and the
+	// hidden clock — and a viewer only has to catch one of them disagreeing to
+	// see through the whole effect.
+	//
+	// Checked against the live duration rather than the source type: a live
+	// stream reports none (see rapid-engage.js), and `hls`/`mux`/`bunny`/
+	// `gumlet` serve live and VOD from the same type, so nothing here can be
+	// decided ahead of playback. Before metadata arrives this is false and the
+	// ordinary scrubber renders — which is also what we want on a source that
+	// turns out to have no duration at all.
+	// Split in two, because the editor preview needs one half without the other.
+	//
+	// DRAWN covers the preview as well: the speed slider beside it is picking a
+	// curve, and a slider whose effect only appears after publishing cannot be
+	// judged at all — the author would be tuning the one thing they cannot see.
+	//
+	// ACTIVE — the locked timeline and the withheld PiP — stays off in preview,
+	// matching what the anti-skip toggles already promise there ("the preview
+	// stays scrubbable on purpose"). The author gets the look without losing
+	// the ability to scrub around their own video while setting it up.
+	const rapidDrawn = rapidEligible( appearance, ui.duration, source.mediaType === 'audio' );
+	const rapidActive = rapidDrawn && ! preview;
+
+	// What the timeline lock actually is, everywhere below. The author's own
+	// "disable the timeline" toggle, or the rapid bar demanding the same thing.
+	const seekLocked = !! behavior.disableSeek || rapidActive;
+
 	// Cap seeking to the furthest point watched when "no skip" (free behavior)
 	// or pro anti-skip is on. Never in preview, and released once completed.
 	const noSkipActive = ! preview && ! ( gate && gate.completed ) &&
@@ -817,6 +851,23 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const seekable = noSkipActive
 		? Math.min( ui.duration, Math.max( watchedTo + 1.5, ui.current + 0.5 ) )
 		: ui.duration;
+
+	useEffect( () => {
+		if ( typeof window === 'undefined' || ! window.matchMedia ) {
+			return undefined;
+		}
+		const mq = window.matchMedia( '(hover: none) and (pointer: coarse)' );
+		const onChange = () => setIsMobile( isMobileViewer() );
+		// Safari below 14 has addListener only. Cheap to keep: the player is
+		// embedded on other people's sites and does not get to choose the
+		// browser it lands in.
+		mq.addEventListener ? mq.addEventListener( 'change', onChange ) : mq.addListener( onChange );
+		window.addEventListener( 'resize', onChange );
+		return () => {
+			mq.removeEventListener ? mq.removeEventListener( 'change', onChange ) : mq.removeListener( onChange );
+			window.removeEventListener( 'resize', onChange );
+		};
+	}, [] );
 
 	useEffect( () => {
 		if ( ! behavior.hideControls ) {
@@ -865,7 +916,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 		// "Disable the timeline entirely" has to mean the keyboard and the
 		// rewind/forward buttons too, not just the scrubber — both land here.
-		if ( behavior.disableSeek ) {
+		// The rapid bar rides the same guard: arrow keys that jump the video
+		// while the fake bar crawls are the loudest possible tell.
+		if ( seekLocked ) {
 			return;
 		}
 		let t = p.getCurrentTime() + delta;
@@ -923,6 +976,16 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		// Fallback: native per-<video>/per-embed PiP (html5, Vimeo only — the
 		// button is hidden entirely for sources with neither this nor the
 		// fallback available, e.g. YouTube on a non-Chromium browser).
+		//
+		// Never under the rapid bar. Container PiP above portals our own DOM,
+		// so the simulated bar floats with it; native PiP hands the raw <video>
+		// to the browser, which draws its own scrubber from the real duration —
+		// one click and the viewer is looking at the timeline we hid. The button
+		// is already hidden in this case (see `pipAvailable`); this is the guard
+		// for the path that reaches here anyway, e.g. a keyboard shortcut.
+		if ( rapidActive ) {
+			return;
+		}
 		const p = providerRef.current;
 		if ( ! p || ! p.requestPiP ) {
 			return;
@@ -1122,7 +1185,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// Container PiP works regardless of provider (it just floats the whole
 	// stage), so it can make the button available even where the provider has
 	// no native fallback of its own (YouTube).
-	const pipAvailable = containerPipSupported || !! providerRef.current?.capabilities?.pip;
+	// Container PiP keeps our controls (rapid bar included) and is safe always;
+	// the native fallback exposes the browser's real scrubber, so under the
+	// rapid bar it is not an option and the button goes away with it rather
+	// than sitting there doing nothing.
+	const pipAvailable = containerPipSupported ||
+		( ! rapidActive && !! providerRef.current?.capabilities?.pip );
 
 	const stage = (
 		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
@@ -1294,7 +1362,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					speeds={ cz.speeds }
 					qualities={ qualities }
 					skipSeconds={ cz.skipSeconds }
-					scrubDisabled={ !! behavior.disableSeek }
+					scrubDisabled={ seekLocked }
 					hidePiP={ sticky && ! pipWin }
 					onPlayPause={ playPause }
 					onSeek={ seek }
@@ -1318,8 +1386,17 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					onPrev={ onPrev }
 					onNext={ onNext }
 					/* The minimal audio bar IS its waveform, so chapters must not
-					   replace it there the way they do in the other layouts. */
-					scrubberStyle={ source.mediaType === 'audio' && ( appearance.audioLayout || 'compact' ) === 'minimal' ? 'waveform' : undefined }
+					   replace it there the way they do in the other layouts.
+					   Waveform wins outright over the rapid bar: that layout has
+					   no plain track to simulate, and `rapidDrawn` is false for
+					   audio anyway — the ordering here is belt and braces. */
+					scrubberStyle={
+						source.mediaType === 'audio' && ( appearance.audioLayout || 'compact' ) === 'minimal' ? 'waveform'
+							: rapidDrawn ? 'rapid-engage'
+								: 'waveform' === appearance.seekBarStyle ? 'waveform'
+									: undefined
+					}
+					rapidSpeed={ resolveRapidSpeed( appearance, isMobile ) }
 				/>
 			) }
 
