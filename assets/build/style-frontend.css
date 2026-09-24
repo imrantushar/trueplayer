@@ -676,9 +676,21 @@
 .tp-volume:hover,
 .tp-volume:focus,
 .tp-volume:active {
+	/* The track and the thumb, named once. The thumb has to be centred on the
+	   track by hand in WebKit (see the negative margin below), and that offset
+	   is only correct for one pair of sizes — as a bare number it went stale
+	   the moment the thumb was resized, which is how it came to sit ~2px above
+	   the track. Derived from these, it cannot drift again. */
+	--tp-vol-track: 3px;
+	--tp-vol-thumb: 10px;
 	width: 74px !important;
 	flex: 0 0 74px !important;
 	height: 16px; /* comfortable click target; the visible track is drawn thin below */
+	/* A floor, not just a height: this is an <input>, and a host theme's own
+	   `input { height: auto }` (or a CSS reset) outranks a plain `height` on a
+	   single-class selector the same way the width note above describes. Below
+	   the thumb's own size the indicator gets clipped by the input's box. */
+	min-height: 16px;
 	cursor: pointer;
 	/* Taking manual control of the track/thumb below via the WebKit/Moz
 	   pseudo-elements — accent-color only recolors the browser's default
@@ -694,7 +706,7 @@
     outline: 0 !important;
 }
 .tp-volume::-webkit-slider-runnable-track {
-	height: 3px;
+	height: var( --tp-vol-track );
 	border-radius: 2px;
 	background: rgba( 255, 255, 255, 0.4 ) !important;
     box-shadow: none !important;
@@ -702,27 +714,36 @@
 .tp-volume::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	appearance: none;
-	width: 0.4rem;
-	height: 0.4rem;
-	margin-top: -3.5px; /* center the 10px thumb on the 3px track */
+	width: var( --tp-vol-thumb );
+	height: var( --tp-vol-thumb );
+	/* WebKit lays the thumb out from the TOP of the track, so centring it is
+	   ours to do: half the difference, pulled upwards. Computed rather than
+	   written out, so resizing either variable keeps the indicator centred.
+	   Sizes are px for the same reason — a rem thumb against a px offset
+	   decentres itself on any page with a non-16px root font size. */
+	margin-top: calc( ( var( --tp-vol-track ) - var( --tp-vol-thumb ) ) / 2 );
 	border-radius: 50%;
 	background: var( --tp-accent );
 	cursor: pointer;
 }
 .tp-volume::-moz-range-track {
-	height: 3px;
+	height: var( --tp-vol-track );
 	border-radius: 2px;
-	background: rgba( 255, 255, 255, 0.3 );
+	background: rgba( 255, 255, 255, 0.4 );
 	box-shadow: none !important;
 }
+/* The filled portion is part of the track and has to match its height —  at
+   8px on a 3px track it drew a bar thicker than the groove it was filling. */
 .tp-volume::-moz-range-progress {
-	height: 8px;
-	border-radius: 8px;
+	height: var( --tp-vol-track );
+	border-radius: 2px;
 	background: var( --tp-accent );
 }
+/* Firefox centres the thumb on the track itself, so no margin here — only the
+   size, matched to WebKit's so the control looks the same in both. */
 .tp-volume::-moz-range-thumb {
-	width: 0.3rem !important;
-	height: 0.3rem !important;
+	width: var( --tp-vol-thumb ) !important;
+	height: var( --tp-vol-thumb ) !important;
 	border: 0;
 	border-radius: 50%;
 	background: var( --tp-accent );
