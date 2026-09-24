@@ -193,15 +193,6 @@ class Helper {
 			$config['customize']['appearance']['audioLayout'] = 'compact';
 		}
 
-		// The seek bar's half of the same gate. Reset rather than ignored: the
-		// player reads this value directly, and leaving it in place on a free
-		// install would render the simulated bar for anyone who saved it while
-		// a licence was active.
-		$seek_bar = $config['customize']['appearance']['seekBarStyle'] ?? '';
-		if ( $seek_bar && Pro::is_premium_seek_bar( $seek_bar ) ) {
-			$config['customize']['appearance']['seekBarStyle'] = 'default';
-		}
-
 		/**
 		 * A premium source keeps its type and loses its location.
 		 *

@@ -77,24 +77,6 @@ class Pro {
 	const PREMIUM_AUDIO_LAYOUTS = [ 'podcast', 'audiobook' ];
 
 	/**
-	 * Seek-bar styles reserved for pro.
-	 *
-	 * `rapid-engage` draws a simulated progress bar that runs ahead early so a
-	 * long video reads as a short one — a conversion device, which is the same
-	 * thing `floating` and `ambient` are and the same reason they sit behind
-	 * this gate. Like them it is one stored value plus the CSS already in the
-	 * free stylesheet, so the gate below IS the feature boundary.
-	 *
-	 * Reset to `default` when Pro is absent: the plain scrubber is what every
-	 * video has always had, and unlike the skins there is no middle option — a
-	 * half-applied rapid bar would be a locked timeline with an honest bar on
-	 * it, which is strictly worse than not having the feature.
-	 *
-	 * Mirrored in the browser by PRO_SEEK_BARS in dev_trueplayer/admin/pro.js.
-	 */
-	const PREMIUM_SEEK_BARS = [ 'rapid-engage' ];
-
-	/**
 	 * The feature gate: is Pro installed?
 	 *
 	 * Deliberately not a licence check. Installing Pro is what unlocks its
@@ -196,18 +178,6 @@ class Pro {
 
 	public static function is_premium_audio_layout( $layout ): bool {
 		return in_array( $layout, self::premium_audio_layouts(), true );
-	}
-
-	/**
-	 * Seek-bar styles that need Pro. `trueplayer/premium_seek_bars` is the hook
-	 * an addon uses to add its own, or to hand one back to free.
-	 */
-	public static function premium_seek_bars(): array {
-		return (array) apply_filters( 'trueplayer/premium_seek_bars', self::PREMIUM_SEEK_BARS );
-	}
-
-	public static function is_premium_seek_bar( $style ): bool {
-		return in_array( $style, self::premium_seek_bars(), true );
 	}
 
 	/** Feature-flag map exposed to React + the frontend player. */

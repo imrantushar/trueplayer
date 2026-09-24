@@ -43,22 +43,6 @@ export const CUSTOMIZE_DEFAULTS = {
 		roundness: 10, // stage border radius, px
 		controlBarStyle: 'gradient', // gradient | solid | minimal
 		aspectRatio: '16:9', // 16:9 | 9:16 | 4:3 | 1:1 | 21:9 | auto
-		// Video only — how the scrubber draws itself. `rapid-engage` replaces the
-		// real progress bar with a simulated one that runs ahead at the start so
-		// the video reads as shorter than it is, easing back to real speed by the
-		// end. It is a treatment of the timeline, not a behaviour, so it lives
-		// here and is filtered out of the site-wide layer for audio (see
-		// VIDEO_ONLY_APPEARANCE) — an audio bar has no picture to make feel short.
-		seekBarStyle: 'default', // default | waveform | rapid-engage
-		// 1-5, how far ahead `rapid-engage` runs. Ignored by the other styles.
-		// Two of them because the tolerance genuinely differs by device — see
-		// isMobileViewer() in rapid-engage.js. `rapidSpeedMobileSync` defaults
-		// to true so the mobile value stays invisible until someone asks for it:
-		// one speed is the common case, and a second number that silently did
-		// something different on half the traffic would be a trap.
-		rapidSpeed: 3,
-		rapidSpeedMobile: 3,
-		rapidSpeedMobileSync: true,
 		// Caption rendering (html5-backed providers). Flat keys — the section
 		// merge is shallow, so nested objects would override wholesale.
 		captionSize: 100, // % of the player's base cue size
@@ -93,10 +77,6 @@ export const CUSTOMIZE_DEFAULTS = {
 export const VIDEO_ONLY_APPEARANCE = [
 	'skin',
 	'aspectRatio',
-	'seekBarStyle',
-	'rapidSpeed',
-	'rapidSpeedMobile',
-	'rapidSpeedMobileSync',
 	'playButtonStyle',
 	'playButtonSize',
 	'bigPlay',

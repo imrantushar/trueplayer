@@ -115,16 +115,6 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 					     is the same kind of thing. The media editor deliberately does
 					     not get this — see the note in PlayerOptionsTab. */ }
 					<PlayerOptionsTab config={ config } patch={ patch } mediaType={ presetType } offerTemplates />
-					{ /* This screen has no sub-navigation — it renders whichever section
-					     PlayerOptionsTab defaults to, which is Appearance. The seek bar
-					     moved out of Appearance into its own section, so without this
-					     second render a preset could no longer carry one: Rapid Engage
-					     is exactly the kind of choice a "VSL" preset exists to stamp
-					     onto thirty videos at once, and the preset editor would have
-					     silently lost the ability to set it. */ }
-					<div className="mt-6">
-						<PlayerOptionsTab config={ config } patch={ patch } mediaType={ presetType } sub="seekbar" />
-					</div>
 				</div>
 
 				{ /* Sticky header (top-8) + its h-14 bar are ~88px; top-[104px] clears both with a small gap. */ }

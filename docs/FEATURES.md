@@ -15,14 +15,6 @@ analyses, automates or extends sits behind `TruePlayer\Pro::active()`.
   current time, duration, mute, volume, captions, settings (speed/quality/captions), PiP,
   fullscreen, optional download button. Every control individually toggleable.
 - Keyboard shortcuts; Picture-in-Picture; playback-speed menu (configurable speed list).
-- **Quality selector** — `Auto (720p)` plus every available level, in the gear menu and
-  optionally as a one-tap button in the bar. Available where the source actually has a
-  rendition ladder: Bunny Stream, Mux, Gumlet ABR and any HLS `.m3u8` (via hls.js levels),
-  YouTube and Vimeo (via their own APIs). A single progressive file — self-hosted MP4,
-  Bunny Storage, Gumlet MP4 — has no levels, so no picker is shown. The viewer's choice is
-  remembered across videos. Note iOS Safari plays HLS natively and exposes no level API,
-  and YouTube treats a quality request as advisory, so the menu reports what is actually
-  playing rather than what was asked for.
 - Behaviour: autoplay (off / muted / with sound), muted, loop, reset-on-end, auto-hide controls,
   preload (auto/metadata/none).
 - **Resume where you left off** — position saved to `localStorage` per video.

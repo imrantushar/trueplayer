@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: TruePlayer 1.6.0\n"
+"Project-Id-Version: TruePlayer 1.5.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/trueplayer\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-24T10:46:39+00:00\n"
+"POT-Creation-Date: 2026-09-24T11:01:56+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 
@@ -175,7 +175,7 @@ msgstr ""
 #: includes/admin/menu.php:75
 #: dev_trueplayer/admin/App.jsx:163
 #: dev_trueplayer/admin/screens/Settings.jsx:707
-#: dev_trueplayer/player/components/Controls.jsx:403
+#: dev_trueplayer/player/components/Controls.jsx:240
 msgid "Settings"
 msgstr ""
 
@@ -210,7 +210,7 @@ msgid "Untitled playlist"
 msgstr ""
 
 #: includes/api/presets-controller.php:119
-#: dev_trueplayer/admin/screens/Presets.jsx:176
+#: dev_trueplayer/admin/screens/Presets.jsx:166
 msgid "Untitled preset"
 msgstr ""
 
@@ -435,7 +435,7 @@ msgstr ""
 #: dev_trueplayer/admin/components/GumletField.jsx:174
 #: dev_trueplayer/admin/screens/CreateModal.jsx:161
 #: dev_trueplayer/admin/screens/Library.jsx:340
-#: dev_trueplayer/admin/screens/Presets.jsx:219
+#: dev_trueplayer/admin/screens/Presets.jsx:209
 #: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:296
 #: dev_trueplayer/block/VideoModal.jsx:230
 msgid "Cancel"
@@ -514,7 +514,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/Analytics.jsx:293
 #: dev_trueplayer/admin/screens/Dashboard.jsx:93
 #: dev_trueplayer/admin/screens/Editor.jsx:231
-#: dev_trueplayer/admin/screens/Presets.jsx:279
+#: dev_trueplayer/admin/screens/Presets.jsx:269
 #: dev_trueplayer/admin/screens/Settings.jsx:564
 #: dev_trueplayer/admin/screens/Settings.jsx:681
 #: dev_trueplayer/player/components/QuizpressQuiz.jsx:213
@@ -537,7 +537,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/Library.jsx:336
 #: dev_trueplayer/admin/screens/Library.jsx:341
 #: dev_trueplayer/admin/screens/Library.jsx:428
-#: dev_trueplayer/admin/screens/Presets.jsx:302
+#: dev_trueplayer/admin/screens/Presets.jsx:292
 msgid "Delete"
 msgstr ""
 
@@ -646,8 +646,8 @@ msgstr ""
 #: dev_trueplayer/admin/screens/CreateModal.jsx:54
 #: dev_trueplayer/admin/screens/CreateModal.jsx:55
 #: dev_trueplayer/admin/screens/CreateModal.jsx:56
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:353
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:556
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:352
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:544
 #: dev_trueplayer/admin/screens/editor/SourceTab.jsx:161
 #: dev_trueplayer/admin/screens/H5pEditor.jsx:141
 msgid "Title"
@@ -770,7 +770,7 @@ msgstr ""
 #: dev_trueplayer/player/components/InfoPanel.jsx:101
 #: dev_trueplayer/player/components/Overlay.jsx:14
 #: dev_trueplayer/player/mount.js:281
-#: dev_trueplayer/player/Player.jsx:1202
+#: dev_trueplayer/player/Player.jsx:1058
 msgid "Close"
 msgstr ""
 
@@ -826,8 +826,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:11
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:210
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:28
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:60
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:22
 msgid "Default"
 msgstr ""
 
@@ -836,7 +835,7 @@ msgid "Gradient bar fading over the picture. The balanced baseline."
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:12
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:29
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:23
 msgid "Modern"
 msgstr ""
 
@@ -845,7 +844,7 @@ msgid "Roomier bar, thicker scrubber and a larger play button."
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:13
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:30
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:24
 msgid "Simple"
 msgstr ""
 
@@ -855,9 +854,9 @@ msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:14
 #: dev_trueplayer/admin/data/preset-templates.js:40
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:31
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:52
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:288
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:25
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:46
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:267
 msgid "Minimal"
 msgstr ""
 
@@ -866,7 +865,7 @@ msgid "Controls in a small pill. Time and volume are hidden."
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:15
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:32
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:26
 msgid "Standard"
 msgstr ""
 
@@ -875,7 +874,7 @@ msgid "Opaque deck with square edges — the classic player look."
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:16
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:33
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:27
 msgid "Floating"
 msgstr ""
 
@@ -884,7 +883,7 @@ msgid "The bar detaches from the edge as a blurred, rounded panel."
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:17
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:34
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:28
 msgid "Ambient"
 msgstr ""
 
@@ -901,7 +900,7 @@ msgid "Album"
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:48
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:51
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:45
 msgid "Large square cover art above the title and controls."
 msgstr ""
 
@@ -916,7 +915,7 @@ msgid "For episodes inside a playlist: previous / next track, nothing competing 
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:85
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:53
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:47
 msgid "Podcast"
 msgstr ""
 
@@ -925,7 +924,7 @@ msgid "Roomier bar with large cover art, skip buttons and a speed control."
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:93
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:54
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:48
 msgid "Audiobook"
 msgstr ""
 
@@ -934,32 +933,32 @@ msgid "Long-form listening: 30-second skips, speed control and chapter navigatio
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:203
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:66
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:52
 msgid "16:9 (widescreen)"
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:204
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:67
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:53
 msgid "9:16 (vertical)"
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:205
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:68
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:54
 msgid "4:3 (classic)"
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:206
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:69
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:55
 msgid "1:1 (square)"
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:207
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:70
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:56
 msgid "21:9 (cinematic)"
 msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:208
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:71
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:57
 msgid "Auto (native)"
 msgstr ""
 
@@ -1151,7 +1150,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/Analytics.jsx:275
 #: dev_trueplayer/admin/screens/CreateModal.jsx:188
-#: dev_trueplayer/admin/screens/Presets.jsx:246
+#: dev_trueplayer/admin/screens/Presets.jsx:236
 #: dev_trueplayer/block/VideoModal.jsx:134
 #: dev_trueplayer/player/components/EmailForm.jsx:86
 msgid "Name"
@@ -1166,7 +1165,7 @@ msgid "Completed"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/Analytics.jsx:276
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:238
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:237
 msgid "Quiz"
 msgstr ""
 
@@ -1183,7 +1182,7 @@ msgid "No completions yet."
 msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:29
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:227
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:226
 msgid "Questions"
 msgstr ""
 
@@ -1248,7 +1247,7 @@ msgid "Install"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:165
-#: dev_trueplayer/admin/screens/Presets.jsx:220
+#: dev_trueplayer/admin/screens/Presets.jsx:210
 #: dev_trueplayer/block/VideoModal.jsx:242
 msgid "Creating…"
 msgstr ""
@@ -1270,8 +1269,8 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:200
 #: dev_trueplayer/admin/screens/Library.jsx:38
-#: dev_trueplayer/admin/screens/Presets.jsx:229
-#: dev_trueplayer/admin/screens/Presets.jsx:263
+#: dev_trueplayer/admin/screens/Presets.jsx:219
+#: dev_trueplayer/admin/screens/Presets.jsx:253
 #: dev_trueplayer/admin/screens/Settings.jsx:781
 #: dev_trueplayer/block/edit.jsx:124
 msgid "Video"
@@ -1279,8 +1278,8 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:200
 #: dev_trueplayer/admin/screens/Library.jsx:39
-#: dev_trueplayer/admin/screens/Presets.jsx:229
-#: dev_trueplayer/admin/screens/Presets.jsx:263
+#: dev_trueplayer/admin/screens/Presets.jsx:219
+#: dev_trueplayer/admin/screens/Presets.jsx:253
 #: dev_trueplayer/admin/screens/Settings.jsx:781
 #: dev_trueplayer/utils/source-types.js:140
 msgid "Audio"
@@ -1321,7 +1320,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/Editor.jsx:304
 #: dev_trueplayer/admin/screens/Editor.jsx:320
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:50
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:190
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:169
 #: dev_trueplayer/admin/screens/Settings.jsx:119
 msgid "PRO"
 msgstr ""
@@ -1557,7 +1556,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:155
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:22
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:17
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:496
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:391
 #: dev_trueplayer/admin/screens/Settings.jsx:1329
 msgid "Top right"
 msgstr ""
@@ -1565,7 +1564,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:156
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:22
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:17
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:497
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:392
 #: dev_trueplayer/admin/screens/Settings.jsx:1328
 msgid "Top left"
 msgstr ""
@@ -1573,7 +1572,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:157
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:24
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:19
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:494
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:389
 #: dev_trueplayer/admin/screens/Settings.jsx:1331
 msgid "Bottom right"
 msgstr ""
@@ -1581,7 +1580,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:158
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:24
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:19
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:495
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:390
 #: dev_trueplayer/admin/screens/Settings.jsx:1330
 msgid "Bottom left"
 msgstr ""
@@ -1764,276 +1763,272 @@ msgstr ""
 msgid "Available with TruePlayer Pro."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:42
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:41
 msgid "Course completion (LMS)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:43
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:42
 msgid "Install Academy LMS to link this video to a course lesson."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:50
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:49
 msgid "Course completion (Academy LMS)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:51
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:50
 msgid "Link this video to a lesson: gate it by enrollment and mark it complete when watched/passed."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:52
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:51
 msgid "Link to an Academy course"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:56
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:55
 msgid "Course"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:60
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:73
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:240
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:59
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:72
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:239
 msgid "— select —"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:65
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:64
 msgid "Lesson"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:66
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:65
 msgid "Pick a course first."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:66
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:65
 msgid "This course has no lessons in its curriculum yet."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:66
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:65
 msgid "Marked complete when the viewer completes this video."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:78
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:77
 msgid "Block playback for non-enrolled viewers"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:139
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:168
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:138
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:167
 msgid "True / False"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:139
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:167
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:138
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:166
 msgid "Multiple choice"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:154
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:338
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:153
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:337
 #: dev_trueplayer/admin/screens/Playlists.jsx:171
 msgid "Drag to reorder"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:171
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:170
 msgid "Question prompt…"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:174
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:173
 msgid "Correct answer"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:176
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:175
 msgid "— pick —"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:177
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:176
 #: dev_trueplayer/player/components/Quiz.jsx:147
 msgid "True"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:178
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:177
 #: dev_trueplayer/player/components/Quiz.jsx:147
 msgid "False"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:183
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:182
 msgid "Options (select the correct one)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:193
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:192
 msgid "+ Option"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:201
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:200
 msgid "+ Add question"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:207
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:206
 msgid "one attempt only"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:208
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:207
 msgid "retries allowed"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:233
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:232
 msgid "Author here"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:234
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:233
 msgid "Use a QuizPress quiz"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:238
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:237
 msgid "Question types, scoring and feedback all come from QuizPress."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:243
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:242
 msgid " — has manual-review questions"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:252
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:251
 msgid "Install QuizPress to link a quiz here."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:266
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:265
 #: dev_trueplayer/admin/screens/settings/LicensePanel.jsx:244
 msgid "Unlimited"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:275
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:274
 msgid "Set on the quiz itself in QuizPress — this checkpoint's own \"Pass %\" field isn't used for a QuizPress quiz. QuizPress's attempt limit above is separate from TruePlayer's own \"Max quiz attempts\" (Watch verification, above): that one still applies too and locks the whole video (requiring a rewatch) independently, once it's reached."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:282
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:281
 msgid "<b>Heads up:</b> this quiz includes a manually-reviewed question type (short answer, paragraph, date, or number). QuizPress won't mark an attempt passed or failed until an admin reviews it in <i>QuizPress → Quiz Insights</i> — until then, a viewer gated on this quiz can't complete the video."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:322
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:321
 msgid "No QuizPress quiz selected yet"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:349
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:348
 msgid "At (seconds)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:351
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:558
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:350
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:546
 msgid "Pass %"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:353
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:352
 msgid "Checkpoint"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:380
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:379
 #: dev_trueplayer/admin/screens/Settings.jsx:521
 msgid "Lock the video — re-watch it to earn another try"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:381
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:380
 #: dev_trueplayer/admin/screens/Settings.jsx:522
 msgid "Nothing — let them keep retrying"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:461
-#: dev_trueplayer/player/Player.jsx:766
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:455
+#: dev_trueplayer/player/Player.jsx:690
 msgid "Final quiz"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:473
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:467
 msgid "Watch verification"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:475
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:469
 #: dev_trueplayer/admin/screens/Settings.jsx:951
 msgid "Completion threshold (%)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:475
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:469
 #: dev_trueplayer/admin/screens/Settings.jsx:951
 msgid "Coverage required to count as 'watched'."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:479
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:473
 #: dev_trueplayer/admin/screens/Settings.jsx:954
 msgid "Max quiz attempts"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:482
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:476
 msgid "A separate limit from QuizPress's own attempt limit on a linked quiz below; both apply independently."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:483
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:477
 #: dev_trueplayer/admin/screens/Settings.jsx:954
 msgid "Counted and reported, but never enforced."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:483
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:477
 #: dev_trueplayer/admin/screens/Settings.jsx:954
 msgid "Before the video locks."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:490
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:484
 #: dev_trueplayer/admin/screens/Settings.jsx:959
 msgid "When attempts run out"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:492
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:486
 #: dev_trueplayer/admin/screens/Settings.jsx:961
 msgid "Attempts are still counted and reported — they just never lock anything, and watch progress is kept so the video resumes."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:493
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:487
 #: dev_trueplayer/admin/screens/Settings.jsx:962
 msgid "Locking clears the viewer’s watch progress, so the re-watch has to be genuine."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:504
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:493
 #: dev_trueplayer/admin/screens/Settings.jsx:968
 msgid "Anti-skip (block seeking past unwatched parts)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:504
-msgid "Already covered — the Rapid Engage Bar locks the timeline entirely."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:506
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:494
 #: dev_trueplayer/admin/screens/Settings.jsx:970
 msgid "Require login to watch (reliable per-person tracking)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:507
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:495
 msgid "These start from your site-wide policy (Settings → Enforcement). Change one here and this video keeps your value; leave it and it follows the site."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:513
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:501
 msgid "Checkpoint questions"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:516
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:504
 msgid "Pause playback at a timestamp and require a correct answer to continue. Drag ⠿ to reorder, click a row to expand it."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:517
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:505
 msgid "Pause playback at a timestamp and require a correct answer to continue. Click a row to expand it."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:520
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:508
 msgid "+ Checkpoint"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:541
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:529
 msgid "No checkpoints yet."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:548
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:536
 msgid "Final quiz (end gate)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:549
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:537
 #: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:29
 #: dev_trueplayer/admin/screens/editor/ProtectionTab.jsx:50
 msgid "on"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:551
+#: dev_trueplayer/admin/screens/editor/GatingTab.jsx:539
 msgid "Enable"
 msgstr ""
 
@@ -2354,9 +2349,8 @@ msgid "— Select a provider —"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:363
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:223
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:243
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:328
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:202
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:222
 #: dev_trueplayer/admin/screens/editor/SourceTab.jsx:174
 msgid " (Pro)"
 msgstr ""
@@ -2502,10 +2496,8 @@ msgid "On"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:50
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:434
-#: dev_trueplayer/player/components/Controls.jsx:396
-#: dev_trueplayer/player/components/Controls.jsx:397
-#: dev_trueplayer/player/components/Controls.jsx:451
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:339
+#: dev_trueplayer/player/components/Controls.jsx:264
 msgid "Off"
 msgstr ""
 
@@ -2615,7 +2607,7 @@ msgid "Optional supporting line"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:160
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:389
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:294
 msgid "Background color"
 msgstr ""
 
@@ -2659,413 +2651,332 @@ msgstr ""
 msgid "Labels the picture during a time window."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:14
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:138
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:13
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:117
 msgid "Appearance"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:19
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:306
-msgid "Seek bar"
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:20
-#: dev_trueplayer/utils/controls.js:64
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:14
+#: dev_trueplayer/utils/controls.js:56
 msgid "Captions"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:21
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:402
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:15
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:307
 msgid "Controls"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:22
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:16
 msgid "Behaviour"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:23
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:522
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:17
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:417
 msgid "Playback"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:24
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:543
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:18
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:438
 #: dev_trueplayer/admin/screens/Settings.jsx:921
 msgid "Custom CSS"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:50
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:44
 msgid "Compact"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:50
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:44
 msgid "A single bar: cover art, title and controls in one row."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:51
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:45
 msgid "Card"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:52
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:46
 msgid "Play button and a waveform, nothing else."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:53
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:47
 msgid "A taller bar with large cover art and room for the episode title."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:54
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:48
 msgid "The transport centred and enlarged for hours of listening."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:60
-msgid "A plain progress track."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:61
-msgid "Waveform"
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:61
-msgid "The track drawn as audio bars. Chapter markers give way to it."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:62
-msgid "Rapid Engage"
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:62
-msgid "Simulated: it runs ahead early so the video feels shorter. Seeking and the time display are turned off while it is on."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:165
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:144
 msgid "Start from a template"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:166
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:145
 msgid "Applies a complete look in one click. Every field below stays editable afterwards."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:199
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:178
 msgid "Preset"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:199
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:178
 msgid "Apply a saved player preset as the starting point — you can still tweak anything below."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:204
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:505
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:183
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:400
 #: dev_trueplayer/admin/screens/Settings.jsx:888
 msgid "None"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:219
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:235
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:198
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:214
 msgid "Skin"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:219
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:198
 msgid "Overall player theme."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:219
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:198
 msgid "Floating & Ambient need TruePlayer Pro."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:238
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:217
 msgid "Podcast & Audiobook need TruePlayer Pro."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:249
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:228
 #: dev_trueplayer/admin/screens/Settings.jsx:912
 msgid "Aspect ratio"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:249
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:228
 msgid "9:16 for vertical / Shorts-style video."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:255
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:234
 #: dev_trueplayer/admin/screens/Settings.jsx:1300
 msgid "Accent color"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:255
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:234
 msgid "Scrubber, buttons, highlights."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:258
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:237
 #: dev_trueplayer/admin/screens/Settings.jsx:1306
 msgid "Button hover color"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:258
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:237
 msgid "Optional; default is a light overlay."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:259
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:238
 #: dev_trueplayer/admin/screens/Settings.jsx:1309
 msgid "(none)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:264
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:243
 msgid "Play button style"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:266
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:245
 msgid "Circle"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:267
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:246
 msgid "Soft (rounded)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:268
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:247
 msgid "Square"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:274
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:253
 msgid "Play button size"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:276
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:255
 msgid "Auto (skin default)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:277
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:256
 msgid "Small"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:278
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:257
 msgid "Medium"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:279
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:258
 msgid "Large"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:280
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:259
 msgid "Extra large"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:284
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:263
 msgid "Control bar style"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:286
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:265
 msgid "Gradient"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:287
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:266
 msgid "Solid"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:298
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:277
 msgid "Show large center play button"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:307
-msgid "How the timeline draws itself, and what the viewer can do with it."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:315
-msgid "An audio player’s bar comes from its skin — see Appearance."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:319
-msgid "Seek bar style"
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:334
-msgid "Rapid Engage needs TruePlayer Pro."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:343
-msgid "Desktop speed"
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:344
-msgid "How far ahead the bar runs. Start at Balanced — too strong and the jump reads as a broken player rather than a short video."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:358
-msgid "Use the desktop speed on mobile"
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:358
-msgid "Phone viewers decide faster and see a shorter bar, so the same setting can read differently there."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:361
-msgid "Mobile speed"
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:370
-msgid "The preview shows the bar but stays scrubbable — the locked timeline only applies on a real page."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:380
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:285
 msgid "Subtitle style"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:381
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:286
 msgid "How captions render on self-hosted / HLS video. YouTube & Vimeo embeds style their own."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:386
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:291
 msgid "Text color"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:403
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:308
 msgid "Show or hide each control in the bar."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:415
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:320
 msgid "Behavior"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:417
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:322
 msgid "Autoplay"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:417
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:322
 msgid "“With sound” falls back to muted when the browser blocks it."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:435
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:340
 msgid "On, muted"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:436
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:341
 msgid "On, with sound"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:441
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:346
 msgid "Start muted"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:443
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:348
 msgid "Loop"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:448
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:353
 msgid "Reset to start when finished"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:448
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:353
 msgid "Loop already restarts the video, and keeps it playing."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:456
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:358
 msgid "Save & resume playback position"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:456
-msgid "A returning viewer resumes part-way in, so the Rapid Engage Bar starts part-filled and the fast opening is lost."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:458
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:359
 msgid "Auto-hide controls while playing"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:462
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:363
 msgid "Float player when scrolling away"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:462
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:363
 msgid "Test on a real page — the preview is scaled, so it can’t float."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:472
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:369
 msgid "Prevent skipping ahead (no jumping to unwatched parts)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:472
-msgid "Always on with the Rapid Engage Bar."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:472
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:369
 msgid "Test on a real page — the preview stays scrubbable on purpose."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:478
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:374
 msgid "Disable the timeline entirely (no click or drag, forward or back)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:478
-msgid "Always on with the Rapid Engage Bar — a scrubbable simulated bar gives itself away."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:485
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:380
 msgid "Muted preview on hover (self-hosted video)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:485
-msgid "Unavailable with the Rapid Engage Bar — a hover preview is positioned from the real timeline."
-msgstr ""
-
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:485
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:380
 msgid "Test on a real page — it needs the click-to-load poster."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:492
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:387
 msgid "Float position"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:501
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:396
 msgid "Preload"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:501
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:396
 msgid "How much to load before play."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:503
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:398
 msgid "Metadata only"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:504
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:399
 msgid "Auto (full)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:508
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:403
 msgid "Load strategy"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:508
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:403
 msgid "When the player boots — keeps below-the-fold pages fast."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:510
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:405
 msgid "On click (poster until played)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:511
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:406
 msgid "When scrolled into view"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:512
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:407
 msgid "Immediately on page load"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:524
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:419
 msgid "Playback speeds"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:524
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:419
 msgid "Comma-separated, e.g. 0.5, 1, 1.5, 2"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:533
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:428
 msgid "Skip interval (seconds)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:533
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:428
 msgid "Rewind / fast-forward + arrow keys."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:546
+#: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:441
 msgid "Printed with this player on the frontend. Scope rules with <mount>.trueplayer-mount</mount> (all players) or <stage>.tp-stage</stage>."
 msgstr ""
 
@@ -3412,7 +3323,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/Library.jsx:418
 #: dev_trueplayer/admin/screens/Library.jsx:419
-#: dev_trueplayer/admin/screens/Presets.jsx:301
+#: dev_trueplayer/admin/screens/Presets.jsx:291
 #: dev_trueplayer/block/edit.jsx:147
 #: dev_trueplayer/block/edit.jsx:162
 msgid "Edit"
@@ -3486,84 +3397,84 @@ msgstr ""
 msgid "These styles & behaviours apply to any video that uses this preset. Individual videos can still override anything."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:139
+#: dev_trueplayer/admin/screens/Presets.jsx:129
 msgid "Preview with"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:148
+#: dev_trueplayer/admin/screens/Presets.jsx:138
 msgid "Sample track"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:192
+#: dev_trueplayer/admin/screens/Presets.jsx:182
 msgid "Delete this preset? Videos using it fall back to defaults."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:207
+#: dev_trueplayer/admin/screens/Presets.jsx:197
 msgid "Player presets"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:208
+#: dev_trueplayer/admin/screens/Presets.jsx:198
 msgid "Reusable styles & behaviour — brand once, use everywhere."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:210
+#: dev_trueplayer/admin/screens/Presets.jsx:200
 msgid "Add preset"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:215
-#: dev_trueplayer/admin/screens/Presets.jsx:220
+#: dev_trueplayer/admin/screens/Presets.jsx:205
+#: dev_trueplayer/admin/screens/Presets.jsx:210
 msgid "Create preset"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:227
+#: dev_trueplayer/admin/screens/Presets.jsx:217
 msgid "Player type"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:227
+#: dev_trueplayer/admin/screens/Presets.jsx:217
 msgid "Video and audio presets configure different players."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:245
+#: dev_trueplayer/admin/screens/Presets.jsx:235
 msgid "Preset name"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:248
+#: dev_trueplayer/admin/screens/Presets.jsx:238
 msgid "Start from"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:248
+#: dev_trueplayer/admin/screens/Presets.jsx:238
 msgid "A predefined look to begin with — you can change everything after."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:250
+#: dev_trueplayer/admin/screens/Presets.jsx:240
 msgid "Blank (defaults)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:253
+#: dev_trueplayer/admin/screens/Presets.jsx:243
 msgid " — needs Pro"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:283
+#: dev_trueplayer/admin/screens/Presets.jsx:273
 msgid "No audio presets yet"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:283
+#: dev_trueplayer/admin/screens/Presets.jsx:273
 msgid "No video presets yet"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:285
+#: dev_trueplayer/admin/screens/Presets.jsx:275
 msgid "Create one to reuse a consistent audio player style across episodes."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:286
+#: dev_trueplayer/admin/screens/Presets.jsx:276
 msgid "Create one to reuse a consistent player style across videos."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:298
+#: dev_trueplayer/admin/screens/Presets.jsx:288
 msgid "Audio preset"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:298
+#: dev_trueplayer/admin/screens/Presets.jsx:288
 msgid "Video preset"
 msgstr ""
 
@@ -4611,91 +4522,81 @@ msgstr ""
 msgid "Open %s"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:288
-#: dev_trueplayer/player/providers/html5.js:139
-#: dev_trueplayer/player/providers/vimeo.js:87
-#: dev_trueplayer/player/providers/youtube.js:131
-msgid "Auto"
-msgstr ""
-
-#: dev_trueplayer/player/components/Controls.jsx:294
-#: dev_trueplayer/player/components/Controls.jsx:302
-#: dev_trueplayer/player/components/Controls.jsx:415
-msgid "Quality"
-msgstr ""
-
-#: dev_trueplayer/player/components/Controls.jsx:430
+#: dev_trueplayer/player/components/Controls.jsx:245
 msgid "Speed"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:431
-#: dev_trueplayer/player/components/Controls.jsx:437
+#: dev_trueplayer/player/components/Controls.jsx:248
 msgid "Normal"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:446
-#: dev_trueplayer/player/components/Controls.jsx:602
+#: dev_trueplayer/player/components/Controls.jsx:253
+msgid "Quality"
+msgstr ""
+
+#: dev_trueplayer/player/components/Controls.jsx:263
+#: dev_trueplayer/player/components/Controls.jsx:398
 msgid "Subtitles"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:526
+#: dev_trueplayer/player/components/Controls.jsx:325
 msgid "Previous track"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:531
+#: dev_trueplayer/player/components/Controls.jsx:330
 msgid "Pause"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:531
+#: dev_trueplayer/player/components/Controls.jsx:330
 #: dev_trueplayer/player/components/Overlays.jsx:32
 msgid "Play"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:538
-#: dev_trueplayer/utils/controls.js:46
+#: dev_trueplayer/player/components/Controls.jsx:337
+#: dev_trueplayer/utils/controls.js:45
 msgid "Rewind"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:543
+#: dev_trueplayer/player/components/Controls.jsx:342
 msgid "Fast forward"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:548
+#: dev_trueplayer/player/components/Controls.jsx:347
 msgid "Next track"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:553
+#: dev_trueplayer/player/components/Controls.jsx:352
 msgid "Unmute"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:553
-#: dev_trueplayer/utils/controls.js:51
+#: dev_trueplayer/player/components/Controls.jsx:352
+#: dev_trueplayer/utils/controls.js:50
 msgid "Mute"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:558
+#: dev_trueplayer/player/components/Controls.jsx:357
 msgid "Volume"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:575
+#: dev_trueplayer/player/components/Controls.jsx:374
 msgid "Playback speed"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:585
+#: dev_trueplayer/player/components/Controls.jsx:381
 msgid "Download"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:590
-#: dev_trueplayer/utils/controls.js:69
+#: dev_trueplayer/player/components/Controls.jsx:386
+#: dev_trueplayer/utils/controls.js:61
 msgid "Chapters & transcript"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:613
+#: dev_trueplayer/player/components/Controls.jsx:409
 msgid "Picture in picture"
 msgstr ""
 
-#: dev_trueplayer/player/components/Controls.jsx:618
-#: dev_trueplayer/utils/controls.js:72
+#: dev_trueplayer/player/components/Controls.jsx:414
+#: dev_trueplayer/utils/controls.js:64
 msgid "Fullscreen"
 msgstr ""
 
@@ -4856,68 +4757,72 @@ msgstr ""
 msgid "Next"
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:252
+#: dev_trueplayer/player/Player.jsx:203
 msgid "This video source requires TruePlayer Pro."
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:273
+#: dev_trueplayer/player/Player.jsx:224
 msgid "Please log in to watch this video."
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:274
+#: dev_trueplayer/player/Player.jsx:225
 msgid "Enroll in this course to watch."
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:275
+#: dev_trueplayer/player/Player.jsx:226
 msgid "Purchase this course to watch."
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:277
+#: dev_trueplayer/player/Player.jsx:228
 msgid "This video is not available."
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:301
+#: dev_trueplayer/player/Player.jsx:252
 msgid "Unable to load the player."
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:488
-#: dev_trueplayer/player/providers/html5.js:231
+#: dev_trueplayer/player/Player.jsx:420
+#: dev_trueplayer/player/providers/html5.js:163
 msgid "Playback error."
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:579
+#: dev_trueplayer/player/Player.jsx:503
 msgid "Checkpoint question"
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:1429
+#: dev_trueplayer/player/Player.jsx:1275
 msgid "Playing in a floating window"
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:1430
+#: dev_trueplayer/player/Player.jsx:1276
 msgid "Bring back"
 msgstr ""
 
-#: dev_trueplayer/player/providers/html5.js:74
+#: dev_trueplayer/player/providers/html5.js:55
 msgid "This video has no playable source yet. If it was just uploaded, it may still be encoding."
 msgstr ""
 
-#: dev_trueplayer/player/providers/html5.js:178
+#: dev_trueplayer/player/providers/html5.js:85
+msgid "Auto"
+msgstr ""
+
+#: dev_trueplayer/player/providers/html5.js:110
 msgid "This browser cannot play streaming (HLS) video."
 msgstr ""
 
-#: dev_trueplayer/player/providers/html5.js:222
+#: dev_trueplayer/player/providers/html5.js:154
 msgid "Playback was interrupted."
 msgstr ""
 
-#: dev_trueplayer/player/providers/html5.js:223
+#: dev_trueplayer/player/providers/html5.js:155
 msgid "The video could not be downloaded — check the connection or the file’s URL."
 msgstr ""
 
-#: dev_trueplayer/player/providers/html5.js:224
+#: dev_trueplayer/player/providers/html5.js:156
 msgid "This video could not be decoded. Its format may not be supported by this browser."
 msgstr ""
 
-#: dev_trueplayer/player/providers/html5.js:225
+#: dev_trueplayer/player/providers/html5.js:157
 msgid "This video’s format or URL is not supported by this browser."
 msgstr ""
 
@@ -4938,79 +4843,55 @@ msgstr ""
 msgid "The owner of that YouTube video doesn’t allow it to be embedded."
 msgstr ""
 
-#: dev_trueplayer/player/providers/youtube.js:179
+#: dev_trueplayer/player/providers/youtube.js:118
 msgid "This YouTube video could not be played."
 msgstr ""
 
-#: dev_trueplayer/player/rapid-engage.js:51
-msgid "1 — Subtle"
-msgstr ""
-
-#: dev_trueplayer/player/rapid-engage.js:52
-msgid "2 — Light"
-msgstr ""
-
-#: dev_trueplayer/player/rapid-engage.js:53
-msgid "3 — Balanced"
-msgstr ""
-
-#: dev_trueplayer/player/rapid-engage.js:54
-msgid "4 — Strong"
-msgstr ""
-
-#: dev_trueplayer/player/rapid-engage.js:55
-msgid "5 — Aggressive"
-msgstr ""
-
-#: dev_trueplayer/utils/controls.js:43
+#: dev_trueplayer/utils/controls.js:42
 msgid "Play / pause"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:44
+#: dev_trueplayer/utils/controls.js:43
 msgid "Previous track (playlists)"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:45
+#: dev_trueplayer/utils/controls.js:44
 msgid "Next track (playlists)"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:47
+#: dev_trueplayer/utils/controls.js:46
 msgid "Fast-forward"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:48
+#: dev_trueplayer/utils/controls.js:47
 msgid "Progress bar"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:49
+#: dev_trueplayer/utils/controls.js:48
 msgid "Current time"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:50
+#: dev_trueplayer/utils/controls.js:49
 msgid "Duration"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:52
+#: dev_trueplayer/utils/controls.js:51
 msgid "Volume slider"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:56
+#: dev_trueplayer/utils/controls.js:55
 msgid "Playback speed button"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:63
-msgid "Quality button"
-msgstr ""
-
-#: dev_trueplayer/utils/controls.js:70
+#: dev_trueplayer/utils/controls.js:62
 msgid "Settings (gear, incl. playback speed)"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:71
+#: dev_trueplayer/utils/controls.js:63
 msgid "Picture-in-picture"
 msgstr ""
 
-#: dev_trueplayer/utils/controls.js:73
+#: dev_trueplayer/utils/controls.js:65
 msgid "Download button"
 msgstr ""
 

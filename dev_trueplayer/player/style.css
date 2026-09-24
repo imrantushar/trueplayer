@@ -670,21 +670,9 @@
 .tp-volume:hover,
 .tp-volume:focus,
 .tp-volume:active {
-	/* The track and the thumb, named once. The thumb has to be centred on the
-	   track by hand in WebKit (see the negative margin below), and that offset
-	   is only correct for one pair of sizes — as a bare number it went stale
-	   the moment the thumb was resized, which is how it came to sit ~2px above
-	   the track. Derived from these, it cannot drift again. */
-	--tp-vol-track: 3px;
-	--tp-vol-thumb: 10px;
 	width: 74px !important;
 	flex: 0 0 74px !important;
 	height: 16px; /* comfortable click target; the visible track is drawn thin below */
-	/* A floor, not just a height: this is an <input>, and a host theme's own
-	   `input { height: auto }` (or a CSS reset) outranks a plain `height` on a
-	   single-class selector the same way the width note above describes. Below
-	   the thumb's own size the indicator gets clipped by the input's box. */
-	min-height: 16px;
 	cursor: pointer;
 	/* Taking manual control of the track/thumb below via the WebKit/Moz
 	   pseudo-elements — accent-color only recolors the browser's default
@@ -699,7 +687,7 @@
     outline: 0 !important;
 }
 .tp-volume::-webkit-slider-runnable-track {
-	height: var( --tp-vol-track );
+	height: 3px;
 	border-radius: 2px;
 	background: rgba( 255, 255, 255, 0.4 ) !important;
     box-shadow: none !important;
@@ -707,36 +695,27 @@
 .tp-volume::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	appearance: none;
-	width: var( --tp-vol-thumb );
-	height: var( --tp-vol-thumb );
-	/* WebKit lays the thumb out from the TOP of the track, so centring it is
-	   ours to do: half the difference, pulled upwards. Computed rather than
-	   written out, so resizing either variable keeps the indicator centred.
-	   Sizes are px for the same reason — a rem thumb against a px offset
-	   decentres itself on any page with a non-16px root font size. */
-	margin-top: calc( ( var( --tp-vol-track ) - var( --tp-vol-thumb ) ) / 2 );
+	width: 0.4rem;
+	height: 0.4rem;
+	margin-top: -3.5px; /* center the 10px thumb on the 3px track */
 	border-radius: 50%;
 	background: var( --tp-accent );
 	cursor: pointer;
 }
 .tp-volume::-moz-range-track {
-	height: var( --tp-vol-track );
+	height: 3px;
 	border-radius: 2px;
-	background: rgba( 255, 255, 255, 0.4 );
+	background: rgba( 255, 255, 255, 0.3 );
 	box-shadow: none !important;
 }
-/* The filled portion is part of the track and has to match its height —  at
-   8px on a 3px track it drew a bar thicker than the groove it was filling. */
 .tp-volume::-moz-range-progress {
-	height: var( --tp-vol-track );
-	border-radius: 2px;
+	height: 8px;
+	border-radius: 8px;
 	background: var( --tp-accent );
 }
-/* Firefox centres the thumb on the track itself, so no margin here — only the
-   size, matched to WebKit's so the control looks the same in both. */
 .tp-volume::-moz-range-thumb {
-	width: var( --tp-vol-thumb ) !important;
-	height: var( --tp-vol-thumb ) !important;
+	width: 0.3rem !important;
+	height: 0.3rem !important;
 	border: 0;
 	border-radius: 50%;
 	background: var( --tp-accent );
@@ -781,19 +760,6 @@
 }
 .tp-scrubber.is-disabled {
 	cursor: not-allowed;
-}
-/* The Rapid Engage Bar is locked, but it must not LOOK locked: `not-allowed`
-   is an affordance announcing that something is being refused, which is the
-   one thing a bar pretending to be an ordinary timeline cannot afford to
-   announce. It reads as a plain progress indicator instead — default cursor,
-   no thumb to reach for, no hover response. Wins on specificity over
-   .is-disabled above, which Player.jsx always sets alongside it. */
-.tp-scrubber.is-rapid,
-.tp-scrubber.is-rapid.is-disabled {
-	cursor: default;
-}
-.tp-scrubber.is-rapid .tp-scrubber-thumb {
-	display: none;
 }
 .tp-scrubber-track {
 	position: relative;
@@ -917,65 +883,12 @@
 	padding: 6px;
 	box-shadow: 0 6px 24px rgba( 0, 0, 0, 0.4 );
 }
-/* The gear menu specifically: a fixed window rather than a popup that resizes
-   as sections are opened and closed. Collapsing a group would otherwise make
-   the panel jump under the pointer, moving the next row out from under it.
-   box-sizing so the rendered box is exactly 312x250 including the padding. */
-.tp-menu.is-settings {
-	box-sizing: border-box;
-	width: 312px;
-	height: 250px;
-	max-height: none;
-}
 .tp-menu-section {
 	font-size: 10px;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
 	color: #9ca3af;
 	padding: 6px 8px 2px;
-}
-/* ---- collapsible group header (gear menu) ---- */
-.tp-menu-toggle {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	width: 100%;
-	text-align: left;
-	background: transparent;
-	border: 0;
-	color: #e5e7eb;
-	padding: 9px 8px;
-	border-radius: 6px;
-	font-size: 13px;
-	font-weight: 500;
-	cursor: pointer;
-}
-.tp-menu-toggle:hover {
-	background: rgba( 255, 255, 255, 0.1 );
-}
-/* The current value, so a collapsed group still answers what it is set to. */
-.tp-menu-toggle-value {
-	margin-left: auto;
-	color: #9ca3af;
-	font-size: 12px;
-	font-weight: 400;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	max-width: 140px;
-}
-.tp-menu-chevron {
-	flex: none;
-	width: 16px;
-	height: 16px;
-	transition: transform 0.15s ease;
-}
-.tp-menu-toggle[aria-expanded='true'] .tp-menu-chevron {
-	transform: rotate( 180deg );
-}
-/* Indented so an option reads as belonging to the group above it. */
-.tp-menu-group .tp-menu-item {
-	padding-left: 24px;
 }
 .tp-menu-item {
 	display: flex;
