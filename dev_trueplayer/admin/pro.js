@@ -31,6 +31,10 @@ export const PRO_SKINS = [ 'floating', 'ambient' ];
 // `compact` at render on a free install. This list only decides what the
 // editor offers; keep the two in step.
 export const PRO_AUDIO_LAYOUTS = [ 'podcast', 'audiobook' ];
+// The seek bar's equivalent. Mirrors TruePlayer\Pro::PREMIUM_SEEK_BARS, which
+// is the enforcing copy — Helper::enforce_pro_limits() resets one of these to
+// `default` at render on a free install. Keep the two in step.
+export const PRO_SEEK_BARS = [ 'rapid-engage' ];
 // Re-exported so existing importers keep working; the list itself lives with
 // the rest of each type's metadata (see @Utils/source-types).
 export { PRO_SOURCES } from '@Utils/source-types';
