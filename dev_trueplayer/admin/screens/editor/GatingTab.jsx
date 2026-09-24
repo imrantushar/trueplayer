@@ -3,6 +3,7 @@ import { Card, Field, Input, Select, Toggle, Button, Badge } from '../../compone
 import { Icon } from '../../components/icons';
 import { api } from '../../api';
 import { BsTrash } from 'react-icons/bs';
+import { resolveCustomize } from '@Player/customize';
 import { __, __sprintf, _nSprintf } from '@Utils/translation';
 
 const uid = () => Math.random().toString( 36 ).slice( 2, 9 );
@@ -385,6 +386,11 @@ const ON_FAIL_POLICIES = [
 const POLICY_KEYS = [ 'completionThreshold', 'antiSkip', 'maxAttempts', 'onFail', 'requireLoginForGate' ];
 
 export default function GatingTab( { config, patch } ) {
+	// Anti-skip is redundant while the Rapid Engage Bar is on — that locks the
+	// timeline outright, so "block seeking past unwatched parts" has nothing
+	// left to block. Resolved the way the player resolves it so a value
+	// inherited from a preset or the site-wide layer counts too.
+	const rapidOn = 'rapid-engage' === resolveCustomize( config ).appearance.seekBarStyle;
 	const policy = sitePolicy();
 	const [ quizpressOpts, setQuizpressOpts ] = useState( null );
 	useEffect( () => { api.getQuizpressOptions().then( setQuizpressOpts ).catch( () => setQuizpressOpts( { available: false, quizzes: [] } ) ); }, [] );
@@ -490,7 +496,13 @@ export default function GatingTab( { config, patch } ) {
 						{ ON_FAIL_POLICIES.map( ( o ) => <option key={ o.value } value={ o.value }>{ o.label }</option> ) }
 					</Select>
 				</Field>
-				<Toggle className="mb-6" checked={ gating.antiSkip } onChange={ ( v ) => set( { antiSkip: v } ) } label={ __( 'Anti-skip (block seeking past unwatched parts)' ) } />
+				<Toggle
+					className="mb-6"
+					checked={ gating.antiSkip || rapidOn }
+					disabled={ rapidOn }
+					onChange={ ( v ) => set( { antiSkip: v } ) }
+					label={<>{ __( 'Anti-skip (block seeking past unwatched parts)' ) }{ rapidOn && <em className="block not-italic text-[11px] text-gray-400 mt-0.5">{ __( 'Already covered — the Rapid Engage Bar locks the timeline entirely.' ) }</em> }</>}
+				/>
 				<Toggle checked={ gating.requireLoginForGate } onChange={ ( v ) => set( { requireLoginForGate: v } ) } label={ __( 'Require login to watch (reliable per-person tracking)' ) } />
 				<p className="text-xs text-muted mt-4">{ __( 'These start from your site-wide policy (Settings → Enforcement). Change one here and this video keeps your value; leave it and it follows the site.' ) }</p>
 			</Card>

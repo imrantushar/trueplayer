@@ -14,6 +14,20 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 	el.playsInline = true;
 	const behavior = opts.behavior || {};
 	el.preload = behavior.preload || 'metadata';
+	// Rapid Engage hardening. The simulated bar is drawn by our controls, but
+	// the <video> underneath still has the browser's own — reachable in one
+	// right-click ("Show controls") on every Chromium build, complete with the
+	// real elapsed/total readout the bar exists to hide. `controlsList` alone
+	// does not cover it, so the context menu goes too.
+	//
+	// Keyed off the CONFIGURED style, not the runtime-eligible one: the element
+	// is built before any duration is known, and hardening a source that turns
+	// out to be live costs nothing.
+	if ( 'rapid-engage' === ( opts.appearance || {} ).seekBarStyle && ! isAudio ) {
+		el.controlsList = 'nodownload noplaybackrate noremoteplayback';
+		el.disablePictureInPicture = true;
+		el.addEventListener( 'contextmenu', ( e ) => e.preventDefault() );
+	}
 	// Looping is deliberately NOT the native `loop` attribute: a looping
 	// media element never fires `ended`, and `ended` is the single trigger
 	// for the final quiz, the end-screen overlay, the end email gate,
@@ -42,6 +56,11 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 
 	let hls = null;
 	let qualities = [];
+	// The hls.js level index currently on screen. Tracked separately from the
+	// *selected* id because under `auto` the two differ by definition: the
+	// selection stays 'auto' while ABR moves the rendering level underneath it,
+	// and the menu has to be able to say which one that is (`Auto (720p)`).
+	let activeLevel = -1;
 	const src = source.src || '';
 	const isHls = source.type === 'hls' || /\.m3u8($|\?)/i.test( src );
 
@@ -78,11 +97,54 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 			hls.loadSource( src );
 			hls.attachMedia( el );
 			hls.on( Hls.Events.MANIFEST_PARSED, () => {
-				qualities = ( hls.levels || [] ).map( ( lvl, i ) => ( {
-					id: String( i ),
-					label: lvl.height ? __sprintf( '%dp', lvl.height ) : __sprintf( 'Level %d', i ),
-				} ) );
-				qualities.unshift( { id: 'auto', label: __( 'Auto' ) } );
+				/**
+				 * hls.js hands levels back ascending by bitrate, and an ABR
+				 * ladder routinely carries two bitrates at the same height
+				 * (a 720p high and a 720p low). Presented raw that reads as a
+				 * menu with "720p" twice and the best option at the bottom, so
+				 * the list is reversed to highest-first — what every video
+				 * player does — and heights are de-duplicated, keeping the
+				 * richest bitrate for each one.
+				 *
+				 * `id` stays the hls.js level INDEX, not the height, so
+				 * setQuality remains a direct map onto `hls.currentLevel` and
+				 * the de-duplication can't shift what a selection means.
+				 */
+				const seen = new Set();
+				qualities = ( hls.levels || [] )
+					.map( ( lvl, i ) => ( { lvl, i } ) )
+					.sort( ( a, b ) => ( b.lvl.height || 0 ) - ( a.lvl.height || 0 ) || ( b.lvl.bitrate || 0 ) - ( a.lvl.bitrate || 0 ) )
+					.filter( ( { lvl } ) => {
+						// A level with no height can't be de-duplicated by one;
+						// keep every such level rather than collapsing them all.
+						if ( ! lvl.height ) {
+							return true;
+						}
+						if ( seen.has( lvl.height ) ) {
+							return false;
+						}
+						seen.add( lvl.height );
+						return true;
+					} )
+					.map( ( { lvl, i } ) => ( {
+						id: String( i ),
+						label: lvl.height ? __sprintf( '%dp', lvl.height ) : __sprintf( 'Level %d', i ),
+					} ) );
+				// A single-rendition manifest is not a choice. Offering "Auto"
+				// and one level side by side is a menu whose two rows do the
+				// same thing, so leave the list empty and let the UI hide.
+				if ( qualities.length < 2 ) {
+					qualities = [];
+				} else {
+					qualities.unshift( { id: 'auto', label: __( 'Auto' ) } );
+				}
+				emitter.emit( 'qualitychange', qualities );
+			} );
+			// What ABR actually settled on. Without this the menu can only
+			// report the level that was *asked* for, and under 'auto' nothing
+			// was asked for at all.
+			hls.on( Hls.Events.LEVEL_SWITCHED, ( _evt, data ) => {
+				activeLevel = data && typeof data.level === 'number' ? data.level : -1;
 				emitter.emit( 'qualitychange', qualities );
 			} );
 			// Without this, an HLS failure is invisible: hls.js reports its own
@@ -101,6 +163,12 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 			} );
 		} else if ( el.canPlayType( 'application/vnd.apple.mpegurl' ) ) {
 			// No MSE, but the browser plays HLS itself — iOS Safari.
+			//
+			// `hls` stays null here, so getQualities() returns [] and the
+			// quality menu correctly hides: there is no level API to drive.
+			// Nothing is synthesized from el.videoHeight — that reports what
+			// ABR happens to be rendering, which would produce a menu whose
+			// only entry changes on its own and that cannot switch anything.
 			el.src = src;
 		} else {
 			// Neither route exists. Say so, rather than assigning a manifest the
@@ -175,7 +243,16 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 			// broken. `document.pictureInPictureEnabled` reflects whether it can
 			// actually succeed.
 			pip: ! isAudio && !! document.pictureInPictureEnabled && ! el.disablePictureInPicture,
-			quality: qualities.length > 0, rate: true, tracks: true, download: true, fullscreen: ! isAudio,
+			// A GETTER, not a value. This object is built before the manifest
+			// is parsed, so a computed `qualities.length > 0` was evaluated
+			// while the list was still empty and stayed false forever — the
+			// capability could never turn on for any HLS source. Player.jsx
+			// re-spreads `capabilities` on every render, so a getter is
+			// re-read and flips the moment levels arrive.
+			get quality() {
+				return qualities.length > 0;
+			},
+			rate: true, tracks: true, download: true, fullscreen: ! isAudio,
 		},
 		on: emitter.on,
 		play: () => el.play(),
@@ -208,8 +285,28 @@ export async function createHtml5Provider( container, source, opts = {} ) {
 		getQualities: () => qualities,
 		setQuality: ( id ) => {
 			if ( hls ) {
+				// `currentLevel` switches immediately (discarding buffered
+				// segments) where `nextLevel` would wait for the next segment
+				// boundary. Immediate is what a viewer picking a level expects
+				// to see — the picture changes when they ask, not ten seconds
+				// later.
 				hls.currentLevel = id === 'auto' ? -1 : parseInt( id, 10 );
 			}
+		},
+		/**
+		 * The level actually on screen, as an id from getQualities().
+		 *
+		 * Mirrors getActiveTextTrack() below, and for the same reason: under
+		 * `auto` hls.js changes the rendering level without anyone calling
+		 * setQuality, so the UI has to read this back rather than trust the
+		 * selection it last made.
+		 */
+		getActiveQuality: () => {
+			if ( ! hls ) {
+				return '';
+			}
+			const lvl = activeLevel >= 0 ? activeLevel : hls.currentLevel;
+			return lvl >= 0 ? String( lvl ) : '';
 		},
 		getTextTracks: () => {
 			// `default` lives on the <track> element, not on the TextTrack the

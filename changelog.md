@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.6.0 - 2026-09-24
+
+### Added
+
+- Quality selector: Auto plus every available level, in the gear menu or as a one-tap button. Bunny Stream, Mux, Gumlet ABR, HLS, YouTube and Vimeo.
+- The viewer's quality choice is remembered across videos.
+- Rapid Engage Bar: a simulated seek bar that runs ahead early so a video feels shorter. Needs Pro.
+- Seek bar is now its own section in the player editor.
+- Waveform is selectable as a video seek bar style, not only for audio.
+- Separate Rapid Engage speeds for desktop and mobile.
+
+### Fixed
+
+- The volume slider's indicator sat above its track instead of on it.
+- Firefox drew the volume fill thicker than the track it was filling.
+- The volume slider could be squashed by a host theme's input styles.
+
 ## 1.4.0 - 2026-09-10
 
 ### Added
