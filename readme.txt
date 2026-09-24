@@ -22,6 +22,18 @@ Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources 
 
 == Changelog ==
 
+= 1.6.0 - 24-09-2026 =
+* Added - Quality selector: Auto plus every available level, in the gear menu or as a one-tap button. Bunny Stream, Mux, Gumlet ABR, HLS, YouTube and Vimeo.
+* Added - The viewer's quality choice is remembered across videos.
+* Added - Rapid Engage Bar: a simulated seek bar that runs ahead early so a video feels shorter. Needs Pro.
+* Added - Seek bar is now its own section in the player editor.
+* Added - Waveform is selectable as a video seek bar style, not only for audio.
+* Added - Separate Rapid Engage speeds for desktop and mobile.
+
+* Fixed - The volume slider's indicator sat above its track instead of on it.
+* Fixed - Firefox drew the volume fill thicker than the track it was filling.
+* Fixed - The volume slider could be squashed by a host theme's input styles.
+
 = 1.5.0 - 14-09-2026 =
 * Added - Two more audio starting points: Audiobook and Playlist.
 * Added - Podcast and Audiobook are now audio bars of their own, not just switched-on controls. Need Pro.
