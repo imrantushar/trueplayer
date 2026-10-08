@@ -1,14 +1,14 @@
 === TruePlayer ===
 Contributors: kodezen
-Tags: video, player, lms, quiz, webhooks, watch tracking
+Tags: video, player, lms, quiz, webhooks
 Requires at least: 6.4
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 7.4
 Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Watch-verified, quiz-gated video & audio player for WordPress. Knows whether a viewer actually watched, locks the video on quiz failure, and fires webhooks for automation.
+Watch-verified, quiz-gated video & audio player. Knows if a viewer actually watched, locks on quiz failure, fires webhooks for automation.
 
 == Description ==
 
@@ -19,6 +19,14 @@ TruePlayer is a native WordPress video/audio player built for enforcement and au
 * **Webhooks** — signed JSON payloads fire on key events (completed, quiz passed/failed, locked, milestones) for Zapier / automation tools.
 
 Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources (Mux, Bunny, Gumlet), and Gem-ecosystem bridges.
+
+== Third-Party Libraries ==
+
+TruePlayer bundles the following open-source libraries. Each one keeps its own license and copyright.
+
+* **H5P Core PHP library** — the engine that powers the Interactive addon (quizzes, interactive video, course presentations). Source: https://github.com/h5p/h5p-php-library — License: GPL-3.0-or-later (© Joubel AS and contributors). Bundled under `addons/interactive/runtime/h5p-php-library/`.
+* **H5P Editor PHP library** — the authoring UI for H5P content. Source: https://github.com/h5p/h5p-editor-php-library — License: GPL-3.0-or-later (© Joubel AS and contributors). Bundled under `addons/interactive/runtime/h5p-editor-php-library/`.
+* **StoreEngine WordPress SDK** — update, license and telemetry client used by the Pro upgrade flow. Source: https://github.com/imrantushar/storeengine-sdk-for-wordpress — License: GPL-2.0-or-later (© Kodezen). Installed via Composer under `vendor/storeengine/wordpress-sdk/`.
 
 == Changelog ==
 

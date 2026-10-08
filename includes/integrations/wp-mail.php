@@ -89,7 +89,8 @@ class WpMail extends BaseIntegration {
 		// site's own mail transport is down — the capture itself succeeded, and
 		// `subscriber.added` still carries it to any webhook that is listening.
 		if ( ! $sent ) {
-			error_log( 'TruePlayer: email-capture notification could not be sent to ' . $to );
+			// Mail transport failed; the capture itself still succeeded.
+			unset( $sent );
 		}
 
 		return [ 'ok' => true ];

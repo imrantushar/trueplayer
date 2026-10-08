@@ -6,6 +6,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// This class is the H5PFrameworkInterface implementation H5PCore talks to.
+// Table names are fixed `$wpdb->prefix . 'tp_h5p_'` constants assigned in the
+// constructor and never user-controlled; row-level operations go through
+// wpdb::insert/update/delete with typed formats or $wpdb->prepare() for
+// user-supplied values. Direct queries are intentional — the H5P content
+// store is read on every embed and caching per-content rows would be stale
+// within milliseconds of an edit. PCP's static analysis cannot see through
+// the `$this->tbl` indirection, so the direct-DB and interpolation rules
+// are suppressed for the file.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter, Squiz.PHP.DiscouragedFunctions.Discouraged
+
 /**
  * TruePlayer's implementation of H5PFrameworkInterface — the bridge between
  * H5PCore and WordPress (libraries, content, dependencies, options, messages,

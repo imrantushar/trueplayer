@@ -10,6 +10,10 @@ use WP_REST_Controller;
 use WP_REST_Server;
 use TruePlayer\Services\ProgressService;
 
+// Table name comes from ProgressService::table() (our prefix-derived constant);
+// %d parameter is passed through $wpdb->prepare().
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
 /**
  * Admin viewers list for a video (free-tier reporting) + reset/unlock action.
  * Rich charts/exports live in the pro reporting addon.

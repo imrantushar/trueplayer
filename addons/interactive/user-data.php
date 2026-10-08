@@ -6,6 +6,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Table names come from our own `$wpdb->prefix . 'tp_h5p_'` constants and all
+// row operations use wpdb::insert/update/delete with typed formats or
+// $wpdb->prepare() for user-supplied values.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
 /**
  * Save & resume for interactive content.
  *

@@ -6,6 +6,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// This class reads custom plugin tables whose names come from our own
+// ProgressService::table()/engagement_table()/daily_table()/GradingService::attempts_table()
+// constants (built from $wpdb->prefix); every parameter is passed through
+// $wpdb->prepare(). Caching the aggregated analytics is a dashboard concern,
+// not a row read, so DirectQuery / NoCaching / InterpolatedNotPrepared /
+// UnescapedDBParameter are all false positives here.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
 /**
  * Reads the raw tables (tp_progress, tp_engagement, tp_daily, tp_quiz_attempts)
  * and computes the per-video analytics payload the dashboard renders:

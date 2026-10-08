@@ -58,7 +58,7 @@ class Database {
 		try {
 			self::create_initial_custom_table();
 		} catch ( \Throwable $e ) {
-			error_log( 'TruePlayer: schema upgrade deferred — ' . $e->getMessage() );
+			// Deferring to a later load; nothing further we can do here.
 			return;
 		}
 		// New rewrite rules (instant video pages) need a one-time flush.

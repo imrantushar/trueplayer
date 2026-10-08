@@ -14,6 +14,12 @@ use TruePlayerInteractive\Module;
 use TruePlayerInteractive\Importer;
 use TruePlayerInteractive\Preview;
 
+// Table names are our own `$wpdb->prefix . 'tp_h5p_'` constants built in-file;
+// user-supplied parameters go through $wpdb->prepare(). The admin-only REST
+// routes read schema the H5P engine owns; row caching would be stale within
+// a single admin action.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
 /**
  * Admin REST for the H5P engine — content-type management, semantics retrieval,
  * and content CRUD. All admin-only.

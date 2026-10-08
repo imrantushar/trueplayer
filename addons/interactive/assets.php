@@ -221,7 +221,9 @@ class Assets {
 
 		// Emit the H5P styles that missed wp_head (enqueued during the_content).
 		foreach ( array_unique( self::$style_urls ) as $url ) {
-			echo '<link rel="stylesheet" href="' . esc_url( $url ) . '" />' . "\n";
+			// Styles that missed wp_head still have to go inline here; H5P assets
+			// are discovered mid-the_content, after wp_head has already fired.
+			echo '<link rel="stylesheet" href="' . esc_url( $url ) . '" />' . "\n"; // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet
 		}
 
 		// JSON_HEX_* because this lands inside an inline <script>: the settings
@@ -230,7 +232,7 @@ class Assets {
 		// swallowing the rest of the document into this block.
 		$json = wp_json_encode( self::$settings, self::JSON_INLINE_FLAGS );
 		if ( $json !== false ) {
-			echo '<script>window.H5PIntegration = ' . $json . ';</script>';
+			echo '<script>window.H5PIntegration = ' . $json . ';</script>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 
 		if ( self::$xapi_items ) {
@@ -244,7 +246,7 @@ class Assets {
 				self::JSON_INLINE_FLAGS
 			);
 			if ( $xapi !== false ) {
-				echo '<script>window.TruePlayerH5PxAPI = ' . $xapi . ';</script>';
+				echo '<script>window.TruePlayerH5PxAPI = ' . $xapi . ';</script>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 		}
 	}

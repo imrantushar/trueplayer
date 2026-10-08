@@ -47,7 +47,7 @@ class Importer {
 		}
 
 		if ( ! $validator->isValidPackage( $skip_content, false ) ) {
-			@unlink( $uploaded_path );
+			wp_delete_file( $uploaded_path );
 			$errors = $framework->getMessages( 'error' );
 			return new \WP_Error( 'h5p_invalid_package', __( 'The file is not a valid H5P package.', 'trueplayer' ), $errors );
 		}
@@ -64,7 +64,7 @@ class Importer {
 
 		$storage = Core::storage();
 		$storage->savePackage( $skip_content ? null : $content, null, $skip_content );
-		@unlink( $uploaded_path );
+		wp_delete_file( $uploaded_path );
 
 		return (int) $storage->contentId;
 	}
@@ -87,7 +87,7 @@ class Importer {
 		}
 
 		$result = self::import_file( $tmp, null, ! $with_content );
-		@unlink( $tmp );
+		wp_delete_file( $tmp );
 		return $result;
 	}
 }

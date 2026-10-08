@@ -50,4 +50,19 @@ AGENTS.md
 *.log
 *.map
 *.sh
+*.yml
+*.yaml
+.travis.yml
+.scrutinizer.yml
+.codeclimate.yml
+.editorconfig
+DEVELOPERS.md
 changelog.md
+
+# === Nested hidden/CI files inside vendored libraries (H5P) ===
+addons/interactive/runtime/h5p-php-library/.gitignore
+addons/interactive/runtime/h5p-php-library/.travis.yml
+addons/interactive/runtime/h5p-editor-php-library/.gitignore
+addons/interactive/runtime/h5p-php-library/doc/
+addons/interactive/runtime/h5p-editor-php-library/README.md
+addons/interactive/runtime/h5p-php-library/README.md

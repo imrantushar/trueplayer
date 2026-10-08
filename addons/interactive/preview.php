@@ -62,7 +62,8 @@ class Preview {
 		// just those gives the runtime everything it needs — no wp_head, so the
 		// theme's styles never bleed into the preview.
 		header( 'Content-Type: text/html; charset=utf-8' );
-		echo '<!doctype html><html ' . get_language_attributes() . '><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
+		// get_language_attributes() returns a safe `dir="…" lang="…"` string from WP core.
+		echo '<!doctype html><html ' . get_language_attributes() . '><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '<style>html,body{margin:0;padding:16px;background:#fff;color:#1f2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}.trueplayer-h5p-notice{display:none}</style>';
 		echo '</head><body>';
 
@@ -85,7 +86,8 @@ class Preview {
 		})();</script>';
 
 		echo '<div id="tp-h5p-preview-root">';
-		echo $markup; // already escaped/built by the renderer + H5P. phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		// $markup is produced by the H5P renderer (do_shortcode of our own [trueplayer]) which emits trusted HTML.
+		echo $markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '</div>';
 		$empty = '' === trim( wp_strip_all_tags( $markup ) ) && '' === trim( $markup );
 		echo '<p id="tp-h5p-preview-fallback" style="display:' . ( $empty ? 'block' : 'none' ) . ';color:#9ca3af">'

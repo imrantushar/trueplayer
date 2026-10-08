@@ -10,6 +10,10 @@ use TruePlayer\Subject;
 use TruePlayer\Helper;
 use TruePlayer\Events;
 
+// Table names are our own `$wpdb->prefix . TRUEPLAYER_DB_PREFIX`-derived
+// constants; row writes go through wpdb::insert/update with typed formats.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
 /**
  * Server-side quiz grading + lock enforcement. Correct answers live only here
  * and in the stored config — never sent to the client.

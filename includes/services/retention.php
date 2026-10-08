@@ -42,8 +42,11 @@ class Retention {
 		$attempts = $wpdb->prefix . TRUEPLAYER_DB_PREFIX . '_quiz_attempts';
 
 		// Progress: age by last activity (fall back to updated_at).
+		// Table names are our own `$wpdb->prefix . TRUEPLAYER_DB_PREFIX`-derived constants.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$progress} WHERE COALESCE(last_seen, updated_at) < %s", $cutoff ) );
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$attempts} WHERE created_at < %s", $cutoff ) );
+		// phpcs:enable
 
 		do_action( 'trueplayer/retention/purged', $days, $cutoff );
 	}

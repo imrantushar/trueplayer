@@ -10,6 +10,12 @@ use TruePlayer\Subject;
 use TruePlayer\Helper;
 use TruePlayer\Events;
 
+// Table names are our own `$wpdb->prefix . TRUEPLAYER_DB_PREFIX`-derived
+// constants; row-level reads/writes are intentional (object cache would be
+// stale within milliseconds of a watch heartbeat); every user-supplied value
+// goes through $wpdb->prepare() or wpdb::insert()/update() typed-format args.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
 /**
  * Server-side source of truth for "did this viewer actually watch it".
  *
