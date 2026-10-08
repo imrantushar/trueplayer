@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-24T10:46:39+00:00\n"
+"POT-Creation-Date: 2026-10-08T16:34:38+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 
@@ -38,42 +38,42 @@ msgstr ""
 msgid "https://kodezen.com"
 msgstr ""
 
-#: addons/interactive/api/controller.php:201
+#: addons/interactive/api/controller.php:207
 msgid "A content type is required."
 msgstr ""
 
-#: addons/interactive/api/controller.php:224
+#: addons/interactive/api/controller.php:230
 msgid "Content type is not installed."
 msgstr ""
 
-#: addons/interactive/api/controller.php:256
+#: addons/interactive/api/controller.php:262
 msgid "Invalid content type."
 msgstr ""
 
-#: addons/interactive/api/controller.php:262
+#: addons/interactive/api/controller.php:268
 msgid "That content type is not installed."
 msgstr ""
 
-#: addons/interactive/api/controller.php:266
+#: addons/interactive/api/controller.php:272
 #: dev_trueplayer/admin/screens/H5pEditor.jsx:142
 msgid "Untitled interactive"
 msgstr ""
 
-#: addons/interactive/api/controller.php:329
-#: addons/interactive/user-data.php:135
-#: addons/interactive/user-data.php:222
+#: addons/interactive/api/controller.php:335
+#: addons/interactive/user-data.php:140
+#: addons/interactive/user-data.php:227
 msgid "Invalid request."
 msgstr ""
 
-#: addons/interactive/api/controller.php:335
+#: addons/interactive/api/controller.php:341
 msgid "Not an interactive item."
 msgstr ""
 
-#: addons/interactive/api/controller.php:409
+#: addons/interactive/api/controller.php:415
 msgid "Not found."
 msgstr ""
 
-#: addons/interactive/api/controller.php:418
+#: addons/interactive/api/controller.php:424
 msgid "Content could not be loaded."
 msgstr ""
 
@@ -110,11 +110,11 @@ msgstr ""
 msgid "Enabling adds the interactive engine’s tables to your database. Turning it back off leaves anything you’ve built untouched."
 msgstr ""
 
-#: addons/interactive/preview.php:92
+#: addons/interactive/preview.php:94
 msgid "Nothing to preview yet."
 msgstr ""
 
-#: addons/interactive/preview.php:92
+#: addons/interactive/preview.php:94
 msgid "Fill in the required fields to preview."
 msgstr ""
 
@@ -130,19 +130,19 @@ msgstr ""
 msgid "This is interactive content, and interactive content is turned off. Enable it under TruePlayer → Media → Interactive."
 msgstr ""
 
-#: addons/interactive/user-data.php:146
+#: addons/interactive/user-data.php:151
 msgid "Nothing to store."
 msgstr ""
 
-#: addons/interactive/user-data.php:190
+#: addons/interactive/user-data.php:195
 msgid "Unexpected payload."
 msgstr ""
 
-#: addons/interactive/user-data.php:195
+#: addons/interactive/user-data.php:200
 msgid "That state is too large to store."
 msgstr ""
 
-#: addons/interactive/user-data.php:236
+#: addons/interactive/user-data.php:241
 msgid "Nothing to record."
 msgstr ""
 

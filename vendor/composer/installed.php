@@ -3,7 +3,7 @@
         'name' => 'kodezen/trueplayer',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '90def72a5e5555492a262e10177fe5ba4ac6f4b4',
+        'reference' => '9e40f1d84076301d22e0e04a19a41170956c8440',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'kodezen/trueplayer' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '90def72a5e5555492a262e10177fe5ba4ac6f4b4',
+            'reference' => '9e40f1d84076301d22e0e04a19a41170956c8440',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

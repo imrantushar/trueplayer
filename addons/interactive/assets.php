@@ -101,10 +101,19 @@ class Assets {
 			self::$settings['core']['styles'][] = $url;
 			self::$style_urls[]                 = $url;
 		}
+		// H5P's own `js/jquery.js` is skipped — wp.org forbids bundling core
+		// libraries, so we use WordPress's registered jQuery instead and point
+		// H5PIntegration at its URL so the H5P runtime can still see it.
+		$jquery_url = includes_url( 'js/jquery/jquery.min.js' );
+		wp_enqueue_script( 'jquery' );
 		foreach ( \H5PCore::$scripts as $script ) {
+			if ( 'js/jquery.js' === $script ) {
+				self::$settings['core']['scripts'][] = $jquery_url;
+				continue;
+			}
 			$url                             = $base . $script;
 			self::$settings['core']['scripts'][] = $url;
-			wp_enqueue_script( 'trueplayer-h5p-core-' . sanitize_key( $script ), $url, [], $ver, true );
+			wp_enqueue_script( 'trueplayer-h5p-core-' . sanitize_key( $script ), $url, [ 'jquery' ], $ver, true );
 		}
 
 		// Print H5PIntegration in the footer, before the enqueued scripts run.

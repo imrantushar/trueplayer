@@ -2,7 +2,7 @@
 Contributors: kodezen
 Tags: video, player, lms, quiz, webhooks
 Requires at least: 6.4
-Tested up to: 6.8
+Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 1.6.0
 License: GPLv2 or later
