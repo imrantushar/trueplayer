@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class InstantPage {
 
-	const QUERY_VAR = 'tp_video';
+	const QUERY_VAR = 'truepl_video';
 
 	public static function init() {
 		$self = new self();

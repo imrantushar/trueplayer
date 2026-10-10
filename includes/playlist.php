@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Playlist {
 
-	const POST_TYPE = 'tp_playlist';
+	const POST_TYPE = 'truepl_playlist';
 	const TAG       = 'trueplayer_playlist';
 
 	public static function init() {
@@ -126,9 +126,11 @@ class Playlist {
 			'items'        => $items,
 		];
 
+		// JSON_HEX_TAG so a `</script>` inside any string (video title, caption,
+		// filter payload) can't break the inline `<script type="application/json">` block.
 		return sprintf(
 			'<div class="trueplayer-playlist" data-trueplayer-playlist><script type="application/json" class="trueplayer-playlist-config">%s</script></div>',
-			wp_json_encode( $data )
+			wp_json_encode( $data, JSON_HEX_TAG )
 		);
 	}
 }

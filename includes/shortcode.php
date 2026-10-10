@@ -68,7 +68,9 @@ class Shortcode {
 
 		$config = self::resolved_config( $video_id );
 		self::maybe_enqueue_quizpress( $config );
-		$json   = wp_json_encode( [ 'videoId' => $video_id, 'title' => get_the_title( $video_id ), 'config' => $config ] );
+		// JSON_HEX_TAG so a `</script>` inside any string (title, caption, filter
+		// payload) can't break the inline `<script type="application/json">` block.
+		$json   = wp_json_encode( [ 'videoId' => $video_id, 'title' => get_the_title( $video_id ), 'config' => $config ], JSON_HEX_TAG );
 		$label  = '' !== trim( (string) $content ) ? do_shortcode( $content ) : ( $atts['label'] ?: __( 'Watch video', 'trueplayer' ) );
 		$accent = $config['customize']['appearance']['accent'] ?? '';
 		$style  = $accent ? sprintf( ' style="--tp-accent:%s"', esc_attr( $accent ) ) : '';
@@ -110,12 +112,15 @@ class Shortcode {
 		$config = self::resolved_config( $video_id );
 		self::maybe_enqueue_quizpress( $config );
 
+		// JSON_HEX_TAG so a `</script>` inside any string (title, caption, filter
+		// payload) can't break the inline `<script type="application/json">` block.
 		$json = wp_json_encode(
 			[
 				'videoId' => $video_id,
 				'title'   => get_the_title( $video_id ),
 				'config'  => $config,
-			]
+			],
+			JSON_HEX_TAG
 		);
 
 		$behavior = is_array( $config['customize']['behavior'] ?? null ) ? $config['customize']['behavior'] : [];

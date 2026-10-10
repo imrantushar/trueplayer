@@ -8,8 +8,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * White-label (pro). When enabled in settings, replaces the "TruePlayer" name
- * across the admin with the site owner's brand and hides the player's
- * "Powered by" attribution. Gated on Pro::active().
+ * across the admin screens with the site owner's brand. Gated on Pro::active().
+ *
+ * The frontend player carries no "Powered by" attribution to suppress — this
+ * class only renames admin-area chrome.
  *
  * Settings shape: settings.whiteLabel = { enabled: bool, brand: string, logo: string }.
  */
@@ -41,8 +43,5 @@ class WhiteLabel {
 				return $logo;
 			} );
 		}
-
-		// Suppress the frontend "Powered by" attribution when white-labelled.
-		add_filter( 'trueplayer/show_attribution', '__return_false' );
 	}
 }

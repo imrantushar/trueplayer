@@ -39,6 +39,8 @@ class Migrator {
 	}
 
 	public static function run(): void {
+		// Must run first — subsequent passes read posts by the new post_type slug.
+		self::rename_post_type_slugs();
 		self::unstamp_inherited_gating();
 		self::adopt_existing_interactive_content();
 		self::fold_optin_into_layers();
@@ -46,6 +48,44 @@ class Migrator {
 		// flag is set, so a site already migrated by an earlier build would never
 		// have reached this.
 		self::drop_orphaned_optin();
+	}
+
+	/**
+	 * Rename legacy 2-char post type / taxonomy slugs to the plugin-prefixed ones.
+	 *
+	 * The wp.org directory requires plugin-owned identifiers be at least 4
+	 * characters so they feel distinctive and don't collide with other plugins.
+	 * Prior builds used `tp_video`, `tp_preset`, `tp_video_tag`, `tp_playlist`;
+	 * installs upgrading from those keep their rows, just under the new slugs.
+	 */
+	private static function rename_post_type_slugs(): void {
+		$done = 'trueplayer_migrated_truepl_slugs';
+		if ( get_option( $done ) ) {
+			return;
+		}
+		update_option( $done, Helper::now_iso(), false );
+
+		global $wpdb;
+
+		$post_type_map = [
+			'tp_video'    => TRUEPLAYER_VIDEO_POST_TYPE,
+			'tp_preset'   => TRUEPLAYER_PRESET_POST_TYPE,
+			'tp_playlist' => 'truepl_playlist',
+		];
+		foreach ( $post_type_map as $old => $new ) {
+			if ( $old === $new ) {
+				continue;
+			}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- schema rename.
+			$wpdb->update( $wpdb->posts, [ 'post_type' => $new ], [ 'post_type' => $old ] );
+		}
+
+		// Taxonomy slug lives on the terms' taxonomy column.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- schema rename.
+		$wpdb->update( $wpdb->term_taxonomy, [ 'taxonomy' => 'truepl_video_tag' ], [ 'taxonomy' => 'tp_video_tag' ] );
+
+		// Flush object caches so the next request doesn't still see the old slug.
+		wp_cache_flush();
 	}
 
 	/**

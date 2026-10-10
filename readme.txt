@@ -20,6 +20,17 @@ TruePlayer is a native WordPress video/audio player built for enforcement and au
 
 Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources (Mux, Bunny, Gumlet), and Gem-ecosystem bridges.
 
+== External services ==
+
+TruePlayer connects to the following third-party services. Each one is only contacted for the feature it supports, and only when that feature is used.
+
+* **H5P Hub** (`https://api.h5p.org/`, `https://hub-api.h5p.org/`) — used by the Interactive addon to list, download and update H5P content types, and to fetch license metadata. Called when an administrator opens the H5P library picker, imports an H5P package, or opens the H5P editor. No viewer or site-visitor data is sent. Terms: https://h5p.org/terms-of-use — Privacy: https://h5p.org/privacy-policy
+* **Vimeo oEmbed** (`https://vimeo.com/api/oembed.json`) — used to resolve a thumbnail for a Vimeo video when none is set, so the poster image is populated. The video's public Vimeo URL is sent. Called in the admin only, when saving a Vimeo-sourced video. Terms: https://vimeo.com/terms — Privacy: https://vimeo.com/privacy
+* **YouTube captions** (`https://www.youtube.com/api/timedtext`) — used by the subtitles importer to fetch public captions for a YouTube video when an administrator imports them. Only the public video id is sent. Terms: https://www.youtube.com/t/terms — Privacy: https://policies.google.com/privacy
+* **Google Analytics (GA4) via Google Tag Manager** (`https://www.googletagmanager.com/gtag/js`) — only loaded when the site administrator configures a GA4 Measurement ID in TruePlayer's Settings → Analytics screen. Standard GA4 playback events are then sent from the viewer's browser to Google. Off by default. Terms: https://marketingplatform.google.com/about/analytics/terms/us/ — Privacy: https://policies.google.com/privacy
+* **Mailchimp API** (`https://*.api.mailchimp.com/`) — only used when the site administrator connects a Mailchimp list in Settings → Integrations. Email captures from the configured form layer are sent to the connected list. Off by default. Terms: https://mailchimp.com/legal/terms/ — Privacy: https://mailchimp.com/legal/privacy/
+* **Kodezen license & update service** (`https://kodezen.com/`) — used by the Pro upgrade flow (TruePlayer Pro only) for license activation, update checks and optional telemetry. Not contacted on free installs.
+
 == Third-Party Libraries ==
 
 TruePlayer bundles the following open-source libraries. Each one keeps its own license and copyright.
