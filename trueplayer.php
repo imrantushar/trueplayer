@@ -4,7 +4,7 @@
  * Plugin Name: TruePlayer
  * Plugin URI: https://true-player.net/
  * Description: A watch-verified, quiz-gated video & audio player for WordPress — knows whether a viewer actually watched, locks the video on quiz failure, and fires webhooks for automation.
- * Version: 1.6.0
+ * Version: 1.6.1
  * Author: Kodezen
  * Author URI: https://kodezen.com
  * License: GPLv2 or later
@@ -42,7 +42,7 @@ final class TruePlayer {
 	}
 
 	public function define_constants() {
-		define( 'TRUEPLAYER_VERSION', '1.6.0' );
+		define( 'TRUEPLAYER_VERSION', '1.6.1' );
 		define( 'TRUEPLAYER_DB_VERSION', '5' );
 		define( 'TRUEPLAYER_SETTINGS_NAME', 'trueplayer_settings' );
 		define( 'TRUEPLAYER_PLUGIN_FILE', __FILE__ );

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.6.1 - 2026-10-10
+
+### Security
+
+- Harden inline player config against breakout — JSON blobs rendered beside the player, popup and playlist now escape `</script>` sequences.
+
+### Changed
+
+- Plugin URI updated to https://true-player.net/.
+- Rename post types and taxonomy to plugin-prefixed slugs (`truepl_video`, `truepl_preset`, `truepl_video_tag`, `truepl_playlist`) to avoid collisions. Existing content is migrated automatically on first admin load.
+- Admin-area white-labeling no longer touches player attribution (the player carries none to suppress).
+
+### Added
+
+- Readme now documents every external service the plugin can contact, with Terms and Privacy links.
+
 ## 1.6.0 - 2026-09-24
 
 ### Added
