@@ -24,7 +24,6 @@ Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources 
 
 TruePlayer connects to the following third-party services. Each one is only contacted for the feature it supports, and only when that feature is used.
 
-* **H5P Hub** (`https://api.h5p.org/`, `https://hub-api.h5p.org/`) — used by the Interactive addon to list, download and update H5P content types, and to fetch license metadata. Called when an administrator opens the H5P library picker, imports an H5P package, or opens the H5P editor. No viewer or site-visitor data is sent. Terms: https://h5p.org/terms-of-use — Privacy: https://h5p.org/privacy-policy
 * **Vimeo oEmbed** (`https://vimeo.com/api/oembed.json`) — used to resolve a thumbnail for a Vimeo video when none is set, so the poster image is populated. The video's public Vimeo URL is sent. Called in the admin only, when saving a Vimeo-sourced video. Terms: https://vimeo.com/terms — Privacy: https://vimeo.com/privacy
 * **YouTube captions** (`https://www.youtube.com/api/timedtext`) — used by the subtitles importer to fetch public captions for a YouTube video when an administrator imports them. Only the public video id is sent. Terms: https://www.youtube.com/t/terms — Privacy: https://policies.google.com/privacy
 * **Google Analytics (GA4) via Google Tag Manager** (`https://www.googletagmanager.com/gtag/js`) — only loaded when the site administrator configures a GA4 Measurement ID in TruePlayer's Settings → Analytics screen. Standard GA4 playback events are then sent from the viewer's browser to Google. Off by default. Terms: https://marketingplatform.google.com/about/analytics/terms/us/ — Privacy: https://policies.google.com/privacy
@@ -35,9 +34,21 @@ TruePlayer connects to the following third-party services. Each one is only cont
 
 TruePlayer bundles the following open-source libraries. Each one keeps its own license and copyright.
 
-* **H5P Core PHP library** — the engine that powers the Interactive addon (quizzes, interactive video, course presentations). Source: https://github.com/h5p/h5p-php-library — License: GPL-3.0-or-later (© Joubel AS and contributors). Bundled under `addons/interactive/runtime/h5p-php-library/`.
-* **H5P Editor PHP library** — the authoring UI for H5P content. Source: https://github.com/h5p/h5p-editor-php-library — License: GPL-3.0-or-later (© Joubel AS and contributors). Bundled under `addons/interactive/runtime/h5p-editor-php-library/`.
 * **StoreEngine WordPress SDK** — update, license and telemetry client used by the Pro upgrade flow. Source: https://github.com/imrantushar/storeengine-sdk-for-wordpress — License: GPL-2.0-or-later (© Kodezen). Installed via Composer under `vendor/storeengine/wordpress-sdk/`.
+
+== Source code & build ==
+
+All compiled JavaScript and CSS in `assets/build/` is generated from the human-readable sources shipped in the `dev_trueplayer/` folder of this plugin. The same sources are public at https://github.com/imrantushar/trueplayer .
+
+Every file in `assets/build/` maps to a source entry:
+
+* `backend.*.js` / `style-backend.css` — `dev_trueplayer/backend.js` (admin app, `dev_trueplayer/admin/`)
+* `frontend.*.js` / `style-frontend.css` — `dev_trueplayer/frontend.js` (player, `dev_trueplayer/player/`)
+* `block.*.js` — `dev_trueplayer/block/index.js` (block editor)
+* `yt.*.js`, `vimeo.*.js` — lazily loaded provider chunks from `dev_trueplayer/player/providers/`
+* `hlsjs.*.js`, `vimeojs.*.js` — the third-party hls.js (https://github.com/video-dev/hls.js, Apache-2.0) and @vimeo/player (https://github.com/vimeo/player.js, MIT) npm packages, split into their own chunks
+
+To rebuild: install Node.js 20+, then run `npm install` and `npm run build` in the plugin folder. The build uses `@wordpress/scripts` (webpack) with the config in `webpack.config.js`.
 
 == Changelog ==
 

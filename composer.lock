@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "storeengine/wordpress-sdk",
-            "version": "v1.5.9",
+            "version": "v1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/imrantushar/storeengine-sdk-for-wordpress.git",
-                "reference": "8d92b2139477f6d7018a9f8e603992b225a5d583"
+                "reference": "004ed6140ffb579a9a0415e00ab5939b0d16664b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/imrantushar/storeengine-sdk-for-wordpress/zipball/8d92b2139477f6d7018a9f8e603992b225a5d583",
-                "reference": "8d92b2139477f6d7018a9f8e603992b225a5d583",
+                "url": "https://api.github.com/repos/imrantushar/storeengine-sdk-for-wordpress/zipball/004ed6140ffb579a9a0415e00ab5939b0d16664b",
+                "reference": "004ed6140ffb579a9a0415e00ab5939b0d16664b",
                 "shasum": ""
             },
             "require": {
@@ -104,7 +104,7 @@
                     "url": "https://storeengine.pro"
                 }
             ],
-            "time": "2026-09-23T09:12:08+00:00"
+            "time": "2026-10-01T13:45:40+00:00"
         }
     ],
     "packages-dev": [],

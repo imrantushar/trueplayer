@@ -20,7 +20,7 @@ class Menu {
 	public static function init() {
 		$self = new self();
 		add_action( 'admin_menu', [ $self, 'register_menu' ] );
-		add_action( 'admin_head', [ $self, 'brand_icon_style' ] );
+		add_action( 'admin_enqueue_scripts', [ $self, 'brand_icon_style' ] );
 		// Must run before WP's own access check, which wp_die()s on a page slug
 		// that no longer exists — that check lives at the end of the same file
 		// that fires admin_menu, and admin_init is later still.
@@ -105,9 +105,11 @@ class Menu {
 		if ( ! \TruePlayer\Helper::brand_logo() ) {
 			return;
 		}
-		printf(
-			'<style id="trueplayer-brand-icon">#adminmenu .toplevel_page_%1$s .wp-menu-image img{width:20px;height:20px;max-width:20px;object-fit:contain;}</style>',
-			esc_attr( TRUEPLAYER_PLUGIN_SLUG )
+		wp_register_style( 'trueplayer-brand-icon', false, [], TRUEPLAYER_VERSION );
+		wp_enqueue_style( 'trueplayer-brand-icon' );
+		wp_add_inline_style(
+			'trueplayer-brand-icon',
+			sprintf( '#adminmenu .toplevel_page_%1$s .wp-menu-image img{width:20px;height:20px;max-width:20px;object-fit:contain;}', sanitize_html_class( TRUEPLAYER_PLUGIN_SLUG ) )
 		);
 	}
 

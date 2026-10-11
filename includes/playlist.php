@@ -126,11 +126,10 @@ class Playlist {
 			'items'        => $items,
 		];
 
-		// JSON_HEX_TAG so a `</script>` inside any string (video title, caption,
-		// filter payload) can't break the inline `<script type="application/json">` block.
+		// Config travels as an escaped data attribute, read by mount.js.
 		return sprintf(
-			'<div class="trueplayer-playlist" data-trueplayer-playlist><script type="application/json" class="trueplayer-playlist-config">%s</script></div>',
-			wp_json_encode( $data, JSON_HEX_TAG )
+			'<div class="trueplayer-playlist" data-trueplayer-playlist data-tp-config="%s"></div>',
+			esc_attr( wp_json_encode( $data ) )
 		);
 	}
 }

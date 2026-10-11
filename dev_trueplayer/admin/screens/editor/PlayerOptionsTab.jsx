@@ -21,7 +21,6 @@ export const PLAYER_SUBS = [
 	['controls', __( 'Controls' )],
 	['behavior', __( 'Behaviour' )],
 	['playback', __( 'Playback' )],
-	['css', __( 'Custom CSS' )],
 ];
 
 const SKINS = [
@@ -538,29 +537,6 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 
 						)}
 
-						{sub === 'css' && (
-							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Custom CSS' ) }</h3>
-								<p className="text-sm text-gray-500 mb-4">
-									{ createInterpolateElement(
-										__( 'Printed with this player on the frontend. Scope rules with <mount>.trueplayer-mount</mount> (all players) or <stage>.tp-stage</stage>.' ),
-										{
-											mount: <code className="text-xs bg-gray-100 px-1 rounded" />,
-											stage: <code className="text-xs bg-gray-100 px-1 rounded" />,
-										}
-									) }
-								</p>
-								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									<Textarea
-										rows={6}
-										className="font-mono text-xs"
-										value={config.customize?.css || ''}
-										onChange={(e) => setRoot({ css: e.target.value })}
-										placeholder={'.tp-stage { box-shadow: 0 10px 40px rgba(0,0,0,.2); }'}
-									/>
-								</div>
-							</Card>
-						)}
 		</div>
 	);
 }

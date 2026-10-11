@@ -79,7 +79,7 @@ class VideosController extends WP_REST_Controller {
 			[
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => [ $this, 'quick_update' ],
-				'permission_callback' => [ $this, 'quick' ],
+				'permission_callback' => [ $this, 'quick_edit' ],
 			]
 		);
 		register_rest_route(
@@ -245,6 +245,12 @@ class VideosController extends WP_REST_Controller {
 
 	public function quick() {
 		return self::can_quick_create();
+	}
+
+	/** Updating an existing video also needs edit rights on that video. */
+	public function quick_edit( $request ) {
+		$id = (int) $request['id'];
+		return self::can_quick_create() && $id > 0 && current_user_can( 'edit_post', $id );
 	}
 
 	/**

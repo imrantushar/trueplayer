@@ -917,18 +917,6 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</div>
 							</Card>
 
-							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Custom CSS' ) }</h3>
-								<p className="text-sm text-muted">
-									{ createInterpolateElement(
-										__( 'Injected on every page a TruePlayer player renders. Target <c>.tp-*</c> classes.' ),
-										{ c: <code /> }
-									) }
-								</p>
-								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									<Textarea rows={6} className="font-mono text-xs" value={settings.customize?.css || ''} onChange={(e) => setSettings((s) => ({ ...s, customize: { ...(s.customize || {}), css: e.target.value } }))} placeholder=".tp-controls { --tp-accent: #4F46E5; }" />
-								</div>
-							</Card>
 						</div>
 					)}
 

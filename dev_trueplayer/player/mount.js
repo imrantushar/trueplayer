@@ -45,9 +45,8 @@ function warm( type ) {
  * Read + parse the inline JSON config a mount node carries.
  */
 function readConfig( node ) {
-	const configEl = node.querySelector( 'script.trueplayer-config' );
 	try {
-		const data = configEl ? JSON.parse( configEl.textContent ) : {};
+		const data = node.dataset.tpConfig ? JSON.parse( node.dataset.tpConfig ) : {};
 		// Resolve the media type at THE single entry point, before the config
 		// reaches anything that acts on it. It has to happen here rather than
 		// inside Player: the HTML5 provider picks <audio> vs <video> when it
@@ -252,10 +251,9 @@ export function mountPopups() {
 			return;
 		}
 		node.dataset.tpPopupBound = '1';
-		const el = node.querySelector( 'script.trueplayer-popup-config' );
 		let data = {};
 		try {
-			data = el ? JSON.parse( el.textContent ) : {};
+			data = node.dataset.tpConfig ? JSON.parse( node.dataset.tpConfig ) : {};
 		} catch ( e ) {
 			data = {};
 		}
@@ -312,10 +310,9 @@ export function mountPlaylists() {
 			return;
 		}
 		node.dataset.tpBooted = '1';
-		const configEl = node.querySelector( 'script.trueplayer-playlist-config' );
 		let data = {};
 		try {
-			data = configEl ? JSON.parse( configEl.textContent ) : {};
+			data = node.dataset.tpConfig ? JSON.parse( node.dataset.tpConfig ) : {};
 		} catch ( e ) {
 			data = {};
 		}

@@ -26,14 +26,7 @@ class Addons {
 		// through the `trueplayer/addons/loader_filtered` filter below.
 		$addons = apply_filters(
 			'trueplayer/addons/loader_args',
-			[
-				// Interactive content (the H5P engine). Opt-in: registered here
-				// so it can be described and switched on, but it gates its own
-				// features on being active — see TruePlayerInteractive\Interactive.
-				// Watch verification, gating and basic webhooks stay in core:
-				// they are the product, not an addon.
-				'interactive' => 'Interactive',
-			]
+			[]
 		);
 
 		$addons = apply_filters( 'trueplayer/addons/loader_filtered', $addons );

@@ -37,14 +37,6 @@ class Assets {
 			TRUEPLAYER_VERSION
 		);
 
-		// Site-wide custom player CSS (Settings → Player defaults → Custom CSS,
-		// stored in the settings option under customize.css).
-		$defaults   = self::player_defaults();
-		$custom_css = isset( $defaults['css'] ) && is_string( $defaults['css'] ) ? wp_strip_all_tags( $defaults['css'] ) : '';
-		if ( '' !== trim( $custom_css ) ) {
-			wp_add_inline_style( self::FRONTEND_STYLE_HANDLE, $custom_css );
-		}
-
 		wp_register_script(
 			self::FRONTEND_SCRIPT_HANDLE,
 			TRUEPLAYER_ASSETS_URI . sprintf( 'build/frontend.%s.js', TRUEPLAYER_VERSION ),
@@ -66,7 +58,6 @@ class Assets {
 		// clash with the React app. CSS-only (notices stay in the DOM for
 		// screen readers + dismiss workflows) — wp.org flags plugins that nuke
 		// admin_notices wholesale.
-		add_action( 'admin_head', [ $this, 'hide_admin_notices_on_app_pages' ] );
 		// Belt-and-braces: also drop queued notice callbacks on our own pages.
 		add_action( 'in_admin_header', [ $this, 'strip_admin_notice_actions' ], 1000 );
 
@@ -81,6 +72,7 @@ class Assets {
 			[ 'wp-components' ],
 			file_exists( TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-backend.css' ) ? filemtime( TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-backend.css' ) : TRUEPLAYER_VERSION
 		);
+		wp_add_inline_style( self::BACKEND_STYLE_HANDLE, self::notice_suppression_css() );
 
 		// The live preview renders the real frontend player, which needs the
 		// frontend player CSS. It's a separate webpack entry, so load it here.
@@ -132,14 +124,14 @@ class Assets {
 	 * notices in the DOM (dismiss-state, screen readers, other plugins' flows
 	 * keep working) but hides them inside the React layout.
 	 */
-	public function hide_admin_notices_on_app_pages(): void {
-		echo '<style>
+	private static function notice_suppression_css(): string {
+		return '
 			#wpbody-content > .notice,
 			#wpbody-content > .updated,
 			#wpbody-content > .update-nag,
 			#wpbody-content > .error,
 			.trueplayer-app ~ .notice { display: none !important; }
-		</style>';
+		';
 	}
 
 	/**

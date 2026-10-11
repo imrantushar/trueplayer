@@ -259,6 +259,21 @@ final class SE_License_SDK_Client {
 	private $is_dirty = false;
 
 	/**
+	 * Keys this client changed since the last save; only these are written back.
+	 *
+	 * @var array<string, true>
+	 */
+	private $dirty_keys = [];
+
+	/**
+	 * Depth of interactive() calls currently running. While > 0, requests are
+	 * treated as explicit user actions: longer timeout, circuit breaker ignored.
+	 *
+	 * @var int
+	 */
+	private $interactive_depth = 0;
+
+	/**
 	 * Initialize the class.
 	 *
 	 * @param string $package_file Main Plugin/Theme file path.
@@ -549,27 +564,69 @@ final class SE_License_SDK_Client {
 
 		$this->software_data[ $this->package_file_hash ][ $key ] = $value;
 		// Flag for update data.
-		$this->is_dirty = true;
+		$this->is_dirty           = true;
+		$this->dirty_keys[ $key ] = true;
 	}
 
+	/**
+	 * Read the shared option straight from the database, bypassing the options
+	 * cache, so a save merges into what other products and requests stored.
+	 *
+	 * @return array
+	 */
+	protected function read_stored_software_data(): array {
+		global $wpdb;
+
+		if ( $this->is_network_activated() ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$raw = $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->sitemeta} WHERE meta_key = %s AND site_id = %d LIMIT 1", $this->software_data_option, get_current_network_id() ) );
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$raw = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1", $this->software_data_option ) );
+		}
+
+		$data = null === $raw ? [] : maybe_unserialize( $raw );
+
+		return is_array( $data ) ? $data : [];
+	}
+
+	/**
+	 * Write this client's changed keys into the stored option.
+	 *
+	 * Every product on the site shares one option, and each client used to write
+	 * back the whole copy it loaded at the start of the request. With two
+	 * products (or two concurrent requests) the last writer erased the other's
+	 * changes, including a freshly generated device_id. The product then made a
+	 * new id on its next request, and the license server recorded a new
+	 * installation each time. Re-reading and merging per key keeps both writes.
+	 */
 	public function save_software_data() {
 		if ( ! $this->is_dirty ) {
 			return;
 		}
 
-		$this->is_dirty = false;
+		$stored = $this->read_stored_software_data();
+		$hash   = $this->package_file_hash;
 
-		if ( ! is_array( $this->software_data ) ) {
-			$this->software_data = [];
+		if ( empty( $stored[ $hash ] ) || ! is_array( $stored[ $hash ] ) ) {
+			$stored[ $hash ] = [];
 		}
 
+		foreach ( array_keys( $this->dirty_keys ) as $key ) {
+			$stored[ $hash ][ $key ] = $this->software_data[ $hash ][ $key ] ?? null;
+		}
+
+		$this->is_dirty   = false;
+		$this->dirty_keys = [];
+
 		// Force save.
-		$this->software_data['last-updated'] = current_time( 'mysql', 1 );
+		$stored['last-updated'] = current_time( 'mysql', 1 );
+		$this->software_data    = $stored;
 
 		if ( $this->is_network_activated() ) {
-			update_site_option( $this->software_data_option, $this->software_data );
+			update_site_option( $this->software_data_option, $stored );
 		} else {
-			update_option( $this->software_data_option, $this->software_data );
+			update_option( $this->software_data_option, $stored );
 		}
 	}
 
@@ -577,8 +634,18 @@ final class SE_License_SDK_Client {
 		$device_id = $this->get_option( 'device_id' );
 
 		if ( ! $device_id ) {
-			$device_id = $this->generate_device_id();
-			$this->set_option( 'device_id', $device_id );
+			// Another product or request may have stored it after we loaded.
+			$device_id = $this->read_stored_software_data()[ $this->package_file_hash ]['device_id'] ?? '';
+
+			if ( $device_id ) {
+				$this->software_data[ $this->package_file_hash ]['device_id'] = $device_id;
+			} else {
+				$device_id = $this->generate_device_id();
+				$this->set_option( 'device_id', $device_id );
+				// Persist now rather than at shutdown, which a fatal error or a
+				// timed-out request never reaches.
+				$this->save_software_data();
+			}
 		}
 
 		return $device_id;
@@ -1223,7 +1290,6 @@ final class SE_License_SDK_Client {
 		 */
 		do_action( $this->getHookName( 'before_client_request_' . $args['route'] ), $args, $headers, $this->version, $url );
 
-		$timeout  = $this->validate_timeout( $args );
 
 		// Body. Caller-provided fields win over auto-added defaults — this
 		// matters for routes like /software/get-package where `version`
@@ -1244,7 +1310,13 @@ final class SE_License_SDK_Client {
 		// instead of making the site wait for another timeout. Only explicit
 		// user actions (activating/deactivating a license, downloading a
 		// package, "check now") still go out and can close the breaker early.
-		$interactive = ! empty( $args['interactive'] ) || in_array( $args['route'], [ 'activate-license', 'deactivate-license', 'get-package' ], true );
+		$interactive = $this->interactive_depth > 0 || ! empty( $args['interactive'] ) || in_array( $args['route'], [ 'activate-license', 'deactivate-license', 'get-package' ], true );
+
+		// A person is waiting on an explicit action: give a slow-but-working
+		// server time to answer. Until 1.6.0 these got the front-end cap of
+		// 5 seconds whenever they came through REST (is_admin() is false
+		// there), so activations failed whenever the server took longer.
+		$timeout = $interactive ? $this->get_interactive_timeout( $args ) : $this->validate_timeout( $args );
 
 		if ( ! $interactive && self::is_server_down( $url ) ) {
 			$response = new WP_Error(
@@ -1303,6 +1375,115 @@ final class SE_License_SDK_Client {
 		do_action( $this->getHookName( 'after_client_request_' . $args['route'] ), $response, $args['route'] );
 
 		return $this->format_response( $response, $args['route'] );
+	}
+
+	/**
+	 * Run $callback as an explicit user action: every license-server request
+	 * it makes gets the interactive timeout and ignores the circuit breaker.
+	 *
+	 * @param callable $callback Callback.
+	 *
+	 * @return mixed The callback's return value.
+	 */
+	public function interactive( callable $callback ) {
+		$this->interactive_depth++;
+
+		try {
+			return $callback();
+		} finally {
+			$this->interactive_depth--;
+		}
+	}
+
+	/**
+	 * Timeout for a request a person is waiting on.
+	 *
+	 * @param array $args Request args.
+	 *
+	 * @return int Seconds.
+	 */
+	private function get_interactive_timeout( array $args ): int {
+		$requested = isset( $args['timeout'] ) && $args['timeout'] ? (int) abs( $args['timeout'] ) : 30;
+
+		/**
+		 * Filter the timeout for explicit user actions (activate, deactivate,
+		 * "check now", install).
+		 *
+		 * @param int   $timeout Seconds (15–30 by default).
+		 * @param array $args    Request args.
+		 */
+		return (int) apply_filters( 'se_license_sdk_interactive_timeout', max( 15, min( 30, $requested ) ), $args );
+	}
+
+	/**
+	 * Spread a delay by ±$spread so thousands of sites that failed (or were
+	 * activated) at the same moment don't all come back at the same second.
+	 *
+	 * @param int   $seconds Base delay.
+	 * @param float $spread  Fraction, e.g. 0.25 for ±25 %.
+	 * @param bool  $up_only Only ever lengthen the delay (for server-requested waits).
+	 *
+	 * @return int
+	 */
+	public static function jitter( int $seconds, float $spread = 0.25, bool $up_only = false ): int {
+		if ( $seconds <= 0 ) {
+			return $seconds;
+		}
+
+		$range = (int) round( $seconds * $spread );
+
+		if ( $range < 1 ) {
+			return $seconds;
+		}
+
+		$min = $up_only ? 0 : - $range;
+
+		// wp_rand() is pluggable and may not exist this early in the request.
+		$offset = function_exists( 'wp_rand' ) ? wp_rand( $min, $range ) : mt_rand( $min, $range ); // phpcs:ignore WordPress.WP.AlternativeFunctions.rand_mt_rand
+
+		return max( 1, $seconds + $offset );
+	}
+
+	/**
+	 * Stop background requests to this product's server for a while, because
+	 * the server asked us to (`pause_background` in a response). Kept apart
+	 * from the failure breaker so a successful user action doesn't clear it.
+	 *
+	 * @param int $seconds Seconds (capped at 7 days).
+	 *
+	 * @return void
+	 */
+	public function pause_background( int $seconds ) {
+		$seconds = min( 7 * DAY_IN_SECONDS, max( 0, $seconds ) );
+		$key     = 'se_sdk_pause_' . $this->get_server_key();
+
+		if ( 0 === $seconds ) {
+			delete_site_transient( $key );
+
+			return;
+		}
+
+		$seconds = self::jitter( $seconds, 0.25, true );
+
+		set_site_transient( $key, [ 'until' => time() + $seconds ], $seconds );
+	}
+
+	/**
+	 * Apply instructions the license server sends back with update data.
+	 *
+	 * - `pause_background` (int seconds): stop background requests for that long;
+	 *   0 lifts an earlier pause.
+	 *
+	 * `next_check_in` is read by the updater, which owns the update cache.
+	 *
+	 * @param array $data Response data.
+	 *
+	 * @return void
+	 */
+	public function apply_server_directives( array $data ) {
+		if ( isset( $data['pause_background'] ) && is_numeric( $data['pause_background'] ) ) {
+			$this->pause_background( (int) $data['pause_background'] );
+		}
 	}
 
 	/**
@@ -1385,13 +1566,19 @@ final class SE_License_SDK_Client {
 	 * @return int
 	 */
 	public static function get_server_retry_in_for( string $url ): int {
-		$state = get_site_transient( 'se_sdk_srv_' . self::server_key( $url ) );
+		$key   = self::server_key( $url );
+		$until = 0;
 
-		if ( ! is_array( $state ) || empty( $state['until'] ) ) {
-			return 0;
+		// Failure breaker, then a pause the server asked for.
+		foreach ( [ 'se_sdk_srv_', 'se_sdk_pause_' ] as $prefix ) {
+			$state = get_site_transient( $prefix . $key );
+
+			if ( is_array( $state ) && ! empty( $state['until'] ) ) {
+				$until = max( $until, (int) $state['until'] );
+			}
 		}
 
-		return max( 0, (int) $state['until'] - time() );
+		return max( 0, $until - time() );
 	}
 
 	/**
@@ -1399,7 +1586,8 @@ final class SE_License_SDK_Client {
 	 * after any answer from the server.
 	 *
 	 * Back-off doubles with each consecutive failure: 15 min, 30 min, 1 h … up
-	 * to 6 h. A `Retry-After` header from the server wins (capped at a day).
+	 * to 6 h, each spread by ±25 %. A `Retry-After` header from the server wins
+	 * (capped at a day, spread upwards only).
 	 *
 	 * @param string          $url      Endpoint URL.
 	 * @param array|WP_Error  $response Raw HTTP response.
@@ -1408,7 +1596,12 @@ final class SE_License_SDK_Client {
 		$key  = 'se_sdk_srv_' . self::server_key( $url );
 		$code = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
 
-		$failed = is_wp_error( $response ) || 0 === $code || $code >= 500 || in_array( $code, [ 408, 429 ], true );
+		// A `cf-mitigated` header means an edge (e.g. Cloudflare) challenged the
+		// request rather than the server answering — back off like any outage so
+		// we stop hammering the edge.
+		$challenged = ! is_wp_error( $response ) && '' !== wp_remote_retrieve_header( $response, 'cf-mitigated' );
+
+		$failed = is_wp_error( $response ) || 0 === $code || $code >= 500 || in_array( $code, [ 408, 429 ], true ) || $challenged;
 
 		if ( ! $failed ) {
 			if ( false !== get_site_transient( $key ) ) {
@@ -1422,9 +1615,14 @@ final class SE_License_SDK_Client {
 		$fails = is_array( $state ) ? (int) ( $state['fails'] ?? 0 ) + 1 : 1;
 		$delay = min( 6 * HOUR_IN_SECONDS, 15 * MINUTE_IN_SECONDS * ( 2 ** min( $fails - 1, 5 ) ) );
 
+		// ±25 % so sites that failed together don't all retry together the
+		// moment the server comes back.
+		$delay = self::jitter( $delay );
+
 		$retry_after = is_wp_error( $response ) ? '' : wp_remote_retrieve_header( $response, 'retry-after' );
 		if ( is_numeric( $retry_after ) && (int) $retry_after > 0 ) {
-			$delay = min( DAY_IN_SECONDS, (int) $retry_after );
+			// Never earlier than the server asked; spread upwards only.
+			$delay = self::jitter( min( DAY_IN_SECONDS, (int) $retry_after ), 0.25, true );
 		}
 
 		/**
@@ -1466,9 +1664,25 @@ final class SE_License_SDK_Client {
 				];
 			}
 
-			$code = wp_remote_retrieve_response_code( $response );
-			$body = wp_remote_retrieve_body( $response );
-			$body = json_decode( $body, true );
+			$code     = wp_remote_retrieve_response_code( $response );
+			$raw_body = wp_remote_retrieve_body( $response );
+
+			// An edge/CDN in front of the license server (e.g. Cloudflare) can
+			// intercept the request and answer with an interactive bot-challenge
+			// page instead of forwarding it. The server never gave a verdict, so
+			// this must NOT be read as "license invalid" — flag it transport-level
+			// so the grace period holds the last-known-good state.
+			if ( $this->is_edge_challenge( $response, $raw_body ) ) {
+				return [
+					'success'         => false,
+					'error'           => __( 'The license server could not be reached: a security check (e.g. Cloudflare) intercepted the request. Please try again later.', 'storeengine-sdk' ),
+					'code'            => 'edge_challenge',
+					'data'            => [],
+					'transport_error' => true,
+				];
+			}
+
+			$body = json_decode( $raw_body, true );
 
 			if ( 201 === $code && ! $response ) {
 				return [
@@ -1506,6 +1720,50 @@ final class SE_License_SDK_Client {
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Detect an edge/CDN bot-challenge served in place of the license server's
+	 * own response (most commonly Cloudflare's "Just a moment…" interstitial).
+	 *
+	 * The server-to-server request carries no browser, cookies or JS engine, so
+	 * an edge bot-manager may answer it with a challenge page. That is never a
+	 * license verdict and callers must treat it as a transport failure.
+	 *
+	 * @param array|WP_Error $response Raw WP HTTP response.
+	 * @param string         $body     Already-retrieved response body.
+	 *
+	 * @return bool
+	 */
+	private function is_edge_challenge( $response, string $body ): bool {
+		// Cloudflare sets this header whenever it challenges or blocks a request
+		// (e.g. "challenge", "managed_challenge", "jschallenge"). Its presence is
+		// authoritative; a request that passed through carries no such header.
+		$mitigated = wp_remote_retrieve_header( $response, 'cf-mitigated' );
+		if ( '' !== $mitigated ) {
+			return true;
+		}
+
+		if ( '' === $body ) {
+			return false;
+		}
+
+		// A genuine API response — success or business error — is JSON. Only
+		// consider a non-JSON (HTML) body a possible challenge, so a real JSON
+		// error is never masked.
+		$trimmed = ltrim( $body );
+		if ( '' !== $trimmed && ( '{' === $trimmed[0] || '[' === $trimmed[0] ) ) {
+			return false;
+		}
+
+		// Markers emitted by common edge challenge/interstitial pages.
+		foreach ( [ 'challenge-platform', '_cf_chl_opt', 'cf-browser-verification', 'Just a moment', 'Attention Required', 'Checking your browser' ] as $marker ) {
+			if ( false !== stripos( $body, $marker ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

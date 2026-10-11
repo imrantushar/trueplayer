@@ -68,17 +68,15 @@ class Shortcode {
 
 		$config = self::resolved_config( $video_id );
 		self::maybe_enqueue_quizpress( $config );
-		// JSON_HEX_TAG so a `</script>` inside any string (title, caption, filter
-		// payload) can't break the inline `<script type="application/json">` block.
-		$json   = wp_json_encode( [ 'videoId' => $video_id, 'title' => get_the_title( $video_id ), 'config' => $config ], JSON_HEX_TAG );
+		$json   = wp_json_encode( [ 'videoId' => $video_id, 'title' => get_the_title( $video_id ), 'config' => $config ] );
 		$label  = '' !== trim( (string) $content ) ? do_shortcode( $content ) : ( $atts['label'] ?: __( 'Watch video', 'trueplayer' ) );
 		$accent = $config['customize']['appearance']['accent'] ?? '';
 		$style  = $accent ? sprintf( ' style="--tp-accent:%s"', esc_attr( $accent ) ) : '';
 
 		return sprintf(
-			'<span class="trueplayer-popup" data-trueplayer-popup data-video-id="%1$d"%4$s><script type="application/json" class="trueplayer-popup-config">%2$s</script><button type="button" class="trueplayer-popup-trigger"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>%3$s</button></span>',
+			'<span class="trueplayer-popup" data-trueplayer-popup data-video-id="%1$d"%4$s data-tp-config="%2$s"><button type="button" class="trueplayer-popup-trigger"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>%3$s</button></span>',
 			$video_id,
-			$json,
+			esc_attr( $json ),
 			wp_kses_post( $label ),
 			$style
 		);
@@ -112,15 +110,12 @@ class Shortcode {
 		$config = self::resolved_config( $video_id );
 		self::maybe_enqueue_quizpress( $config );
 
-		// JSON_HEX_TAG so a `</script>` inside any string (title, caption, filter
-		// payload) can't break the inline `<script type="application/json">` block.
 		$json = wp_json_encode(
 			[
 				'videoId' => $video_id,
 				'title'   => get_the_title( $video_id ),
 				'config'  => $config,
-			],
-			JSON_HEX_TAG
+			]
 		);
 
 		$behavior = is_array( $config['customize']['behavior'] ?? null ) ? $config['customize']['behavior'] : [];
@@ -151,10 +146,11 @@ class Shortcode {
 			$attrs .= ' data-tp-autoplay="1"';
 		}
 
-		return self::video_schema( $video_id, $config ) . self::custom_css( $video_id, $config ) . sprintf(
-			'<div class="trueplayer-mount tp-v%1$d" data-trueplayer data-video-id="%1$d"%4$s><script type="application/json" class="trueplayer-config">%2$s</script>%3$s</div>%5$s',
+		self::video_schema( $video_id, $config );
+		return sprintf(
+			'<div class="trueplayer-mount tp-v%1$d" data-trueplayer data-video-id="%1$d"%4$s data-tp-config="%2$s">%3$s</div>%5$s',
 			$video_id,
-			$json, // already JSON-encoded; rendered inside a JSON script tag.
+			esc_attr( $json ),
 			$use_facade ? self::render_facade( $config ) : '',
 			$attrs,
 			$description
@@ -264,20 +260,6 @@ class Shortcode {
 	}
 
 	/**
-	 * Per-video custom CSS (`customize.css`, preset-mergeable). Tag content is
-	 * neutralized so the style block can't be broken out of. The mount carries
-	 * a `tp-v{ID}` class for scoping.
-	 */
-	private static function custom_css( int $video_id, array $config ): string {
-		$css = $config['customize']['css'] ?? '';
-		if ( ! is_string( $css ) || '' === trim( $css ) ) {
-			return '';
-		}
-		$css = wp_strip_all_tags( $css );
-		return sprintf( '<style id="tp-custom-css-%d">%s</style>', $video_id, $css );
-	}
-
-	/**
 	 * VideoObject JSON-LD for SEO (Google video rich results). Requires a
 	 * thumbnail — provider posters are derived upstream (Helper::with_derived_poster)
 	 * when none is set. Filterable/disable-able via `trueplayer/seo_schema`.
@@ -309,23 +291,16 @@ class Shortcode {
 		if ( empty( $schema ) || ! is_array( $schema ) ) {
 			return '';
 		}
-		/**
-		 * JSON_HEX_TAG is load-bearing, not tidiness.
-		 *
-		 * json_encode does not escape `<` or `>`, and JSON_UNESCAPED_SLASHES
-		 * stops `/` being escaped too — so any schema string containing the
-		 * literal text `</script>` closed this block early and everything after
-		 * it was parsed as HTML. `name` is the raw post title, and the
-		 * `trueplayer/seo_schema` filter lets an addon put anything it likes in
-		 * here, so "no input path can produce that" is not a property this
-		 * function can rely on. HEX_TAG encodes both angle brackets as \u003C /
-		 * \u003E, which is still valid JSON-LD and cannot break out; the
-		 * slashes stay unescaped so URLs read normally.
-		 */
-		return sprintf(
-			'<script type="application/ld+json">%s</script>',
-			wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG )
+		// Printed through core's inline-script helper in the footer. JSON_HEX_TAG
+		// keeps any `</script>` inside a string from closing the block early.
+		$json = wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG );
+		add_action(
+			'wp_footer',
+			static function () use ( $json ) {
+				wp_print_inline_script_tag( $json, [ 'type' => 'application/ld+json' ] );
+			}
 		);
+		return '';
 	}
 
 	/**
