@@ -4,10 +4,8 @@
 # === Dev sources & toolchain ===
 /assets/scss/
 /assets/src/
-webpack.config.js
-tailwind.config.js
-postcss.config.js
 package-lock.json
+bun.lock
 
 # Composer lock (manifests themselves are shipped alongside the built vendor/)
 composer.lock

@@ -4,7 +4,7 @@ Tags: video, player, audio, playlist, youtube
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.6.1
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,6 +57,16 @@ Every file in `assets/build/` maps to a source entry:
 To rebuild: install Node.js 20+, then run `npm install` and `npm run build` in the plugin folder. The build uses `@wordpress/scripts` (webpack) with the config in `webpack.config.js`.
 
 == Changelog ==
+
+= 1.7.0 - 11-10-2026 =
+* Changed - Everything in the free plugin now works on its own, with no locked options. Features that belong to TruePlayer Pro now ship only in that add-on.
+* Changed - HLS streams, Google Analytics events and YouTube caption import are free.
+* Removed - Interactive (H5P) content moved to TruePlayer Pro.
+* Removed - Custom CSS fields — use the Customizer or Site Editor's Additional CSS instead.
+* Security - Quick-editing a video from the block editor now also checks you can edit that video.
+* Changed - Player settings are passed to the page as data attributes instead of inline script tags; admin styles load through the WordPress style queue.
+* Changed - Updated the StoreEngine SDK to 1.6.2.
+* Added - Readme documents where the source for the compiled scripts lives and how to rebuild it.
 
 = 1.6.1 - 10-10-2026 =
 * Security - Harden inline player config against breakout — JSON blobs rendered beside the player, popup and playlist now escape `</script>` sequences.

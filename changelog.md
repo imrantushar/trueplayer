@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.7.0 - 2026-10-11
+
+### Changed
+
+- Everything in the free plugin now works on its own, with no locked options. Features that belong to TruePlayer Pro now ship only in that add-on.
+- HLS streams, Google Analytics events and YouTube caption import are free.
+- Player settings are passed to the page as data attributes instead of inline script tags; admin styles load through the WordPress style queue.
+- Updated the StoreEngine SDK to 1.6.2.
+
+### Removed
+
+- Interactive (H5P) content moved to TruePlayer Pro.
+- Custom CSS fields — use the Customizer or Site Editor's Additional CSS instead.
+
+### Security
+
+- Quick-editing a video from the block editor now also checks you can edit that video.
+
+### Added
+
+- Readme documents where the source for the compiled scripts lives and how to rebuild it.
+
 ## 1.6.1 - 2026-10-10
 
 ### Security
