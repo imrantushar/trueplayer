@@ -20,10 +20,8 @@ class Addons {
 
 		$Autoload = \TruePlayer\Autoload::get_instance();
 
-		// Core-bundled addons ship in the free plugin. Pro-only addons
-		// (reporting, attestation, webhook-logs, academy-sync, and the premium
-		// source providers bunny + gumlet) are contributed by trueplayer-pro
-		// through the `trueplayer/addons/loader_filtered` filter below.
+		// Add-on plugins contribute their addons through the
+		// `trueplayer/addons/loader_filtered` filter below.
 		$addons = apply_filters(
 			'trueplayer/addons/loader_args',
 			[]

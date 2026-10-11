@@ -2,11 +2,7 @@ import { createInterpolateElement, useEffect, useState, useRef, createPortal } f
 import { api } from '../api';
 import { Card, CollapsibleCard, Button, Badge, Field, Input, Select, Textarea, Toggle } from '../components/UI';
 import { Icon } from '../components/icons';
-import { EndpointList } from '../components/EndpointList';
-import UpsellPanel from '../components/UpsellPanel';
-import { isPro, licenseStatus, licensePageUrl } from '../pro';
-import { hasLicenseApi } from '../license';
-import LicensePanel from './settings/LicensePanel';
+import { ExtSlot, settingsTabs } from '@Ext/admin';
 import AddonsPanel from './settings/AddonsPanel';
 import MediaPicker from '../components/MediaPicker';
 import { templatesFor, applyTemplateToBlob, ASPECT_RATIOS } from '../data/preset-templates';
@@ -54,8 +50,8 @@ function InfoDot() {
 }
 
 /**
- * The chrome every template tile shares: the frame, the selected state, the pro
- * flag, the label and the description.
+ * The chrome every template tile shares: the frame, the selected state, the
+ * label and the description.
  *
  * Split out because the video and audio tiles draw completely different
  * pictures inside it (a skin over a poster vs the shape of a bar) but have to
@@ -109,16 +105,6 @@ function TemplateTile({ template, selected, disabled, onSelect, children }) {
 					style={{ background: TILE_POSTER }}
 				>
 					{children}
-
-					{/* Top-left, because the tick owns the opposite corner. Gone once
-					    Pro is active: here the mark means "you cannot pick this",
-					    and on a licensed site that is simply false — it would be
-					    flagging two perfectly available templates as locked. */}
-					{template.pro && ! isPro() && (
-						<span className="absolute top-1.5 left-1.5 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white/90 text-brand-500">
-							{ __( 'PRO' ) }
-						</span>
-					)}
 
 					{selected && (
 						<span className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center shadow-sm">
@@ -332,9 +318,8 @@ function AudioTemplateCard({ template, selected, disabled, accent, onSelect }) {
 				style={{ borderRadius: radius, background: '#14171f', padding: layout === 'card' ? 8 : 10 }}
 			>
 				{/* Everything that is not card or minimal draws the bar form: that
-				    is compact and the two Pro layouts built on it, which differ in
-				    the room they take and where the transport sits — neither of
-				    which survives at tile size anyway. The branch is written as
+				    is compact and any layout built on it — the differences do not
+				    survive at tile size anyway. The branch is written as
 				    "not the other two" rather than a list of names so a layout
 				    added later renders instead of leaving a blank tile. */}
 				{'card' !== layout && 'minimal' !== layout && (
@@ -432,35 +417,32 @@ const TYPE_LOOK = {
 	},
 };
 
-const NAV_GROUPS = [
+const BASE_NAV_GROUPS = [
 	{
-		label: __( 'Player' ), items: [
+		key: 'player', label: __( 'Player' ), items: [
 			{ key: 'general', label: __( 'General' ), icon: 'settings' },
 			{ key: 'branding', label: __( 'Branding' ), icon: 'tag' },
 			{ key: 'sources', label: __( 'Sources & CDN' ), icon: 'cloud' },
 		]
 	},
+	{ key: 'data', label: __( 'Trust & data' ), items: [] },
 	{
-		label: __( 'Trust & data' ), items: [
-			{ key: 'enforcement', label: __( 'Enforcement' ), icon: 'shield' },
-			{ key: 'compliance', label: __( 'Compliance & privacy' ), icon: 'lock' },
-			{ key: 'analytics', label: __( 'Analytics' ), icon: 'analytics' },
-		]
-	},
-	{
-		label: __( 'Connect' ), items: [
+		key: 'connect', label: __( 'Connect' ), items: [
 			{ key: 'integrations', label: __( 'Integrations' ), icon: 'plug' },
-			{ key: 'webhooks', label: __( 'Global webhooks' ), icon: 'webhook' },
-			{ key: 'logs', label: __( 'Webhook logs' ), icon: 'clock' },
 		]
 	},
 	{
-		label: __( 'Account' ), items: [
+		key: 'account', label: __( 'Account' ), items: [
 			{ key: 'addons', label: __( 'Addons' ), icon: 'puzzle' },
-			{ key: 'license', label: __( 'License' ), icon: 'key' },
 		]
 	},
 ];
+
+// Extension tabs join the group they name; empty groups are not shown.
+const NAV_GROUPS = BASE_NAV_GROUPS.map( ( g ) => ( {
+	...g,
+	items: [ ...g.items, ...settingsTabs.filter( ( t ) => ( t.group || 'account' ) === g.key ) ],
+} ) ).filter( ( g ) => g.items.length > 0 );
 
 /**
  * Push the values that were just saved back into TruePlayerGlobal.
@@ -512,62 +494,6 @@ function syncGlobalDefaults(saved) {
 	g.enforcement = { ...(g.enforcement || {}), ...(saved.enforcement || {}) };
 }
 
-// Global defaults so a control is never uncontrolled before first save.
-const ENFORCEMENT_DEFAULTS = { completionThreshold: 90, antiSkip: true, strict: false, maxAttempts: 3, onFail: 'lock_retry_after_rewatch', requireLogin: false, trackGuests: true };
-
-// What happens once a viewer has used every attempt. Mirrors
-// Helper::ON_FAIL_POLICIES — the enforcing copy.
-const ON_FAIL_POLICIES = [
-	{ value: 'lock_retry_after_rewatch', label: __( 'Lock the video — re-watch it to earn another try' ) },
-	{ value: 'never_lock', label: __( 'Nothing — let them keep retrying' ) },
-];
-const COMPLIANCE_DEFAULTS = { certIssuer: '', certLogo: '', certSignature: '', certFooter: '', retentionEnabled: false, retentionDays: 365 };
-
-// Bunny.net storage endpoints. Codes must match BunnyStorage::REGIONS in PHP —
-// the server maps them to hostnames, and an unknown code falls back to default.
-// Bunny names a Stream pull zone `vz-{uuid}.b-cdn.net`. Mirrors
-// BunnyStorage::looks_like_stream_host() — the server makes the same call after
-// an upload, this one just gets there first.
-const IS_STREAM_HOST = /^vz-[0-9a-f-]+\.b-cdn\.net$/i;
-
-const BUNNY_REGIONS = [
-	{ value: '', label: __( 'Default — Falkenstein, DE' ) },
-	{ value: 'ny', label: __( 'New York, US' ) },
-	{ value: 'la', label: __( 'Los Angeles, US' ) },
-	{ value: 'uk', label: __( 'London, UK' ) },
-	{ value: 'se', label: __( 'Stockholm, SE' ) },
-	{ value: 'sg', label: __( 'Singapore' ) },
-	{ value: 'syd', label: __( 'Sydney, AU' ) },
-	{ value: 'br', label: __( 'São Paulo, BR' ) },
-	{ value: 'jh', label: __( 'Johannesburg, ZA' ) },
-];
-
-function WebhookLogs({ className }) {
-	const [rows, setRows] = useState(null);
-	useEffect(() => { api.getWebhookLogs(100).then(setRows).catch(() => setRows([])); }, []);
-	return (
-		<Card className={`overflow-hidden p-6 ${ className }`}>
-			<table className="w-full text-sm">
-				<thead className="bg-gray-50 text-gray-500 text-left">
-					<tr><th className="px-4 py-3 font-medium">{ __( 'When' ) }</th><th className="px-4 py-3 font-medium">{ __( 'Event' ) }</th><th className="px-4 py-3 font-medium">{ __( 'Endpoint' ) }</th><th className="px-4 py-3 font-medium">{ __( 'Result' ) }</th></tr>
-				</thead>
-				<tbody>
-					{(rows || []).map((r) => (
-						<tr key={r.id} className="border-t border-gray-100">
-							<td className="px-4 py-3 text-gray-500 whitespace-nowrap">{r.created}</td>
-							<td className="px-4 py-3">{r.event}</td>
-							<td className="px-4 py-3 text-gray-500 truncate max-w-xs">{r.url}</td>
-							<td className="px-4 py-3"><Badge tone={r.ok ? 'green' : 'red'}>{r.code || __( 'error' )}</Badge>{r.error ? <span className="text-xs text-red-500 ml-2">{r.error}</span> : ''}</td>
-						</tr>
-					))}
-					{rows && rows.length === 0 && <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">{ __( 'No deliveries logged yet.' ) }</td></tr>}
-					{!rows && <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">{ __( 'Loading…' ) }</td></tr>}
-				</tbody>
-			</table>
-		</Card>
-	);
-}
-
 /** The address wp_mail falls back to, shown as the field's placeholder. */
 function TruePlayerGlobalAdminEmail() {
 	const g = window.TruePlayerGlobal || {};
@@ -590,17 +516,6 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 	const [dirty, setDirty] = useState(false);
 	const [toolbarSlot, setToolbarSlot] = useState(null);
 	const loadedOnce = useRef(false);
-	// Which CDN panel is expanded. One at a time on purpose: every one of these
-	// takes a provider secret, they all look identical, and nothing reports a
-	// swap until playback or an upload fails — so they are never on screen
-	// together to be pasted into the wrong box. That reasoning is why this is a
-	// single value rather than one open-flag per card. `null` means the seeding
-	// effect below hasn't run yet, which is distinct from '' (all collapsed).
-	const [cdnPanel, setCdnPanel] = useState(null);
-	// Workspaces read back from Gumlet with the saved key. `null` = not asked
-	// yet or still asking; `[]` = asked and got nothing, which falls back to a
-	// plain text box rather than stranding the author with no way to set it.
-	const [gumletCollections, setGumletCollections] = useState(null);
 
 	useEffect(() => {
 		api.getSettings().then((s) => setSettings(s || {}));
@@ -620,43 +535,6 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 		}
 		setDirty(true);
 	}, [settings]);
-
-	// Open whichever product this site already uses, once the saved settings
-	// arrive. An install with none opens Bunny Storage — it is the one people
-	// come here to set up, and a screen of closed cards hides that.
-	useEffect(() => {
-		if (!settings || cdnPanel !== null) {
-			return;
-		}
-		const st = settings.bunny?.storage || {};
-		const hasBunnyStorage = !!(st.zone || st.accessKey || st.pullZone);
-		const hasBunnyStream = !!settings.bunny?.tokenKey;
-		const hasGumlet = !!settings.gumlet?.apiKey;
-
-		if (hasBunnyStorage) {
-			setCdnPanel('bunny-storage');
-		} else if (hasBunnyStream) {
-			setCdnPanel('bunny-stream');
-		} else {
-			// Gumlet before the empty default: a site with Gumlet configured and
-			// no Bunny at all should land on the one it actually uses.
-			setCdnPanel(hasGumlet ? 'gumlet' : 'bunny-storage');
-		}
-	}, [settings, cdnPanel]);
-
-	// Look up the workspaces once, when the Gumlet panel is actually opened and
-	// there is a key to look them up with — not on every Settings load, since
-	// most visits here have nothing to do with Gumlet.
-	useEffect(() => {
-		if (cdnPanel !== 'gumlet' || !settings?.gumlet?.apiKey || gumletCollections !== null) {
-			return;
-		}
-		let live = true;
-		api.gumletCollections()
-			.then((r) => live && setGumletCollections(r.collections || []))
-			.catch(() => live && setGumletCollections([]));
-		return () => { live = false; };
-	}, [cdnPanel, settings, gumletCollections]);
 
 	// Report dirty state up to the app shell so it can warn before navigating
 	// away (Settings has no breadcrumb title/back of its own, unlike the entity
@@ -680,17 +558,6 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 	if (!settings) {
 		return <p className="text-gray-400">{ __( 'Loading…' ) }</p>;
 	}
-
-	// "Connected" means uploads can actually run — the same three fields
-	// BunnyStorage::is_configured() checks server-side, so the badge can't claim
-	// a zone is ready that the editor's upload field will then refuse.
-	const bs = settings.bunny?.storage || {};
-	const storageReady = !!(bs.zone && bs.accessKey && bs.pullZone);
-	// "Connected" for Gumlet is just the key: it is all that is needed to play
-	// an asset that already exists. Uploading additionally wants a collection
-	// ID, and the editor's upload field says so rather than this badge lying
-	// about a half-setup being unusable.
-	const gumletReady = !!settings.gumlet?.apiKey;
 
 	return (
 		<>
@@ -753,10 +620,8 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								const markerKey = isAudioTab ? 'defaultAudioTemplate' : 'defaultTemplate';
 								const presetKey = isAudioTab ? 'defaultAudioPreset' : 'defaultPreset';
 								// The tile that reads as chosen before anything is stored.
-								// Audio points at Minimal rather than Podcast because Podcast
-								// is Pro now, and a free install must not open on a locked
-								// tile. Mirrored in utils/default-look.js, which names the
-								// same fallback in the create dialog.
+								// Mirrored in utils/default-look.js, which names the same
+								// fallback in the create dialog.
 								const fallbackTemplate = isAudioTab ? 'bare' : 'default';
 								const activePreset = settings.general?.[presetKey] || '';
 								const typePresets = presets.filter((p) => ('audio' === p.type) === isAudioTab);
@@ -816,17 +681,8 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 												</div>
 											)}
 
-											{/* Free first, Pro in its own labelled group below, rather
-											    than one run of tiles with the locked ones wherever the
-											    row happens to break. Two reasons: a free install sees
-											    what it can use without reading badges, and the Pro row
-											    reads as an offer instead of as three arbitrary tiles
-											    that refuse to click. Grouped rather than ordered so it
-											    survives the narrow two-column grid, where sorting
-											    alone would still leave a Pro tile sharing a row. */}
 											{[
-												[ null, templatesFor(lookType).filter((t) => ! t.pro) ],
-												[ __( 'With TruePlayer Pro' ), templatesFor(lookType).filter((t) => !! t.pro) ],
+												[ null, templatesFor(lookType) ],
 											].filter(([ , list ]) => list.length > 0).map(([ groupLabel, list ]) => (
 											<div key={groupLabel || 'free'} className={groupLabel ? 'mt-5' : ''}>
 											{groupLabel && (
@@ -842,7 +698,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 													// pointer-events-none tile stays in the tab
 													// order, so a keyboard user would land on a
 													// control that silently does nothing.
-													const locked = !!activePreset || ( t.pro && ! isPro() );
+													const locked = !!activePreset;
 													// The marker is what makes the right tile
 													// read as chosen; nothing consumes it at
 													// render, where the appearance keys below
@@ -920,130 +776,11 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 						</div>
 					)}
 
-					{tab === 'enforcement' && (
-						isPro() ? (
-							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Enforcement defaults' ) }</h3>
-								<p className="text-sm text-muted mb-4">
-									{ createInterpolateElement(
-										__( 'The watch-verification & gating policy applied to new videos. Any video can override these in its own <b>Questions & gating</b> tab.' ),
-										{ b: <strong /> }
-									) }
-								</p>
-								{(() => {
-									const enf = { ...ENFORCEMENT_DEFAULTS, ...(settings.enforcement || {}) };
-									const setEnf = (partial) => setSettings((s) => ({ ...s, enforcement: { ...ENFORCEMENT_DEFAULTS, ...(s.enforcement || {}), ...partial } }));
-									return (
-										<>
-											<div className="grid grid-cols-2 gap-4 mt-4 pt-5 border-t border-solid border-line">
-												<Field label={ __( 'Completion threshold (%)' ) } hint={ __( "Coverage required to count as 'watched'." ) }>
-													<Input type="number" min="1" max="100" value={enf.completionThreshold} onChange={(e) => setEnf({ completionThreshold: parseInt(e.target.value, 10) || 0 })} />
-												</Field>
-												<Field label={ __( 'Max quiz attempts' ) } hint={ enf.onFail === 'never_lock' ? __( 'Counted and reported, but never enforced.' ) : __( 'Before the video locks.' ) }>
-													<Input type="number" min="1" value={enf.maxAttempts} onChange={(e) => setEnf({ maxAttempts: parseInt(e.target.value, 10) || 1 })} />
-												</Field>
-											</div>
-											<Field
-												label={ __( 'When attempts run out' ) }
-												hint={ enf.onFail === 'never_lock'
-													? __( 'Attempts are still counted and reported — they just never lock anything, and watch progress is kept so the video resumes.' )
-													: __( 'Locking clears the viewer\u2019s watch progress, so the re-watch has to be genuine.' ) }
-											>
-												<Select value={enf.onFail} onChange={(e) => setEnf({ onFail: e.target.value })}>
-													{ON_FAIL_POLICIES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-												</Select>
-											</Field>
-											<Toggle className="mb-6" checked={enf.antiSkip} onChange={(v) => setEnf({ antiSkip: v })} label={ __( 'Anti-skip (block seeking past unwatched parts)' ) } />
-											<Toggle className="mb-6" checked={enf.strict} onChange={(v) => setEnf({ strict: v })} label={ __( 'Must-watch (strict): force 100% coverage + anti-skip' ) } />
-											<Toggle className="mb-6" checked={enf.requireLogin} onChange={(v) => setEnf({ requireLogin: v })} label={ __( 'Require login to watch (reliable per-person tracking)' ) } />
-											<Toggle checked={enf.trackGuests} onChange={(v) => setEnf({ trackGuests: v })} label={ __( 'Track logged-out guests (cookie-based, best-effort)' ) } />
-										</>
-									);
-								})()}
-							</Card>
-						) : (
-							<UpsellPanel title={ __( 'Enforcement policy' ) } features={[ __( 'Site-wide watch-verification defaults' ), __( 'Anti-skip & must-watch (strict) mode' ), __( 'Quiz lock-on-fail & login gating' ) ]} />
-						)
-					)}
+					
 
-					{tab === 'compliance' && (
-						isPro() ? (
-							<div className="space-y-6">
-								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Certificate branding' ) }</h3>
-									<p className="text-sm text-muted mb-4">{ __( 'Shown on completion certificates & the public verification page.' ) }</p>
-									{(() => {
-										const c = { ...COMPLIANCE_DEFAULTS, ...(settings.compliance || {}) };
-										const setC = (partial) => setSettings((s) => ({ ...s, compliance: { ...COMPLIANCE_DEFAULTS, ...(s.compliance || {}), ...partial } }));
-										return (
-											<div className='mt-4 pt-5 border-t border-solid border-line'>
-												<Field label={ __( 'Issuer name' ) } hint={ __( 'Defaults to your site name.' ) }>
-													<Input value={c.certIssuer} onChange={(e) => setC({ certIssuer: e.target.value })} placeholder={(window.TruePlayerGlobal && window.TruePlayerGlobal.site_name) || __( 'Your organization' )} />
-												</Field>
-												<Field label={ __( 'Logo' ) }>
-													<MediaPicker value={c.certLogo} onChange={(url) => setC({ certLogo: url })} accept="image" label={ __( 'Upload a logo' ) } />
-												</Field>
-												<Field label={ __( 'Signature line' ) } hint={ __( 'e.g. a name / title printed under the certificate.' ) }>
-													<Input value={c.certSignature} onChange={(e) => setC({ certSignature: e.target.value })} placeholder={ __( 'Jane Doe, Head of Training' ) } />
-												</Field>
-												<Field label={ __( 'Footer note' ) } className='!mb-0'>
-													<Input value={c.certFooter} onChange={(e) => setC({ certFooter: e.target.value })} placeholder={ __( 'This certificate can be verified online.' ) } />
-												</Field>
-											</div>
-										);
-									})()}
-								</Card>
+					
 
-								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Data retention' ) }</h3>
-									<p className="text-sm text-muted mb-4">{ __( 'Automatically purge watch & quiz records older than a set age — for privacy & GDPR compliance.' ) }</p>
-									{(() => {
-										const c = { ...COMPLIANCE_DEFAULTS, ...(settings.compliance || {}) };
-										const setC = (partial) => setSettings((s) => ({ ...s, compliance: { ...COMPLIANCE_DEFAULTS, ...(s.compliance || {}), ...partial } }));
-										return (
-											<div className='mt-4 pt-5 border-t border-solid border-line'>
-												<Toggle checked={c.retentionEnabled} onChange={(v) => setC({ retentionEnabled: v })} label={ __( 'Auto-purge old records' ) } />
-												{c.retentionEnabled ? (
-													<div className="mt-6">
-														<Field label={ __( 'Keep records for (days)' ) } hint={ __( 'Progress + quiz attempts past this age are deleted daily.' ) } className='!mb-0'>
-															<Input type="number" min="7" value={c.retentionDays} onChange={(e) => setC({ retentionDays: parseInt(e.target.value, 10) || 0 })} />
-														</Field>
-													</div>
-												) : null}
-											</div>
-										);
-									})()}
-								</Card>
-							</div>
-						) : (
-							<UpsellPanel title={ __( 'Compliance & privacy' ) } features={[ __( 'White-labelled completion certificates' ), __( 'Public verification page' ), __( 'Data-retention auto-purge (GDPR)' ) ]} />
-						)
-					)}
-
-					{tab === 'analytics' && (
-						isPro() ? (
-							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Analytics collection' ) }</h3>
-								<p className="text-sm text-muted mb-4">{ __( 'Retention, replay heatmap & daily rollups. Turning this off keeps watch-verification working but stops aggregate data collection.' ) }</p>
-								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									<Toggle
-										checked={settings.analytics?.enabled !== false}
-										onChange={(v) => setSettings((s) => ({ ...s, analytics: { ...(s.analytics || {}), enabled: v } }))}
-										label={ __( 'Collect video analytics' ) }
-										className="mb-6"
-									/>
-									<p className="text-xs text-muted mt-2">
-										{ createInterpolateElement(
-											__( 'Data retention (auto-purge) is under <b>Compliance & privacy</b>.' ),
-											{ b: <strong /> }
-										) }
-									</p>
-								</div>
-							</Card>
-						) : (
-							<UpsellPanel title={ __( 'Video analytics' ) } features={[ __( 'Audience retention & replay heatmap' ), __( 'Completion funnel & per-viewer drill-down' ), __( 'Toggle collection site-wide' ) ]} />
-						)
-					)}
+					
 
 					{tab === 'sources' && (
 						<div className="space-y-6">
@@ -1055,166 +792,14 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</div>
 							</Card>
 
-							{isPro() ? (
-								<>
-									{ /* Storage before Stream: these are two different Bunny
-									     products with two different secrets, and the one people
-									     arrive here for is the zone they just uploaded to. Each
-									     card names the product and says where in Bunny's own
-									     dashboard its key lives, because a Token Authentication
-									     Key and a storage password look identical and neither
-									     tells you when it has been pasted into the wrong box. */ }
-									<CollapsibleCard
-										title={ __( 'Bunny.net Storage' ) }
-										description={ __( 'Video files you upload to a storage zone and serve through a pull zone. Connect it and videos can be uploaded straight from the editor — the password stays on this server, uploads are proxied, never sent from the browser.' ) }
-										badge={storageReady ? <Badge tone="green">{ __( 'Connected' ) }</Badge> : <Badge tone="gray">{ __( 'Not set up' ) }</Badge>}
-										open={cdnPanel === 'bunny-storage'}
-										onToggle={() => setCdnPanel((p) => (p === 'bunny-storage' ? '' : 'bunny-storage'))}
-									>
-										{(() => {
-											const st = settings.bunny?.storage || {};
-											const setSt = (partial) => setSettings((s) => ({ ...s, bunny: { ...(s.bunny || {}), storage: { ...((s.bunny || {}).storage || {}), ...partial } } }));
-											return (
-												<>
-													<div className="grid grid-cols-2 gap-4">
-														<Field label={ __( 'Storage zone name' ) } hint={ __( 'As it appears in your Bunny dashboard.' ) }>
-															<Input value={st.zone || ''} onChange={(e) => setSt({ zone: e.target.value.trim() })} placeholder="my-videos" />
-														</Field>
-														<Field label={ __( 'Region' ) } hint={ __( "The zone's main storage region." ) }>
-															<Select value={st.region || ''} onChange={(e) => setSt({ region: e.target.value })}>
-																{BUNNY_REGIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-															</Select>
-														</Field>
-													</div>
-													<Field label={ __( 'Storage password' ) } hint={ __( 'Bunny → Storage → your zone → FTP & API Access → Password. Not the same as a Token Authentication Key. Grants full access to the zone, so it is never exposed to the browser.' ) }>
-														<Input type="password" value={st.accessKey || ''} onChange={(e) => setSt({ accessKey: e.target.value.trim() })} placeholder="••••••••-••••-••••" />
-													</Field>
-													{ /* Required, not optional: the storage host serves nothing publicly,
-													     so without a pull zone an upload succeeds and yields a URL that
-													     cannot be played. */ }
-													<Field label={ __( 'Pull-zone hostname' ) } required hint={ __( 'Bunny → Storage → your zone → Connected pull zones. Uploads need this to produce a playable URL.' ) }>
-														<Input value={st.pullZone || ''} onChange={(e) => setSt({ pullZone: e.target.value.replace(/^https?:\/\//, '').replace(/\/$/, '').trim() })} placeholder="my-videos.b-cdn.net" />
-														{ /* Bunny auto-names Stream's zones `vz-{uuid}.b-cdn.net`, and that
-														     one hostname is the difference between every upload playing and
-														     every upload 404ing — while the upload itself succeeds either
-														     way, so nothing else in the flow can catch it. */ }
-														{IS_STREAM_HOST.test(st.pullZone || '') && (
-															<p className="text-xs text-ink leading-5 !mt-1.5 p-2.5 rounded border border-warning/40 bg-warning-light">
-																{ createInterpolateElement(
-																	__( 'That is a <b>Stream</b> pull zone (Bunny names them <c>vz-…</c>). It serves a video library, not your storage zone — files uploaded here will not play from it. Use the hostname under <s>Storage → your zone → Connected pull zones</s> instead.' ),
-																	{ b: <strong />, c: <code />, s: <strong /> }
-																) }
-															</p>
-														)}
-													</Field>
-													<Field label={ __( 'Upload folder' ) } hint={ __( 'Folder inside the zone that uploads land in. Leave empty to use the zone root.' ) }>
-														<Input value={st.folder ?? 'trueplayer'} onChange={(e) => setSt({ folder: e.target.value.replace(/^\/+|\/+$/g, '') })} placeholder="trueplayer" />
-													</Field>
-													<Field label={ __( 'Token Authentication Key (optional)' ) } hint={ __( 'Bunny → CDN → this storage pull zone → Security → Token Authentication Key. Only needed to sign playback of videos you mark private.' ) } className='!mb-0'>
-														<Input type="password" value={st.tokenKey || ''} onChange={(e) => setSt({ tokenKey: e.target.value.trim() })} placeholder="••••••••-••••-••••" />
-													</Field>
-												</>
-											);
-										})()}
-									</CollapsibleCard>
-
-									<CollapsibleCard
-										title={ __( 'Bunny.net Stream' ) }
-										description={ __( "Videos hosted in a Bunny video library. Each video's own pull zone and video ID are set in its Source tab — only the signing key is site-wide." ) }
-										badge={settings.bunny?.tokenKey ? <Badge tone="green">{ __( 'Key saved' ) }</Badge> : <Badge tone="gray">{ __( 'Not set up' ) }</Badge>}
-										open={cdnPanel === 'bunny-stream'}
-										onToggle={() => setCdnPanel((p) => (p === 'bunny-stream' ? '' : 'bunny-stream'))}
-									>
-										<Field label={ __( 'Token Authentication Key' ) } hint={ __( 'Bunny → CDN → your Stream pull zone → Security → Token Authentication Key. Only needed to sign playback of videos you mark private.' ) } className='!mb-0'>
-											<Input type="password" value={settings.bunny?.tokenKey || ''} onChange={(e) => setSettings((s) => ({ ...s, bunny: { ...(s.bunny || {}), tokenKey: e.target.value.trim() } }))} placeholder="••••••••-••••-••••" />
-										</Field>
-									</CollapsibleCard>
-
-									{ /* One card, not two. Bunny needs a card per product because
-									     Storage and Stream are separate services with separate
-									     secrets; Gumlet Stream and Gumlet upload are two ways into
-									     one workspace behind one API key, so splitting them would
-									     invent a distinction the account doesn't have. */ }
-									<CollapsibleCard
-										title={ __( 'Gumlet' ) }
-										description={ __( 'Videos hosted and transcoded by Gumlet. Connect it and files can be uploaded straight from the editor — the browser sends them directly to Gumlet using a one-time link this server signs, so your API key never leaves the site.' ) }
-										badge={gumletReady ? <Badge tone="green">{ __( 'Connected' ) }</Badge> : <Badge tone="gray">{ __( 'Not set up' ) }</Badge>}
-										open={cdnPanel === 'gumlet'}
-										onToggle={() => setCdnPanel((p) => (p === 'gumlet' ? '' : 'gumlet'))}
-									>
-										{(() => {
-											const g = settings.gumlet || {};
-											const setG = (partial) => setSettings((s) => ({ ...s, gumlet: { ...(s.gumlet || {}), ...partial } }));
-											return (
-												<>
-													<Field label={ __( 'API key' ) } required hint={ __( 'Gumlet → Settings → API keys. Grants full access to your workspace, so it is never exposed to the browser.' ) }>
-														<Input type="password" value={g.apiKey || ''} onChange={(e) => setG({ apiKey: e.target.value.trim() })} placeholder="••••••••-••••-••••" />
-													</Field>
-													<div className="grid grid-cols-2 gap-4">
-														{ /* Only uploads need this. Pasting an asset that already
-														     exists works without it, which is why it isn't marked
-														     required — the editor says so at the point of use. */ }
-														{ /* Gumlet's API calls this a collection, its dashboard calls
-														     it a workspace, and the dashboard never shows the id at all
-														     — so this is looked up with the saved key rather than asked
-														     for. The text box is only the fallback for when that lookup
-														     cannot run. */ }
-														<Field label={ __( 'Video workspace' ) } hint={ __( 'Where uploaded videos land. Needed to upload; using a video you already have works without it.' ) }>
-															{ gumletCollections === null ? (
-																<Input value="" disabled placeholder={ g.apiKey ? __( 'Looking up your workspaces…' ) : __( 'Add your API key first' ) } />
-															) : gumletCollections.length ? (
-																<Select value={g.collectionId || ''} onChange={(e) => setG({ collectionId: e.target.value })}>
-																	<option value="">{ __( '— Select a workspace —' ) }</option>
-																	{gumletCollections.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-																</Select>
-															) : (
-																<Input value={g.collectionId || ''} onChange={(e) => setG({ collectionId: e.target.value.trim() })} placeholder="65f1a2b3c4d5e6f708192a3b" />
-															)}
-														</Field>
-														<Field label={ __( 'Output format' ) } hint={ __( 'ABR streams adaptively and is the right default. MP4 produces a single progressive file.' ) }>
-															<Select value={g.format || 'ABR'} onChange={(e) => setG({ format: e.target.value })}>
-																<option value="ABR">{ __( 'ABR (adaptive streaming)' ) }</option>
-																<option value="MP4">{ __( 'MP4 (single file)' ) }</option>
-															</Select>
-														</Field>
-													</div>
-													{ /* An ID, not a name, and Gumlet will not create it — sending
-													     one that does not exist fails the whole upload with "Folder
-													     do not exist". Empty is the right default: it uploads to the
-													     workspace root, which always exists. The placeholder used to
-													     read "trueplayer", which invited exactly that failure. */ }
-													<Field label={ __( 'Upload folder ID (optional)' ) } hint={ __( 'Must be a folder that already exists in Gumlet, given by its ID rather than its name. Leave empty to upload to the workspace root.' ) }>
-														<Input value={g.folder || ''} onChange={(e) => setG({ folder: e.target.value.trim() })} placeholder={ __( 'Leave empty for the workspace root' ) } />
-													</Field>
-													<Field label={ __( 'Signing secret (optional)' ) } hint={ __( 'Gumlet → your workspace → Video protection → Signed URLs. Only needed to sign playback of videos you mark private. A different value from the API key above.' ) } className='!mb-0'>
-														<Input type="password" value={g.signSecret || ''} onChange={(e) => setG({ signSecret: e.target.value.trim() })} placeholder="••••••••••••••••" />
-													</Field>
-												</>
-											);
-										})()}
-									</CollapsibleCard>
-
-									<Card className="p-6">
-										<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Signed link expiry' ) }</h3>
-										<p className="text-sm text-muted mb-4">{ __( 'How long a signed / private playback URL stays valid before it must be re-issued.' ) }</p>
-										<div className='mt-4 pt-5 border-t border-solid border-line'>
-											<Field label={ __( 'Expiry (hours)' ) } hint={ __( 'Applies to private self-hosted files and to the Bunny and Gumlet sources above.' ) } className='!mb-0'>
-												<Input type="number" min="1" value={settings.sources?.signedUrlTtlHours || 6} onChange={(e) => setSettings((s) => ({ ...s, sources: { ...(s.sources || {}), signedUrlTtlHours: parseInt(e.target.value, 10) || 0 } }))} />
-											</Field>
-										</div>
-									</Card>
-								</>
-							) : (
-								<UpsellPanel title={ __( 'Private & premium sources' ) } features={[ __( 'Bunny.net & Gumlet hosting' ), __( 'Upload to your CDN from the editor' ), __( 'Signed, expiring playback URLs' ), __( 'Mux & HLS streaming' ) ]} />
-							)}
+							<ExtSlot name="settings.sources" settings={settings} setSettings={setSettings} />
 						</div>
 					)}
 
 					{tab === 'integrations' && (
 						<div className="space-y-6">
-							{ /* Free, and first: this is the destination email capture falls back
-							     to when no CRM is connected, so it must be reachable without Pro
-							     — the rest of this section stays gated below. */ }
+							{ /* First: this is the destination email capture falls back to
+							     when no CRM is connected. */ }
 							<Card className="p-6">
 								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Email notification' ) }</h3>
 								<p className="text-sm text-muted mb-4">{ __( "Where captured addresses are sent when a video's email form has no CRM provider selected." ) }</p>
@@ -1230,46 +815,26 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 								</div>
 							</Card>
 
-						{ isPro() ? (
-							<>
-								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Mailchimp' ) }</h3>
-									<p className="text-sm text-muted mb-4">{ __( 'Send in-player opt-ins to Mailchimp audiences. Paste your API key (Account → Extras → API keys).' ) }</p>
-									<div className='mt-4 pt-5 border-t border-solid border-line'>
-										<Field label={ __( 'Mailchimp API key' ) } hint={ __( 'Looks like abc123…-us21. Stored on your site only.' ) }>
-											<Input
-												type="password"
-												value={settings.integrations?.mailchimp?.api_key || ''}
-												onChange={(e) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), mailchimp: { ...(s.integrations?.mailchimp || {}), api_key: e.target.value } } }))}
-												placeholder="xxxxxxxxxxxxxxxx-us21"
-											/>
-										</Field>
-										<p className="text-xs text-muted">{ __( 'Once saved, Mailchimp audiences appear in each video’s Subscribe tab.' ) }</p>
-									</div>
-								</Card>
+						<Card className="p-6">
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Google Analytics' ) }</h3>
+								<p className="text-sm text-muted mb-4">{ __( 'Send player events (video_start, video_complete) to GA4. Uses your existing site tag, or loads one from a measurement ID.' ) }</p>
+								<div className='mt-4 pt-5 border-t border-solid border-line'>
+									<Toggle
+										checked={!!settings.integrations?.ga?.enabled}
+										onChange={(v) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), enabled: v } } }))}
+										label={ __( 'Send player events to Google Analytics' ) }
+									/>
+									{settings.integrations?.ga?.enabled ? (
+										<div className="mt-6">
+											<Field label={ __( 'Measurement ID' ) } hint={ __( "Optional — leave blank to use the site's existing GA tag." ) } className="!mb-0">
+												<Input value={settings.integrations?.ga?.measurementId || ''} onChange={(e) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), measurementId: e.target.value.trim() } } }))} placeholder="G-XXXXXXXXXX" />
+											</Field>
+										</div>
+									) : null}
+								</div>
+							</Card>
 
-								<Card className="p-6">
-									<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Google Analytics' ) }</h3>
-									<p className="text-sm text-muted mb-4">{ __( 'Send player events (video_start, video_complete) to GA4. Uses your existing site tag, or loads one from a measurement ID.' ) }</p>
-									<div className='mt-4 pt-5 border-t border-solid border-line'>
-										<Toggle
-											checked={!!settings.integrations?.ga?.enabled}
-											onChange={(v) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), enabled: v } } }))}
-											label={ __( 'Send player events to Google Analytics' ) }
-										/>
-										{settings.integrations?.ga?.enabled ? (
-											<div className="mt-6">
-												<Field label={ __( 'Measurement ID' ) } hint={ __( "Optional — leave blank to use the site's existing GA tag." ) } className="!mb-0">
-													<Input value={settings.integrations?.ga?.measurementId || ''} onChange={(e) => setSettings((s) => ({ ...s, integrations: { ...(s.integrations || {}), ga: { ...(s.integrations?.ga || {}), measurementId: e.target.value.trim() } } }))} placeholder="G-XXXXXXXXXX" />
-												</Field>
-											</div>
-										) : null}
-									</div>
-								</Card>
-							</>
-						) : (
-							<UpsellPanel title={ __( 'CRM & email integrations' ) } features={[ __( 'Mailchimp audiences' ), __( 'Google Analytics events' ), __( 'GemCRM / FluentCRM opt-in capture' ) ]} />
-						)}
+						<ExtSlot name="settings.integrations" settings={settings} setSettings={setSettings} />
 						</div>
 					)}
 
@@ -1332,134 +897,23 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 										</div>
 									</Card>
 
-									<Card className="p-6">
-										<div className="flex items-center gap-2 !mb-1">
-											<h3 className="font-semibold text-gray-900">{ __( 'White-label' ) }</h3>
-											{!isPro() && <Badge tone="gray">{ __( 'Pro' ) }</Badge>}
-										</div>
-										<p className="text-sm text-muted mb-4">{ __( 'Replace the TruePlayer name across the admin and hide the player attribution.' ) }</p>
-										<div className='mt-4 pt-5 border-t border-solid border-line'>
-											{isPro() ? (
-												<>
-													<Toggle
-														checked={!!settings.whiteLabel?.enabled}
-														onChange={(v) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), enabled: v } }))}
-														label={ __( 'Enable white-label' ) }
-														className="mb-6"
-													/>
-													{settings.whiteLabel?.enabled && (
-														<>
-															<Field label={ __( 'Brand name' ) } hint={ __( 'Shown in the admin menu & titles.' ) }>
-																<Input
-																	value={settings.whiteLabel?.brand || ''}
-																	onChange={(e) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), brand: e.target.value } }))}
-																	placeholder={ __( 'Acme Video' ) }
-																/>
-															</Field>
-															{ /* The mark that goes with the name — without it a rebranded
-															     install still showed TruePlayer's play glyph beside the
-															     owner's own name in the WP menu and the admin header. */ }
-															<Field label={ __( 'Brand logo' ) } hint={ __( 'Square works best (used at 20px in the WordPress menu). Leave empty to keep the default mark.' ) }>
-																<MediaPicker
-																	value={settings.whiteLabel?.logo || ''}
-																	onChange={(url) => setSettings((s) => ({ ...s, whiteLabel: { ...(s.whiteLabel || {}), logo: url } }))}
-																	accept="image"
-																	label={ __( 'Upload a mark' ) }
-																/>
-															</Field>
-														</>
-													)}
-													<p className="text-xs text-muted mt-2">{ __( 'Takes effect on the next page load after saving.' ) }</p>
-												</>
-											) : (
-												<p className="text-sm text-muted">{ __( 'Upgrade to TruePlayer Pro to rebrand the admin and remove player attribution.' ) }</p>
-											)}
-										</div>
-									</Card>
+									<ExtSlot name="settings.branding" settings={settings} setSettings={setSettings} />
 								</div>
 							);
 						})()
 					)}
 
-					{tab === 'logs' && (
-						isPro() ? <WebhookLogs /> : <UpsellPanel title={ __( 'Webhook delivery logs' ) } features={[ __( 'Every delivery attempt recorded' ), __( 'See failures & status codes' ) ]} />
-					)}
+					
 
-					{tab === 'webhooks' && (
-						isPro() ? (
-							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Global webhooks' ) }</h3>
-								<p className="text-sm text-gray-500">{ __( 'Fire for every video, in addition to per-video webhooks.' ) }</p>
-								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									<EndpointList
-										endpoints={settings.webhooks || []}
-										onChange={(webhooks) => setSettings((s) => ({ ...s, webhooks }))}
-									/>
-								</div>
-							</Card>
-						) : (
-							<UpsellPanel title={ __( 'Automation & webhooks' ) } features={[ __( 'Signed webhooks on every player event' ), __( 'Site-wide + per-video endpoints' ) ]} />
-						)
-					)}
+					
 
 					{tab === 'addons' && <AddonsPanel />}
 
-					{ /* With Pro active and a store product configured, the SDK's REST
-					     routes are reachable and this tab is the real activation
-					     screen. Without them there is nothing to activate, so it
-					     falls back to stating where things stand. */ }
-					{tab === 'license' && hasLicenseApi() && <LicensePanel />}
+					{settingsTabs.filter( ( t ) => t.key === tab ).map( ( t ) => (
+						<t.Component key={ t.key } settings={ settings } setSettings={ setSettings } />
+					) )}
 
-					{tab === 'license' && !hasLicenseApi() && (
-						(() => {
-							// Two independent facts, and this card used to conflate them:
-							// the Pro plugin being active, and a license key being
-							// activated. Pro runs on a permissive default before a store
-							// is configured, so "Pro active" must not be reported as
-							// "your license is valid".
-							const status = licenseStatus();
-							const url = licensePageUrl();
-							return (
-								<Card className="p-6">
-									<div className="flex items-center gap-3 mb-2">
-										<h3 className="font-semibold text-gray-900">{ __( 'License' ) }</h3>
-										{!isPro() && <Badge tone="gray">{ __( 'Free' ) }</Badge>}
-										{isPro() && <Badge tone="brand">{ __( 'Pro plugin active' ) }</Badge>}
-										{isPro() && status === 'active' && <Badge tone="green">{ __( 'License activated' ) }</Badge>}
-										{isPro() && status === 'inactive' && <Badge tone="amber">{ __( 'License not activated' ) }</Badge>}
-									</div>
-									{!isPro() && (
-										<p className="text-sm text-gray-500">
-											{ createInterpolateElement(
-												__( 'You’re on the free player. Install <b>TruePlayer Pro</b> and activate a license to unlock watch-verification, quiz-gating, analytics, automation, premium sources and playlists.' ),
-												{ b: <strong /> }
-											) }
-										</p>
-									)}
-									{isPro() && status === 'active' && (
-										<p className="text-sm text-gray-500">{ __( 'TruePlayer Pro is active and your license key is valid.' ) }</p>
-									)}
-									{isPro() && status === 'inactive' && (
-										<p className="text-sm text-gray-500">
-											{ __( 'TruePlayer Pro is running and every feature is available. Activating a license adds automatic updates and priority support — it doesn’t unlock anything.' ) }
-										</p>
-									)}
-									{isPro() && status === 'unconfigured' && (
-										<p className="text-sm text-gray-500">
-											{ __( 'TruePlayer Pro is active. This build has no license server configured, so there’s no key to activate.' ) }
-										</p>
-									)}
-									{url && status !== 'unconfigured' && (
-										<div className="mt-4">
-											<Button variant="ghost" onClick={() => { window.location.href = url; }}>
-												{status === 'active' ? __( 'Manage license' ) : __( 'Activate license' )}
-											</Button>
-										</div>
-									)}
-								</Card>
-							);
-						})()
-					)}
+					
 				</div>
 			</div>
 		</>

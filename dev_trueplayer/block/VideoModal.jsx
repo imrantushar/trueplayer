@@ -209,7 +209,7 @@ export default function VideoModal( { video = null, onClose, onSaved } ) {
 				<FlexItem>
 					<p style={ { margin: 0, fontSize: '12px', color: '#757575' } }>
 						{ __(
-							'Bunny.net, Mux and HLS sources — and gating, chapters and appearance — are set up in the full editor.' ) }
+							'Other sources, chapters and appearance are set up in the full editor.' ) }
 						{ deepLink && ' ' }
 						{ deepLink && (
 							<a href={ deepLink } target="_blank" rel="noreferrer">

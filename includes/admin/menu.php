@@ -9,12 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Menu {
 
 	/**
-	 * Playlists and interactive content used to be their own submenu pages.
-	 * They're filters of the Media screen now; the old slugs redirect there.
+	 * Playlists used to be their own submenu page. They're a filter of the
+	 * Media screen now; the old slug redirects there.
 	 */
 	const LEGACY_PAGES = [
-		'-playlists'   => 'playlist',
-		'-interactive' => 'interactive',
+		'-playlists' => 'playlist',
 	];
 
 	public static function init() {

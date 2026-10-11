@@ -174,7 +174,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 								) }
 							</a>
 							{ ' — ' }
-							{ __( 'gating, chapters, appearance and more.' ) }
+							{ __( 'chapters, appearance and more.' ) }
 						</p>
 					) }
 				</PanelBody>

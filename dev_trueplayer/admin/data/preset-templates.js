@@ -6,6 +6,7 @@
 // tiles alone can only hint at it, and "Modern / Simple / Standard" tells an
 // author nothing about which to choose.
 import { __ } from '@Utils/translation';
+import { extTemplates } from '@Ext/admin';
 
 export const PRESET_TEMPLATES = [
 	{ key: 'default', label: __( 'Default' ), description: __( 'Gradient bar fading over the picture. The balanced baseline.' ), appearance: { skin: 'default', controlBarStyle: 'gradient', playButtonStyle: 'circle', roundness: 10 } },
@@ -13,8 +14,6 @@ export const PRESET_TEMPLATES = [
 	{ key: 'simple', label: __( 'Simple' ), description: __( 'Flat solid bar, tight padding — quiet and unobtrusive.' ), appearance: { skin: 'simple', controlBarStyle: 'solid', playButtonStyle: 'square', roundness: 6 } },
 	{ key: 'minimal', label: __( 'Minimal' ), description: __( 'Controls in a small pill. Time and volume are hidden.' ), appearance: { skin: 'minimal', controlBarStyle: 'minimal', playButtonStyle: 'square', roundness: 0 } },
 	{ key: 'standard', label: __( 'Standard' ), description: __( 'Opaque deck with square edges — the classic player look.' ), appearance: { skin: 'standard', controlBarStyle: 'gradient', playButtonStyle: 'circle', roundness: 8 } },
-	{ key: 'floating', label: __( 'Floating' ), pro: true, description: __( 'The bar detaches from the edge as a blurred, rounded panel.' ), appearance: { skin: 'floating', controlBarStyle: 'solid', playButtonStyle: 'soft', roundness: 16 } },
-	{ key: 'ambient', label: __( 'Ambient' ), pro: true, description: __( 'A blurred glow of the poster spills out behind the player.' ), appearance: { skin: 'ambient', controlBarStyle: 'gradient', playButtonStyle: 'circle', roundness: 8 } },
 ];
 
 /**
@@ -33,9 +32,7 @@ export const AUDIO_PRESET_TEMPLATES = [
 		// it would silently deselect the tile on every install that chose this
 		// one. The label is the only part an author ever sees.
 		//
-		// First, and the free default: the list is ordered free-then-pro (see
-		// `pro` below), and the tile a free install lands on has to be one it can
-		// actually use.
+		// First, and the default.
 		key: 'bare',
 		label: __( 'Minimal' ),
 		description: __( 'Just a play button and a waveform. No art, time or volume.' ),
@@ -66,50 +63,13 @@ export const AUDIO_PRESET_TEMPLATES = [
 		controls: { prev: true, next: true, speed: false, chapters: false, rewind: false, forward: false },
 	},
 
-	// ── Pro ───────────────────────────────────────────────────────────────
-	// The two long-form templates. `pro` is read by both pickers (Settings and
-	// the preset builder) to lock the tile and mark it, exactly as the video
-	// list has always done for Floating and Ambient.
-	//
-	// Note what this gate is and is not. A premium *skin* is a capability —
-	// `skin: floating` is one stored value naming CSS that only ships with Pro,
-	// and Helper::enforce_pro_limits() resets it at render. These two are
-	// bundles of ordinary free controls over a layout (`compact`) that the free
-	// Playlist template also uses, so there is nothing for the render gate to
-	// strip and deliberately no entry added to Pro::PREMIUM_SKINS. The gate is
-	// the one-click bundle, not the result — a free user can still assemble the
-	// same bar by hand. Making it enforceable would mean giving each of these a
-	// layout of its own with its own CSS.
-	{
-		key: 'podcast',
-		label: __( 'Podcast' ),
-		pro: true,
-		description: __( 'Roomier bar with large cover art, skip buttons and a speed control.' ),
-		appearance: { audioLayout: 'podcast', controlBarStyle: 'solid', roundness: 10 },
-		controls: { speed: true, rewind: true, forward: true, chapters: true },
-	},
-	{
-		key: 'audiobook',
-		label: __( 'Audiobook' ),
-		pro: true,
-		description: __( 'Long-form listening: 30-second skips, speed control and chapter navigation.' ),
-		// Its own layout, not compact with switches flipped: the transport is
-		// centred and enlarged because it is what a listener reaches for across
-		// hours. That is also what makes the Pro gate real — there is a stored
-		// value for Helper::enforce_pro_limits() to refuse.
-		appearance: { audioLayout: 'audiobook', controlBarStyle: 'solid', roundness: 10 },
-		// Volume off: a listener on headphones uses the device volume, and the
-		// slider is the first thing worth trading for room on a long-form bar.
-		controls: { speed: true, rewind: true, forward: true, chapters: true, volume: false, prev: false, next: false },
-		// 30s rather than the 10s default — the audiobook convention, and the
-		// reason the skip buttons are worth having at this length.
-		skipSeconds: 30,
-	},
 ];
 
 /** Templates for one media type. */
 export function templatesFor( type ) {
-	return 'audio' === type ? AUDIO_PRESET_TEMPLATES : PRESET_TEMPLATES;
+	return 'audio' === type
+		? [ ...AUDIO_PRESET_TEMPLATES, ...( extTemplates.audio || [] ) ]
+		: [ ...PRESET_TEMPLATES, ...( extTemplates.video || [] ) ];
 }
 
 /**

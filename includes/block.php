@@ -64,7 +64,7 @@ class Block {
 
 		wp_localize_script( self::SCRIPT_HANDLE, self::GLOBAL_OBJECT, $this->editor_data() );
 		// The in-canvas preview renders the real frontend player, which reads
-		// its site-wide defaults and pro state from this object exactly as it
+		// its site-wide defaults from this object exactly as it
 		// does on a published page. Without it the preview would quietly fall
 		// back to the built-in defaults and stop matching what visitors see.
 		wp_localize_script( self::SCRIPT_HANDLE, Assets::GLOBAL_OBJECT, ( new Assets() )->get_frontend_scripts_data() );

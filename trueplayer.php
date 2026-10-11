@@ -65,7 +65,7 @@ final class TruePlayer {
 
 	/**
 	 * When WP has loaded all plugins, trigger the `trueplayer_loaded` hook so
-	 * add-ons (trueplayer-pro) that registered their loader filter at plugin
+	 * add-ons that registered their loader filter at plugin
 	 * construction time are in place before our addon loader runs.
 	 */
 	public function on_plugins_loaded() {

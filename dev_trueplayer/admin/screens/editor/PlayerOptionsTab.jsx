@@ -1,7 +1,6 @@
 import { Card, Field, Input, Select, Toggle, Textarea, ColorInput } from '../../components/UI';
-import { isPro, PRO_SKINS, PRO_AUDIO_LAYOUTS, PRO_SEEK_BARS } from '../../pro';
 import { resolveCustomize, CUSTOMIZE_DEFAULTS } from '@Player/customize';
-import { RAPID_SPEEDS } from '@Player/rapid-engage';
+import { extOptions, seekBarLocks, ExtSlot } from '@Ext/admin';
 import { availableControls } from '@Utils/controls';
 import { isAudioSource as isAudioSourceUtil } from '@Utils/audio';
 import { templatesFor, applyTemplateToBlob } from '../../data/preset-templates';
@@ -12,10 +11,9 @@ import { __, __sprintf } from '@Utils/translation';
 // can drive which one is shown — this tab renders the active section only.
 export const PLAYER_SUBS = [
 	['appearance', __( 'Appearance' )],
-	// Its own section rather than three more fields in Appearance: the seek bar
-	// is the one part of the chrome with a behaviour attached (Rapid Engage
-	// locks the timeline and hides the clock), and that consequence needs room
-	// to be stated where the choice is made.
+	// Its own section rather than more fields in Appearance: a seek-bar style
+	// can carry behaviour of its own, which needs room to be stated where the
+	// choice is made.
 	['seekbar', __( 'Seek bar' )],
 	['captions', __( 'Captions' )],
 	['controls', __( 'Controls' )],
@@ -29,8 +27,7 @@ const SKINS = [
 	{ value: 'simple', label: __( 'Simple' ) },
 	{ value: 'minimal', label: __( 'Minimal' ) },
 	{ value: 'standard', label: __( 'Standard' ) },
-	{ value: 'floating', label: __( 'Floating' ) },
-	{ value: 'ambient', label: __( 'Ambient' ) },
+	...( extOptions.skins || [] ),
 ];
 
 // The audio player's skins. Same control, same word and same slot as the video
@@ -39,7 +36,7 @@ const SKINS = [
 //
 // Stored under `appearance.audioLayout`, not `appearance.skin`: the two lists
 // share no values, `skin` is video-only by declaration (VIDEO_ONLY_APPEARANCE
-// in player/customize.js) and Player.jsx refuses `ambient` for audio outright.
+// in player/customize.js).
 // Merging the keys would undo that separation to save a word. So the KEY stays
 // what it has always been — every stored config keeps working — and only the
 // vocabulary in front of the author changes.
@@ -49,16 +46,14 @@ const AUDIO_SKINS = [
 	{ value: 'compact', label: __( 'Compact' ), hint: __( 'A single bar: cover art, title and controls in one row.' ) },
 	{ value: 'card', label: __( 'Card' ), hint: __( 'Large square cover art above the title and controls.' ) },
 	{ value: 'minimal', label: __( 'Minimal' ), hint: __( 'Play button and a waveform, nothing else.' ) },
-	{ value: 'podcast', label: __( 'Podcast' ), hint: __( 'A taller bar with large cover art and room for the episode title.' ) },
-	{ value: 'audiobook', label: __( 'Audiobook' ), hint: __( 'The transport centred and enlarged for hours of listening.' ) },
+	...( extOptions.audioSkins || [] ),
 ];
 
-// Video only. Named for what the viewer gets, not for the mechanism: "Rapid
-// Engage" is Vidalytics' term for it and the one authors arrive looking for.
+// Video only.
 const SEEK_BARS = [
 	{ value: 'default', label: __( 'Default' ), hint: __( 'A plain progress track.' ) },
 	{ value: 'waveform', label: __( 'Waveform' ), hint: __( 'The track drawn as audio bars. Chapter markers give way to it.' ) },
-	{ value: 'rapid-engage', label: __( 'Rapid Engage' ), hint: __( 'Simulated: it runs ahead early so the video feels shorter. Seeking and the time display are turned off while it is on.' ) },
+	...( extOptions.seekBars || [] ),
 ];
 
 const ASPECT_RATIOS = [
@@ -108,12 +103,10 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 		sourceType: source.type,
 	});
 
-	// Drives the speed slider, the seek-bar hint, and every conflicting control
-	// below. Read from the RESOLVED appearance so a value inherited from the
-	// site-wide layer or a preset disables the same things a value typed here
-	// does. Deliberately not the player's `rapidEligible`: that also asks the
-	// live duration, which the editor has no way to know.
-	const rapidOn = ! isAudioSource && 'rapid-engage' === appearance.seekBarStyle;
+	// Whether the chosen seek-bar style locks the timeline itself. Read from
+	// the RESOLVED appearance so an inherited value disables the same controls
+	// a value typed here does.
+	const seekBarLocked = ! isAudioSource && seekBarLocks( appearance.seekBarStyle );
 
 	// 'off' | 'muted' | 'sound' — same resolution as player/customize.js.
 	const apMode = behavior.autoplayMode || (behavior.autoplay ? 'muted' : 'off');
@@ -166,12 +159,10 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 									>
 										<div className="flex flex-wrap gap-2">
 											{templatesFor(isAudioSource ? 'audio' : 'video').map((t) => {
-												const locked = t.pro && ! isPro();
 												return (
 													<button
 														key={t.key}
 														type="button"
-														disabled={locked}
 														title={t.description || ''}
 														// Replaces the keys a template owns rather than
 														// merging over them — same rule as the Settings
@@ -179,14 +170,9 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 														// Playlist here too and not Playlist wearing
 														// whatever the last template left behind.
 														onClick={() => patch({ customize: applyTemplateToBlob(config.customize, t, isAudioSource ? 'audio' : 'video') })}
-														className={`px-3 py-1.5 rounded border border-solid text-[13px] font-medium transition-colors ${
-															locked
-																? 'border-line bg-gray-50 text-muted opacity-60 cursor-not-allowed'
-																: 'border-line bg-white text-ink hover:border-brand-400 hover:text-brand-500 cursor-pointer'
-														}`}
+														className="px-3 py-1.5 rounded border border-solid text-[13px] font-medium transition-colors border-line bg-white text-ink hover:border-brand-400 hover:text-brand-500 cursor-pointer"
 													>
 														{t.label}
-														{locked && <span className="ml-1 text-[9px] font-semibold text-brand-500">{ __( 'PRO' ) }</span>}
 													</button>
 												);
 											})}
@@ -211,16 +197,13 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 										</Field>
 									)}
 									<div className="grid md:grid-cols-2 gap-x-6">
-										{/* A skin is a treatment of the picture — the bar fading over it, the
-										    glow behind it. None of that exists in an audio bar, and `ambient`
-										    is already refused outright by Player.jsx. */}
+										{/* A skin is a treatment of the picture — none of that exists in
+										    an audio bar. */}
 										{!isAudioSource && (
-											<Field label={ __( 'Skin' ) } hint={isPro() ? __( 'Overall player theme.' ) : __( 'Floating & Ambient need TruePlayer Pro.' )}>
+											<Field label={ __( 'Skin' ) } hint={ __( 'Overall player theme.' ) }>
 												<Select value={appearance.skin} onChange={(e) => setSection('appearance', { skin: e.target.value })}>
 													{SKINS.map((s) => (
-														<option key={s.value} value={s.value} disabled={!isPro() && PRO_SKINS.includes(s.value)}>
-															{s.label}{!isPro() && PRO_SKINS.includes(s.value) ? __( ' (Pro)' ) : ''}
-														</option>
+														<option key={s.value} value={s.value}>{s.label}</option>
 													))}
 												</Select>
 											</Field>
@@ -232,15 +215,11 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 										{isAudioSource ? (
 											<Field
 												label={ __( 'Skin' ) }
-												hint={ isPro()
-													? ( AUDIO_SKINS.find( ( l ) => l.value === appearance.audioLayout ) || AUDIO_SKINS[ 0 ] ).hint
-													: __( 'Podcast & Audiobook need TruePlayer Pro.' ) }
+												hint={ ( AUDIO_SKINS.find( ( l ) => l.value === appearance.audioLayout ) || AUDIO_SKINS[ 0 ] ).hint }
 											>
 												<Select value={appearance.audioLayout} onChange={(e) => setSection('appearance', { audioLayout: e.target.value })}>
 													{AUDIO_SKINS.map((l) => (
-														<option key={l.value} value={l.value} disabled={!isPro() && PRO_AUDIO_LAYOUTS.includes(l.value)}>
-															{l.label}{!isPro() && PRO_AUDIO_LAYOUTS.includes(l.value) ? __( ' (Pro)' ) : ''}
-														</option>
+														<option key={l.value} value={l.value}>{l.label}</option>
 													))}
 												</Select>
 											</Field>
@@ -323,52 +302,12 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 												onChange={(e) => setSection('appearance', { seekBarStyle: e.target.value })}
 											>
 												{SEEK_BARS.map((b) => (
-													<option key={b.value} value={b.value} disabled={!isPro() && PRO_SEEK_BARS.includes(b.value)}>
-														{b.label}{!isPro() && PRO_SEEK_BARS.includes(b.value) ? __( ' (Pro)' ) : ''}
-													</option>
+													<option key={b.value} value={b.value}>{b.label}</option>
 												))}
 											</Select>
 										</Field>
-										{!isPro() && (
-											<p className="text-xs text-muted -mt-2 mb-4">{ __( 'Rapid Engage needs TruePlayer Pro.' ) }</p>
-										)}
 
-										{/* Speeds belong to Rapid Engage alone — the other two styles
-										    have no curve to tune, so the fields stay out of the way
-										    rather than sitting there inert. */}
-										{rapidOn && (
-											<div className="mt-5 pt-5 border-t border-solid border-line">
-												<Field
-													label={ __( 'Desktop speed' ) }
-													hint={ __( 'How far ahead the bar runs. Start at Balanced — too strong and the jump reads as a broken player rather than a short video.' ) }
-												>
-													<Select
-														value={appearance.rapidSpeed || 3}
-														onChange={(e) => setSection('appearance', { rapidSpeed: parseInt(e.target.value, 10) })}
-													>
-														{RAPID_SPEEDS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-													</Select>
-												</Field>
-
-												<Toggle
-													className="mb-4"
-													checked={false !== appearance.rapidSpeedMobileSync}
-													onChange={(v) => setSection('appearance', { rapidSpeedMobileSync: v })}
-													label={<>{ __( 'Use the desktop speed on mobile' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{ __( 'Phone viewers decide faster and see a shorter bar, so the same setting can read differently there.' ) }</em>}</>}
-												/>
-												{false === appearance.rapidSpeedMobileSync && (
-													<Field label={ __( 'Mobile speed' ) }>
-														<Select
-															value={appearance.rapidSpeedMobile || appearance.rapidSpeed || 3}
-															onChange={(e) => setSection('appearance', { rapidSpeedMobile: parseInt(e.target.value, 10) })}
-														>
-															{RAPID_SPEEDS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-														</Select>
-													</Field>
-												)}
-												<p className="text-xs text-muted mt-4">{ __( 'The preview shows the bar but stays scrubbable — the locked timeline only applies on a real page.' ) }</p>
-											</div>
-										)}
+										<ExtSlot name="player.seekbar" appearance={ appearance } setSection={ setSection } />
 									</>
 								)}
 							</Card>
@@ -452,7 +391,7 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 										<Toggle
 											checked={behavior.savePosition}
 											onChange={(v) => setSection('behavior', { savePosition: v })}
-											label={<>{ __( 'Save & resume playback position' ) }{rapidOn && behavior.savePosition && <em className="block not-italic text-[11px] text-amber-600 mt-0.5">{ __( 'A returning viewer resumes part-way in, so the Rapid Engage Bar starts part-filled and the fast opening is lost.' ) }</em>}</>}
+											label={<>{ __( 'Save & resume playback position' ) }{seekBarLocked && behavior.savePosition && <em className="block not-italic text-[11px] text-amber-600 mt-0.5">{ __( 'A returning viewer resumes part-way in, so the seek bar starts part-filled.' ) }</em>}</>}
 										/>
 										<Toggle checked={behavior.hideControls} onChange={(v) => setSection('behavior', { hideControls: v })} label={ __( 'Auto-hide controls while playing' ) } />
 										<Toggle
@@ -460,28 +399,27 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 											onChange={(v) => setSection('behavior', { sticky: v })}
 											label={<>{ __( 'Float player when scrolling away' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{ __( 'Test on a real page — the preview is scaled, so it can’t float.' ) }</em>}</>}
 										/>
-										{/* Both are subsumed while the rapid bar is on — it locks the
-										    timeline itself (see `seekLocked` in Player.jsx). Disabled
-										    rather than silently overridden, and the stored values are
-										    left alone so they come back when the bar is switched off. */}
+										{/* Both are subsumed while the seek bar style locks the timeline
+										    itself (see `seekLocked` in Player.jsx). Disabled rather than
+										    silently overridden; the stored values are left alone. */}
 										<Toggle
-											checked={behavior.noSkip || rapidOn}
-											disabled={behavior.disableSeek || rapidOn}
+											checked={behavior.noSkip || seekBarLocked}
+											disabled={behavior.disableSeek || seekBarLocked}
 											onChange={(v) => setSection('behavior', { noSkip: v })}
-											label={<>{ __( 'Prevent skipping ahead (no jumping to unwatched parts)' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{rapidOn ? __( 'Always on with the Rapid Engage Bar.' ) : __( 'Test on a real page — the preview stays scrubbable on purpose.' )}</em>}</>}
+											label={<>{ __( 'Prevent skipping ahead (no jumping to unwatched parts)' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{seekBarLocked ? __( 'Always on with this seek bar style.' ) : __( 'Test on a real page — the preview stays scrubbable on purpose.' )}</em>}</>}
 										/>
 										<Toggle
-											checked={behavior.disableSeek || rapidOn}
-											disabled={rapidOn}
+											checked={behavior.disableSeek || seekBarLocked}
+											disabled={seekBarLocked}
 											onChange={(v) => setSection('behavior', { disableSeek: v, ...(v ? { noSkip: false } : {}) })}
-											label={<>{ __( 'Disable the timeline entirely (no click or drag, forward or back)' ) }{rapidOn && <em className="block not-italic text-[11px] text-gray-400 mt-0.5">{ __( 'Always on with the Rapid Engage Bar — a scrubbable simulated bar gives itself away.' ) }</em>}</>}
+											label={<>{ __( 'Disable the timeline entirely (no click or drag, forward or back)' ) }{seekBarLocked && <em className="block not-italic text-[11px] text-gray-400 mt-0.5">{ __( 'Always on with this seek bar style.' ) }</em>}</>}
 										/>
 										{hoverPreviewEligible && (
 											<Toggle
-												checked={behavior.hoverPreview && !rapidOn}
-												disabled={rapidOn}
+												checked={behavior.hoverPreview && !seekBarLocked}
+												disabled={seekBarLocked}
 												onChange={(v) => setSection('behavior', { hoverPreview: v })}
-												label={<>{ __( 'Muted preview on hover (self-hosted video)' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{rapidOn ? __( 'Unavailable with the Rapid Engage Bar — a hover preview is positioned from the real timeline.' ) : __( 'Test on a real page — it needs the click-to-load poster.' )}</em>}</>}
+												label={<>{ __( 'Muted preview on hover (self-hosted video)' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{seekBarLocked ? __( 'Unavailable with this seek bar style.' ) : __( 'Test on a real page — it needs the click-to-load poster.' )}</em>}</>}
 											/>
 										)}
 									</div>

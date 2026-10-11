@@ -9,6 +9,7 @@
  * all. `@wordpress/api-fetch` already resolves both correctly here.
  */
 import apiFetch from '@wordpress/api-fetch';
+import { sourceType as sourceTypeInfo } from '@Utils/source-types';
 import { __ } from '@Utils/translation';
 
 const G = () => window.TruePlayerBlock || {};
@@ -26,9 +27,8 @@ export const editUrl = ( id ) => ( G().editUrl ? G().editUrl + id : '' );
 export const libraryUrl = () => G().libraryUrl || '';
 
 /**
- * How each source type is written, for the four the dialog offers and the
- * premium ones it doesn't — the picker shows whatever is already in the
- * library, so a video set up as Bunny or Mux still has to read properly.
+ * How each source type is written. The picker shows whatever is already in
+ * the library, so a type the dialog doesn't offer still has to read properly.
  */
 const TYPE_LABELS = {
 	self: __( 'Self-hosted' ),
@@ -36,19 +36,16 @@ const TYPE_LABELS = {
 	vimeo: __( 'Vimeo' ),
 	url: __( 'External URL' ),
 	hls: __( 'HLS stream' ),
-	mux: __( 'Mux' ),
-	bunny: __( 'Bunny.net Stream' ),
-	bunnyStorage: __( 'Bunny.net Storage' ),
 };
 
-/** A source type as a person reads it, falling back to the raw key. */
-export const typeLabel = ( value ) => TYPE_LABELS[ value ] || value;
+/** A source type as a person reads it, falling back to the registry, then the raw key. */
+export const typeLabel = ( value ) => TYPE_LABELS[ value ] || sourceTypeInfo( value )?.badge || value;
 
 /**
  * The sources the create dialog can finish on its own.
  *
  * Each is a type plus one URL, so the author lands back in their post with a
- * player that already plays. Bunny, Mux and HLS need fields of their own, so
+ * player that already plays. Other types need fields of their own, so
  * they are set up in the full editor rather than half-offered here — the
  * dialog says so instead of listing them as dead options. The server enforces
  * the same list (VideosController::QUICK_SOURCE_TYPES).

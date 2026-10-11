@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo, useRef, createPortal } from '@wordpress/e
 import { api } from '../api';
 import { Card, Button, Input, Select, Field, Modal, OptionMenu } from '../components/UI';
 import { Icon } from '../components/icons';
-import { isPro } from '../pro';
 import { templatesFor, templateConfig } from '../data/preset-templates';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import PreviewPanel from './editor/PreviewPanel';
@@ -249,8 +248,8 @@ export default function Presets( { onEditState } ) {
 						<Select value={ template } onChange={ ( e ) => setTemplate( e.target.value ) }>
 							<option value="blank">{ __( 'Blank (defaults)' ) }</option>
 							{ templatesFor( newType ).map( ( t ) => (
-								<option key={ t.key } value={ t.key } disabled={ t.pro && ! isPro() }>
-									{ t.label }{ t.pro && ! isPro() ? __( ' — needs Pro' ) : '' }
+								<option key={ t.key } value={ t.key }>
+									{ t.label }
 								</option>
 							) ) }
 						</Select>

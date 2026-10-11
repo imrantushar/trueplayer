@@ -37,12 +37,6 @@ export const api = {
 	discardPosters: ( id ) => rest.del( `videos/${ id }/poster` ),
 	getSettings: () => rest.get( 'settings' ),
 	saveSettings: ( data ) => rest.post( 'settings', data ),
-	listViewers: ( id ) => rest.get( `viewers?video=${ id }` ),
-	resetViewer: ( id ) => rest.post( 'viewers/reset', { id } ),
-	getAnalytics: ( id ) => rest.get( `analytics?video=${ id }` ),
-	getViewerDetail: ( id ) => rest.get( `analytics/viewer?id=${ id }` ),
-	testWebhook: ( url, secret ) => rest.post( 'webhooks/test', { url, secret } ),
-	getIntegrations: () => rest.get( 'integrations' ),
 	// No type filter here on purpose: the Presets screen shows both kinds as
 	// tabs and needs the counts, so it fetches once and splits client-side.
 	listPresets: () => rest.get( 'presets' ),
@@ -55,42 +49,6 @@ export const api = {
 	createPlaylist: ( title ) => rest.post( 'playlists', { title, config: { layout: 'sidebar', videos: [] } } ),
 	updatePlaylist: ( id, data ) => rest.put( `playlists/${ id }`, data ),
 	deletePlaylist: ( id ) => rest.del( `playlists/${ id }` ),
-
-	// Attestation (pro)
-	getAttestations: ( id ) => rest.get( `attestation?video=${ id }` ),
-	// rest.url, not rest.base + '?': the REST root carries a query string of
-	// its own on a site running plain permalinks.
-	attestationExportUrl: ( id ) => rest.url( `attestation/export?video=${ id }&_wpnonce=${ nonce() }` ),
-	certificateUrl: ( code ) => rest.url( `attestation/certificate?code=${ encodeURIComponent( code ) }` ),
-
-	// Bunny.net Storage (pro) — the upload itself is chunked, see utils/bunnyUpload.js.
-	bunnyStatus: () => rest.get( 'bunny/status' ),
-	bunnyFiles: () => rest.get( 'bunny/files' ),
-
-	// Gumlet (pro) — the upload itself goes straight from the browser to
-	// Gumlet, see utils/gumletUpload.js; these are the surrounding calls.
-	gumletStatus: () => rest.get( 'gumlet/status' ),
-	/** Workspaces the saved key can see — Gumlet never shows these ids in its UI. */
-	gumletCollections: () => rest.get( 'gumlet/collections' ),
-	/** Resolve a pasted asset id or URL into a playable asset. */
-	gumletAsset: ( id ) => rest.get( `gumlet/asset?id=${ encodeURIComponent( id ) }` ),
-
-	// LMS course/lesson options (pro)
-	getLmsOptions: () => rest.get( 'lms/options' ),
-
-	// QuizPress quiz options, for the Gating tab's "use a QuizPress quiz" picker (pro)
-	getQuizpressOptions: () => rest.get( 'quizpress/options' ),
-
-	// H5P engine (Interactive content)
-	h5pContentTypes: () => rest.get( 'h5p/content-types' ),
-	h5pItems: () => rest.get( 'h5p/items' ),
-	h5pInstallType: ( machineName ) => rest.post( 'h5p/content-types', { machineName } ),
-	h5pSemantics: ( name ) => rest.get( `h5p/semantics/${ encodeURIComponent( name ) }` ),
-	h5pSaveContent: ( data ) => rest.post( 'h5p/content', data ),
-	h5pGetContent: ( video ) => rest.get( `h5p/content/${ video }` ),
-
-	// Webhook delivery logs (pro)
-	getWebhookLogs: ( limit = 100 ) => rest.get( `webhook-logs?limit=${ limit }` ),
 
 	/**
 	 * Switch an addon on or off.
@@ -129,15 +87,3 @@ export const api = {
 function nonce() {
 	return ( window.TruePlayerGlobal || {} ).nonce || '';
 }
-
-export const EVENT_TYPES = [
-	'view.started',
-	'progress.milestone',
-	'view.completed',
-	'checkpoint.passed',
-	'checkpoint.failed',
-	'quiz.passed',
-	'quiz.failed',
-	'video.locked',
-	'video.unlocked',
-];

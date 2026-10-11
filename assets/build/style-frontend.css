@@ -428,51 +428,6 @@
 	border-radius: 0;
 }
 
-/* --- floating + ambient: premium looks, and why their CSS is here --- */
-/* Free ships everything needed to RENDER the premium looks; Pro ships only the
-   code that makes them reachable. So these rules stay in the free stylesheet
-   and are simply never matched without Pro: Helper::enforce_pro_limits() resets
-   `skin` to `default` before the config reaches the page, so the class that
-   would select them is never written. Dead CSS on a free install, and that is
-   the intended state — a stylesheet is UI, not the thing being sold.
-   Names in TruePlayer\Pro::PREMIUM_SKINS; the picker offers them locked. */
-
-/* floating (pro): detached rounded bar hovering above the bottom edge */
-.tp-skin-floating .tp-controls {
-	left: 12px;
-	right: 12px;
-	bottom: 12px;
-	border-radius: 14px;
-	background: rgba( 15, 17, 26, 0.82 );
-	backdrop-filter: blur( 10px );
-	padding: 6px 14px 8px;
-	box-shadow: 0 8px 28px rgba( 0, 0, 0, 0.35 );
-}
-.tp-skin-floating .tp-info {
-	bottom: 4.6rem;
-}
-
-/* ambient (pro): blurred poster glow behind the stage */
-.tp-ambient-wrap {
-	position: relative;
-	width: 100%;
-}
-.tp-ambient-glow {
-	position: absolute;
-	inset: -28px;
-	background-position: center;
-	background-size: cover;
-	filter: blur( 36px ) saturate( 1.5 );
-	opacity: 0.5;
-	border-radius: 24px;
-	pointer-events: none;
-	z-index: 0;
-}
-.tp-ambient-wrap .tp-stage {
-	position: relative;
-	z-index: 1;
-}
-
 /* ---- "In this video" drawer: chapters + transcript ---- */
 .tp-info {
 	position: absolute;
@@ -605,6 +560,7 @@
 	.tp-info {
 		width: 100%;
 	}
+
 }
 
 /* ---- controls ---- */
@@ -767,6 +723,7 @@
 	.tp-time {
 		font-size: 11px;
 	}
+
 }
 @container (max-width: 340px) {
 	.tp-btn {
@@ -777,6 +734,7 @@
 		width: 17px;
 		height: 17px;
 	}
+
 }
 
 /* ---- scrubber ---- */
@@ -790,19 +748,6 @@
 }
 .tp-scrubber.is-disabled {
 	cursor: not-allowed;
-}
-/* The Rapid Engage Bar is locked, but it must not LOOK locked: `not-allowed`
-   is an affordance announcing that something is being refused, which is the
-   one thing a bar pretending to be an ordinary timeline cannot afford to
-   announce. It reads as a plain progress indicator instead — default cursor,
-   no thumb to reach for, no hover response. Wins on specificity over
-   .is-disabled above, which Player.jsx always sets alongside it. */
-.tp-scrubber.is-rapid,
-.tp-scrubber.is-rapid.is-disabled {
-	cursor: default;
-}
-.tp-scrubber.is-rapid .tp-scrubber-thumb {
-	display: none;
 }
 .tp-scrubber-track {
 	position: relative;
@@ -1105,7 +1050,7 @@
 	color: inherit;
 }
 
-/* ---- interactive layers (pro) ---- */
+/* ---- layers ---- */
 .tp-layers {
 	position: absolute;
 	inset: 0;
@@ -1121,86 +1066,6 @@
 }
 .tp-layer {
 	pointer-events: auto;
-}
-.tp-hotspot {
-	position: absolute;
-	display: block;
-	cursor: pointer;
-	border-radius: 8px;
-}
-.tp-hotspot-pulse {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 16px;
-	height: 16px;
-	margin: -8px 0 0 -8px;
-	border-radius: 50%;
-	background: var( --tp-accent );
-	box-shadow: 0 0 0 0 var( --tp-accent );
-	animation: tp-hotspot-pulse 1.8s infinite;
-}
-@keyframes tp-hotspot-pulse {
-	0% { box-shadow: 0 0 0 0 rgba( 255, 255, 255, 0.5 ); }
-	70% { box-shadow: 0 0 0 14px rgba( 255, 255, 255, 0 ); }
-	100% { box-shadow: 0 0 0 0 rgba( 255, 255, 255, 0 ); }
-}
-.tp-hotspot-tip {
-	position: absolute;
-	bottom: calc( 50% + 18px );
-	left: 50%;
-	transform: translateX( -50% );
-	background: rgba( 17, 24, 39, 0.95 );
-	color: #fff;
-	font-size: 12px;
-	padding: 4px 9px;
-	border-radius: 6px;
-	white-space: nowrap;
-	opacity: 0;
-	transition: opacity 0.15s ease;
-	pointer-events: none;
-}
-.tp-hotspot:hover .tp-hotspot-tip {
-	opacity: 1;
-}
-.tp-banner {
-	position: absolute;
-	max-width: 70%;
-}
-.tp-banner img {
-	max-width: 100%;
-	max-height: 110px;
-	display: block;
-	border-radius: 8px;
-}
-.tp-shortcode-layer {
-	position: absolute;
-	max-width: 80%;
-	background: rgba( 255, 255, 255, 0.96 );
-	color: #111827;
-	border-radius: 10px;
-	padding: 14px 16px;
-}
-/* Editor preview only: PHP renders shortcodes, and the preview builds its
-   config in the browser, so there is no html to show. Naming the shortcode
-   beats an empty stage that reads as a broken feature. */
-.tp-shortcode-layer.is-placeholder {
-	background: rgba( 17, 24, 39, 0.88 );
-	color: #e5e7eb;
-	border: 1px dashed rgba( 229, 231, 235, 0.45 );
-	text-align: center;
-}
-.tp-shortcode-layer.is-placeholder code {
-	display: block;
-	font-size: 12px;
-	word-break: break-all;
-	color: #fff;
-}
-.tp-shortcode-layer.is-placeholder span {
-	display: block;
-	margin-top: 6px;
-	font-size: 11px;
-	opacity: 0.7;
 }
 /* ---- email form ----
    One form, one appearance. The mode decides only where it sits and whether it
@@ -1320,6 +1185,7 @@
 	.tp-emailform-submit {
 		width: 100%;
 	}
+
 }
 
 .tp-emailform-error {
@@ -1342,33 +1208,6 @@
 	text-decoration: underline;
 	cursor: pointer;
 	color: var( --tp-of-muted, #6b7280 );
-}
-
-/* ---- dynamic watermark (pro) ---- */
-.tp-watermark {
-	position: absolute;
-	top: 12%;
-	left: 8%;
-	z-index: 4;
-	color: #fff;
-	font-size: 12px;
-	letter-spacing: 0.03em;
-	text-shadow: 0 1px 3px rgba( 0, 0, 0, 0.8 );
-	pointer-events: none;
-	-webkit-user-select: none;
-	   -moz-user-select: none;
-	        user-select: none;
-	white-space: nowrap;
-}
-.tp-watermark.is-drifting {
-	animation: tp-wm-drift 46s linear infinite;
-}
-@keyframes tp-wm-drift {
-	0% { top: 12%; left: 8%; }
-	25% { top: 70%; left: 62%; }
-	50% { top: 24%; left: 70%; }
-	75% { top: 76%; left: 12%; }
-	100% { top: 12%; left: 8%; }
 }
 
 /* ---- overlays ---- */
@@ -1542,8 +1381,7 @@
 	filter: brightness( 1.08 );
 }
 
-.tp-lock-card,
-.tp-quiz-card {
+.tp-lock-card {
 	background: #fff;
 	color: #111827;
 	border-radius: 12px;
@@ -1554,129 +1392,6 @@
 	overflow-y: auto;
 	text-align: center;
 	box-shadow: 0 12px 40px rgba( 0, 0, 0, 0.3 );
-}
-.tp-lock-icon {
-	display: flex;
-	justify-content: center;
-	margin-bottom: 4px;
-	opacity: 0.9;
-}
-.tp-quiz-card {
-	text-align: left;
-}
-.tp-quiz-title {
-	margin: 0 0 14px;
-	font-size: 18px;
-	font-weight: 700;
-}
-.tp-quiz-q {
-	margin-bottom: 16px;
-}
-.tp-quiz-prompt {
-	font-weight: 600;
-	margin: 0 0 8px;
-}
-.tp-quiz-num {
-	color: var(--tp-accent);
-}
-.tp-quiz-opts {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
-.tp-quiz-opt {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 9px 12px;
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	cursor: pointer;
-}
-.tp-quiz-opt.is-picked {
-	border-color: var(--tp-accent);
-	background: rgba( 79, 70, 229, 0.06 );
-}
-.tp-quiz-feedback {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	font-weight: 600;
-	margin: 8px 0;
-}
-.tp-quiz-feedback.tp-pass {
-	color: #16a34a;
-}
-.tp-quiz-feedback.tp-fail {
-	color: #dc2626;
-}
-/* The final pass/fail/pending outcome of a QuizPress-sourced quiz — given
-   its own banner, not just another feedback line, so it reads as the one
-   unambiguous result rather than blending in with in-progress messages. */
-.tp-quiz-verdict {
-	font-size: 15px;
-	padding: 12px 14px;
-	border-radius: 8px;
-	background: rgba( 0, 0, 0, 0.04 );
-}
-.tp-quiz-verdict.tp-pass {
-	background: rgba( 22, 163, 74, 0.1 );
-}
-.tp-quiz-verdict.tp-fail {
-	background: rgba( 220, 38, 38, 0.08 );
-}
-.tp-quiz-submit {
-	margin-top: 8px;
-	background: var(--tp-accent);
-	color: #fff;
-	border: 0;
-	border-radius: 8px;
-	padding: 11px 20px;
-	font-weight: 600;
-	cursor: pointer;
-}
-.tp-quiz-submit:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-/* A QuizPress-sourced quiz's own answer widgets (images, matching pairs,
-   graphs, …) need real room — wider than the compact native quiz card. */
-.tp-quiz--quizpress .tp-quiz-card {
-	max-width: 680px;
-}
-.tp-quiz-qp-progress {
-	font-size: 12px;
-	font-weight: 600;
-	color: var(--tp-accent);
-	margin: 0 0 8px;
-}
-.tp-quiz-qp-widget {
-	margin: 12px 0;
-}
-.tp-quiz-qp-nav {
-	display: flex;
-	justify-content: space-between;
-	gap: 8px;
-	margin-top: 8px;
-}
-.tp-quiz-qp-prev {
-	background: transparent;
-	color: #374151;
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	padding: 11px 20px;
-	font-weight: 600;
-	cursor: pointer;
-}
-.tp-quiz-qp-prev:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-.tp-quiz-qp-start p {
-	margin: 0 0 8px;
-	font-size: 14px;
-	color: #374151;
 }
 
 /* ---- opt-in / subscribe ---- */
@@ -1964,6 +1679,7 @@
 		-webkit-line-clamp: 1;
 		white-space: nowrap;
 	}
+
 }
 /* Fallback for browsers without container queries: stack on a narrow viewport. */
 @supports not ( container-type: inline-size ) {
@@ -2001,7 +1717,9 @@
 			-webkit-line-clamp: 1;
 			white-space: nowrap;
 		}
-	}
+	
+}
+
 }
 
 .tp-stage:fullscreen {
@@ -2012,17 +1730,6 @@
 	-o-object-fit: contain;
 	   object-fit: contain;
 }
-
-/* Timed content region (pro): swaps below the player with the timeline. */
-.tp-timed-content {
-	margin-top: 12px;
-	padding: 14px 16px;
-	border: 1px solid var(--tp-line, #e5e7eb);
-	border-radius: var(--tp-radius, 8px);
-	background: var(--tp-timed-bg, rgba(0, 0, 0, 0.02));
-	animation: tp-timed-in 0.25s ease;
-}
-@keyframes tp-timed-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
 /* ==========================================================================
    Audio layouts — MUST STAY LAST IN THIS FILE.
@@ -2146,76 +1853,5 @@
    one; with the row shrunk to its content it would just add dead space. */
 .tp-stage.is-audio.tp-audio-minimal .tp-spacer {
 	display: none;
-}
-
-/* --- podcast (pro): a show, not a strip --- */
-/* Here for the same reason floating and ambient are: free renders the premium
-   UI, Pro unlocks it. Without Pro, enforce_pro_limits() has already rewritten
-   `audioLayout` to `compact`, so `tp-audio-podcast` is never on the stage.
-
-   Compact is a 72px bar with a 48px art tile — right for "a file is playing",
-   too cramped for an episode with a name. This gives the art and the title the
-   room a show needs, and is the reason podcast is a layout at all rather than
-   compact with some buttons switched on. */
-.tp-stage.is-audio.tp-audio-podcast {
-	flex-direction: row;
-	min-height: 96px;
-	gap: 14px;
-	padding: 14px 16px;
-}
-.tp-stage.is-audio.tp-audio-podcast .tp-audio-art {
-	width: 68px;
-	height: 68px;
-	flex: none;
-	border-radius: 10px;
-}
-.tp-stage.is-audio.tp-audio-podcast .tp-audio-art svg {
-	width: 26px;
-	height: 26px;
-}
-.tp-stage.is-audio.tp-audio-podcast .tp-audio-title {
-	font-size: 15px;
-	margin-bottom: 8px;
-}
-.tp-stage.is-audio.tp-audio-podcast .tp-controls {
-	min-width: 0;
-	padding: 0;
-}
-.tp-stage.is-audio.tp-audio-podcast .tp-controls-row {
-	gap: 10px;
-}
-
-/* --- audiobook (pro): the transport, centred and enlarged --- */
-/* A listener crosses hours with these buttons and reaches for the same two
-   over and over, so the skips and play sit in the middle of the bar at a size
-   worth aiming at, instead of tucked into the left corner beside everything
-   else. The spacer goes with them: it exists to push the right-hand group
-   away, and there is no left and right group here. */
-.tp-stage.is-audio.tp-audio-audiobook {
-	flex-direction: row;
-	min-height: 88px;
-	gap: 14px;
-	padding: 12px 16px;
-}
-.tp-stage.is-audio.tp-audio-audiobook .tp-audio-art {
-	width: 56px;
-	height: 56px;
-	flex: none;
-	border-radius: 8px;
-}
-.tp-stage.is-audio.tp-audio-audiobook .tp-controls {
-	min-width: 0;
-	padding: 0;
-}
-.tp-stage.is-audio.tp-audio-audiobook .tp-controls-row {
-	justify-content: center;
-	gap: 14px;
-}
-.tp-stage.is-audio.tp-audio-audiobook .tp-spacer {
-	display: none;
-}
-.tp-stage.is-audio.tp-audio-audiobook .tp-btn {
-	width: 40px;
-	height: 40px;
 }
 

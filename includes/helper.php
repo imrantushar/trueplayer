@@ -105,7 +105,7 @@ class Helper {
 			$config = [];
 		}
 		/**
-		 * Central seam: pro + Gem integrations mutate the resolved player
+		 * Central seam: add-ons and integrations mutate the resolved player
 		 * config (inject layers, override gating, etc.) without touching core.
 		 */
 		return apply_filters( 'trueplayer/config', $config, (int) $video_id );
@@ -310,15 +310,15 @@ class Helper {
 	}
 
 	/**
-	 * The product name shown in the admin and any attribution. White-label (pro)
-	 * hooks `trueplayer/brand_name` to override it.
+	 * The product name shown in the admin and any attribution. Filterable via
+	 * `trueplayer/brand_name`.
 	 */
 	public static function brand_name(): string {
 		return (string) apply_filters( 'trueplayer/brand_name', 'TruePlayer' );
 	}
 
 	/**
-	 * The site owner's own mark, when white-label is on (pro). Empty otherwise —
+	 * The site owner's own mark, via `trueplayer/brand_logo`. Empty by default —
 	 * the admin then falls back to TruePlayer's built-in play glyph.
 	 */
 	public static function brand_logo(): string {

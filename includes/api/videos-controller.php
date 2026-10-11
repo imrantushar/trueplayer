@@ -206,9 +206,9 @@ class VideosController extends WP_REST_Controller {
 	 *
 	 * Every one of them is fully described by a type plus a single `src`, so
 	 * the dialog that offers them can also finish them — the author lands back
-	 * in their post with a player that already plays. The premium types need
-	 * fields of their own (a pull zone, a playback id), so they stay in the
-	 * full editor rather than being half-offered here.
+	 * in their post with a player that already plays. Other types need fields
+	 * of their own, so they stay in the full editor rather than being
+	 * half-offered here.
 	 */
 	const QUICK_SOURCE_TYPES = [ 'self', 'youtube', 'vimeo', 'url' ];
 
@@ -254,9 +254,9 @@ class VideosController extends WP_REST_Controller {
 	}
 
 	/**
-	 * Query args for the player list. Items on another engine (interactive
-	 * content) share the tp_video post type but are authored and listed
-	 * separately, not as players with a source — so they are excluded.
+	 * Query args for the player list. Items an add-on renders with another
+	 * engine share the post type but are not players with a source, so only
+	 * native items are listed.
 	 */
 	private function player_query_args(): array {
 		return [
@@ -268,7 +268,7 @@ class VideosController extends WP_REST_Controller {
 			'meta_query'     => [ // phpcs:ignore WordPress.DB.SlowMetaQuery.slow_db_query -- excluding another engine's items is the point of the list.
 				'relation' => 'OR',
 				[ 'key' => \TruePlayer\Database\MetaManager::ENGINE_META, 'compare' => 'NOT EXISTS' ],
-				[ 'key' => \TruePlayer\Database\MetaManager::ENGINE_META, 'value' => 'h5p', 'compare' => '!=' ],
+				[ 'key' => \TruePlayer\Database\MetaManager::ENGINE_META, 'value' => 'native' ],
 			],
 		];
 	}
@@ -371,7 +371,7 @@ class VideosController extends WP_REST_Controller {
 		$config = $this->config_of( $id );
 		$source = is_array( $config['source'] ?? null ) ? $config['source'] : [];
 
-		// A video already on a premium source must not be quietly downgraded by
+		// A video already on another source type must not be quietly changed by
 		// an editor whose dialog cannot express it; that edit belongs in the
 		// full editor, which is where the dialog sends them.
 		$current = (string) ( $source['type'] ?? '' );

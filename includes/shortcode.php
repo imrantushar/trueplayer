@@ -95,8 +95,7 @@ class Shortcode {
 		}
 
 		// Engine router. Core renders the native player; another engine can claim
-		// an item by returning markup from this filter (the interactive addon
-		// does, for items authored as H5P). Nothing registered means nothing
+		// an item by returning markup from this filter. Nothing registered means nothing
 		// changes — core carries no knowledge of the other engines.
 		$engine = apply_filters( 'trueplayer/render_engine', null, $video_id );
 		if ( null !== $engine ) {

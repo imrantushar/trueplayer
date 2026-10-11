@@ -21,12 +21,6 @@ class Migrator {
 	 * it touched. Only a gating block matching this *exactly* is treated as
 	 * "the editor stamped it", never as an author's choice.
 	 */
-	/**
-	 * Addon slug for interactive content. A literal on purpose: this migration
-	 * must run whether or not that addon's code is present.
-	 */
-	const INTERACTIVE_ADDON = 'interactive';
-
 	const STAMPED_GATING = [
 		'completionThreshold' => 90,
 		'antiSkip'            => true,
@@ -42,7 +36,6 @@ class Migrator {
 		// Must run first — subsequent passes read posts by the new post_type slug.
 		self::rename_post_type_slugs();
 		self::unstamp_inherited_gating();
-		self::adopt_existing_interactive_content();
 		self::fold_optin_into_layers();
 		// Its own pass, not nested in the one above: that returns early once its
 		// flag is set, so a site already migrated by an earlier build would never
@@ -86,44 +79,6 @@ class Migrator {
 
 		// Flush object caches so the next request doesn't still see the old slug.
 		wp_cache_flush();
-	}
-
-	/**
-	 * Keep interactive content working on sites that already use it.
-	 *
-	 * The H5P engine became an opt-in addon that defaults to off, so a site
-	 * upgrading into that change would otherwise have its existing quizzes stop
-	 * rendering and disappear from the library. If the engine has been used
-	 * here, the addon was effectively already on — record that, once.
-	 */
-	private static function adopt_existing_interactive_content(): void {
-		$done = 'trueplayer_migrated_interactive_addon';
-		if ( get_option( $done ) ) {
-			return;
-		}
-		update_option( $done, Helper::now_iso(), false );
-
-		if ( Helper::get_addon_active_status( self::INTERACTIVE_ADDON ) ) {
-			return;
-		}
-
-		global $wpdb;
-		$table = $wpdb->prefix . 'tp_h5p_contents';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- table name built above; schema introspection.
-		$exists = (bool) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
-		if ( ! $exists ) {
-			return;
-		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- table name built above.
-		$rows = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
-		if ( $rows < 1 ) {
-			return;
-		}
-
-		$saved = (array) json_decode( (string) get_option( TRUEPLAYER_ADDONS_SETTINGS, '{}' ), true );
-		$saved[ self::INTERACTIVE_ADDON ] = true;
-		update_option( TRUEPLAYER_ADDONS_SETTINGS, wp_json_encode( $saved ) );
-		$GLOBALS['trueplayer_addons'] = (object) $saved;
 	}
 
 	/**

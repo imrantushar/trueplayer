@@ -20,6 +20,7 @@ class Api {
 		( new API\PlaylistsController() )->register_routes();
 		( new API\OptinController() )->register_routes();
 		( new API\ImportController() )->register_routes();
+		( new API\SubtitlesController() )->register_routes();
 		do_action( 'trueplayer/api/register_routes' );
 	}
 }
