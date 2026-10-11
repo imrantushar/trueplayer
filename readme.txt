@@ -1,6 +1,6 @@
 === TruePlayer ===
 Contributors: kodezen
-Tags: video, player, lms, quiz, webhooks
+Tags: video, player, audio, playlist, youtube
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -8,17 +8,24 @@ Stable tag: 1.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Watch-verified, quiz-gated video & audio player. Knows if a viewer actually watched, locks on quiz failure, fires webhooks for automation.
+A fast, customizable video & audio player for self-hosted files, YouTube, Vimeo and HLS — with chapters, playlists, presets and email capture.
 
 == Description ==
 
-TruePlayer is a native WordPress video/audio player built for enforcement and automation, not just playback:
+TruePlayer is a native WordPress video and audio player with its own controls, so every video on your site looks and behaves the same — wherever it is hosted.
 
-* **Watch verification** — server-side coverage tracking proves a viewer actually watched (not just pressed play or skipped to the end), with anti-skip.
-* **Quiz gating** — attach built-in checkpoint and end-gate questions to a video; failing locks the video until the viewer re-watches and re-attempts.
-* **Webhooks** — signed JSON payloads fire on key events (completed, quiz passed/failed, locked, milestones) for Zapier / automation tools.
+* **Sources** — self-hosted files from the media library, any MP4/WebM URL, HLS streams (.m3u8), YouTube and Vimeo.
+* **Audio player** — a proper audio bar with cover art, waveform and compact/card/minimal layouts.
+* **Your look** — skins, accent and hover colors, play-button styles, control-bar styles, roundness, aspect ratio, logo watermark, and a site-wide default that every video inherits.
+* **Controls** — choose exactly which buttons show; speed, quality, captions, picture-in-picture, keyboard shortcuts, rewind/forward and download.
+* **Chapters & captions** — YouTube-style segmented chapters, multi-track subtitles with styling, and a transcript drawer.
+* **Behaviour** — autoplay modes, loop, resume where the viewer left off, sticky player on scroll, no-skip, click-to-load poster for fast pages.
+* **Engagement** — call-to-action and end-screen overlays, text overlays, an action bar, and email-capture forms (sent to your inbox).
+* **Playlists & presets** — sidebar or grid playlists with autoplay-next, and reusable player presets.
+* **Block & shortcode** — a block with an in-editor preview, plus `[trueplayer id="…"]`, a popup/lightbox shortcode and playlist shortcode.
+* **SEO** — VideoObject structured data and Google Analytics (GA4) playback events.
 
-Pro adds a reporting dashboard, exports, webhook delivery logs, premium sources (Mux, Bunny, Gumlet), and Gem-ecosystem bridges.
+Everything in this plugin works on its own. A separate add-on, TruePlayer Pro, adds features of its own such as watch verification, quizzes, analytics and automation.
 
 == External services ==
 
@@ -26,15 +33,14 @@ TruePlayer connects to the following third-party services. Each one is only cont
 
 * **Vimeo oEmbed** (`https://vimeo.com/api/oembed.json`) — used to resolve a thumbnail for a Vimeo video when none is set, so the poster image is populated. The video's public Vimeo URL is sent. Called in the admin only, when saving a Vimeo-sourced video. Terms: https://vimeo.com/terms — Privacy: https://vimeo.com/privacy
 * **YouTube captions** (`https://www.youtube.com/api/timedtext`) — used by the subtitles importer to fetch public captions for a YouTube video when an administrator imports them. Only the public video id is sent. Terms: https://www.youtube.com/t/terms — Privacy: https://policies.google.com/privacy
-* **Google Analytics (GA4) via Google Tag Manager** (`https://www.googletagmanager.com/gtag/js`) — only loaded when the site administrator configures a GA4 Measurement ID in TruePlayer's Settings → Analytics screen. Standard GA4 playback events are then sent from the viewer's browser to Google. Off by default. Terms: https://marketingplatform.google.com/about/analytics/terms/us/ — Privacy: https://policies.google.com/privacy
-* **Mailchimp API** (`https://*.api.mailchimp.com/`) — only used when the site administrator connects a Mailchimp list in Settings → Integrations. Email captures from the configured form layer are sent to the connected list. Off by default. Terms: https://mailchimp.com/legal/terms/ — Privacy: https://mailchimp.com/legal/privacy/
-* **Kodezen license & update service** (`https://kodezen.com/`) — used by the Pro upgrade flow (TruePlayer Pro only) for license activation, update checks and optional telemetry. Not contacted on free installs.
+* **Google Analytics (GA4) via Google Tag Manager** (`https://www.googletagmanager.com/gtag/js`) — only loaded when the site administrator turns on Google Analytics in TruePlayer's Settings → Integrations screen and enters a GA4 Measurement ID. Standard GA4 playback events are then sent from the viewer's browser to Google. Off by default. Terms: https://marketingplatform.google.com/about/analytics/terms/us/ — Privacy: https://policies.google.com/privacy
+* **Kodezen usage insights** (`https://store.kodezen.com/`) — optional, anonymous usage telemetry sent only if a site administrator opts in from the notice TruePlayer shows in the admin; it sends the site URL, WordPress/PHP/plugin versions and the admin email given at opt-in. When the plugin is deactivated, an optional feedback form can send the reason the administrator chooses. Nothing is sent without that action. Terms: https://kodezen.com/terms-and-conditions/ — Privacy: https://store.kodezen.com/privacy-policy/
 
 == Third-Party Libraries ==
 
 TruePlayer bundles the following open-source libraries. Each one keeps its own license and copyright.
 
-* **StoreEngine WordPress SDK** — update, license and telemetry client used by the Pro upgrade flow. Source: https://github.com/imrantushar/storeengine-sdk-for-wordpress — License: GPL-2.0-or-later (© Kodezen). Installed via Composer under `vendor/storeengine/wordpress-sdk/`.
+* **StoreEngine WordPress SDK** — the opt-in usage-insights client described above. Source: https://github.com/imrantushar/storeengine-sdk-for-wordpress — License: GPL-2.0-or-later (© Kodezen). Installed via Composer under `vendor/storeengine/wordpress-sdk/`.
 
 == Source code & build ==
 
@@ -211,7 +217,7 @@ First stable release. TruePlayer ships as a native WordPress video & audio playe
 * HMAC-SHA256 signed JSON webhooks (X-TruePlayer-Signature header) for automation tools.
 
 **Admin**
-* React single-page admin: Dashboard, Media library, Editor, Playlists, Presets, Settings (and Interactive when the H5P engine is present).
+* React single-page admin: Dashboard, Media library, Editor, Playlists, Presets, Settings.
 * WP-CLI `trueplayer` command; REST API across videos, progress, grading, playlists, presets, subtitles, viewers and webhooks.
 
-Premium sources (Bunny, Bunny Storage, Mux, signed/private streaming), premium skins (floating, ambient), playlists, interactive layers, analytics, LMS progression and white-label are unlocked by TruePlayer Pro.
+
