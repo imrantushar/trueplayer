@@ -15,6 +15,34 @@ class Assets {
 
 	const GLOBAL_OBJECT = 'TruePlayerGlobal';
 
+	/**
+	 * Where the compiled bundles live. An addon that ships its own build of the
+	 * same entries (backend/frontend/block, same version) can point these at it
+	 * through `trueplayer/assets/build`; anything else keeps this plugin's own.
+	 */
+	private static function build_location(): array {
+		static $loc = null;
+		if ( null === $loc ) {
+			$default = [
+				'dir' => TRUEPLAYER_ASSETS_DIR_PATH . 'build/',
+				'uri' => TRUEPLAYER_ASSETS_URI . 'build/',
+			];
+			$loc     = (array) apply_filters( 'trueplayer/assets/build', $default );
+			if ( empty( $loc['dir'] ) || empty( $loc['uri'] ) ) {
+				$loc = $default;
+			}
+		}
+		return $loc;
+	}
+
+	public static function build_dir(): string {
+		return trailingslashit( self::build_location()['dir'] );
+	}
+
+	public static function build_uri(): string {
+		return trailingslashit( self::build_location()['uri'] );
+	}
+
 	public static function init(): void {
 		$self = new self();
 		add_action( 'admin_enqueue_scripts', [ $self, 'enqueue_app_assets' ] );
@@ -32,14 +60,14 @@ class Assets {
 
 		wp_register_style(
 			self::FRONTEND_STYLE_HANDLE,
-			TRUEPLAYER_ASSETS_URI . 'build/style-frontend.css',
+			self::build_uri() . 'style-frontend.css',
 			[],
 			TRUEPLAYER_VERSION
 		);
 
 		wp_register_script(
 			self::FRONTEND_SCRIPT_HANDLE,
-			TRUEPLAYER_ASSETS_URI . sprintf( 'build/frontend.%s.js', TRUEPLAYER_VERSION ),
+			self::build_uri() . sprintf( 'frontend.%s.js', TRUEPLAYER_VERSION ),
 			$deps['dependencies'],
 			$deps['version'],
 			true
@@ -68,9 +96,9 @@ class Assets {
 
 		wp_enqueue_style(
 			self::BACKEND_STYLE_HANDLE,
-			TRUEPLAYER_ASSETS_URI . 'build/style-backend.css',
+			self::build_uri() . 'style-backend.css',
 			[ 'wp-components' ],
-			file_exists( TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-backend.css' ) ? filemtime( TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-backend.css' ) : TRUEPLAYER_VERSION
+			file_exists( self::build_dir() . 'style-backend.css' ) ? filemtime( self::build_dir() . 'style-backend.css' ) : TRUEPLAYER_VERSION
 		);
 		wp_add_inline_style( self::BACKEND_STYLE_HANDLE, self::notice_suppression_css() );
 
@@ -78,9 +106,9 @@ class Assets {
 		// frontend player CSS. It's a separate webpack entry, so load it here.
 		wp_enqueue_style(
 			'trueplayer-preview-player',
-			TRUEPLAYER_ASSETS_URI . 'build/style-frontend.css',
+			self::build_uri() . 'style-frontend.css',
 			[],
-			file_exists( TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-frontend.css' ) ? filemtime( TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-frontend.css' ) : TRUEPLAYER_VERSION
+			file_exists( self::build_dir() . 'style-frontend.css' ) ? filemtime( self::build_dir() . 'style-frontend.css' ) : TRUEPLAYER_VERSION
 		);
 
 		if ( ! did_action( 'wp_enqueue_media' ) ) {
@@ -109,7 +137,7 @@ class Assets {
 
 		wp_enqueue_script(
 			self::BACKEND_SCRIPT_HANDLE,
-			TRUEPLAYER_ASSETS_URI . sprintf( 'build/backend.%s.js', TRUEPLAYER_VERSION ),
+			self::build_uri() . sprintf( 'backend.%s.js', TRUEPLAYER_VERSION ),
 			$deps['dependencies'],
 			$deps['version'],
 			true
@@ -145,7 +173,7 @@ class Assets {
 	}
 
 	private function load_asset_deps( string $entry ): array {
-		$file = TRUEPLAYER_ASSETS_DIR_PATH . sprintf( 'build/%s.%s.asset.php', $entry, TRUEPLAYER_VERSION );
+		$file = self::build_dir() . sprintf( '%s.%s.asset.php', $entry, TRUEPLAYER_VERSION );
 		if ( ! file_exists( $file ) ) {
 			return [ 'dependencies' => [], 'version' => TRUEPLAYER_VERSION ];
 		}
@@ -226,16 +254,6 @@ class Assets {
 			'user_id'               => get_current_user_id(),
 			'is_admin'              => (bool) current_user_can( 'manage_options' ),
 			'addons'                => $trueplayer_addons,
-			// Installing Pro is what unlocks its features; the licence buys
-			// updates and support and is reported separately (license_status),
-			// so a missing key never reads as "you don't have Pro".
-			'is_pro_active'         => \TruePlayer\Pro::active(),
-			// Distinct from is_pro_active: the pro plugin can be running on the
-			// permissive pre-license default, and the settings screen must not
-			// call that "your license is valid". See Pro::license_status().
-			'license_status'        => \TruePlayer\Pro::license_status(),
-			'license_url'           => \TruePlayer\Pro::license_page_url(),
-			'feature_flags'         => \TruePlayer\Pro::feature_flags(),
 			// The site's own name/mark when white-label is on, so the React
 			// admin matches the WP menu instead of always saying "TruePlayer".
 			'brand'                 => [

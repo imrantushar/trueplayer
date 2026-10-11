@@ -53,13 +53,6 @@ class OptinController extends WP_REST_Controller {
 		$config = Helper::get_video_config( $video_id );
 		$target = self::destination( $config, $layer_id );
 
-		// A provider the licence doesn't cover must not be reachable by posting
-		// its id — the destination is resolved from stored config, but the
-		// config could predate a lapsed licence.
-		if ( '' !== $target['provider'] && ! \TruePlayer\Pro::active() && ! Integrations::is_free_provider( $target['provider'] ) ) {
-			return new \WP_Error( 'pro_required', __( 'That subscription provider requires TruePlayer Pro.', 'trueplayer' ), [ 'status' => 403 ] );
-		}
-
 		$result = Integrations::subscribe( [
 			'email'    => $email,
 			'name'     => $name,

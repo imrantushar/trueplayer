@@ -159,8 +159,7 @@ class Shortcode {
 
 	/**
 	 * The full frontend config pipeline, shared by the inline and popup embeds:
-	 * raw meta → preset merge → free clamp → pro layer/watermark/private-source
-	 * preparation → answer-key strip.
+	 * raw meta → preset merge → `trueplayer/player/config` → answer-key strip.
 	 */
 	public static function resolved_config( int $video_id ): array {
 		// Resolve the media type FIRST. Everything downstream branches on it —
@@ -172,91 +171,15 @@ class Shortcode {
 		$config = Helper::apply_preset( $config );
 		$config = Helper::with_derived_poster( $config );
 		$config = Helper::apply_global_branding( $config );
-		$config = Helper::enforce_pro_limits( $config );
-		if ( Pro::active() ) {
-			$config = self::prepare_layers( $config );
-			$config = self::prepare_timed_content( $config );
-			$config = self::prepare_watermark( $config );
-
-			/**
-			 * Last chance to turn a stored identifier into a playable URL.
-			 *
-			 * Some sources are stored as a provider's own id rather than a URL
-			 * — a Gumlet video saved mid-encode has an asset id and nothing to
-			 * play yet — and only the addon that talks to that provider can
-			 * resolve one. Runs before signing, since there is nothing to sign
-			 * until a URL exists.
-			 *
-			 * @param array $config   The resolved config.
-			 * @param int   $video_id The video being rendered.
-			 */
-			$config = (array) apply_filters( 'trueplayer/source/resolve', $config, $video_id );
-
-			$config = PrivateVideo::prepare_source( $config, $video_id );
-		}
+		/**
+		 * The resolved config, before answer keys are stripped. Add-ons that
+		 * prepare their own config keys for the browser hook in here.
+		 *
+		 * @param array $config   The resolved config.
+		 * @param int   $video_id The video being rendered.
+		 */
+		$config = (array) apply_filters( 'trueplayer/player/config', $config, $video_id );
 		return self::strip_answer_keys( $config );
-	}
-
-	/**
-	 * Shortcode layers can't run PHP in the browser — render them now and ship
-	 * the HTML. Admin-authored content (manage_options), so shortcodes are
-	 * trusted the same way post content is.
-	 */
-	private static function prepare_layers( array $config ): array {
-		if ( empty( $config['layers'] ) || ! is_array( $config['layers'] ) ) {
-			return $config;
-		}
-		foreach ( $config['layers'] as &$layer ) {
-			if ( ( $layer['type'] ?? '' ) === 'shortcode' && ! empty( $layer['shortcode'] ) ) {
-				$layer['html'] = do_shortcode( wp_kses_post( (string) $layer['shortcode'] ) );
-				unset( $layer['shortcode'] );
-			}
-		}
-		unset( $layer );
-		return $config;
-	}
-
-	/**
-	 * Pre-render timed-content segments server-side: shortcodes resolved, HTML
-	 * sanitized, exposed as `html` so the client renders trusted markup and
-	 * never runs shortcodes itself. The raw `content` is dropped from output.
-	 */
-	private static function prepare_timed_content( array $config ): array {
-		if ( empty( $config['timedContent']['items'] ) || ! is_array( $config['timedContent']['items'] ) ) {
-			return $config;
-		}
-		foreach ( $config['timedContent']['items'] as &$item ) {
-			$content      = (string) ( $item['content'] ?? '' );
-			$item['html'] = '' !== $content ? do_shortcode( wp_kses_post( $content ) ) : '';
-			unset( $item['content'] );
-		}
-		unset( $item );
-		return $config;
-	}
-
-	/**
-	 * Resolve the dynamic-watermark display text server-side (the browser never
-	 * decides what identity to burn in).
-	 */
-	private static function prepare_watermark( array $config ): array {
-		$wm = $config['protection']['dynamicWatermark'] ?? null;
-		if ( empty( $wm['enabled'] ) ) {
-			return $config;
-		}
-		$fields = is_array( $wm['fields'] ?? null ) ? $wm['fields'] : [ 'email' ];
-		$parts  = [];
-		$user   = wp_get_current_user();
-		foreach ( $fields as $f ) {
-			if ( 'email' === $f && $user && $user->exists() ) {
-				$parts[] = $user->user_email;
-			} elseif ( 'name' === $f && $user && $user->exists() ) {
-				$parts[] = $user->display_name;
-			} elseif ( 'ip' === $f && ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
-				$parts[] = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
-			}
-		}
-		$config['protection']['dynamicWatermark']['text'] = implode( ' · ', array_filter( $parts ) );
-		return $config;
 	}
 
 	/**

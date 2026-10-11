@@ -89,15 +89,11 @@ final class TruePlayer {
 		TruePlayer\Api::init();
 		TruePlayer\Database::init();
 		TruePlayer\Shortcode::init();
-		TruePlayer\InstantPage::init();
 		TruePlayer\Playlist::init();
 		TruePlayer\Block::init();
 		TruePlayer\Events::init();
-		TruePlayer\Webhook\Dispatcher::init();
 		TruePlayer\Integrations::init();
-		TruePlayer\WhiteLabel::init();
 		TruePlayer\Migrator::init();
-		TruePlayer\Services\Retention::init();
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			\WP_CLI::add_command( 'trueplayer', 'TruePlayer\\CLI' );
@@ -149,12 +145,6 @@ final class TruePlayer {
  */
 function trueplayer_start() {
 	return TruePlayer::init();
-}
-
-if ( ! function_exists( 'trueplayer_is_pro_active' ) ) {
-	function trueplayer_is_pro_active() {
-		return defined( 'TRUEPLAYER_PRO_VERSION' ) || did_action( 'trueplayer_pro_init' ) > 0;
-	}
 }
 
 // Plugin Start.
