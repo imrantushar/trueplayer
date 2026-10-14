@@ -28,11 +28,11 @@ class CreateQuizAttemptsTable {
 			gate_id VARCHAR(64) NOT NULL DEFAULT 'final',
 			subject_type VARCHAR(16) NOT NULL DEFAULT 'guest',
 			subject_id VARCHAR(64) NOT NULL,
-			answers JSON NULL,
+			answers LONGTEXT NULL,
 			score DECIMAL(5,2) NOT NULL DEFAULT 0,
 			passed TINYINT(1) NOT NULL DEFAULT 0,
 			attempt_no INT UNSIGNED NOT NULL DEFAULT 1,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			created_at DATETIME NULL DEFAULT NULL,
 			PRIMARY KEY  (id),
 			INDEX idx_subject_video (video_id, subject_type, subject_id),
 			INDEX idx_video_gate (video_id, gate_id)

@@ -19,7 +19,15 @@ class Database {
 		Database\MetaManager::init();
 	}
 
-	public static function create_initial_custom_table() {
+	/**
+	 * Create (or diff-sync) every core table.
+	 *
+	 * Returns true only when every expected table exists after `dbDelta` ran:
+	 * `dbDelta` logs on failure but does not throw, so the caller must verify
+	 * before recording that the install reached a given schema version — the
+	 * reviewer's point was that we were bumping the version regardless.
+	 */
+	public static function create_initial_custom_table(): bool {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		global $wpdb;
 		$prefix          = $wpdb->prefix;
@@ -39,6 +47,21 @@ class Database {
 		 * @param string $charset_collate Charset/collation clause.
 		 */
 		do_action( 'trueplayer/database/sync_schema', $prefix, $charset_collate );
+
+		$expected = [
+			$prefix . TRUEPLAYER_DB_PREFIX . '_progress',
+			$prefix . TRUEPLAYER_DB_PREFIX . '_quiz_attempts',
+			$prefix . TRUEPLAYER_DB_PREFIX . '_engagement',
+			$prefix . TRUEPLAYER_DB_PREFIX . '_daily',
+		];
+		foreach ( $expected as $table ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- post-dbDelta existence probe; identifier is composed from a known prefix.
+			$found = $wpdb->get_var( "SHOW TABLES LIKE '" . esc_sql( $table ) . "'" );
+			if ( $found !== $table ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -56,9 +79,14 @@ class Database {
 		// later load once the code is complete; the version is only bumped on a
 		// clean run, and dbDelta makes every table create idempotent.
 		try {
-			self::create_initial_custom_table();
+			$ok = self::create_initial_custom_table();
 		} catch ( \Throwable $e ) {
 			// Deferring to a later load; nothing further we can do here.
+			return;
+		}
+		if ( ! $ok ) {
+			// A table is still missing after dbDelta. Leave the stored version
+			// alone so a later load retries, rather than claiming a clean install.
 			return;
 		}
 		// New rewrite rules (instant video pages) need a one-time flush.

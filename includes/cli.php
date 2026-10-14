@@ -17,13 +17,20 @@ class CLI {
 
 	const SEED_META = '_tp_seeded';
 
-	/** The demo videos — one per supported source type, with variety. */
+	/**
+	 * The demo videos — one per supported source type, with variety.
+	 *
+	 * Source URLs are left empty on purpose: the seeder is for exercising the
+	 * editor UI, and bundling third-party media URLs would hard-wire remote
+	 * dependencies into every seeded install. The administrator picks a real
+	 * source from the editor after seeding.
+	 */
 	private function samples() {
 		return [
 			[
 				'title'  => 'Demo — Self-hosted MP4 (chapters)',
 				'config' => [
-					'source'   => [ 'type' => 'url', 'src' => 'https://vjs.zencdn.net/v/oceans.mp4', 'poster' => 'https://vjs.zencdn.net/v/oceans.png' ],
+					'source'   => [ 'type' => 'url', 'src' => '', 'poster' => '' ],
 					'chapters' => [
 						[ 'at' => 0, 'label' => 'Opening' ],
 						[ 'at' => 15, 'label' => 'The reef' ],
@@ -34,41 +41,41 @@ class CLI {
 			],
 			[
 				'title'  => 'Demo — YouTube',
-				'config' => [ 'source' => [ 'type' => 'youtube', 'src' => 'https://www.youtube.com/watch?v=aqz-KE-bpKQ' ] ],
+				'config' => [ 'source' => [ 'type' => 'youtube', 'src' => '' ] ],
 			],
 			[
 				'title'  => 'Demo — Vimeo',
-				'config' => [ 'source' => [ 'type' => 'vimeo', 'src' => 'https://vimeo.com/76979871' ] ],
+				'config' => [ 'source' => [ 'type' => 'vimeo', 'src' => '' ] ],
 			],
 			[
 				'title'  => 'Demo — HLS stream',
-				'config' => [ 'source' => [ 'type' => 'hls', 'src' => 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' ] ],
+				'config' => [ 'source' => [ 'type' => 'hls', 'src' => '' ] ],
 			],
 			[
 				'title'  => 'Demo — Audio / podcast',
-				'config' => [ 'source' => [ 'type' => 'url', 'src' => 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 'mediaType' => 'audio' ] ],
+				'config' => [ 'source' => [ 'type' => 'url', 'src' => '', 'mediaType' => 'audio' ] ],
 			],
 			[
 				'title'  => 'Demo — Bunny.net (placeholder ids)',
-				'config' => [ 'source' => [ 'type' => 'bunny', 'pullZone' => 'vz-example.b-cdn.net', 'videoId' => 'REPLACE-ME' ] ],
+				'config' => [ 'source' => [ 'type' => 'bunny', 'pullZone' => '', 'videoId' => '' ] ],
 			],
 			[
 				'title'  => 'Demo — Showcase (skin, overlays, action bar, layers)',
 				'config' => [
-					'source'      => [ 'type' => 'url', 'src' => 'https://vjs.zencdn.net/v/oceans.mp4', 'poster' => 'https://vjs.zencdn.net/v/oceans.png' ],
+					'source'      => [ 'type' => 'url', 'src' => '', 'poster' => '' ],
 					'description' => 'A <strong>dynamic description</strong> rendered under the player — links, resources, anything.',
 					'customize'   => [
 						'appearance' => [ 'skin' => 'floating', 'aspectRatio' => '16:9', 'captionSize' => 120, 'captionOpacity' => 60 ],
 						'behavior'   => [ 'hoverPreview' => true, 'autoplayMode' => 'off' ],
 					],
-					'branding'    => [ 'logo' => 'https://vjs.zencdn.net/v/oceans.png', 'logoPosition' => 'bottom-left', 'logoOpacity' => 0.7, 'logoUrl' => 'https://kodezen.com' ],
+					'branding'    => [ 'logo' => '', 'logoPosition' => 'bottom-left', 'logoOpacity' => 0.7, 'logoUrl' => '' ],
 					'overlays'    => [
 						[ 'id' => 'tx1', 'type' => 'text', 'start' => 2, 'end' => 8, 'position' => 'top-left', 'title' => 'Chapter 1', 'text' => 'The open ocean', 'bgOpacity' => 55 ],
-						[ 'id' => 'cta1', 'trigger' => 'end', 'title' => 'Enjoyed it?', 'text' => 'See the full series.', 'buttonLabel' => 'Browse', 'buttonUrl' => 'https://example.com' ],
+						[ 'id' => 'cta1', 'trigger' => 'end', 'title' => 'Enjoyed it?', 'text' => 'See the full series.', 'buttonLabel' => 'Browse', 'buttonUrl' => '' ],
 					],
-					'actionBar'   => [ 'enabled' => true, 'text' => 'Limited offer — full course 30% off', 'buttonLabel' => 'Get it', 'buttonUrl' => 'https://example.com', 'position' => 'bottom' ],
+					'actionBar'   => [ 'enabled' => true, 'text' => 'Limited offer — full course 30% off', 'buttonLabel' => 'Get it', 'buttonUrl' => '', 'position' => 'bottom' ],
 					'layers'      => [
-						[ 'id' => 'ly1', 'type' => 'hotspot', 'start' => 3, 'end' => 20, 'x' => 60, 'y' => 30, 'w' => 18, 'h' => 22, 'tooltip' => 'What is this?', 'url' => 'https://example.com' ],
+						[ 'id' => 'ly1', 'type' => 'hotspot', 'start' => 3, 'end' => 20, 'x' => 60, 'y' => 30, 'w' => 18, 'h' => 22, 'tooltip' => 'What is this?', 'url' => '' ],
 						[ 'id' => 'ly2', 'type' => 'form', 'start' => 25, 'end' => 40, 'position' => 'bottom-center', 'title' => 'Get the bonus pack', 'buttonLabel' => 'Send it' ],
 					],
 					'protection'  => [ 'dynamicWatermark' => [ 'enabled' => true, 'fields' => [ 'email' ], 'opacity' => 0.35, 'drift' => true ] ],
@@ -78,7 +85,7 @@ class CLI {
 			[
 				'title'  => 'Demo — Watch-verify + quiz (no-skip)',
 				'config' => [
-					'source'    => [ 'type' => 'url', 'src' => 'https://vjs.zencdn.net/v/oceans.mp4' ],
+					'source'    => [ 'type' => 'url', 'src' => '' ],
 					'customize' => [ 'behavior' => [ 'noSkip' => true ], 'appearance' => [ 'accent' => '#008dff' ] ],
 					'gating'    => [
 						'completionThreshold' => 80,
@@ -107,7 +114,7 @@ class CLI {
 
 		$extra = isset( $assoc['count'] ) ? max( 0, (int) $assoc['count'] ) : 0;
 		for ( $i = 1; $i <= $extra; $i++ ) {
-			$ids[] = $this->make_video( "Demo — Extra {$i}", [ 'source' => [ 'type' => 'url', 'src' => 'https://vjs.zencdn.net/v/oceans.mp4' ] ] );
+			$ids[] = $this->make_video( "Demo — Extra {$i}", [ 'source' => [ 'type' => 'url', 'src' => '' ] ] );
 		}
 
 		\WP_CLI::success( sprintf( 'Created %d demo videos.', count( $ids ) ) );

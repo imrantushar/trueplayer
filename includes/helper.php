@@ -237,7 +237,7 @@ class Helper {
 		if ( '' === $vid ) {
 			return '';
 		}
-		$key    = 'tp_vimeo_poster_' . $vid;
+		$key    = 'trueplayer_vimeo_poster_' . $vid;
 		$cached = get_transient( $key );
 		if ( is_string( $cached ) ) {
 			return $cached;

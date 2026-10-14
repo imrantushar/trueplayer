@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.7.1 - 2026-10-14
+
+### Fixed
+
+- Activation schema no longer uses `JSON` columns or `DATETIME DEFAULT CURRENT_TIMESTAMP`, so tables create cleanly on MySQL versions WordPress still supports.
+- Schema sync now verifies every expected table exists before recording the database version, so a silent `dbDelta` failure can no longer mark the install as upgraded.
+- Seed data and preset-preview samples no longer reference remote demo files; sources start empty and the author picks their own media.
+
+### Security
+
+- The video-preview REST route now requires edit rights on the specific video, not just a generic edit-posts capability.
+
+### Changed
+
+- Vimeo poster transient is now namespaced as `trueplayer_vimeo_poster_` to avoid colliding with other plugins' short prefixes.
+
 ## 1.7.0 - 2026-10-11
 
 ### Changed

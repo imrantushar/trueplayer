@@ -11,11 +11,12 @@ import { __ } from '@Utils/translation';
 /** A preset's type, defaulting to video for everything made before audio. */
 const presetType = ( p ) => ( 'audio' === p?.type ? 'audio' : 'video' );
 
-// Built-in samples so a preset can be previewed even before any media exists.
-// An audio preset previewed against a video sample shows nothing it controls,
-// so each type gets its own.
-const SAMPLE_SOURCE = { type: 'url', src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', poster: '' };
-const SAMPLE_AUDIO_SOURCE = { type: 'url', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', poster: '', mediaType: 'audio' };
+// Placeholder sources so a preset can open a preview panel before any media is
+// chosen. Left empty on purpose: the preview is for visual settings (skin,
+// controls, overlays) and must not pull media from a third-party host just to
+// render — the editor's own media picker is where a real source gets wired in.
+const SAMPLE_SOURCE = { type: 'url', src: '', poster: '' };
+const SAMPLE_AUDIO_SOURCE = { type: 'url', src: '', poster: '', mediaType: 'audio' };
 
 function Editor( { preset, onBack, onSaved, onEditState } ) {
 	// A preset has no `source`, so the type it styles cannot be inferred the way

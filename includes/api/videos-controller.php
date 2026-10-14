@@ -88,7 +88,7 @@ class VideosController extends WP_REST_Controller {
 			[
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => [ $this, 'preview' ],
-				'permission_callback' => [ $this, 'browse' ],
+				'permission_callback' => [ $this, 'can_preview' ],
 			]
 		);
 		register_rest_route(
@@ -251,6 +251,21 @@ class VideosController extends WP_REST_Controller {
 	public function quick_edit( $request ) {
 		$id = (int) $request['id'];
 		return self::can_quick_create() && $id > 0 && current_user_can( 'edit_post', $id );
+	}
+
+	/**
+	 * Previewing a video returns its resolved player config, which is the same
+	 * payload the published embed hands every visitor — but the route is used
+	 * from the block editor against drafts and private videos too, so it has to
+	 * verify the caller can edit the specific post rather than relying on a
+	 * generic `edit_posts` check.
+	 */
+	public function can_preview( $request ) {
+		$id = (int) $request['id'];
+		if ( $id <= 0 || get_post_type( $id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
+			return false;
+		}
+		return self::can_browse() && current_user_can( 'edit_post', $id );
 	}
 
 	/**

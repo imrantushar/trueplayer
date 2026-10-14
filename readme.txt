@@ -4,7 +4,7 @@ Tags: video, player, audio, playlist, youtube
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,6 +57,13 @@ Every file in `assets/build/` maps to a source entry:
 To rebuild: install Node.js 20+, then run `npm install` and `npm run build` in the plugin folder. The build uses `@wordpress/scripts` (webpack) with the config in `webpack.config.js`.
 
 == Changelog ==
+
+= 1.7.1 - 14-10-2026 =
+* Fixed - Activation schema no longer uses `JSON` columns or `DATETIME DEFAULT CURRENT_TIMESTAMP`, so tables create cleanly on MySQL versions WordPress still supports.
+* Fixed - Schema sync now verifies every expected table exists before recording the database version, so a silent `dbDelta` failure can no longer mark the install as upgraded.
+* Fixed - Seed data and preset-preview samples no longer reference remote demo files; sources start empty and the author picks their own media.
+* Security - The video-preview REST route now requires edit rights on the specific video, not just a generic edit-posts capability.
+* Changed - Vimeo poster transient is now namespaced as `trueplayer_vimeo_poster_` to avoid colliding with other plugins' short prefixes.
 
 = 1.7.0 - 11-10-2026 =
 * Changed - Everything in the free plugin now works on its own, with no locked options. Features that belong to TruePlayer Pro now ship only in that add-on.
