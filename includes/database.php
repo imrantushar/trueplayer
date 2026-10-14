@@ -55,7 +55,7 @@ class Database {
 			$prefix . TRUEPLAYER_DB_PREFIX . '_daily',
 		];
 		foreach ( $expected as $table ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- post-dbDelta existence probe; identifier is composed from a known prefix.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- post-dbDelta schema probe; must bypass object cache because schema changes are the point of this check.
 			$found = $wpdb->get_var( "SHOW TABLES LIKE '" . esc_sql( $table ) . "'" );
 			if ( $found !== $table ) {
 				return false;

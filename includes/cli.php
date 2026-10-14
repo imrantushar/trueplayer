@@ -133,6 +133,7 @@ class CLI {
 	public function clean() {
 		$removed = 0;
 		foreach ( [ TRUEPLAYER_VIDEO_POST_TYPE, Playlist::POST_TYPE ] as $pt ) {
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- WP-CLI seeder cleanup; the meta_key narrows the delete to posts this command itself created.
 			$posts = get_posts( [ 'post_type' => $pt, 'post_status' => 'any', 'posts_per_page' => -1, 'meta_key' => self::SEED_META, 'fields' => 'ids' ] );
 			foreach ( $posts as $id ) {
 				wp_delete_post( $id, true );

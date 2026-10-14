@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-14T05:39:57+00:00\n"
+"POT-Creation-Date: 2026-10-14T11:30:52+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 
@@ -96,7 +96,7 @@ msgstr ""
 msgid "Untitled playlist"
 msgstr ""
 
-#: includes/api/presets-controller.php:119
+#: includes/api/presets-controller.php:121
 #: dev_trueplayer/admin/screens/Presets.jsx:176
 msgid "Untitled preset"
 msgstr ""
@@ -121,45 +121,45 @@ msgstr ""
 msgid "The title has to be plain text — markup and code are not accepted."
 msgstr ""
 
-#: includes/api/videos-controller.php:317
+#: includes/api/videos-controller.php:318
 msgid "That source type cannot be created from the editor."
 msgstr ""
 
-#: includes/api/videos-controller.php:326
-#: includes/api/videos-controller.php:405
+#: includes/api/videos-controller.php:327
+#: includes/api/videos-controller.php:406
 msgid "Choose a file or paste a link first."
 msgstr ""
 
-#: includes/api/videos-controller.php:336
-#: includes/api/videos-controller.php:578
-#: includes/api/videos-controller.php:615
+#: includes/api/videos-controller.php:337
+#: includes/api/videos-controller.php:580
+#: includes/api/videos-controller.php:617
 #: dev_trueplayer/admin/screens/Library.jsx:156
 msgid "Untitled video"
 msgstr ""
 
-#: includes/api/videos-controller.php:373
-#: includes/api/videos-controller.php:446
+#: includes/api/videos-controller.php:374
+#: includes/api/videos-controller.php:447
 msgid "Not found"
 msgstr ""
 
-#: includes/api/videos-controller.php:381
+#: includes/api/videos-controller.php:382
 msgid "That source type cannot be set from the editor."
 msgstr ""
 
-#: includes/api/videos-controller.php:396
+#: includes/api/videos-controller.php:397
 msgid "This video uses a source that is set up in the full editor."
 msgstr ""
 
-#: includes/api/videos-controller.php:657
+#: includes/api/videos-controller.php:659
 msgid "The captured frame was empty or too large to store."
 msgstr ""
 
-#: includes/api/videos-controller.php:668
+#: includes/api/videos-controller.php:670
 msgid "That frame was not a readable image."
 msgstr ""
 
 #. translators: %s: video title.
-#: includes/api/videos-controller.php:682
+#: includes/api/videos-controller.php:684
 #, php-format
 msgid "%s poster"
 msgstr ""

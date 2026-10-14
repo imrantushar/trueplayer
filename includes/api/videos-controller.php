@@ -280,7 +280,8 @@ class VideosController extends WP_REST_Controller {
 			'posts_per_page' => 500,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
-			'meta_query'     => [ // phpcs:ignore WordPress.DB.SlowMetaQuery.slow_db_query -- excluding another engine's items is the point of the list.
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- excluding another engine's items is the point of the list; small post type.
+			'meta_query'     => [
 				'relation' => 'OR',
 				[ 'key' => \TruePlayer\Database\MetaManager::ENGINE_META, 'compare' => 'NOT EXISTS' ],
 				[ 'key' => \TruePlayer\Database\MetaManager::ENGINE_META, 'value' => 'native' ],
@@ -518,6 +519,7 @@ class VideosController extends WP_REST_Controller {
 
 		$tag = $request ? sanitize_title( (string) $request->get_param( 'tag' ) ) : '';
 		if ( $tag ) {
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- filtering videos by their own tag taxonomy is the endpoint's purpose; term is sanitized and single.
 			$args['tax_query'] = [
 				[
 					'taxonomy' => \TruePlayer\Database\PostType::VIDEO_TAXONOMY,
@@ -776,9 +778,12 @@ class VideosController extends WP_REST_Controller {
 				'post_status'    => 'any',
 				'posts_per_page' => 50,
 				'fields'         => 'ids',
+				// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- $keep is a single id (the current poster to preserve), bounded cleanup.
 				'exclude'        => [ $keep ],
-				'meta_key'       => self::GENERATED_POSTER_META, // phpcs:ignore WordPress.DB.SlowMetaQuery.slow_db_query -- our own meta, bounded to this video.
-				'meta_value'     => $id, // phpcs:ignore WordPress.DB.SlowMetaQuery.slow_db_query
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- plugin-owned meta that tags only posters this editor captured.
+				'meta_key'       => self::GENERATED_POSTER_META,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- paired with meta_key above; narrow to one video.
+				'meta_value'     => $id,
 			]
 		);
 		foreach ( $stale as $attachment ) {
