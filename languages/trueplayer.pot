@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: TruePlayer 1.7.0\n"
+"Project-Id-Version: TruePlayer 1.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/trueplayer\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-11T12:52:37+00:00\n"
+"POT-Creation-Date: 2026-10-14T05:39:57+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 
@@ -71,16 +71,24 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: includes/api/optin-controller.php:47
+#: includes/api/optin-controller.php:80
 msgid "Please enter a valid email."
 msgstr ""
 
-#: includes/api/optin-controller.php:50
+#: includes/api/optin-controller.php:83
 msgid "Video not found."
 msgstr ""
 
-#: includes/api/optin-controller.php:67
+#: includes/api/optin-controller.php:105
 msgid "Could not subscribe."
+msgstr ""
+
+#: includes/api/optin-controller.php:127
+msgid "Please wait a moment before trying again."
+msgstr ""
+
+#: includes/api/optin-controller.php:135
+msgid "Too many submissions. Try again later."
 msgstr ""
 
 #: includes/api/playlists-controller.php:64
@@ -89,7 +97,7 @@ msgid "Untitled playlist"
 msgstr ""
 
 #: includes/api/presets-controller.php:119
-#: dev_trueplayer/admin/screens/Presets.jsx:175
+#: dev_trueplayer/admin/screens/Presets.jsx:176
 msgid "Untitled preset"
 msgstr ""
 
@@ -113,45 +121,45 @@ msgstr ""
 msgid "The title has to be plain text — markup and code are not accepted."
 msgstr ""
 
-#: includes/api/videos-controller.php:302
+#: includes/api/videos-controller.php:317
 msgid "That source type cannot be created from the editor."
 msgstr ""
 
-#: includes/api/videos-controller.php:311
-#: includes/api/videos-controller.php:390
+#: includes/api/videos-controller.php:326
+#: includes/api/videos-controller.php:405
 msgid "Choose a file or paste a link first."
 msgstr ""
 
-#: includes/api/videos-controller.php:321
-#: includes/api/videos-controller.php:563
-#: includes/api/videos-controller.php:600
+#: includes/api/videos-controller.php:336
+#: includes/api/videos-controller.php:578
+#: includes/api/videos-controller.php:615
 #: dev_trueplayer/admin/screens/Library.jsx:156
 msgid "Untitled video"
 msgstr ""
 
-#: includes/api/videos-controller.php:358
-#: includes/api/videos-controller.php:431
+#: includes/api/videos-controller.php:373
+#: includes/api/videos-controller.php:446
 msgid "Not found"
 msgstr ""
 
-#: includes/api/videos-controller.php:366
+#: includes/api/videos-controller.php:381
 msgid "That source type cannot be set from the editor."
 msgstr ""
 
-#: includes/api/videos-controller.php:381
+#: includes/api/videos-controller.php:396
 msgid "This video uses a source that is set up in the full editor."
 msgstr ""
 
-#: includes/api/videos-controller.php:642
+#: includes/api/videos-controller.php:657
 msgid "The captured frame was empty or too large to store."
 msgstr ""
 
-#: includes/api/videos-controller.php:653
+#: includes/api/videos-controller.php:668
 msgid "That frame was not a readable image."
 msgstr ""
 
 #. translators: %s: video title.
-#: includes/api/videos-controller.php:667
+#: includes/api/videos-controller.php:682
 #, php-format
 msgid "%s poster"
 msgstr ""
@@ -524,13 +532,13 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:87
 #: dev_trueplayer/admin/screens/Library.jsx:321
-#: dev_trueplayer/admin/screens/Presets.jsx:218
+#: dev_trueplayer/admin/screens/Presets.jsx:219
 #: dev_trueplayer/block/VideoModal.jsx:230
 msgid "Cancel"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:91
-#: dev_trueplayer/admin/screens/Presets.jsx:219
+#: dev_trueplayer/admin/screens/Presets.jsx:220
 #: dev_trueplayer/block/VideoModal.jsx:242
 msgid "Creating…"
 msgstr ""
@@ -542,9 +550,9 @@ msgid "Create"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:111
-#: dev_trueplayer/admin/screens/Presets.jsx:245
+#: dev_trueplayer/admin/screens/Presets.jsx:246
 #: dev_trueplayer/block/VideoModal.jsx:134
-#: dev_trueplayer/player/components/EmailForm.jsx:86
+#: dev_trueplayer/player/components/EmailForm.jsx:103
 msgid "Name"
 msgstr ""
 
@@ -559,8 +567,8 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:122
 #: dev_trueplayer/admin/screens/Library.jsx:30
-#: dev_trueplayer/admin/screens/Presets.jsx:228
-#: dev_trueplayer/admin/screens/Presets.jsx:262
+#: dev_trueplayer/admin/screens/Presets.jsx:229
+#: dev_trueplayer/admin/screens/Presets.jsx:263
 #: dev_trueplayer/admin/screens/Settings.jsx:646
 #: dev_trueplayer/block/edit.jsx:124
 msgid "Video"
@@ -569,8 +577,8 @@ msgstr ""
 #: dev_trueplayer/admin/screens/CreateModal.jsx:122
 #: dev_trueplayer/admin/screens/Dashboard.jsx:68
 #: dev_trueplayer/admin/screens/Library.jsx:31
-#: dev_trueplayer/admin/screens/Presets.jsx:228
-#: dev_trueplayer/admin/screens/Presets.jsx:262
+#: dev_trueplayer/admin/screens/Presets.jsx:229
+#: dev_trueplayer/admin/screens/Presets.jsx:263
 #: dev_trueplayer/admin/screens/Settings.jsx:646
 #: dev_trueplayer/utils/source-types.js:93
 msgid "Audio"
@@ -613,7 +621,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/Dashboard.jsx:78
 #: dev_trueplayer/admin/screens/Editor.jsx:185
-#: dev_trueplayer/admin/screens/Presets.jsx:278
+#: dev_trueplayer/admin/screens/Presets.jsx:279
 #: dev_trueplayer/admin/screens/Settings.jsx:559
 msgid "Loading…"
 msgstr ""
@@ -682,7 +690,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/Editor.jsx:178
 #: dev_trueplayer/admin/screens/Playlists.jsx:131
-#: dev_trueplayer/admin/screens/Presets.jsx:101
+#: dev_trueplayer/admin/screens/Presets.jsx:102
 #: dev_trueplayer/admin/screens/Settings.jsx:567
 msgid "Saved"
 msgstr ""
@@ -698,7 +706,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/Editor.jsx:200
 #: dev_trueplayer/admin/screens/Playlists.jsx:132
-#: dev_trueplayer/admin/screens/Presets.jsx:102
+#: dev_trueplayer/admin/screens/Presets.jsx:103
 #: dev_trueplayer/admin/screens/Settings.jsx:568
 #: dev_trueplayer/block/VideoModal.jsx:241
 msgid "Saving…"
@@ -976,7 +984,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:43
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:242
-#: dev_trueplayer/player/components/EmailForm.jsx:101
+#: dev_trueplayer/player/components/EmailForm.jsx:118
 msgid "Subscribe"
 msgstr ""
 
@@ -1122,7 +1130,7 @@ msgid "Email placeholder"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:246
-#: dev_trueplayer/player/components/EmailForm.jsx:97
+#: dev_trueplayer/player/components/EmailForm.jsx:114
 msgid "you@email.com"
 msgstr ""
 
@@ -1135,7 +1143,7 @@ msgid "Shown in place of the form once someone subscribes."
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:250
-#: dev_trueplayer/player/components/EmailForm.jsx:41
+#: dev_trueplayer/player/components/EmailForm.jsx:45
 msgid "Thanks — you’re in!"
 msgstr ""
 
@@ -1840,7 +1848,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/Library.jsx:317
 #: dev_trueplayer/admin/screens/Library.jsx:322
 #: dev_trueplayer/admin/screens/Library.jsx:407
-#: dev_trueplayer/admin/screens/Presets.jsx:301
+#: dev_trueplayer/admin/screens/Presets.jsx:302
 msgid "Delete"
 msgstr ""
 
@@ -1895,14 +1903,14 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/Library.jsx:399
 #: dev_trueplayer/admin/screens/Library.jsx:400
-#: dev_trueplayer/admin/screens/Presets.jsx:300
+#: dev_trueplayer/admin/screens/Presets.jsx:301
 #: dev_trueplayer/block/edit.jsx:147
 #: dev_trueplayer/block/edit.jsx:162
 msgid "Edit"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/Playlists.jsx:132
-#: dev_trueplayer/admin/screens/Presets.jsx:102
+#: dev_trueplayer/admin/screens/Presets.jsx:103
 #: dev_trueplayer/admin/screens/Settings.jsx:568
 #: dev_trueplayer/block/VideoModal.jsx:241
 msgid "Save"
@@ -1972,88 +1980,88 @@ msgstr ""
 msgid "Done"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:107
+#: dev_trueplayer/admin/screens/Presets.jsx:108
 msgid "These styles & behaviours apply to any audio that uses this preset. Individual items can still override anything."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:108
+#: dev_trueplayer/admin/screens/Presets.jsx:109
 msgid "These styles & behaviours apply to any video that uses this preset. Individual videos can still override anything."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:138
+#: dev_trueplayer/admin/screens/Presets.jsx:139
 msgid "Preview with"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:147
+#: dev_trueplayer/admin/screens/Presets.jsx:148
 msgid "Sample track"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:191
+#: dev_trueplayer/admin/screens/Presets.jsx:192
 msgid "Delete this preset? Videos using it fall back to defaults."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:206
+#: dev_trueplayer/admin/screens/Presets.jsx:207
 msgid "Player presets"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:207
+#: dev_trueplayer/admin/screens/Presets.jsx:208
 msgid "Reusable styles & behaviour — brand once, use everywhere."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:209
+#: dev_trueplayer/admin/screens/Presets.jsx:210
 msgid "Add preset"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:214
-#: dev_trueplayer/admin/screens/Presets.jsx:219
+#: dev_trueplayer/admin/screens/Presets.jsx:215
+#: dev_trueplayer/admin/screens/Presets.jsx:220
 msgid "Create preset"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:226
+#: dev_trueplayer/admin/screens/Presets.jsx:227
 msgid "Player type"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:226
+#: dev_trueplayer/admin/screens/Presets.jsx:227
 msgid "Video and audio presets configure different players."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:244
+#: dev_trueplayer/admin/screens/Presets.jsx:245
 msgid "Preset name"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:247
+#: dev_trueplayer/admin/screens/Presets.jsx:248
 msgid "Start from"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:247
+#: dev_trueplayer/admin/screens/Presets.jsx:248
 msgid "A predefined look to begin with — you can change everything after."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:249
+#: dev_trueplayer/admin/screens/Presets.jsx:250
 msgid "Blank (defaults)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:282
+#: dev_trueplayer/admin/screens/Presets.jsx:283
 msgid "No audio presets yet"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:282
+#: dev_trueplayer/admin/screens/Presets.jsx:283
 msgid "No video presets yet"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:284
+#: dev_trueplayer/admin/screens/Presets.jsx:285
 msgid "Create one to reuse a consistent audio player style across episodes."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:285
+#: dev_trueplayer/admin/screens/Presets.jsx:286
 msgid "Create one to reuse a consistent player style across videos."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:297
+#: dev_trueplayer/admin/screens/Presets.jsx:298
 msgid "Audio preset"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Presets.jsx:297
+#: dev_trueplayer/admin/screens/Presets.jsx:298
 msgid "Video preset"
 msgstr ""
 
@@ -2478,27 +2486,27 @@ msgstr ""
 msgid "Fullscreen"
 msgstr ""
 
-#: dev_trueplayer/player/components/EmailForm.jsx:53
+#: dev_trueplayer/player/components/EmailForm.jsx:57
 msgid "Please enter a valid email address."
 msgstr ""
 
-#: dev_trueplayer/player/components/EmailForm.jsx:68
+#: dev_trueplayer/player/components/EmailForm.jsx:72
 msgid "Something went wrong."
 msgstr ""
 
-#: dev_trueplayer/player/components/EmailForm.jsx:85
+#: dev_trueplayer/player/components/EmailForm.jsx:102
 msgid "Your name"
 msgstr ""
 
-#: dev_trueplayer/player/components/EmailForm.jsx:98
+#: dev_trueplayer/player/components/EmailForm.jsx:115
 msgid "Email"
 msgstr ""
 
-#: dev_trueplayer/player/components/EmailForm.jsx:101
+#: dev_trueplayer/player/components/EmailForm.jsx:118
 msgid "Subscribing…"
 msgstr ""
 
-#: dev_trueplayer/player/components/EmailForm.jsx:112
+#: dev_trueplayer/player/components/EmailForm.jsx:129
 msgid "No thanks"
 msgstr ""
 
