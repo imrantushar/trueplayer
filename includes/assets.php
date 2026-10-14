@@ -78,16 +78,14 @@ class Assets {
 	}
 
 	public function enqueue_app_assets( string $hook ): void {
-		if ( strpos( $hook, '_page_' . TRUEPLAYER_PLUGIN_SLUG ) === false && strpos( $hook, TRUEPLAYER_PLUGIN_SLUG ) === false ) {
+		if ( ! self::is_app_screen( $hook ) ) {
 			return;
 		}
 
-		// Suppress third-party admin notices on our screens so they don't
-		// clash with the React app. CSS-only (notices stay in the DOM for
-		// screen readers + dismiss workflows) — wp.org flags plugins that nuke
-		// admin_notices wholesale.
-		// Belt-and-braces: also drop queued notice callbacks on our own pages.
-		add_action( 'in_admin_header', [ $this, 'strip_admin_notice_actions' ], 1000 );
+		// Admin-notice suppression on our screens is CSS-only (see
+		// notice_suppression_css()): notices stay in the DOM for screen readers
+		// and dismiss workflows, and other plugins' queued callbacks still fire.
+		// wp.org flags plugins that remove notice actions wholesale.
 
 		$deps = $this->load_asset_deps( 'backend' );
 
@@ -148,6 +146,29 @@ class Assets {
 	}
 
 	/**
+	 * Whether the current admin hook belongs to one of this plugin's own
+	 * screens. Tight-matched to the slugs `menu.php` registers, so a hook that
+	 * only happens to contain the plugin slug (another plugin's page, or an
+	 * edit screen for a post whose title has `trueplayer` in it) does not
+	 * trigger an admin-wide bundle load.
+	 */
+	private static function is_app_screen( string $hook ): bool {
+		$slug  = TRUEPLAYER_PLUGIN_SLUG;
+		$pages = [
+			'toplevel_page_' . $slug,
+			$slug . '_page_' . $slug . '-videos',
+			$slug . '_page_' . $slug . '-presets',
+			$slug . '_page_' . $slug . '-settings',
+		];
+		foreach ( $pages as $p ) {
+			if ( $hook === $p || 0 === strpos( $hook, $p ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * CSS-only suppression of admin notices on TruePlayer app pages. Keeps the
 	 * notices in the DOM (dismiss-state, screen readers, other plugins' flows
 	 * keep working) but hides them inside the React layout.
@@ -162,17 +183,7 @@ class Assets {
 		';
 	}
 
-	/**
-	 * Remove queued admin_notices / all_admin_notices callbacks on our pages so
-	 * even notices printed before our CSS loads don't flash. Runs late enough
-	 * that our own screens are the only ones affected.
-	 */
-	public function strip_admin_notice_actions(): void {
-		remove_all_actions( 'admin_notices' );
-		remove_all_actions( 'all_admin_notices' );
-	}
-
-	private function load_asset_deps( string $entry ): array {
+private function load_asset_deps( string $entry ): array {
 		$file = self::build_dir() . sprintf( '%s.%s.asset.php', $entry, TRUEPLAYER_VERSION );
 		if ( ! file_exists( $file ) ) {
 			return [ 'dependencies' => [], 'version' => TRUEPLAYER_VERSION ];

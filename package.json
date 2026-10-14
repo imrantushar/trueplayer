@@ -1,6 +1,6 @@
 {
   "name": "trueplayer",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "TruePlayer — watch-verified, quiz-gated video & audio player for WordPress.",
   "main": "index.js",
   "scripts": {

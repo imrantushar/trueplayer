@@ -75,7 +75,13 @@ class SubtitlesController {
 			add_query_arg( [ 'lang' => $lang, 'v' => $vid, 'kind' => 'asr' ], 'https://www.youtube.com/api/timedtext' ),
 		];
 		foreach ( $urls as $url ) {
-			$res = wp_remote_get( $url, [ 'timeout' => 12, 'user-agent' => 'Mozilla/5.0' ] );
+			$res = wp_remote_get(
+				$url,
+				[
+					'timeout'    => 12,
+					'user-agent' => 'TruePlayer/' . TRUEPLAYER_VERSION . '; ' . home_url( '/' ),
+				]
+			);
 			if ( is_wp_error( $res ) ) {
 				continue;
 			}

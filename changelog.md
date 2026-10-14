@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.7.2 - 2026-10-14
+
+### Security
+
+- Public opt-in REST endpoint (`/wp-json/trueplayer/v1/optin`) now requires a `wp_rest` nonce, applies a per-IP+video rate limit, and includes a honeypot field to block form-walking bots.
+
+### Changed
+
+- Admin screens no longer remove queued `admin_notices` callbacks; a CSS-only suppression keeps the layout clean while leaving other plugins' notices in the DOM.
+- Admin asset enqueue matches this plugin's own page hooks exactly instead of a substring on the plugin slug, so an unrelated screen whose hook contains "trueplayer" no longer loads the backend bundle.
+- YouTube caption importer sends an honest `TruePlayer/<version>; <site_url>` User-Agent.
+- Readme tags no longer use third-party brand names.
+
+### Added
+
+- `uninstall.php` drops this plugin's custom tables, options, transients and generated poster attachments when the site owner deletes the plugin. Honours a `trueplayer_keep_data_on_uninstall` option, and runs per-site on multisite.
+
 ## 1.7.1 - 2026-10-14
 
 ### Fixed

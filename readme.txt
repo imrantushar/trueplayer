@@ -1,10 +1,10 @@
 === TruePlayer ===
 Contributors: kodezen
-Tags: video, player, audio, playlist, youtube
+Tags: video, player, audio, playlist, hls
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.7.1
+Stable tag: 1.7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,6 +57,14 @@ Every file in `assets/build/` maps to a source entry:
 To rebuild: install Node.js 20+, then run `npm install` and `npm run build` in the plugin folder. The build uses `@wordpress/scripts` (webpack) with the config in `webpack.config.js`.
 
 == Changelog ==
+
+= 1.7.2 - 14-10-2026 =
+* Security - Public opt-in REST endpoint (`/wp-json/trueplayer/v1/optin`) now requires a `wp_rest` nonce, applies a per-IP+video rate limit, and includes a honeypot field to block form-walking bots.
+* Changed - Admin screens no longer remove queued `admin_notices` callbacks; a CSS-only suppression keeps the layout clean while leaving other plugins' notices in the DOM.
+* Changed - Admin asset enqueue now matches TruePlayer's own page hooks exactly instead of a substring on the plugin slug.
+* Changed - YouTube caption importer sends an honest `TruePlayer/<version>; <site_url>` User-Agent instead of a browser-spoofing one.
+* Added - `uninstall.php` drops this plugin's custom tables, options, transients and generated poster attachments when the site owner deletes the plugin. Honours a `trueplayer_keep_data_on_uninstall` option, and runs per-site on multisite.
+* Changed - Readme tags no longer use third-party brand names.
 
 = 1.7.1 - 14-10-2026 =
 * Fixed - Activation schema no longer uses `JSON` columns or `DATETIME DEFAULT CURRENT_TIMESTAMP`, so tables create cleanly on MySQL versions WordPress still supports.
