@@ -92,7 +92,7 @@ class Helper {
 	 * @return bool|int
 	 */
 	public static function update_json_meta( $post_id, $key, $data ) {
-		return update_post_meta( (int) $post_id, $key, wp_slash( wp_json_encode( $data ) ) );
+		return update_post_meta( (int) $post_id, $key, wp_slash( wp_json_encode( self::sanitize_style_values( $data ) ) ) );
 	}
 
 	/**
@@ -377,5 +377,55 @@ class Helper {
 
 	private static function is_list( array $a ): bool {
 		return array_keys( $a ) === range( 0, count( $a ) - 1 );
+	}
+
+	/**
+	 * Strict validation for every style-bearing value in a stored config,
+	 * preset or settings blob.
+	 *
+	 * Any key naming a colour (`accent`, `color`, `hoverColor`, `borderColor`,
+	 * `backgroundColor`, `captionColor`, …) ends up in a `style` attribute or a
+	 * CSS custom property, so it must be a colour and nothing else — a value
+	 * like `red;background:url(…)` would otherwise inject arbitrary CSS. Invalid
+	 * values are dropped and the player falls back to its default.
+	 *
+	 * @param mixed $data Decoded JSON data.
+	 * @return mixed
+	 */
+	public static function sanitize_style_values( $data ) {
+		if ( ! is_array( $data ) ) {
+			return $data;
+		}
+		foreach ( $data as $key => $value ) {
+			if ( is_array( $value ) ) {
+				$data[ $key ] = self::sanitize_style_values( $value );
+			} elseif ( is_string( $key ) && preg_match( '/(color|accent)$/i', $key ) ) {
+				$data[ $key ] = self::sanitize_css_color( $value );
+			}
+		}
+		return $data;
+	}
+
+	/**
+	 * A CSS colour, or '' when the value is anything else.
+	 *
+	 * Accepts #rgb/#rgba/#rrggbb/#rrggbbaa, rgb()/rgba()/hsl()/hsla() with
+	 * numeric arguments only, and `transparent`.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public static function sanitize_css_color( $value ): string {
+		if ( ! is_string( $value ) ) {
+			return '';
+		}
+		$value = strtolower( trim( $value ) );
+		if ( preg_match( '/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/', $value ) ) {
+			return $value;
+		}
+		if ( preg_match( '/^(?:rgba?|hsla?)\(\s*[0-9.]+(?:deg|%)?(?:\s*[,\s\/]\s*[0-9.]+%?){2,3}\s*\)$/', $value ) ) {
+			return $value;
+		}
+		return 'transparent' === $value ? $value : '';
 	}
 }

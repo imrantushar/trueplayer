@@ -70,7 +70,7 @@ class Shortcode {
 		self::maybe_enqueue_quizpress( $config );
 		$json   = wp_json_encode( [ 'videoId' => $video_id, 'title' => get_the_title( $video_id ), 'config' => $config ] );
 		$label  = '' !== trim( (string) $content ) ? do_shortcode( $content ) : ( $atts['label'] ?: __( 'Watch video', 'trueplayer' ) );
-		$accent = $config['customize']['appearance']['accent'] ?? '';
+		$accent = Helper::sanitize_css_color( $config['customize']['appearance']['accent'] ?? '' );
 		$style  = $accent ? sprintf( ' style="--tp-accent:%s"', esc_attr( $accent ) ) : '';
 
 		return sprintf(
@@ -178,6 +178,9 @@ class Shortcode {
 		 * @param int   $video_id The video being rendered.
 		 */
 		$config = (array) apply_filters( 'trueplayer/player/config', $config, $video_id );
+		// Re-validate at render too, so values stored before validation existed
+		// (or written by another path) can never reach a style attribute.
+		$config = Helper::sanitize_style_values( $config );
 		return self::strip_answer_keys( $config );
 	}
 
@@ -241,7 +244,7 @@ class Shortcode {
 		$is_audio = Media::is_audio( $source );
 		$poster   = is_string( $source['poster'] ?? null ) ? $source['poster'] : '';
 
-		$accent = $config['customize']['appearance']['accent'] ?? ( $config['branding']['accent'] ?? '' );
+		$accent = Helper::sanitize_css_color( $config['customize']['appearance']['accent'] ?? ( $config['branding']['accent'] ?? '' ) );
 		$ratio  = $config['customize']['appearance']['aspectRatio'] ?? '';
 		$rules  = [];
 		if ( $accent ) {

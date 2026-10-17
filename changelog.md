@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.3 - 2026-10-17
+
+- Security: Colour settings (accent and other colour fields) are now strictly validated on save and at render time.
+
 ## 1.7.2 - 2026-10-14
 
 ### Security

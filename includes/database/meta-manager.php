@@ -34,8 +34,9 @@ class MetaManager {
 			TRUEPLAYER_VIDEO_POST_TYPE,
 			'_trueplayer_config',
 			[
-				'type'          => 'string',
-				'single'        => true,
+				'type'              => 'string',
+				'single'            => true,
+				'sanitize_callback' => [ __CLASS__, 'sanitize_json_meta' ],
 				'show_in_rest'  => true,
 				'auth_callback' => function () {
 					return current_user_can( 'edit_posts' );
@@ -66,8 +67,9 @@ class MetaManager {
 			TRUEPLAYER_PRESET_POST_TYPE,
 			'_trueplayer_preset',
 			[
-				'type'          => 'string',
-				'single'        => true,
+				'type'              => 'string',
+				'single'            => true,
+				'sanitize_callback' => [ __CLASS__, 'sanitize_json_meta' ],
 				'show_in_rest'  => true,
 				'auth_callback' => function () {
 					return current_user_can( 'edit_posts' );
@@ -100,5 +102,22 @@ class MetaManager {
 				},
 			]
 		);
+	}
+
+	/**
+	 * Validate style values in a JSON config written through the REST meta API.
+	 *
+	 * @param mixed $value Raw (JSON string) meta value.
+	 * @return mixed
+	 */
+	public static function sanitize_json_meta( $value ) {
+		if ( ! is_string( $value ) || '' === $value ) {
+			return $value;
+		}
+		$data = json_decode( $value, true );
+		if ( ! is_array( $data ) ) {
+			return $value;
+		}
+		return wp_json_encode( \TruePlayer\Helper::sanitize_style_values( $data ) );
 	}
 }
