@@ -1,24 +1,20 @@
 import { useEffect, useRef, useState, useCallback, createPortal } from '@wordpress/element';
 import { createProvider } from './providers';
-import { CoverageTracker } from './coverage';
 import { resolveCustomize, autoplayMode } from './customize';
 import { gaEvent } from './ga';
 import { rest } from '@Utils/rest';
-import { isEmbedSource, isProSource } from '@Utils/source-types';
+import { isEmbedSource } from '@Utils/source-types';
+import { usePlayerExt, useScrubMap, wrapStage } from '@Ext/player';
 import { __ } from '@Utils/translation';
 import { supportsContainerPiP, cloneStylesInto } from './pip';
 import Controls from './components/Controls';
 import InfoPanel from './components/InfoPanel';
-import Quiz from './components/Quiz';
 import Optin from './components/Optin';
 import Overlay from './components/Overlay';
 import Layers from './components/Layers';
-import TimedContent from './components/TimedContent';
-import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
+import { BigPlay, Message, Spinner } from './components/Overlays';
 
 const containerPipSupported = supportsContainerPiP();
-
-const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
 /** Best-effort filename for the download button — from the title, else the URL. */
 function downloadFilename( url, title ) {
@@ -48,16 +44,29 @@ function hexToRgba( hex, alpha ) {
 	return `rgba(${ ( n >> 16 ) & 255 },${ ( n >> 8 ) & 255 },${ n & 255 },${ alpha })`;
 }
 
-// A checkpoint/final quiz has something to show either way: native questions
-// authored here, or a QuizPress quiz picked in place of them.
-function hasQuizContent( quiz ) {
-	if ( ! quiz ) {
-		return false;
+/**
+ * The viewer's remembered quality choice.
+ *
+ * Site-wide rather than per-video (unlike `tp_pos_{id}`, which is a position
+ * and only means anything for one video): a quality preference is about the
+ * connection, and a per-video key would mean the choice never actually sticks.
+ * Both accessors are guarded — localStorage throws outright in some privacy
+ * modes, and losing the preference must never break playback.
+ */
+const QUALITY_KEY = 'tp_quality';
+
+function storedQuality() {
+	try {
+		return window.localStorage.getItem( QUALITY_KEY ) || '';
+	} catch ( e ) {
+		return '';
 	}
-	if ( 'quizpress' === quiz.source ) {
-		return !! quiz.quizpressId;
-	}
-	return !! ( quiz.questions && quiz.questions.length );
+}
+
+function rememberQuality( id ) {
+	try {
+		window.localStorage.setItem( QUALITY_KEY, id );
+	} catch ( e ) {}
 }
 
 export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false, previewCue = null, onPrev = null, onNext = null } ) {
@@ -67,23 +76,11 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const pipWinRef = useRef( null );
 	const containerRef = useRef( null );
 	const providerRef = useRef( null );
-	const coverageRef = useRef( null );
-	const passedCheckpoints = useRef( new Set() );
 	const furthestRef = useRef( 0 ); // furthest naturally-watched second (for no-skip)
 	// Scopes this player's ::cue rule to its own stage — several players can
 	// share a page with different caption styling.
 	const cueUid = useRef( Math.random().toString( 36 ).slice( 2, 9 ) ).current;
 
-	const gating = { ...DEFAULT_GATING, ...( config.gating || {} ) };
-	// Anti-skip is an opt-in restriction the admin sets per video (Questions &
-	// gating tab). DEFAULT_GATING.antiSkip is only a form default for that tab
-	// — a video whose config has never been saved with gating at all must not
-	// silently inherit it just because Pro happens to be active, or every
-	// video's forward-seeking gets capped at "furthest watched" with no admin
-	// choice behind it (this is what looked like "can't drag forward").
-	if ( ! config.gating ) {
-		gating.antiSkip = false;
-	}
 	const source = config.source || {};
 	const branding = config.branding || {};
 	const optinDoneRef = useRef( false );
@@ -93,7 +90,6 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const overlays = allOverlays.filter( ( o ) => ( o.type || 'cta' ) !== 'text' );
 	const textOverlays = allOverlays.filter( ( o ) => o.type === 'text' );
 	const actionBar = config.actionBar || {};
-	// Pro: interactive layers + protection (server strips both when free).
 	const allLayers = Array.isArray( config.layers ) ? config.layers : [];
 	/**
 	 * The email-capture gate, which is an Email form layer in `mode: 'gate'`.
@@ -109,22 +105,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// the layer stack must not draw it a second time as an inline panel.
 	const layers = optinGate ? allLayers.filter( ( l ) => l.id !== optinGate.id ) : allLayers;
 	const optinKey = `tp_optin_${ videoId }_${ optinGate ? optinGate.id : 'none' }`;
-	const watermark = { ...( ( config.protection && config.protection.dynamicWatermark ) || {} ) };
-	if ( preview && watermark.enabled && ! watermark.text ) {
-		watermark.text = 'viewer@example.com'; // live text is resolved server-side
-	}
 	const firedOverlays = useRef( new Set() );
 	const overlayActiveRef = useRef( false );
 	// Text overlay the editor's eye toggle has hidden; syncTextOverlays skips it
 	// until a new cue or a play releases it.
 	const hiddenTextRef = useRef( null );
 	const gaStartedRef = useRef( false );
-
-	// "Player free, intelligence pro": watch-verification, quiz-gating and
-	// opt-in only run with a pro license. In admin preview we simulate them so
-	// the merchant can see how they'll behave.
-	const proActive = !! ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.is_pro_active );
-	const gatingOn = proActive || preview;
 
 	const cz = resolveCustomize( config );
 	const appearance = cz.appearance;
@@ -145,7 +131,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ started, setStarted ] = useState( false );
 	const [ ui, setUi ] = useState( {
 		playing: false, current: 0, duration: 0, buffered: 0,
-		muted: !! ( behavior.muted || ( autoplayOn && apMode !== 'sound' ) ), volume: 1, rate: 1, quality: 'auto', track: 'off',
+		muted: !! ( behavior.muted || ( autoplayOn && apMode !== 'sound' ) ), volume: 1, rate: 1, quality: 'auto', activeQuality: '', track: 'off',
 	} );
 	// Report the media duration up (used by the editor to clamp chapter/overlay times).
 	useEffect( () => {
@@ -154,10 +140,6 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 	}, [ ui.duration, onDurationProp ] );
 
-	const [ gate, setGate ] = useState( null );
-	const [ activeQuiz, setActiveQuiz ] = useState( null );
-	const [ locked, setLocked ] = useState( false );
-	const [ frontier, setFrontier ] = useState( 0 );
 	const [ idle, setIdle ] = useState( false );
 	const [ sticky, setSticky ] = useState( false );
 	const [ pipWin, setPipWin ] = useState( null );
@@ -167,6 +149,41 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const [ infoOpen, setInfoOpen ] = useState( false );
 	// The media's real intrinsic ratio ('1920 / 1080'), once it can be read.
 	const [ nativeRatio, setNativeRatio ] = useState( null );
+	/**
+	 * The quality levels the current provider offers.
+	 *
+	 * React state rather than a call to provider.getQualities() at render time:
+	 * every provider fills its list asynchronously (an HLS manifest parse, a
+	 * Vimeo round-trip, YouTube's first PLAYING state), so the list arrives
+	 * well after mount and nothing else would tell React it had. The menu used
+	 * to read the provider directly and only appeared because `timeupdate`
+	 * happens to re-render constantly — which meant it never appeared at all
+	 * for a viewer who opened the menu before pressing play.
+	 */
+	const [ qualities, setQualities ] = useState( [] );
+
+	// Optional extension (gating, tracking, protection …). Inert by default:
+	// every method resolves to "nothing to do" and every render slot is null.
+	const ext = usePlayerExt( {
+		videoId,
+		config,
+		title,
+		preview,
+		providerRef,
+		furthestRef,
+		current: ui.current,
+		setStarted,
+		// A blocking step the extension showed at the end has been cleared:
+		// carry on with what the end of the video does next.
+		onEndCleared: () => {
+			if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
+				setActiveOptin( true );
+			} else if ( behavior.resetOnEnd && providerRef.current ) {
+				providerRef.current.seek( 0 );
+				setStarted( false );
+			}
+		},
+	} );
 
 	const getCues = useCallback( () => ( providerRef.current?.getCues ? providerRef.current.getCues() : [] ), [] );
 
@@ -184,6 +201,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			muted: p.isMuted(),
 			volume: p.getVolume(),
 			rate: p.getRate(),
+			// Reconciled, not trusted. setQuality() writes this optimistically,
+			// but a provider is free to refuse (YouTube's setPlaybackQuality is
+			// advisory) or to move the level itself under `auto`. Only the
+			// forced selection is sticky, so 'auto' is preserved as a selection
+			// while getActiveQuality() supplies what it resolved to.
+			activeQuality: p.getActiveQuality ? p.getActiveQuality() : '',
 		} ) );
 	}, [] );
 
@@ -193,43 +216,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		setNativeRatio( null );
 
 		( async () => {
-			// Premium sources are pro-only. The server has already stripped the
-			// URL out of the config on a free install (Helper::enforce_pro_limits),
-			// so this is the message rather than the gate — but it has to cover
-			// every premium type or the stripped source reads as a broken video
-			// instead of a locked one. It used to be a hand-kept list that had
-			// already fallen behind by one.
-			if ( isProSource( source.type ) && ! gatingOn ) {
-				setError( __( 'This video source requires TruePlayer Pro.' ) );
-				return;
-			}
-
-			let gateState = null;
-			if ( preview || ! proActive ) {
-				// Free / preview: no server gate — always playable, no tracking.
-				gateState = { canPlay: true, status: 'in_progress', completed: false, resumeAt: 0 };
-			} else {
-				try {
-					gateState = await rest.get( `gate?video=${ videoId }` );
-				} catch ( e ) {
-					gateState = { canPlay: true };
-				}
-			}
+			const gateState = await ext.load();
 			if ( disposed ) {
 				return;
 			}
-			setGate( gateState );
 			if ( gateState.canPlay === false ) {
-				const messages = {
-					login_required: __( 'Please log in to watch this video.' ),
-					enroll_required: __( 'Enroll in this course to watch.' ),
-					purchase_required: __( 'Purchase this course to watch.' ),
-				};
-				setError( gateState.message || messages[ gateState.reason ] || __( 'This video is not available.' ) );
+				setError( gateState.message || __( 'This video is not available.' ) );
 				return;
-			}
-			if ( gateState.locked ) {
-				setLocked( true );
 			}
 
 			let provider;
@@ -242,7 +235,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					autoplay: autoplayOn,
 					autoplaySound: apMode === 'sound',
 				};
-				provider = await createProvider( containerRef.current, source, { behavior: providerBehavior, autoStart } );
+				provider = await createProvider( containerRef.current, source, { behavior: providerBehavior, appearance, autoStart } );
 			} catch ( e ) {
 				// Surface the real cause — a blocked/neutered YouTube IFrame API,
 				// a failed lazy provider chunk and a bad source URL all look
@@ -258,26 +251,6 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			}
 			providerRef.current = provider;
 
-			// Watch-verification tracking runs only with pro (or in preview).
-			let tracker = null;
-			if ( gatingOn ) {
-				tracker = new CoverageTracker( {
-					videoId,
-					preview,
-					getDuration: () => provider.getDuration(),
-					onState: ( st ) => {
-						if ( st && typeof st.percent === 'number' ) {
-							setGate( ( g ) => ( { ...( g || {} ), ...st } ) );
-							if ( st.status === 'in_progress' && locked ) {
-								setLocked( false );
-							}
-						}
-					},
-				} );
-				tracker.start( () => provider.getCurrentTime() );
-				coverageRef.current = tracker;
-			}
-
 			// Resume position: server value wins, else localStorage (savePosition).
 			let resumeAt = gateState.resumeAt || 0;
 			// Not in the editor preview: it shares the `tp_pos_` key with the
@@ -290,12 +263,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				}
 			}
 			if ( resumeAt ) {
-				if ( tracker ) {
-					tracker.frontier = resumeAt;
-				}
 				furthestRef.current = resumeAt;
-				setFrontier( resumeAt );
 			}
+			ext.attach( provider, { ...gateState, resumeAt } );
 
 			// Keyed per gate now that a video can carry more than one form, but the
 			// pre-merge key still counts — someone who already subscribed must not
@@ -378,17 +348,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					if ( t > furthestRef.current && t - furthestRef.current < 6 ) {
 						furthestRef.current = t;
 					}
-					if ( tracker ) {
-						tracker.mark( t );
-						if ( tracker.frontier > frontier ) {
-							setFrontier( tracker.frontier );
-						}
-					}
+					ext.onTime( t );
 					if ( behavior.savePosition && ! preview ) {
 						window.localStorage.setItem( `tp_pos_${ videoId }`, String( Math.floor( t ) ) );
 					}
 					if ( ! maybeOptin( t ) ) {
-						maybeCheckpoint( t );
+						ext.onCue( t );
 					}
 					maybeOverlay( t );
 				}
@@ -407,11 +372,30 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					setStarted( true );
 					sync();
 				} );
-			provider.on( 'pause', () => { if ( tracker ) { tracker.flush(); } sync(); } );
+			provider.on( 'pause', () => { ext.onPause(); sync(); } );
 			provider.on( 'playing', sync );
 			provider.on( 'waiting', sync );
 			provider.on( 'ratechange', sync );
 			provider.on( 'volumechange', sync );
+			/**
+			 * Quality levels arrived (or the active one moved).
+			 *
+			 * Also the point where a remembered preference is applied: the
+			 * levels do not exist until now, so there is nothing to match
+			 * against any earlier. Re-applied on every list change because a
+			 * provider can replace its list mid-playback (YouTube repopulates
+			 * as the video buffers).
+			 */
+			provider.on( 'qualitychange', ( list ) => {
+				const next = list || [];
+				setQualities( next );
+				const want = storedQuality();
+				if ( want && 'auto' !== want && next.some( ( q ) => q.id === want ) ) {
+					provider.setQuality( want );
+					setUi( ( s ) => ( { ...s, quality: want } ) );
+				}
+				sync();
+			} );
 			provider.on( 'ended', onEnded );
 			// Providers that know why they failed say so — YouTube's embed-disabled
 			// case is the one an author most needs named, since the video plays
@@ -419,30 +403,25 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			provider.on( 'error', ( detail ) => setError(
 				( detail && detail.message ) || __( 'Playback error.' )
 			) );
+
+			// A provider whose list was already filled before the subscription
+			// above existed (a cached manifest parses fast) would otherwise
+			// never announce it — nothing re-emits on subscribe.
+			const levels = provider.getQualities ? provider.getQualities() : [];
+			if ( levels.length ) {
+				setQualities( levels );
+			}
 		} )();
 
 		return () => {
 			disposed = true;
-			if ( coverageRef.current ) {
-				coverageRef.current.flush( true );
-				coverageRef.current.stop();
-			}
+			ext.dispose();
 			if ( providerRef.current ) {
 				providerRef.current.destroy();
 			}
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [ videoId ] );
-
-	useEffect( () => {
-		const onHide = () => coverageRef.current && coverageRef.current.flush( true );
-		document.addEventListener( 'visibilitychange', onHide );
-		window.addEventListener( 'pagehide', onHide );
-		return () => {
-			document.removeEventListener( 'visibilitychange', onHide );
-			window.removeEventListener( 'pagehide', onHide );
-		};
-	}, [] );
 
 	// Sticky-on-scroll: pin the player to a corner when scrolled out of view
 	// while playing. Watches a fixed sentinel that stays put in the document
@@ -476,7 +455,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	}, [ behavior.sticky, ui.playing ] );
 
 	const maybeOptin = ( t ) => {
-		if ( activeOptin || activeQuiz || optinDoneRef.current ) {
+		if ( activeOptin || ext.blocking || optinDoneRef.current ) {
 			return false;
 		}
 		if ( optinGate && 'time' === ( optinGate.trigger || 'time' ) && t >= ( optinGate.start || 0 ) ) {
@@ -485,25 +464,6 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			return true;
 		}
 		return false;
-	};
-
-	const maybeCheckpoint = ( t ) => {
-		if ( activeQuiz || activeOptin ) {
-			return;
-		}
-		for ( const cp of gating.checkpoints || [] ) {
-			if ( ! hasQuizContent( cp ) ) {
-				continue;
-			}
-			if ( passedCheckpoints.current.has( cp.id ) ) {
-				continue;
-			}
-			if ( t >= cp.at ) {
-				providerRef.current.pause();
-				setActiveQuiz( { gateId: `checkpoint:${ cp.id }`, quiz: cp, title: cp.title || __( 'Checkpoint question' ) } );
-				break;
-			}
-		}
 	};
 
 	// Time/pause-triggered marketing overlays. Deduped via a ref so a fired
@@ -665,30 +625,11 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	};
 
 	const onEnded = async () => {
-		const finalQuiz = gatingOn && hasQuizContent( gating.finalQuiz );
-		if ( coverageRef.current ) {
-			// The last stretch of coverage has to reach the server BEFORE the
-			// quiz is graded against it. A viewer who was locked out and has
-			// just re-watched earns their fresh attempts on this very flush —
-			// and the beacon path is fire-and-forget, so grading would race it
-			// and read the old, exhausted attempt count, locking them again on
-			// their first mistake. Guaranteed to lose, not merely likely, when
-			// the threshold is 100% (must-watch strict): the unlock can only
-			// happen on the final second.
-			//
-			// Only the quiz waits. Everything else keeps its old timing, and
-			// unload still uses the beacon (see the flush() call sites above).
-			if ( finalQuiz ) {
-				await coverageRef.current.flush( true, false );
-			} else {
-				coverageRef.current.flush( true );
-			}
-		}
+		const extGated = await ext.onEnded();
 		gaEvent( 'video_complete', { video_id: videoId, video_title: title } );
-		let gated = false;
-		if ( finalQuiz ) {
-			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || __( 'Final quiz' ) } );
-			gated = true;
+		let gated = extGated;
+		if ( gated ) {
+			// The extension claimed the end; it calls onEndCleared when done.
 		} else if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
 			setActiveOptin( true );
 			gated = true;
@@ -714,9 +655,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		// author who wanted the next item would have left Loop off.
 		if ( ! gated && behavior.loop ) {
 			providerRef.current.seek( 0 );
-			if ( coverageRef.current ) {
-				coverageRef.current.newSession();
-			}
+			ext.onLoop();
 			providerRef.current.play();
 			return;
 		}
@@ -739,14 +678,25 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 	};
 
-	// Cap seeking to the furthest point watched when "no skip" (free behavior)
-	// or pro anti-skip is on. Never in preview, and released once completed.
-	const noSkipActive = ! preview && ! ( gate && gate.completed ) &&
-		( behavior.noSkip || ( gatingOn && gating.antiSkip ) );
-	const watchedTo = Math.max( furthestRef.current, frontier );
-	const seekable = noSkipActive
-		? Math.min( ui.duration, Math.max( watchedTo + 1.5, ui.current + 0.5 ) )
-		: ui.duration;
+	// Optional display mapping for the scrubber's fill ({ ratio, className,
+	// hideClock, locksSeek }), or null for the ordinary bar.
+	const scrubMap = useScrubMap( appearance, ui.duration, source.mediaType === 'audio', preview );
+	const scrubLocks = !! ( scrubMap && scrubMap.locksSeek );
+
+	// What the timeline lock actually is, everywhere below.
+	const seekLocked = !! behavior.disableSeek || scrubLocks;
+
+	// Cap seeking to the furthest point watched when "no skip" is on (never in
+	// preview, released once the extension reports the video completed), and to
+	// any limit an extension sets.
+	const limits = [];
+	if ( ! preview && ! ext.completed && behavior.noSkip ) {
+		limits.push( Math.max( furthestRef.current + 1.5, ui.current + 0.5 ) );
+	}
+	if ( typeof ext.seekLimit === 'number' ) {
+		limits.push( ext.seekLimit );
+	}
+	const seekable = limits.length ? Math.min( ui.duration, ...limits ) : ui.duration;
 
 	useEffect( () => {
 		if ( ! behavior.hideControls ) {
@@ -786,7 +736,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			return;
 		}
 		p.seek( t );
-		coverageRef.current && coverageRef.current.resync( t );
+		ext.onSeek( t );
 	};
 	const skip = ( delta ) => {
 		const p = providerRef.current;
@@ -795,7 +745,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 		// "Disable the timeline entirely" has to mean the keyboard and the
 		// rewind/forward buttons too, not just the scrubber — both land here.
-		if ( behavior.disableSeek ) {
+		if ( seekLocked ) {
 			return;
 		}
 		let t = p.getCurrentTime() + delta;
@@ -805,7 +755,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const setVolume = ( v ) => { providerRef.current.setVolume( v ); providerRef.current.setMuted( v === 0 ); };
 	const toggleMute = () => providerRef.current.setMuted( ! providerRef.current.isMuted() );
 	const setRate = ( r ) => providerRef.current.setRate( r );
-	const setQuality = ( q ) => { providerRef.current.setQuality( q ); setUi( ( s ) => ( { ...s, quality: q } ) ); };
+	const setQuality = ( q ) => {
+		providerRef.current.setQuality( q );
+		rememberQuality( q );
+		// Optimistic, then reconciled by sync() from getActiveQuality() — a
+		// provider may refuse or override the request.
+		setUi( ( s ) => ( { ...s, quality: q } ) );
+	};
 	const setTrack = ( id ) => { providerRef.current.setTextTrack( id === 'off' ? -1 : id ); setUi( ( s ) => ( { ...s, track: id } ) ); };
 	const closePiP = () => {
 		if ( pipWinRef.current ) {
@@ -847,6 +803,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		// Fallback: native per-<video>/per-embed PiP (html5, Vimeo only — the
 		// button is hidden entirely for sources with neither this nor the
 		// fallback available, e.g. YouTube on a non-Chromium browser).
+		//
+		// Not under a locking scrub map: native PiP hands the raw <video> to the
+		// browser, which draws its own scrubber from the real duration.
+		if ( scrubLocks ) {
+			return;
+		}
 		const p = providerRef.current;
 		if ( ! p || ! p.requestPiP ) {
 			return;
@@ -911,7 +873,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	};
 
 	const onKeyDown = ( e ) => {
-		if ( activeQuiz ) {
+		if ( ext.blocking ) {
 			return;
 		}
 		const p = providerRef.current;
@@ -932,38 +894,6 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			case 'f': fullscreen(); break;
 			default: break;
 		}
-	};
-
-	const onQuizPass = () => {
-		const q = activeQuiz;
-		setActiveQuiz( null );
-		if ( q.gateId.startsWith( 'checkpoint:' ) ) {
-			passedCheckpoints.current.add( q.gateId.split( ':' )[ 1 ] );
-			providerRef.current.play();
-		} else {
-			setGate( ( g ) => ( { ...( g || {} ), completed: true } ) );
-			if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
-				setActiveOptin( true );
-			} else if ( behavior.resetOnEnd ) {
-				providerRef.current.seek( 0 );
-				setStarted( false );
-			}
-		}
-	};
-	const onQuizFail = () => {};
-	const onQuizLocked = () => {
-		setActiveQuiz( null );
-		setLocked( true );
-		setGate( ( g ) => ( { ...( g || {} ), locked: true, requireRewatch: true } ) );
-	};
-	const rewatch = () => {
-		setLocked( false );
-		passedCheckpoints.current = new Set();
-		if ( coverageRef.current ) {
-			coverageRef.current.newSession();
-		}
-		seek( 0 );
-		providerRef.current.play();
 	};
 
 	const stageStyle = {
@@ -1046,7 +976,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// Container PiP works regardless of provider (it just floats the whole
 	// stage), so it can make the button available even where the provider has
 	// no native fallback of its own (YouTube).
-	const pipAvailable = containerPipSupported || !! providerRef.current?.capabilities?.pip;
+	// Container PiP keeps our controls and is safe always;
+	// the native fallback exposes the browser's real scrubber, so under the
+	// a locking scrub map it is not an option and the button goes away rather
+	// than sitting there doing nothing.
+	const pipAvailable = containerPipSupported ||
+		( ! scrubLocks && !! providerRef.current?.capabilities?.pip );
 
 	const stage = (
 		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
@@ -1062,7 +997,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					} }
 				>×</button>
 			) }
-			<div ref={ containerRef } className="tp-media-container" onClick={ () => ready && ! activeQuiz && playPause() } />
+			<div ref={ containerRef } className="tp-media-container" onClick={ () => ready && ! ext.blocking && playPause() } />
 
 			{ /* Audio has no picture — show a compact "now playing" tile (album art
 			     if provided, otherwise a note glyph) so the bar reads as a player. */ }
@@ -1080,7 +1015,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			     events so their in-frame links — title, "Watch on YouTube", channel,
 			     end-screen suggestions — can't be clicked through to leave the site.
 			     Clicking still toggles play, exactly like the native players. */ }
-			{ isEmbedProvider && ! activeQuiz && ! locked && ! error && (
+			{ isEmbedProvider && ! ext.blocking && ! error && (
 				// eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
 				<div className="tp-shield" aria-hidden="true" onClick={ () => ready && playPause() } />
 			) }
@@ -1126,8 +1061,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					</div>
 				) ) }
 
-			{ /* Interactive layers (pro). */ }
-			{ layers.length > 0 && ! activeQuiz && ! activeOptin && ! locked && (
+			{ /* Layers. */ }
+			{ layers.length > 0 && ! ext.blocking && ! activeOptin && (
 				<Layers
 					layers={ layers }
 					current={ ui.current }
@@ -1141,16 +1076,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				/>
 			) }
 
-			{ /* Dynamic watermark (pro): identity burned over the picture. */ }
-			{ watermark.enabled && watermark.text && (
-				<div
-					className={ `tp-watermark${ watermark.drift !== false ? ' is-drifting' : '' }` }
-					style={ { opacity: watermark.opacity ?? 0.35 } }
-					aria-hidden="true"
-				>
-					{ watermark.text }
-				</div>
-			) }
+			{ ext.stage }
 
 			{ /* Persistent action bar. */ }
 			{ actionBar.enabled && ( actionBar.text || actionBar.buttonLabel ) && (
@@ -1170,7 +1096,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			{ ! ready && ! error && <Spinner /> }
 			{ error && <Message>{ error }</Message> }
 
-			{ ready && ! ui.playing && ! locked && ! activeQuiz && ! activeOptin && ! error && appearance.bigPlay && source.mediaType !== 'audio' && <BigPlay onPlay={ playPause } /> }
+			{ ready && ! ui.playing && ! ext.blocking && ! activeOptin && ! error && appearance.bigPlay && source.mediaType !== 'audio' && <BigPlay onPlay={ playPause } /> }
 
 			{ activeOptin && optinGate && (
 				<Optin
@@ -1182,7 +1108,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				/>
 			) }
 
-			{ activeOverlay && ! activeQuiz && ! activeOptin && ! locked && (
+			{ activeOverlay && ! ext.blocking && ! activeOptin && (
 				<Overlay
 					overlay={ activeOverlay }
 					onClose={ closeOverlay }
@@ -1190,22 +1116,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				/>
 			) }
 
-			{ locked && ! activeQuiz && (
-				<LockScreen requireRewatch={ gate && gate.requireRewatch } onRewatch={ rewatch } />
-			) }
-
-			{ activeQuiz && (
-				<Quiz
-					videoId={ videoId }
-					gateId={ activeQuiz.gateId }
-					quiz={ activeQuiz.quiz }
-					title={ activeQuiz.title }
-					preview={ preview }
-					onPass={ onQuizPass }
-					onFail={ onQuizFail }
-					onLocked={ onQuizLocked }
-				/>
-			) }
+			{ ext.overlay }
 
 			{ ready && ! error && (
 				<Controls
@@ -1216,8 +1127,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					capabilities={ { ...providerRef.current?.capabilities, pip: pipAvailable } }
 					controls={ cz.controls }
 					speeds={ cz.speeds }
+					qualities={ qualities }
 					skipSeconds={ cz.skipSeconds }
-					scrubDisabled={ !! behavior.disableSeek }
+					scrubDisabled={ seekLocked }
 					hidePiP={ sticky && ! pipWin }
 					onPlayPause={ playPause }
 					onSeek={ seek }
@@ -1242,11 +1154,16 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					onNext={ onNext }
 					/* The minimal audio bar IS its waveform, so chapters must not
 					   replace it there the way they do in the other layouts. */
-					scrubberStyle={ source.mediaType === 'audio' && ( appearance.audioLayout || 'compact' ) === 'minimal' ? 'waveform' : undefined }
+					scrubberStyle={
+						source.mediaType === 'audio' && ( appearance.audioLayout || 'compact' ) === 'minimal' ? 'waveform'
+							: 'waveform' === appearance.seekBarStyle ? 'waveform'
+								: undefined
+					}
+					scrubMap={ scrubMap }
 				/>
 			) }
 
-			{ infoOpen && ready && ! error && ! activeQuiz && ! locked && ! activeOptin && (
+			{ infoOpen && ready && ! error && ! ext.blocking && ! activeOptin && (
 				<InfoPanel
 					chapters={ chapterList }
 					getCues={ getCues }
@@ -1279,37 +1196,14 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		</div>
 	);
 
-	// Ambient skin: a blurred, oversized copy of the poster glows behind the
-	// stage (the stage clips its own children, so the glow needs a wrapper).
-	// The wrapper renders unconditionally for the skin — toggling it (e.g. on
-	// sticky) would remount the stage and destroy the provider's media element.
-	let content;
-	if ( skin === 'ambient' && source.mediaType !== 'audio' ) {
-		// Both children stay mounted (hidden via style) — removing the glow
-		// would shift the stage's reconciliation slot and recreate its DOM.
-		content = (
-			<div className="tp-ambient-wrap">
-				<div
-					className="tp-ambient-glow"
-					style={ {
-						backgroundImage: source.poster ? `url("${ source.poster }")` : undefined,
-						display: source.poster && ! sticky ? undefined : 'none',
-					} }
-					aria-hidden="true"
-				/>
-				{ stageInSlot }
-			</div>
-		);
-	} else {
-		content = stageInSlot;
-	}
+	// An extension may wrap the stage (it must keep `stageInSlot` mounted in a
+	// stable position, or the provider's media element is recreated).
+	const content = wrapStage( stageInSlot, { skin, source, sticky } );
 
 	return (
 		<>
 			{ content }
-			{ /* Timed content region (pro): a block below the player that swaps
-			     with the video timeline. Stays in flow under the stage. */ }
-			{ gatingOn && <TimedContent config={ config } current={ ui.current } /> }
+			{ ext.below }
 			{ /* The stage (video/iframe + controls) itself lives in the PiP
 			     window once open — a portal, not a copy, so it's the exact same
 			     live provider/DOM node, not a re-mounted one. */ }

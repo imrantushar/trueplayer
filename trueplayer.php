@@ -2,9 +2,9 @@
 
 /**
  * Plugin Name: TruePlayer
- * Plugin URI: https://kodezen.com/trueplayer
+ * Plugin URI: https://true-player.net/
  * Description: A watch-verified, quiz-gated video & audio player for WordPress — knows whether a viewer actually watched, locks the video on quiz failure, and fires webhooks for automation.
- * Version: 1.5.0
+ * Version: 1.7.3
  * Author: Kodezen
  * Author URI: https://kodezen.com
  * License: GPLv2 or later
@@ -42,16 +42,19 @@ final class TruePlayer {
 	}
 
 	public function define_constants() {
-		define( 'TRUEPLAYER_VERSION', '1.5.0' );
-		define( 'TRUEPLAYER_DB_VERSION', '5' );
+		define( 'TRUEPLAYER_VERSION', '1.7.3' );
+		define( 'TRUEPLAYER_DB_VERSION', '6' );
 		define( 'TRUEPLAYER_SETTINGS_NAME', 'trueplayer_settings' );
 		define( 'TRUEPLAYER_PLUGIN_FILE', __FILE__ );
 		define( 'TRUEPLAYER_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 		define( 'TRUEPLAYER_PLUGIN_SLUG', 'trueplayer' );
 		define( 'TRUEPLAYER_DB_PREFIX', 'tp' );
 		define( 'TRUEPLAYER_PREFIX', TRUEPLAYER_DB_PREFIX );
-		define( 'TRUEPLAYER_VIDEO_POST_TYPE', TRUEPLAYER_DB_PREFIX . '_video' );
-		define( 'TRUEPLAYER_PRESET_POST_TYPE', TRUEPLAYER_DB_PREFIX . '_preset' );
+		// Public identifiers that collide with other plugins when they're only 2–3
+		// characters. The DB-table prefix stays short to keep index-key budgets
+		// usable; registered post types/taxonomies use the full plugin slug.
+		define( 'TRUEPLAYER_VIDEO_POST_TYPE', 'truepl_video' );
+		define( 'TRUEPLAYER_PRESET_POST_TYPE', 'truepl_preset' );
 		define( 'TRUEPLAYER_PLUGIN_ROOT_URI', plugins_url( '/', __FILE__ ) );
 		define( 'TRUEPLAYER_ROOT_DIR_PATH', plugin_dir_path( __FILE__ ) );
 		define( 'TRUEPLAYER_INCLUDES_DIR_PATH', TRUEPLAYER_ROOT_DIR_PATH . 'includes/' );
@@ -62,7 +65,7 @@ final class TruePlayer {
 
 	/**
 	 * When WP has loaded all plugins, trigger the `trueplayer_loaded` hook so
-	 * add-ons (trueplayer-pro) that registered their loader filter at plugin
+	 * add-ons that registered their loader filter at plugin
 	 * construction time are in place before our addon loader runs.
 	 */
 	public function on_plugins_loaded() {
@@ -86,15 +89,11 @@ final class TruePlayer {
 		TruePlayer\Api::init();
 		TruePlayer\Database::init();
 		TruePlayer\Shortcode::init();
-		TruePlayer\InstantPage::init();
 		TruePlayer\Playlist::init();
 		TruePlayer\Block::init();
 		TruePlayer\Events::init();
-		TruePlayer\Webhook\Dispatcher::init();
 		TruePlayer\Integrations::init();
-		TruePlayer\WhiteLabel::init();
 		TruePlayer\Migrator::init();
-		TruePlayer\Services\Retention::init();
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			\WP_CLI::add_command( 'trueplayer', 'TruePlayer\\CLI' );
@@ -146,12 +145,6 @@ final class TruePlayer {
  */
 function trueplayer_start() {
 	return TruePlayer::init();
-}
-
-if ( ! function_exists( 'trueplayer_is_pro_active' ) ) {
-	function trueplayer_is_pro_active() {
-		return defined( 'TRUEPLAYER_PRO_VERSION' ) || did_action( 'trueplayer_pro_init' ) > 0;
-	}
 }
 
 // Plugin Start.

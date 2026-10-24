@@ -28,24 +28,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Integrations {
 
-	/**
-	 * Email capture is a free feature, so its providers have to boot on a free
-	 * install too — otherwise the only thing a free site could do with a capture
-	 * form is fail to deliver it. CRM integrations stay behind Pro; the built-in
-	 * notification provider does not depend on one.
-	 */
 	public static function init() {
-		$pro = \TruePlayer\Pro::active();
 		foreach ( self::available() as $integration ) {
-			if ( $pro || self::is_free_provider( $integration->id() ) ) {
-				$integration->register();
-			}
+			$integration->register();
 		}
-	}
-
-	/** Providers a free install may use. */
-	public static function is_free_provider( string $id ): bool {
-		return in_array( $id, (array) apply_filters( 'trueplayer/integrations/free', [ 'wp_mail' ] ), true );
 	}
 
 	/**
@@ -56,8 +42,6 @@ class Integrations {
 			// First, so it is the obvious default in the provider picker: it is
 			// the only one that needs nothing installed.
 			new Integrations\WpMail(),
-			new Integrations\GemCrm(),
-			new Integrations\Mailchimp(),
 		];
 		return apply_filters( 'trueplayer/integrations/register', $built_in );
 	}

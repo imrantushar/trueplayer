@@ -70,13 +70,13 @@ class Shortcode {
 		self::maybe_enqueue_quizpress( $config );
 		$json   = wp_json_encode( [ 'videoId' => $video_id, 'title' => get_the_title( $video_id ), 'config' => $config ] );
 		$label  = '' !== trim( (string) $content ) ? do_shortcode( $content ) : ( $atts['label'] ?: __( 'Watch video', 'trueplayer' ) );
-		$accent = $config['customize']['appearance']['accent'] ?? '';
+		$accent = Helper::sanitize_css_color( $config['customize']['appearance']['accent'] ?? '' );
 		$style  = $accent ? sprintf( ' style="--tp-accent:%s"', esc_attr( $accent ) ) : '';
 
 		return sprintf(
-			'<span class="trueplayer-popup" data-trueplayer-popup data-video-id="%1$d"%4$s><script type="application/json" class="trueplayer-popup-config">%2$s</script><button type="button" class="trueplayer-popup-trigger"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>%3$s</button></span>',
+			'<span class="trueplayer-popup" data-trueplayer-popup data-video-id="%1$d"%4$s data-tp-config="%2$s"><button type="button" class="trueplayer-popup-trigger"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>%3$s</button></span>',
 			$video_id,
-			$json,
+			esc_attr( $json ),
 			wp_kses_post( $label ),
 			$style
 		);
@@ -95,8 +95,7 @@ class Shortcode {
 		}
 
 		// Engine router. Core renders the native player; another engine can claim
-		// an item by returning markup from this filter (the interactive addon
-		// does, for items authored as H5P). Nothing registered means nothing
+		// an item by returning markup from this filter. Nothing registered means nothing
 		// changes — core carries no knowledge of the other engines.
 		$engine = apply_filters( 'trueplayer/render_engine', null, $video_id );
 		if ( null !== $engine ) {
@@ -146,10 +145,11 @@ class Shortcode {
 			$attrs .= ' data-tp-autoplay="1"';
 		}
 
-		return self::video_schema( $video_id, $config ) . self::custom_css( $video_id, $config ) . sprintf(
-			'<div class="trueplayer-mount tp-v%1$d" data-trueplayer data-video-id="%1$d"%4$s><script type="application/json" class="trueplayer-config">%2$s</script>%3$s</div>%5$s',
+		self::video_schema( $video_id, $config );
+		return sprintf(
+			'<div class="trueplayer-mount tp-v%1$d" data-trueplayer data-video-id="%1$d"%4$s data-tp-config="%2$s">%3$s</div>%5$s',
 			$video_id,
-			$json, // already JSON-encoded; rendered inside a JSON script tag.
+			esc_attr( $json ),
 			$use_facade ? self::render_facade( $config ) : '',
 			$attrs,
 			$description
@@ -158,8 +158,7 @@ class Shortcode {
 
 	/**
 	 * The full frontend config pipeline, shared by the inline and popup embeds:
-	 * raw meta → preset merge → free clamp → pro layer/watermark/private-source
-	 * preparation → answer-key strip.
+	 * raw meta → preset merge → `trueplayer/player/config` → answer-key strip.
 	 */
 	public static function resolved_config( int $video_id ): array {
 		// Resolve the media type FIRST. Everything downstream branches on it —
@@ -171,105 +170,18 @@ class Shortcode {
 		$config = Helper::apply_preset( $config );
 		$config = Helper::with_derived_poster( $config );
 		$config = Helper::apply_global_branding( $config );
-		$config = Helper::enforce_pro_limits( $config );
-		if ( Pro::active() ) {
-			$config = self::prepare_layers( $config );
-			$config = self::prepare_timed_content( $config );
-			$config = self::prepare_watermark( $config );
-
-			/**
-			 * Last chance to turn a stored identifier into a playable URL.
-			 *
-			 * Some sources are stored as a provider's own id rather than a URL
-			 * — a Gumlet video saved mid-encode has an asset id and nothing to
-			 * play yet — and only the addon that talks to that provider can
-			 * resolve one. Runs before signing, since there is nothing to sign
-			 * until a URL exists.
-			 *
-			 * @param array $config   The resolved config.
-			 * @param int   $video_id The video being rendered.
-			 */
-			$config = (array) apply_filters( 'trueplayer/source/resolve', $config, $video_id );
-
-			$config = PrivateVideo::prepare_source( $config, $video_id );
-		}
+		/**
+		 * The resolved config, before answer keys are stripped. Add-ons that
+		 * prepare their own config keys for the browser hook in here.
+		 *
+		 * @param array $config   The resolved config.
+		 * @param int   $video_id The video being rendered.
+		 */
+		$config = (array) apply_filters( 'trueplayer/player/config', $config, $video_id );
+		// Re-validate at render too, so values stored before validation existed
+		// (or written by another path) can never reach a style attribute.
+		$config = Helper::sanitize_style_values( $config );
 		return self::strip_answer_keys( $config );
-	}
-
-	/**
-	 * Shortcode layers can't run PHP in the browser — render them now and ship
-	 * the HTML. Admin-authored content (manage_options), so shortcodes are
-	 * trusted the same way post content is.
-	 */
-	private static function prepare_layers( array $config ): array {
-		if ( empty( $config['layers'] ) || ! is_array( $config['layers'] ) ) {
-			return $config;
-		}
-		foreach ( $config['layers'] as &$layer ) {
-			if ( ( $layer['type'] ?? '' ) === 'shortcode' && ! empty( $layer['shortcode'] ) ) {
-				$layer['html'] = do_shortcode( wp_kses_post( (string) $layer['shortcode'] ) );
-				unset( $layer['shortcode'] );
-			}
-		}
-		unset( $layer );
-		return $config;
-	}
-
-	/**
-	 * Pre-render timed-content segments server-side: shortcodes resolved, HTML
-	 * sanitized, exposed as `html` so the client renders trusted markup and
-	 * never runs shortcodes itself. The raw `content` is dropped from output.
-	 */
-	private static function prepare_timed_content( array $config ): array {
-		if ( empty( $config['timedContent']['items'] ) || ! is_array( $config['timedContent']['items'] ) ) {
-			return $config;
-		}
-		foreach ( $config['timedContent']['items'] as &$item ) {
-			$content      = (string) ( $item['content'] ?? '' );
-			$item['html'] = '' !== $content ? do_shortcode( wp_kses_post( $content ) ) : '';
-			unset( $item['content'] );
-		}
-		unset( $item );
-		return $config;
-	}
-
-	/**
-	 * Resolve the dynamic-watermark display text server-side (the browser never
-	 * decides what identity to burn in).
-	 */
-	private static function prepare_watermark( array $config ): array {
-		$wm = $config['protection']['dynamicWatermark'] ?? null;
-		if ( empty( $wm['enabled'] ) ) {
-			return $config;
-		}
-		$fields = is_array( $wm['fields'] ?? null ) ? $wm['fields'] : [ 'email' ];
-		$parts  = [];
-		$user   = wp_get_current_user();
-		foreach ( $fields as $f ) {
-			if ( 'email' === $f && $user && $user->exists() ) {
-				$parts[] = $user->user_email;
-			} elseif ( 'name' === $f && $user && $user->exists() ) {
-				$parts[] = $user->display_name;
-			} elseif ( 'ip' === $f && ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
-				$parts[] = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
-			}
-		}
-		$config['protection']['dynamicWatermark']['text'] = implode( ' · ', array_filter( $parts ) );
-		return $config;
-	}
-
-	/**
-	 * Per-video custom CSS (`customize.css`, preset-mergeable). Tag content is
-	 * neutralized so the style block can't be broken out of. The mount carries
-	 * a `tp-v{ID}` class for scoping.
-	 */
-	private static function custom_css( int $video_id, array $config ): string {
-		$css = $config['customize']['css'] ?? '';
-		if ( ! is_string( $css ) || '' === trim( $css ) ) {
-			return '';
-		}
-		$css = wp_strip_all_tags( $css );
-		return sprintf( '<style id="tp-custom-css-%d">%s</style>', $video_id, $css );
 	}
 
 	/**
@@ -304,23 +216,16 @@ class Shortcode {
 		if ( empty( $schema ) || ! is_array( $schema ) ) {
 			return '';
 		}
-		/**
-		 * JSON_HEX_TAG is load-bearing, not tidiness.
-		 *
-		 * json_encode does not escape `<` or `>`, and JSON_UNESCAPED_SLASHES
-		 * stops `/` being escaped too — so any schema string containing the
-		 * literal text `</script>` closed this block early and everything after
-		 * it was parsed as HTML. `name` is the raw post title, and the
-		 * `trueplayer/seo_schema` filter lets an addon put anything it likes in
-		 * here, so "no input path can produce that" is not a property this
-		 * function can rely on. HEX_TAG encodes both angle brackets as \u003C /
-		 * \u003E, which is still valid JSON-LD and cannot break out; the
-		 * slashes stay unescaped so URLs read normally.
-		 */
-		return sprintf(
-			'<script type="application/ld+json">%s</script>',
-			wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG )
+		// Printed through core's inline-script helper in the footer. JSON_HEX_TAG
+		// keeps any `</script>` inside a string from closing the block early.
+		$json = wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG );
+		add_action(
+			'wp_footer',
+			static function () use ( $json ) {
+				wp_print_inline_script_tag( $json, [ 'type' => 'application/ld+json' ] );
+			}
 		);
+		return '';
 	}
 
 	/**
@@ -339,7 +244,7 @@ class Shortcode {
 		$is_audio = Media::is_audio( $source );
 		$poster   = is_string( $source['poster'] ?? null ) ? $source['poster'] : '';
 
-		$accent = $config['customize']['appearance']['accent'] ?? ( $config['branding']['accent'] ?? '' );
+		$accent = Helper::sanitize_css_color( $config['customize']['appearance']['accent'] ?? ( $config['branding']['accent'] ?? '' ) );
 		$ratio  = $config['customize']['appearance']['aspectRatio'] ?? '';
 		$rules  = [];
 		if ( $accent ) {

@@ -92,7 +92,7 @@ class Helper {
 	 * @return bool|int
 	 */
 	public static function update_json_meta( $post_id, $key, $data ) {
-		return update_post_meta( (int) $post_id, $key, wp_slash( wp_json_encode( $data ) ) );
+		return update_post_meta( (int) $post_id, $key, wp_slash( wp_json_encode( self::sanitize_style_values( $data ) ) ) );
 	}
 
 	/**
@@ -105,7 +105,7 @@ class Helper {
 			$config = [];
 		}
 		/**
-		 * Central seam: pro + Gem integrations mutate the resolved player
+		 * Central seam: add-ons and integrations mutate the resolved player
 		 * config (inject layers, override gating, etc.) without touching core.
 		 */
 		return apply_filters( 'trueplayer/config', $config, (int) $video_id );
@@ -168,85 +168,6 @@ class Helper {
 			$config['branding'] = array_merge( $preset['branding'], $over );
 		}
 		return $config;
-	}
-
-	/**
-	 * Clamp pro-only config to free-safe values when pro isn't active. Runs at
-	 * frontend render, after apply_preset, so a preset can't smuggle premium
-	 * options past the gate either.
-	 */
-	public static function enforce_pro_limits( array $config ): array {
-		if ( Pro::active() ) {
-			return $config;
-		}
-		$skin = $config['customize']['appearance']['skin'] ?? '';
-		if ( $skin && Pro::is_premium_skin( $skin ) ) {
-			$config['customize']['appearance']['skin'] = 'default';
-		}
-
-		// The audio half of the same gate. `compact` is the free fallback for the
-		// reason given above Pro::PREMIUM_AUDIO_LAYOUTS: it is what audio has
-		// always rendered as, so a free install lands on the ordinary bar instead
-		// of also losing its cover art and time readout.
-		$audio_layout = $config['customize']['appearance']['audioLayout'] ?? '';
-		if ( $audio_layout && Pro::is_premium_audio_layout( $audio_layout ) ) {
-			$config['customize']['appearance']['audioLayout'] = 'compact';
-		}
-
-		/**
-		 * A premium source keeps its type and loses its location.
-		 *
-		 * The client has always refused to play these (see Player.jsx), but the
-		 * config it refused on still carried the real media URL — a signed Bunny
-		 * manifest included — inline in the page, where anyone could read it out
-		 * of the source. Refusing in the browser is a courtesy; this is the gate.
-		 *
-		 * The type survives on purpose: the player needs it to say *why* it
-		 * won't play. Dropping the source entirely would render as an ordinary
-		 * "no video here" instead of an upgrade prompt.
-		 */
-		$source_type = $config['source']['type'] ?? '';
-		if ( $source_type && Pro::is_premium_source( $source_type ) ) {
-			$config['source'] = [ 'type' => $source_type, 'locked' => true ];
-		}
-
-		// Pro-only config never reaches the free frontend.
-		unset( $config['protection'], $config['timedContent'] );
-		$config['layers'] = self::free_layers( $config['layers'] ?? [] );
-		if ( ! $config['layers'] ) {
-			unset( $config['layers'] );
-		}
-		return $config;
-	}
-
-	/**
-	 * The layers a free install may render.
-	 *
-	 * Email capture is free, and it lives in the layer stack — so the stack can
-	 * no longer be dropped wholesale. Form layers survive; hotspots, banners and
-	 * shortcode layers stay Pro as before.
-	 *
-	 * Display rules are Pro in their own right, so they are stripped from the
-	 * layers that do survive. Stripping the rule rather than the layer is
-	 * deliberate: a rule that cannot be evaluated must fail open, or a free
-	 * install would silently stop showing a capture form it is entitled to.
-	 *
-	 * @param mixed $layers Raw `config.layers`.
-	 * @return array Layers safe to render without Pro.
-	 */
-	private static function free_layers( $layers ): array {
-		if ( ! is_array( $layers ) ) {
-			return [];
-		}
-		$kept = [];
-		foreach ( $layers as $layer ) {
-			if ( ! is_array( $layer ) || 'form' !== ( $layer['type'] ?? '' ) ) {
-				continue;
-			}
-			unset( $layer['conditions'] );
-			$kept[] = $layer;
-		}
-		return array_values( $kept );
 	}
 
 	/** Extract an 11-char YouTube id from a watch/share/embed/shorts URL. */
@@ -316,7 +237,7 @@ class Helper {
 		if ( '' === $vid ) {
 			return '';
 		}
-		$key    = 'tp_vimeo_poster_' . $vid;
+		$key    = 'trueplayer_vimeo_poster_' . $vid;
 		$cached = get_transient( $key );
 		if ( is_string( $cached ) ) {
 			return $cached;
@@ -389,15 +310,15 @@ class Helper {
 	}
 
 	/**
-	 * The product name shown in the admin and any attribution. White-label (pro)
-	 * hooks `trueplayer/brand_name` to override it.
+	 * The product name shown in the admin and any attribution. Filterable via
+	 * `trueplayer/brand_name`.
 	 */
 	public static function brand_name(): string {
 		return (string) apply_filters( 'trueplayer/brand_name', 'TruePlayer' );
 	}
 
 	/**
-	 * The site owner's own mark, when white-label is on (pro). Empty otherwise —
+	 * The site owner's own mark, via `trueplayer/brand_logo`. Empty by default —
 	 * the admin then falls back to TruePlayer's built-in play glyph.
 	 */
 	public static function brand_logo(): string {
@@ -456,5 +377,55 @@ class Helper {
 
 	private static function is_list( array $a ): bool {
 		return array_keys( $a ) === range( 0, count( $a ) - 1 );
+	}
+
+	/**
+	 * Strict validation for every style-bearing value in a stored config,
+	 * preset or settings blob.
+	 *
+	 * Any key naming a colour (`accent`, `color`, `hoverColor`, `borderColor`,
+	 * `backgroundColor`, `captionColor`, …) ends up in a `style` attribute or a
+	 * CSS custom property, so it must be a colour and nothing else — a value
+	 * like `red;background:url(…)` would otherwise inject arbitrary CSS. Invalid
+	 * values are dropped and the player falls back to its default.
+	 *
+	 * @param mixed $data Decoded JSON data.
+	 * @return mixed
+	 */
+	public static function sanitize_style_values( $data ) {
+		if ( ! is_array( $data ) ) {
+			return $data;
+		}
+		foreach ( $data as $key => $value ) {
+			if ( is_array( $value ) ) {
+				$data[ $key ] = self::sanitize_style_values( $value );
+			} elseif ( is_string( $key ) && preg_match( '/(color|accent)$/i', $key ) ) {
+				$data[ $key ] = self::sanitize_css_color( $value );
+			}
+		}
+		return $data;
+	}
+
+	/**
+	 * A CSS colour, or '' when the value is anything else.
+	 *
+	 * Accepts #rgb/#rgba/#rrggbb/#rrggbbaa, rgb()/rgba()/hsl()/hsla() with
+	 * numeric arguments only, and `transparent`.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public static function sanitize_css_color( $value ): string {
+		if ( ! is_string( $value ) ) {
+			return '';
+		}
+		$value = strtolower( trim( $value ) );
+		if ( preg_match( '/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/', $value ) ) {
+			return $value;
+		}
+		if ( preg_match( '/^(?:rgba?|hsla?)\(\s*[0-9.]+(?:deg|%)?(?:\s*[,\s\/]\s*[0-9.]+%?){2,3}\s*\)$/', $value ) ) {
+			return $value;
+		}
+		return 'transparent' === $value ? $value : '';
 	}
 }

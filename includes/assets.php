@@ -15,6 +15,34 @@ class Assets {
 
 	const GLOBAL_OBJECT = 'TruePlayerGlobal';
 
+	/**
+	 * Where the compiled bundles live. An addon that ships its own build of the
+	 * same entries (backend/frontend/block, same version) can point these at it
+	 * through `trueplayer/assets/build`; anything else keeps this plugin's own.
+	 */
+	private static function build_location(): array {
+		static $loc = null;
+		if ( null === $loc ) {
+			$default = [
+				'dir' => TRUEPLAYER_ASSETS_DIR_PATH . 'build/',
+				'uri' => TRUEPLAYER_ASSETS_URI . 'build/',
+			];
+			$loc     = (array) apply_filters( 'trueplayer/assets/build', $default );
+			if ( empty( $loc['dir'] ) || empty( $loc['uri'] ) ) {
+				$loc = $default;
+			}
+		}
+		return $loc;
+	}
+
+	public static function build_dir(): string {
+		return trailingslashit( self::build_location()['dir'] );
+	}
+
+	public static function build_uri(): string {
+		return trailingslashit( self::build_location()['uri'] );
+	}
+
 	public static function init(): void {
 		$self = new self();
 		add_action( 'admin_enqueue_scripts', [ $self, 'enqueue_app_assets' ] );
@@ -32,22 +60,14 @@ class Assets {
 
 		wp_register_style(
 			self::FRONTEND_STYLE_HANDLE,
-			TRUEPLAYER_ASSETS_URI . 'build/style-frontend.css',
+			self::build_uri() . 'style-frontend.css',
 			[],
 			TRUEPLAYER_VERSION
 		);
 
-		// Site-wide custom player CSS (Settings → Player defaults → Custom CSS,
-		// stored in the settings option under customize.css).
-		$defaults   = self::player_defaults();
-		$custom_css = isset( $defaults['css'] ) && is_string( $defaults['css'] ) ? wp_strip_all_tags( $defaults['css'] ) : '';
-		if ( '' !== trim( $custom_css ) ) {
-			wp_add_inline_style( self::FRONTEND_STYLE_HANDLE, $custom_css );
-		}
-
 		wp_register_script(
 			self::FRONTEND_SCRIPT_HANDLE,
-			TRUEPLAYER_ASSETS_URI . sprintf( 'build/frontend.%s.js', TRUEPLAYER_VERSION ),
+			self::build_uri() . sprintf( 'frontend.%s.js', TRUEPLAYER_VERSION ),
 			$deps['dependencies'],
 			$deps['version'],
 			true
@@ -58,17 +78,14 @@ class Assets {
 	}
 
 	public function enqueue_app_assets( string $hook ): void {
-		if ( strpos( $hook, '_page_' . TRUEPLAYER_PLUGIN_SLUG ) === false && strpos( $hook, TRUEPLAYER_PLUGIN_SLUG ) === false ) {
+		if ( ! self::is_app_screen( $hook ) ) {
 			return;
 		}
 
-		// Suppress third-party admin notices on our screens so they don't
-		// clash with the React app. CSS-only (notices stay in the DOM for
-		// screen readers + dismiss workflows) — wp.org flags plugins that nuke
-		// admin_notices wholesale.
-		add_action( 'admin_head', [ $this, 'hide_admin_notices_on_app_pages' ] );
-		// Belt-and-braces: also drop queued notice callbacks on our own pages.
-		add_action( 'in_admin_header', [ $this, 'strip_admin_notice_actions' ], 1000 );
+		// Admin-notice suppression on our screens is CSS-only (see
+		// notice_suppression_css()): notices stay in the DOM for screen readers
+		// and dismiss workflows, and other plugins' queued callbacks still fire.
+		// wp.org flags plugins that remove notice actions wholesale.
 
 		$deps = $this->load_asset_deps( 'backend' );
 
@@ -77,18 +94,19 @@ class Assets {
 
 		wp_enqueue_style(
 			self::BACKEND_STYLE_HANDLE,
-			TRUEPLAYER_ASSETS_URI . 'build/style-backend.css',
+			self::build_uri() . 'style-backend.css',
 			[ 'wp-components' ],
-			file_exists( TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-backend.css' ) ? filemtime( TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-backend.css' ) : TRUEPLAYER_VERSION
+			file_exists( self::build_dir() . 'style-backend.css' ) ? filemtime( self::build_dir() . 'style-backend.css' ) : TRUEPLAYER_VERSION
 		);
+		wp_add_inline_style( self::BACKEND_STYLE_HANDLE, self::notice_suppression_css() );
 
 		// The live preview renders the real frontend player, which needs the
 		// frontend player CSS. It's a separate webpack entry, so load it here.
 		wp_enqueue_style(
 			'trueplayer-preview-player',
-			TRUEPLAYER_ASSETS_URI . 'build/style-frontend.css',
+			self::build_uri() . 'style-frontend.css',
 			[],
-			file_exists( TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-frontend.css' ) ? filemtime( TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-frontend.css' ) : TRUEPLAYER_VERSION
+			file_exists( self::build_dir() . 'style-frontend.css' ) ? filemtime( self::build_dir() . 'style-frontend.css' ) : TRUEPLAYER_VERSION
 		);
 
 		if ( ! did_action( 'wp_enqueue_media' ) ) {
@@ -117,7 +135,7 @@ class Assets {
 
 		wp_enqueue_script(
 			self::BACKEND_SCRIPT_HANDLE,
-			TRUEPLAYER_ASSETS_URI . sprintf( 'build/backend.%s.js', TRUEPLAYER_VERSION ),
+			self::build_uri() . sprintf( 'backend.%s.js', TRUEPLAYER_VERSION ),
 			$deps['dependencies'],
 			$deps['version'],
 			true
@@ -128,32 +146,45 @@ class Assets {
 	}
 
 	/**
+	 * Whether the current admin hook belongs to one of this plugin's own
+	 * screens. Tight-matched to the slugs `menu.php` registers, so a hook that
+	 * only happens to contain the plugin slug (another plugin's page, or an
+	 * edit screen for a post whose title has `trueplayer` in it) does not
+	 * trigger an admin-wide bundle load.
+	 */
+	private static function is_app_screen( string $hook ): bool {
+		$slug  = TRUEPLAYER_PLUGIN_SLUG;
+		$pages = [
+			'toplevel_page_' . $slug,
+			$slug . '_page_' . $slug . '-videos',
+			$slug . '_page_' . $slug . '-presets',
+			$slug . '_page_' . $slug . '-settings',
+		];
+		foreach ( $pages as $p ) {
+			if ( $hook === $p || 0 === strpos( $hook, $p ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * CSS-only suppression of admin notices on TruePlayer app pages. Keeps the
 	 * notices in the DOM (dismiss-state, screen readers, other plugins' flows
 	 * keep working) but hides them inside the React layout.
 	 */
-	public function hide_admin_notices_on_app_pages(): void {
-		echo '<style>
+	private static function notice_suppression_css(): string {
+		return '
 			#wpbody-content > .notice,
 			#wpbody-content > .updated,
 			#wpbody-content > .update-nag,
 			#wpbody-content > .error,
 			.trueplayer-app ~ .notice { display: none !important; }
-		</style>';
+		';
 	}
 
-	/**
-	 * Remove queued admin_notices / all_admin_notices callbacks on our pages so
-	 * even notices printed before our CSS loads don't flash. Runs late enough
-	 * that our own screens are the only ones affected.
-	 */
-	public function strip_admin_notice_actions(): void {
-		remove_all_actions( 'admin_notices' );
-		remove_all_actions( 'all_admin_notices' );
-	}
-
-	private function load_asset_deps( string $entry ): array {
-		$file = TRUEPLAYER_ASSETS_DIR_PATH . sprintf( 'build/%s.%s.asset.php', $entry, TRUEPLAYER_VERSION );
+private function load_asset_deps( string $entry ): array {
+		$file = self::build_dir() . sprintf( '%s.%s.asset.php', $entry, TRUEPLAYER_VERSION );
 		if ( ! file_exists( $file ) ) {
 			return [ 'dependencies' => [], 'version' => TRUEPLAYER_VERSION ];
 		}
@@ -187,10 +218,9 @@ class Assets {
 			'trueplayer/assets/backend_scripts_data',
 			array_merge(
 				$this->get_common_scripts_data(),
-				// Each addon contributes its own state through this same filter
-				// (see TruePlayerInteractive\Interactive::expose_state), so core
-				// doesn't enumerate features it no longer owns. The registry is
-				// what the Settings → Addons screen lists.
+				// Each addon contributes its own state through this same filter,
+				// so core doesn't enumerate features it doesn't own. The registry
+				// is what the Settings → Addons screen lists.
 				[
 					'addons_registry' => \TruePlayer\Addons::registry(),
 					// The address email-capture notifications fall back to, shown as
@@ -234,16 +264,6 @@ class Assets {
 			'user_id'               => get_current_user_id(),
 			'is_admin'              => (bool) current_user_can( 'manage_options' ),
 			'addons'                => $trueplayer_addons,
-			// Installing Pro is what unlocks its features; the licence buys
-			// updates and support and is reported separately (license_status),
-			// so a missing key never reads as "you don't have Pro".
-			'is_pro_active'         => \TruePlayer\Pro::active(),
-			// Distinct from is_pro_active: the pro plugin can be running on the
-			// permissive pre-license default, and the settings screen must not
-			// call that "your license is valid". See Pro::license_status().
-			'license_status'        => \TruePlayer\Pro::license_status(),
-			'license_url'           => \TruePlayer\Pro::license_page_url(),
-			'feature_flags'         => \TruePlayer\Pro::feature_flags(),
 			// The site's own name/mark when white-label is on, so the React
 			// admin matches the WP menu instead of always saying "TruePlayer".
 			'brand'                 => [

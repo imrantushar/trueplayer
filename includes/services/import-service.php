@@ -9,6 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 use TruePlayer\Database\PostType;
 use TruePlayer\Helper;
 
+// Reads other plugins' own tables for a one-shot import; caching admin-only
+// migration reads buys nothing. Values are prepared or come from a trusted
+// internal source list.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+
 /**
  * Migration importer — pulls an existing Presto Player or FluentPlayer library
  * into TruePlayer videos. An acquisition wedge: a site can switch without

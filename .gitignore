@@ -2,6 +2,9 @@
 .DS_Store
 *.log
 
+# Local build helpers (shell scripts) — not shipped and not tracked.
+/scripts/
+
 # Cross-platform build kit output (tool itself in build-tools/ is tracked)
 /.build-cache/
 /dist/

@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class PostType {
 
-	const VIDEO_TAXONOMY = 'tp_video_tag';
+	const VIDEO_TAXONOMY = 'truepl_video_tag';
 
 	public static function init() {
 		$self = new self();

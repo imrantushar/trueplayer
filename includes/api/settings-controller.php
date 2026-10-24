@@ -49,6 +49,7 @@ class SettingsController extends WP_REST_Controller {
 		if ( ! is_array( $incoming ) ) {
 			$incoming = [];
 		}
+		$incoming = \TruePlayer\Helper::sanitize_style_values( $incoming );
 		update_option( TRUEPLAYER_SETTINGS_NAME, wp_json_encode( $incoming ) );
 		$GLOBALS['trueplayer_settings'] = (object) $incoming;
 		return rest_ensure_response( [ 'success' => true, 'settings' => $incoming ] );

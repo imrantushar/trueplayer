@@ -14,7 +14,10 @@ class Installer {
 		$self                     = new self();
 		$self->trueplayer_version = get_option( 'trueplayer_version' );
 		$self->save_option();
-		Database::create_initial_custom_table();
+		$ok = Database::create_initial_custom_table();
+		if ( $ok ) {
+			update_option( 'trueplayer_db_version', TRUEPLAYER_DB_VERSION );
+		}
 		Helper::request_rewrite_flush();
 	}
 

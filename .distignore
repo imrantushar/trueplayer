@@ -2,17 +2,12 @@
 # release zip (build via `npm run dist`). Ship only what the plugin needs at runtime.
 
 # === Dev sources & toolchain ===
-/dev_trueplayer/
 /assets/scss/
 /assets/src/
-webpack.config.js
-tailwind.config.js
-postcss.config.js
-package.json
 package-lock.json
+bun.lock
 
-# Composer manifests (the built vendor/ autoloader needs neither at runtime)
-composer.json
+# Composer lock (manifests themselves are shipped alongside the built vendor/)
 composer.lock
 
 # === Cross-platform build kit (dev-only, never shipped) ===
@@ -50,4 +45,13 @@ AGENTS.md
 *.log
 *.map
 *.sh
+*.yml
+*.yaml
+.travis.yml
+.scrutinizer.yml
+.codeclimate.yml
+.editorconfig
+DEVELOPERS.md
 changelog.md
+
+/docs/

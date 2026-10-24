@@ -1,5 +1,97 @@
 # Changelog
 
+## 1.7.3 - 2026-10-17
+
+- Security: Colour settings (accent and other colour fields) are now strictly validated on save and at render time.
+
+## 1.7.2 - 2026-10-14
+
+### Security
+
+- Public opt-in REST endpoint (`/wp-json/trueplayer/v1/optin`) now requires a `wp_rest` nonce, applies a per-IP+video rate limit, and includes a honeypot field to block form-walking bots.
+
+### Changed
+
+- Admin screens no longer remove queued `admin_notices` callbacks; a CSS-only suppression keeps the layout clean while leaving other plugins' notices in the DOM.
+- Admin asset enqueue matches this plugin's own page hooks exactly instead of a substring on the plugin slug, so an unrelated screen whose hook contains "trueplayer" no longer loads the backend bundle.
+- YouTube caption importer sends an honest `TruePlayer/<version>; <site_url>` User-Agent.
+- Readme tags no longer use third-party brand names.
+
+### Added
+
+- `uninstall.php` drops this plugin's custom tables, options, transients and generated poster attachments when the site owner deletes the plugin. Honours a `trueplayer_keep_data_on_uninstall` option, and runs per-site on multisite.
+
+## 1.7.1 - 2026-10-14
+
+### Fixed
+
+- Activation schema no longer uses `JSON` columns or `DATETIME DEFAULT CURRENT_TIMESTAMP`, so tables create cleanly on MySQL versions WordPress still supports.
+- Schema sync now verifies every expected table exists before recording the database version, so a silent `dbDelta` failure can no longer mark the install as upgraded.
+- Seed data and preset-preview samples no longer reference remote demo files; sources start empty and the author picks their own media.
+
+### Security
+
+- The video-preview REST route now requires edit rights on the specific video, not just a generic edit-posts capability.
+
+### Changed
+
+- Vimeo poster transient is now namespaced as `trueplayer_vimeo_poster_` to avoid colliding with other plugins' short prefixes.
+
+## 1.7.0 - 2026-10-11
+
+### Changed
+
+- Everything in the free plugin now works on its own, with no locked options. Features that belong to TruePlayer Pro now ship only in that add-on.
+- HLS streams, Google Analytics events and YouTube caption import are free.
+- Player settings are passed to the page as data attributes instead of inline script tags; admin styles load through the WordPress style queue.
+- Updated the StoreEngine SDK to 1.6.2.
+
+### Removed
+
+- Interactive (H5P) content moved to TruePlayer Pro.
+- Custom CSS fields — use the Customizer or Site Editor's Additional CSS instead.
+
+### Security
+
+- Quick-editing a video from the block editor now also checks you can edit that video.
+
+### Added
+
+- Readme documents where the source for the compiled scripts lives and how to rebuild it.
+
+## 1.6.1 - 2026-10-10
+
+### Security
+
+- Harden inline player config against breakout — JSON blobs rendered beside the player, popup and playlist now escape `</script>` sequences.
+
+### Changed
+
+- Plugin URI updated to https://true-player.net/.
+- Rename post types and taxonomy to plugin-prefixed slugs (`truepl_video`, `truepl_preset`, `truepl_video_tag`, `truepl_playlist`) to avoid collisions. Existing content is migrated automatically on first admin load.
+- Admin-area white-labeling no longer touches player attribution (the player carries none to suppress).
+
+### Added
+
+- Readme now documents every external service the plugin can contact, with Terms and Privacy links.
+
+## 1.6.0 - 2026-09-24
+
+### Added
+
+- Quality selector: Auto plus every available level, in the gear menu or as a one-tap button. Bunny Stream, Mux, Gumlet ABR, HLS, YouTube and Vimeo.
+- The viewer's quality choice is remembered across videos.
+- Rapid Engage Bar: a simulated seek bar that runs ahead early so a video feels shorter. Needs Pro.
+- Seek bar is now its own section in the player editor.
+- Waveform is selectable as a video seek bar style, not only for audio.
+- Separate Rapid Engage speeds for desktop and mobile.
+
+### Fixed
+
+- The volume slider's indicator sat above its track instead of on it.
+- Firefox drew the volume fill thicker than the track it was filling.
+- The volume slider could be squashed by a host theme's input styles.
+
 ## 1.4.0 - 2026-09-10
 
 ### Added

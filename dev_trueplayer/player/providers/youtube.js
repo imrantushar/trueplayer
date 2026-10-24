@@ -63,6 +63,40 @@ const ERRORS = () => ( {
 } );
 
 /**
+ * YouTube's quality tokens, in the words a viewer recognizes.
+ *
+ * The API speaks in named tiers rather than heights, and those names are what
+ * getAvailableQualityLevels() returns. `auto` / `default` are deliberately
+ * absent: they are handled as our own 'auto' entry so the list has exactly one
+ * automatic row no matter what YouTube reports.
+ */
+const QUALITY_LABELS = {
+	tiny: '144p',
+	small: '240p',
+	medium: '360p',
+	large: '480p',
+	hd720: '720p',
+	hd1080: '1080p',
+	hd1440: '1440p',
+	hd2160: '2160p',
+	highres: '4320p',
+};
+
+/** Highest first, matching every other quality menu. */
+const QUALITY_ORDER = Object.keys( QUALITY_LABELS );
+
+/**
+ * A reported quality, or '' when it names no real level.
+ *
+ * YouTube answers `auto`, `default` or `unknown` when it has not settled on a
+ * tier yet. None of those is a level in our list, and letting one through
+ * renders as "Auto (Auto)".
+ */
+function normalizeQuality( q ) {
+	return QUALITY_LABELS[ q ] ? q : '';
+}
+
+/**
  * YouTube provider with our own controls overlaid (controls=0, modestbranding).
  * A poll loop synthesizes timeupdate since the IFrame API has no such event.
  */
@@ -75,6 +109,33 @@ export async function createYouTubeProvider( container, source, opts = {} ) {
 
 	let poll = null;
 	let duration = 0;
+	let qualities = [];
+	let activeQuality = '';
+
+	/**
+	 * Re-read the available levels from the player.
+	 *
+	 * Called from onStateChange and onPlaybackQualityChange rather than once at
+	 * ready, because getAvailableQualityLevels() returns an empty array until
+	 * the video has actually started buffering — the same late-arrival shape
+	 * `duration` has on this API, which onStateChange already re-reads for.
+	 */
+	const refreshQualities = () => {
+		const levels = ( player.getAvailableQualityLevels?.() || [] ).filter(
+			( q ) => QUALITY_LABELS[ q ]
+		);
+		const next = QUALITY_ORDER.filter( ( q ) => levels.includes( q ) )
+			.reverse()
+			.map( ( q ) => ( { id: q, label: QUALITY_LABELS[ q ] } ) );
+		// One level is not a choice — leave the list empty so the menu hides.
+		const list = next.length > 1 ? [ { id: 'auto', label: __( 'Auto' ) }, ...next ] : [];
+		const changed = list.length !== qualities.length ||
+			list.some( ( q, i ) => q.id !== qualities[ i ].id );
+		if ( changed ) {
+			qualities = list;
+			emitter.emit( 'qualitychange', qualities );
+		}
+	};
 
 	// The YT.Player constructor returns synchronously; `onReady` fires later.
 	// Build and return the provider now, and emit our own 'ready' from the
@@ -118,6 +179,18 @@ export async function createYouTubeProvider( container, source, opts = {} ) {
 					message: ( ERRORS()[ e && e.data ] ) || __( 'This YouTube video could not be played.' ),
 				} );
 			},
+			/**
+			 * What YouTube is ACTUALLY streaming.
+			 *
+			 * setPlaybackQuality is advisory — YouTube deprecated it and treats
+			 * a request as a suggestion it is free to ignore or override a
+			 * moment later. Reading the verdict back here is what stops the
+			 * menu from ticking 1080p while 480p is on screen.
+			 */
+			onPlaybackQualityChange: ( e ) => {
+				activeQuality = normalizeQuality( e && e.data );
+				refreshQualities();
+			},
 			onStateChange: ( e ) => {
 				// YouTube reports no duration until the video is actually cued, so
 				// the value read at ready is usually 0. Re-read it as the state
@@ -128,6 +201,10 @@ export async function createYouTubeProvider( container, source, opts = {} ) {
 					duration = known;
 					emitter.emit( 'durationchange' );
 				}
+				// The level list is empty until playback has actually begun, so
+				// this is the first moment it can be read — same reason the
+				// duration is re-read just above.
+				refreshQualities();
 				if ( e.data === YT.PlayerState.PLAYING ) {
 					emitter.emit( 'play' );
 					emitter.emit( 'playing' );
@@ -148,7 +225,14 @@ export async function createYouTubeProvider( container, source, opts = {} ) {
 	return {
 		kind: 'youtube',
 		element: host,
-		capabilities: { pip: false, quality: false, rate: true, tracks: false },
+		capabilities: {
+			pip: false,
+			// A getter: the list only exists once playback has started.
+			get quality() {
+				return qualities.length > 0;
+			},
+			rate: true, tracks: false,
+		},
 		on: emitter.on,
 		play: () => player.playVideo(),
 		pause: () => player.pauseVideo(),
@@ -163,8 +247,11 @@ export async function createYouTubeProvider( container, source, opts = {} ) {
 		isMuted: () => player.isMuted(),
 		getVolume: () => ( player.getVolume() || 0 ) / 100,
 		getRate: () => player.getPlaybackRate() || 1,
-		getQualities: () => [],
-		setQuality: () => {},
+		getQualities: () => qualities,
+		// Advisory, as documented on onPlaybackQualityChange above: YouTube may
+		// decline. getActiveQuality() is what the UI trusts afterwards.
+		setQuality: ( id ) => player.setPlaybackQuality( 'auto' === id ? 'default' : id ),
+		getActiveQuality: () => activeQuality || normalizeQuality( player.getPlaybackQuality?.() ),
 		getTextTracks: () => [],
 		setTextTrack: () => {},
 		requestPiP: () => Promise.reject(),

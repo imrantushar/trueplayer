@@ -79,7 +79,7 @@ class VideosController extends WP_REST_Controller {
 			[
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => [ $this, 'quick_update' ],
-				'permission_callback' => [ $this, 'quick' ],
+				'permission_callback' => [ $this, 'quick_edit' ],
 			]
 		);
 		register_rest_route(
@@ -88,7 +88,7 @@ class VideosController extends WP_REST_Controller {
 			[
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => [ $this, 'preview' ],
-				'permission_callback' => [ $this, 'browse' ],
+				'permission_callback' => [ $this, 'can_preview' ],
 			]
 		);
 		register_rest_route(
@@ -206,9 +206,9 @@ class VideosController extends WP_REST_Controller {
 	 *
 	 * Every one of them is fully described by a type plus a single `src`, so
 	 * the dialog that offers them can also finish them — the author lands back
-	 * in their post with a player that already plays. The premium types need
-	 * fields of their own (a pull zone, a playback id), so they stay in the
-	 * full editor rather than being half-offered here.
+	 * in their post with a player that already plays. Other types need fields
+	 * of their own, so they stay in the full editor rather than being
+	 * half-offered here.
 	 */
 	const QUICK_SOURCE_TYPES = [ 'self', 'youtube', 'vimeo', 'url' ];
 
@@ -247,10 +247,31 @@ class VideosController extends WP_REST_Controller {
 		return self::can_quick_create();
 	}
 
+	/** Updating an existing video also needs edit rights on that video. */
+	public function quick_edit( $request ) {
+		$id = (int) $request['id'];
+		return self::can_quick_create() && $id > 0 && current_user_can( 'edit_post', $id );
+	}
+
 	/**
-	 * Query args for the player list. Items on another engine (interactive
-	 * content) share the tp_video post type but are authored and listed
-	 * separately, not as players with a source — so they are excluded.
+	 * Previewing a video returns its resolved player config, which is the same
+	 * payload the published embed hands every visitor — but the route is used
+	 * from the block editor against drafts and private videos too, so it has to
+	 * verify the caller can edit the specific post rather than relying on a
+	 * generic `edit_posts` check.
+	 */
+	public function can_preview( $request ) {
+		$id = (int) $request['id'];
+		if ( $id <= 0 || get_post_type( $id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
+			return false;
+		}
+		return self::can_browse() && current_user_can( 'edit_post', $id );
+	}
+
+	/**
+	 * Query args for the player list. Items an add-on renders with another
+	 * engine share the post type but are not players with a source, so only
+	 * native items are listed.
 	 */
 	private function player_query_args(): array {
 		return [
@@ -259,10 +280,11 @@ class VideosController extends WP_REST_Controller {
 			'posts_per_page' => 500,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
-			'meta_query'     => [ // phpcs:ignore WordPress.DB.SlowMetaQuery.slow_db_query -- excluding another engine's items is the point of the list.
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- excluding another engine's items is the point of the list; small post type.
+			'meta_query'     => [
 				'relation' => 'OR',
 				[ 'key' => \TruePlayer\Database\MetaManager::ENGINE_META, 'compare' => 'NOT EXISTS' ],
-				[ 'key' => \TruePlayer\Database\MetaManager::ENGINE_META, 'value' => 'h5p', 'compare' => '!=' ],
+				[ 'key' => \TruePlayer\Database\MetaManager::ENGINE_META, 'value' => 'native' ],
 			],
 		];
 	}
@@ -365,7 +387,7 @@ class VideosController extends WP_REST_Controller {
 		$config = $this->config_of( $id );
 		$source = is_array( $config['source'] ?? null ) ? $config['source'] : [];
 
-		// A video already on a premium source must not be quietly downgraded by
+		// A video already on another source type must not be quietly changed by
 		// an editor whose dialog cannot express it; that edit belongs in the
 		// full editor, which is where the dialog sends them.
 		$current = (string) ( $source['type'] ?? '' );
@@ -497,6 +519,7 @@ class VideosController extends WP_REST_Controller {
 
 		$tag = $request ? sanitize_title( (string) $request->get_param( 'tag' ) ) : '';
 		if ( $tag ) {
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- filtering videos by their own tag taxonomy is the endpoint's purpose; term is sanitized and single.
 			$args['tax_query'] = [
 				[
 					'taxonomy' => \TruePlayer\Database\PostType::VIDEO_TAXONOMY,
@@ -755,9 +778,12 @@ class VideosController extends WP_REST_Controller {
 				'post_status'    => 'any',
 				'posts_per_page' => 50,
 				'fields'         => 'ids',
+				// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- $keep is a single id (the current poster to preserve), bounded cleanup.
 				'exclude'        => [ $keep ],
-				'meta_key'       => self::GENERATED_POSTER_META, // phpcs:ignore WordPress.DB.SlowMetaQuery.slow_db_query -- our own meta, bounded to this video.
-				'meta_value'     => $id, // phpcs:ignore WordPress.DB.SlowMetaQuery.slow_db_query
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- plugin-owned meta that tags only posters this editor captured.
+				'meta_key'       => self::GENERATED_POSTER_META,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- paired with meta_key above; narrow to one video.
+				'meta_value'     => $id,
 			]
 		);
 		foreach ( $stale as $attachment ) {
@@ -787,19 +813,14 @@ class VideosController extends WP_REST_Controller {
 	private function to_item( $post ) {
 		$terms = wp_get_object_terms( $post->ID, \TruePlayer\Database\PostType::VIDEO_TAXONOMY );
 		$tags  = is_wp_error( $terms ) ? [] : wp_list_pluck( $terms, 'name' );
-		return [
+		$item = [
 			'id'         => $post->ID,
 			'title'      => $post->post_title,
 			'shortcode'  => sprintf( '[trueplayer id="%d"]', $post->ID ),
-			// Like `shortcode`: the embed the author copies, built where its
-			// shape is defined rather than reassembled in the browser. The
-			// admin used to compose this from `site_url` and a hardcoded /tp/
-			// path, which is the wrong host on a WordPress-in-its-own-directory
-			// install and the wrong shape on plain permalinks.
-			'instantUrl' => \TruePlayer\InstantPage::url( $post->ID ),
 			'config'     => $this->config_of( $post->ID ),
 			'tags'       => array_values( $tags ),
 			'modified'   => $post->post_modified_gmt,
 		];
+		return (array) apply_filters( 'trueplayer/video/item', $item, $post );
 	}
 }

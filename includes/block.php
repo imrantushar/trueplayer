@@ -51,12 +51,12 @@ class Block {
 	}
 
 	public function editor_assets() {
-		$deps = TRUEPLAYER_ASSETS_DIR_PATH . sprintf( 'build/block.%s.asset.php', TRUEPLAYER_VERSION );
+		$deps = Assets::build_dir() . sprintf( 'block.%s.asset.php', TRUEPLAYER_VERSION );
 		$asset = file_exists( $deps ) ? include $deps : [ 'dependencies' => [], 'version' => TRUEPLAYER_VERSION ];
 
 		wp_enqueue_script(
 			self::SCRIPT_HANDLE,
-			TRUEPLAYER_ASSETS_URI . sprintf( 'build/block.%s.js', TRUEPLAYER_VERSION ),
+			Assets::build_uri() . sprintf( 'block.%s.js', TRUEPLAYER_VERSION ),
 			$asset['dependencies'],
 			$asset['version'],
 			true
@@ -64,7 +64,7 @@ class Block {
 
 		wp_localize_script( self::SCRIPT_HANDLE, self::GLOBAL_OBJECT, $this->editor_data() );
 		// The in-canvas preview renders the real frontend player, which reads
-		// its site-wide defaults and pro state from this object exactly as it
+		// its site-wide defaults from this object exactly as it
 		// does on a published page. Without it the preview would quietly fall
 		// back to the built-in defaults and stop matching what visitors see.
 		wp_localize_script( self::SCRIPT_HANDLE, Assets::GLOBAL_OBJECT, ( new Assets() )->get_frontend_scripts_data() );
@@ -91,10 +91,10 @@ class Block {
 		if ( ! is_admin() ) {
 			return;
 		}
-		$file = TRUEPLAYER_ASSETS_DIR_PATH . 'build/style-frontend.css';
+		$file = Assets::build_dir() . 'style-frontend.css';
 		wp_enqueue_style(
 			'trueplayer-block-canvas',
-			TRUEPLAYER_ASSETS_URI . 'build/style-frontend.css',
+			Assets::build_uri() . 'style-frontend.css',
 			[],
 			file_exists( $file ) ? filemtime( $file ) : TRUEPLAYER_VERSION
 		);
@@ -123,7 +123,6 @@ class Block {
 				// it, so the dialog can never be offered to someone the
 				// endpoint would refuse.
 				'canCreate'  => VideosController::can_quick_create(),
-				'isPro'      => Pro::active(),
 				'libraryUrl' => $can_manage ? admin_url( 'admin.php?page=trueplayer-videos' ) : '',
 				'editUrl'    => $can_manage ? admin_url( 'admin.php?page=trueplayer-videos&action=edit&id=' ) : '',
 			]

@@ -259,6 +259,13 @@ final class SE_License_SDK_Client {
 	private $is_dirty = false;
 
 	/**
+	 * Keys this client changed since the last save; only these are written back.
+	 *
+	 * @var array<string, true>
+	 */
+	private $dirty_keys = [];
+
+	/**
 	 * Depth of interactive() calls currently running. While > 0, requests are
 	 * treated as explicit user actions: longer timeout, circuit breaker ignored.
 	 *
@@ -557,27 +564,69 @@ final class SE_License_SDK_Client {
 
 		$this->software_data[ $this->package_file_hash ][ $key ] = $value;
 		// Flag for update data.
-		$this->is_dirty = true;
+		$this->is_dirty           = true;
+		$this->dirty_keys[ $key ] = true;
 	}
 
+	/**
+	 * Read the shared option straight from the database, bypassing the options
+	 * cache, so a save merges into what other products and requests stored.
+	 *
+	 * @return array
+	 */
+	protected function read_stored_software_data(): array {
+		global $wpdb;
+
+		if ( $this->is_network_activated() ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$raw = $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->sitemeta} WHERE meta_key = %s AND site_id = %d LIMIT 1", $this->software_data_option, get_current_network_id() ) );
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$raw = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1", $this->software_data_option ) );
+		}
+
+		$data = null === $raw ? [] : maybe_unserialize( $raw );
+
+		return is_array( $data ) ? $data : [];
+	}
+
+	/**
+	 * Write this client's changed keys into the stored option.
+	 *
+	 * Every product on the site shares one option, and each client used to write
+	 * back the whole copy it loaded at the start of the request. With two
+	 * products (or two concurrent requests) the last writer erased the other's
+	 * changes, including a freshly generated device_id. The product then made a
+	 * new id on its next request, and the license server recorded a new
+	 * installation each time. Re-reading and merging per key keeps both writes.
+	 */
 	public function save_software_data() {
 		if ( ! $this->is_dirty ) {
 			return;
 		}
 
-		$this->is_dirty = false;
+		$stored = $this->read_stored_software_data();
+		$hash   = $this->package_file_hash;
 
-		if ( ! is_array( $this->software_data ) ) {
-			$this->software_data = [];
+		if ( empty( $stored[ $hash ] ) || ! is_array( $stored[ $hash ] ) ) {
+			$stored[ $hash ] = [];
 		}
 
+		foreach ( array_keys( $this->dirty_keys ) as $key ) {
+			$stored[ $hash ][ $key ] = $this->software_data[ $hash ][ $key ] ?? null;
+		}
+
+		$this->is_dirty   = false;
+		$this->dirty_keys = [];
+
 		// Force save.
-		$this->software_data['last-updated'] = current_time( 'mysql', 1 );
+		$stored['last-updated'] = current_time( 'mysql', 1 );
+		$this->software_data    = $stored;
 
 		if ( $this->is_network_activated() ) {
-			update_site_option( $this->software_data_option, $this->software_data );
+			update_site_option( $this->software_data_option, $stored );
 		} else {
-			update_option( $this->software_data_option, $this->software_data );
+			update_option( $this->software_data_option, $stored );
 		}
 	}
 
@@ -585,8 +634,18 @@ final class SE_License_SDK_Client {
 		$device_id = $this->get_option( 'device_id' );
 
 		if ( ! $device_id ) {
-			$device_id = $this->generate_device_id();
-			$this->set_option( 'device_id', $device_id );
+			// Another product or request may have stored it after we loaded.
+			$device_id = $this->read_stored_software_data()[ $this->package_file_hash ]['device_id'] ?? '';
+
+			if ( $device_id ) {
+				$this->software_data[ $this->package_file_hash ]['device_id'] = $device_id;
+			} else {
+				$device_id = $this->generate_device_id();
+				$this->set_option( 'device_id', $device_id );
+				// Persist now rather than at shutdown, which a fatal error or a
+				// timed-out request never reaches.
+				$this->save_software_data();
+			}
 		}
 
 		return $device_id;
@@ -1537,7 +1596,12 @@ final class SE_License_SDK_Client {
 		$key  = 'se_sdk_srv_' . self::server_key( $url );
 		$code = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
 
-		$failed = is_wp_error( $response ) || 0 === $code || $code >= 500 || in_array( $code, [ 408, 429 ], true );
+		// A `cf-mitigated` header means an edge (e.g. Cloudflare) challenged the
+		// request rather than the server answering — back off like any outage so
+		// we stop hammering the edge.
+		$challenged = ! is_wp_error( $response ) && '' !== wp_remote_retrieve_header( $response, 'cf-mitigated' );
+
+		$failed = is_wp_error( $response ) || 0 === $code || $code >= 500 || in_array( $code, [ 408, 429 ], true ) || $challenged;
 
 		if ( ! $failed ) {
 			if ( false !== get_site_transient( $key ) ) {
@@ -1600,9 +1664,25 @@ final class SE_License_SDK_Client {
 				];
 			}
 
-			$code = wp_remote_retrieve_response_code( $response );
-			$body = wp_remote_retrieve_body( $response );
-			$body = json_decode( $body, true );
+			$code     = wp_remote_retrieve_response_code( $response );
+			$raw_body = wp_remote_retrieve_body( $response );
+
+			// An edge/CDN in front of the license server (e.g. Cloudflare) can
+			// intercept the request and answer with an interactive bot-challenge
+			// page instead of forwarding it. The server never gave a verdict, so
+			// this must NOT be read as "license invalid" — flag it transport-level
+			// so the grace period holds the last-known-good state.
+			if ( $this->is_edge_challenge( $response, $raw_body ) ) {
+				return [
+					'success'         => false,
+					'error'           => __( 'The license server could not be reached: a security check (e.g. Cloudflare) intercepted the request. Please try again later.', 'storeengine-sdk' ),
+					'code'            => 'edge_challenge',
+					'data'            => [],
+					'transport_error' => true,
+				];
+			}
+
+			$body = json_decode( $raw_body, true );
 
 			if ( 201 === $code && ! $response ) {
 				return [
@@ -1640,6 +1720,50 @@ final class SE_License_SDK_Client {
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Detect an edge/CDN bot-challenge served in place of the license server's
+	 * own response (most commonly Cloudflare's "Just a moment…" interstitial).
+	 *
+	 * The server-to-server request carries no browser, cookies or JS engine, so
+	 * an edge bot-manager may answer it with a challenge page. That is never a
+	 * license verdict and callers must treat it as a transport failure.
+	 *
+	 * @param array|WP_Error $response Raw WP HTTP response.
+	 * @param string         $body     Already-retrieved response body.
+	 *
+	 * @return bool
+	 */
+	private function is_edge_challenge( $response, string $body ): bool {
+		// Cloudflare sets this header whenever it challenges or blocks a request
+		// (e.g. "challenge", "managed_challenge", "jschallenge"). Its presence is
+		// authoritative; a request that passed through carries no such header.
+		$mitigated = wp_remote_retrieve_header( $response, 'cf-mitigated' );
+		if ( '' !== $mitigated ) {
+			return true;
+		}
+
+		if ( '' === $body ) {
+			return false;
+		}
+
+		// A genuine API response — success or business error — is JSON. Only
+		// consider a non-JSON (HTML) body a possible challenge, so a real JSON
+		// error is never masked.
+		$trimmed = ltrim( $body );
+		if ( '' !== $trimmed && ( '{' === $trimmed[0] || '[' === $trimmed[0] ) ) {
+			return false;
+		}
+
+		// Markers emitted by common edge challenge/interstitial pages.
+		foreach ( [ 'challenge-platform', '_cf_chl_opt', 'cf-browser-verification', 'Just a moment', 'Attention Required', 'Checking your browser' ] as $marker ) {
+			if ( false !== stripos( $body, $marker ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

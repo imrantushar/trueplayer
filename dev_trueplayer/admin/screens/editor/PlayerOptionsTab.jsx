@@ -1,6 +1,6 @@
 import { Card, Field, Input, Select, Toggle, Textarea, ColorInput } from '../../components/UI';
-import { isPro, PRO_SKINS, PRO_AUDIO_LAYOUTS } from '../../pro';
 import { resolveCustomize, CUSTOMIZE_DEFAULTS } from '@Player/customize';
+import { extOptions, seekBarLocks, ExtSlot } from '@Ext/admin';
 import { availableControls } from '@Utils/controls';
 import { isAudioSource as isAudioSourceUtil } from '@Utils/audio';
 import { templatesFor, applyTemplateToBlob } from '../../data/preset-templates';
@@ -11,11 +11,14 @@ import { __, __sprintf } from '@Utils/translation';
 // can drive which one is shown — this tab renders the active section only.
 export const PLAYER_SUBS = [
 	['appearance', __( 'Appearance' )],
+	// Its own section rather than more fields in Appearance: a seek-bar style
+	// can carry behaviour of its own, which needs room to be stated where the
+	// choice is made.
+	['seekbar', __( 'Seek bar' )],
 	['captions', __( 'Captions' )],
 	['controls', __( 'Controls' )],
 	['behavior', __( 'Behaviour' )],
 	['playback', __( 'Playback' )],
-	['css', __( 'Custom CSS' )],
 ];
 
 const SKINS = [
@@ -24,8 +27,7 @@ const SKINS = [
 	{ value: 'simple', label: __( 'Simple' ) },
 	{ value: 'minimal', label: __( 'Minimal' ) },
 	{ value: 'standard', label: __( 'Standard' ) },
-	{ value: 'floating', label: __( 'Floating' ) },
-	{ value: 'ambient', label: __( 'Ambient' ) },
+	...( extOptions.skins || [] ),
 ];
 
 // The audio player's skins. Same control, same word and same slot as the video
@@ -34,7 +36,7 @@ const SKINS = [
 //
 // Stored under `appearance.audioLayout`, not `appearance.skin`: the two lists
 // share no values, `skin` is video-only by declaration (VIDEO_ONLY_APPEARANCE
-// in player/customize.js) and Player.jsx refuses `ambient` for audio outright.
+// in player/customize.js).
 // Merging the keys would undo that separation to save a word. So the KEY stays
 // what it has always been — every stored config keeps working — and only the
 // vocabulary in front of the author changes.
@@ -44,8 +46,14 @@ const AUDIO_SKINS = [
 	{ value: 'compact', label: __( 'Compact' ), hint: __( 'A single bar: cover art, title and controls in one row.' ) },
 	{ value: 'card', label: __( 'Card' ), hint: __( 'Large square cover art above the title and controls.' ) },
 	{ value: 'minimal', label: __( 'Minimal' ), hint: __( 'Play button and a waveform, nothing else.' ) },
-	{ value: 'podcast', label: __( 'Podcast' ), hint: __( 'A taller bar with large cover art and room for the episode title.' ) },
-	{ value: 'audiobook', label: __( 'Audiobook' ), hint: __( 'The transport centred and enlarged for hours of listening.' ) },
+	...( extOptions.audioSkins || [] ),
+];
+
+// Video only.
+const SEEK_BARS = [
+	{ value: 'default', label: __( 'Default' ), hint: __( 'A plain progress track.' ) },
+	{ value: 'waveform', label: __( 'Waveform' ), hint: __( 'The track drawn as audio bars. Chapter markers give way to it.' ) },
+	...( extOptions.seekBars || [] ),
 ];
 
 const ASPECT_RATIOS = [
@@ -94,6 +102,11 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 		mediaType: isAudioSource ? 'audio' : 'video',
 		sourceType: source.type,
 	});
+
+	// Whether the chosen seek-bar style locks the timeline itself. Read from
+	// the RESOLVED appearance so an inherited value disables the same controls
+	// a value typed here does.
+	const seekBarLocked = ! isAudioSource && seekBarLocks( appearance.seekBarStyle );
 
 	// 'off' | 'muted' | 'sound' — same resolution as player/customize.js.
 	const apMode = behavior.autoplayMode || (behavior.autoplay ? 'muted' : 'off');
@@ -146,12 +159,10 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 									>
 										<div className="flex flex-wrap gap-2">
 											{templatesFor(isAudioSource ? 'audio' : 'video').map((t) => {
-												const locked = t.pro && ! isPro();
 												return (
 													<button
 														key={t.key}
 														type="button"
-														disabled={locked}
 														title={t.description || ''}
 														// Replaces the keys a template owns rather than
 														// merging over them — same rule as the Settings
@@ -159,14 +170,9 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 														// Playlist here too and not Playlist wearing
 														// whatever the last template left behind.
 														onClick={() => patch({ customize: applyTemplateToBlob(config.customize, t, isAudioSource ? 'audio' : 'video') })}
-														className={`px-3 py-1.5 rounded border border-solid text-[13px] font-medium transition-colors ${
-															locked
-																? 'border-line bg-gray-50 text-muted opacity-60 cursor-not-allowed'
-																: 'border-line bg-white text-ink hover:border-brand-400 hover:text-brand-500 cursor-pointer'
-														}`}
+														className="px-3 py-1.5 rounded border border-solid text-[13px] font-medium transition-colors border-line bg-white text-ink hover:border-brand-400 hover:text-brand-500 cursor-pointer"
 													>
 														{t.label}
-														{locked && <span className="ml-1 text-[9px] font-semibold text-brand-500">{ __( 'PRO' ) }</span>}
 													</button>
 												);
 											})}
@@ -191,16 +197,13 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 										</Field>
 									)}
 									<div className="grid md:grid-cols-2 gap-x-6">
-										{/* A skin is a treatment of the picture — the bar fading over it, the
-										    glow behind it. None of that exists in an audio bar, and `ambient`
-										    is already refused outright by Player.jsx. */}
+										{/* A skin is a treatment of the picture — none of that exists in
+										    an audio bar. */}
 										{!isAudioSource && (
-											<Field label={ __( 'Skin' ) } hint={isPro() ? __( 'Overall player theme.' ) : __( 'Floating & Ambient need TruePlayer Pro.' )}>
+											<Field label={ __( 'Skin' ) } hint={ __( 'Overall player theme.' ) }>
 												<Select value={appearance.skin} onChange={(e) => setSection('appearance', { skin: e.target.value })}>
 													{SKINS.map((s) => (
-														<option key={s.value} value={s.value} disabled={!isPro() && PRO_SKINS.includes(s.value)}>
-															{s.label}{!isPro() && PRO_SKINS.includes(s.value) ? __( ' (Pro)' ) : ''}
-														</option>
+														<option key={s.value} value={s.value}>{s.label}</option>
 													))}
 												</Select>
 											</Field>
@@ -212,15 +215,11 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 										{isAudioSource ? (
 											<Field
 												label={ __( 'Skin' ) }
-												hint={ isPro()
-													? ( AUDIO_SKINS.find( ( l ) => l.value === appearance.audioLayout ) || AUDIO_SKINS[ 0 ] ).hint
-													: __( 'Podcast & Audiobook need TruePlayer Pro.' ) }
+												hint={ ( AUDIO_SKINS.find( ( l ) => l.value === appearance.audioLayout ) || AUDIO_SKINS[ 0 ] ).hint }
 											>
 												<Select value={appearance.audioLayout} onChange={(e) => setSection('appearance', { audioLayout: e.target.value })}>
 													{AUDIO_SKINS.map((l) => (
-														<option key={l.value} value={l.value} disabled={!isPro() && PRO_AUDIO_LAYOUTS.includes(l.value)}>
-															{l.label}{!isPro() && PRO_AUDIO_LAYOUTS.includes(l.value) ? __( ' (Pro)' ) : ''}
-														</option>
+														<option key={l.value} value={l.value}>{l.label}</option>
 													))}
 												</Select>
 											</Field>
@@ -277,6 +276,40 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 										<Toggle checked={appearance.bigPlay} onChange={(v) => setSection('appearance', { bigPlay: v })} label={ __( 'Show large center play button' ) } />
 									)}
 								</div>
+							</Card>
+						)}
+
+						{sub === 'seekbar' && (
+							<Card className="p-6 max-w-2xl">
+								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Seek bar' ) }</h3>
+								<p className="text-sm text-gray-500 mb-4">{ __( 'How the timeline draws itself, and what the viewer can do with it.' ) }</p>
+
+								{/* Audio's bar shape is chosen by its layout (Appearance → Skin),
+								    which already picks the waveform for Minimal — a second control
+								    claiming to set the same thing would contradict it. The keys are
+								    in VIDEO_ONLY_APPEARANCE too, so a site-wide value cannot reach
+								    an audio item even if one were saved here. */}
+								{isAudioSource ? (
+									<p className="text-sm text-muted">{ __( 'An audio player\u2019s bar comes from its skin — see Appearance.' ) }</p>
+								) : (
+									<>
+										<Field
+											label={ __( 'Seek bar style' ) }
+											hint={ ( SEEK_BARS.find( ( b ) => b.value === ( appearance.seekBarStyle || 'default' ) ) || SEEK_BARS[ 0 ] ).hint }
+										>
+											<Select
+												value={appearance.seekBarStyle || 'default'}
+												onChange={(e) => setSection('appearance', { seekBarStyle: e.target.value })}
+											>
+												{SEEK_BARS.map((b) => (
+													<option key={b.value} value={b.value}>{b.label}</option>
+												))}
+											</Select>
+										</Field>
+
+										<ExtSlot name="player.seekbar" appearance={ appearance } setSection={ setSection } />
+									</>
+								)}
 							</Card>
 						)}
 
@@ -355,29 +388,38 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 									</div>
 
 									<div className='flex flex-col gap-6'>
-										<Toggle checked={behavior.savePosition} onChange={(v) => setSection('behavior', { savePosition: v })} label={ __( 'Save & resume playback position' ) } />
+										<Toggle
+											checked={behavior.savePosition}
+											onChange={(v) => setSection('behavior', { savePosition: v })}
+											label={<>{ __( 'Save & resume playback position' ) }{seekBarLocked && behavior.savePosition && <em className="block not-italic text-[11px] text-amber-600 mt-0.5">{ __( 'A returning viewer resumes part-way in, so the seek bar starts part-filled.' ) }</em>}</>}
+										/>
 										<Toggle checked={behavior.hideControls} onChange={(v) => setSection('behavior', { hideControls: v })} label={ __( 'Auto-hide controls while playing' ) } />
 										<Toggle
 											checked={behavior.sticky}
 											onChange={(v) => setSection('behavior', { sticky: v })}
 											label={<>{ __( 'Float player when scrolling away' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{ __( 'Test on a real page — the preview is scaled, so it can’t float.' ) }</em>}</>}
 										/>
+										{/* Both are subsumed while the seek bar style locks the timeline
+										    itself (see `seekLocked` in Player.jsx). Disabled rather than
+										    silently overridden; the stored values are left alone. */}
 										<Toggle
-											checked={behavior.noSkip}
-											disabled={behavior.disableSeek}
+											checked={behavior.noSkip || seekBarLocked}
+											disabled={behavior.disableSeek || seekBarLocked}
 											onChange={(v) => setSection('behavior', { noSkip: v })}
-											label={<>{ __( 'Prevent skipping ahead (no jumping to unwatched parts)' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{ __( 'Test on a real page — the preview stays scrubbable on purpose.' ) }</em>}</>}
+											label={<>{ __( 'Prevent skipping ahead (no jumping to unwatched parts)' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{seekBarLocked ? __( 'Always on with this seek bar style.' ) : __( 'Test on a real page — the preview stays scrubbable on purpose.' )}</em>}</>}
 										/>
 										<Toggle
-											checked={behavior.disableSeek}
+											checked={behavior.disableSeek || seekBarLocked}
+											disabled={seekBarLocked}
 											onChange={(v) => setSection('behavior', { disableSeek: v, ...(v ? { noSkip: false } : {}) })}
-											label={ __( 'Disable the timeline entirely (no click or drag, forward or back)' ) }
+											label={<>{ __( 'Disable the timeline entirely (no click or drag, forward or back)' ) }{seekBarLocked && <em className="block not-italic text-[11px] text-gray-400 mt-0.5">{ __( 'Always on with this seek bar style.' ) }</em>}</>}
 										/>
 										{hoverPreviewEligible && (
 											<Toggle
-												checked={behavior.hoverPreview}
+												checked={behavior.hoverPreview && !seekBarLocked}
+												disabled={seekBarLocked}
 												onChange={(v) => setSection('behavior', { hoverPreview: v })}
-												label={<>{ __( 'Muted preview on hover (self-hosted video)' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{ __( 'Test on a real page — it needs the click-to-load poster.' ) }</em>}</>}
+												label={<>{ __( 'Muted preview on hover (self-hosted video)' ) }{<em className="block not-italic text-[11px] text-gray-400 mt-0.5">{seekBarLocked ? __( 'Unavailable with this seek bar style.' ) : __( 'Test on a real page — it needs the click-to-load poster.' )}</em>}</>}
 											/>
 										)}
 									</div>
@@ -433,29 +475,6 @@ export default function PlayerOptionsTab({ config, patch, presets = [], sub = 'a
 
 						)}
 
-						{sub === 'css' && (
-							<Card className="p-6">
-								<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Custom CSS' ) }</h3>
-								<p className="text-sm text-gray-500 mb-4">
-									{ createInterpolateElement(
-										__( 'Printed with this player on the frontend. Scope rules with <mount>.trueplayer-mount</mount> (all players) or <stage>.tp-stage</stage>.' ),
-										{
-											mount: <code className="text-xs bg-gray-100 px-1 rounded" />,
-											stage: <code className="text-xs bg-gray-100 px-1 rounded" />,
-										}
-									) }
-								</p>
-								<div className='mt-4 pt-5 border-t border-solid border-line'>
-									<Textarea
-										rows={6}
-										className="font-mono text-xs"
-										value={config.customize?.css || ''}
-										onChange={(e) => setRoot({ css: e.target.value })}
-										placeholder={'.tp-stage { box-shadow: 0 10px 40px rgba(0,0,0,.2); }'}
-									/>
-								</div>
-							</Card>
-						)}
 		</div>
 	);
 }

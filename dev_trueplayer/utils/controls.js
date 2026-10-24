@@ -35,7 +35,8 @@ import { __ } from './translation';
  * @property {boolean}  default  Ships enabled? Seeds CUSTOMIZE_DEFAULTS.controls.
  * @property {?string}  requires Capability token the player also checks
  *                               ('download' | 'pip' | 'fullscreen' | 'tracks' |
- *                               'info' | 'playlist' | 'rate'), or null.
+ *                               'info' | 'playlist' | 'rate' | 'quality'),
+ *                               or null.
  * @property {string[]} notFor   Source types where the control is inert.
  */
 export const CONTROLS = [
@@ -53,6 +54,13 @@ export const CONTROLS = [
 	// turning this on for every existing player would add a button nobody asked
 	// for. Audio presets are expected to switch it on.
 	{ key: 'speed', label: __( 'Playback speed button' ), media: 'both', default: false, requires: 'rate', notFor: [] },
+	// Off by default for the same reason as speed: quality has always lived in
+	// the gear menu, and switching this on for every existing player would add
+	// a button nobody asked for. `notFor` lists the sources that are a single
+	// progressive file — one file has no ladder to choose from, so the toggle
+	// would be offered and then do nothing. `url` is NOT excluded: it accepts
+	// an .m3u8, and whether a given one has levels is only knowable at play.
+	{ key: 'quality', label: __( 'Quality button' ), media: 'video', default: false, requires: 'quality', notFor: [ 'self', 'bunnyStorage', 'gumletStorage' ] },
 	{ key: 'captions', label: __( 'Captions' ), media: 'both', default: true, requires: 'tracks', notFor: [] },
 	// TRUE by default, and it must stay that way: the chapters/transcript button
 	// is currently rendered unconditionally whenever there is something to show,

@@ -29,6 +29,10 @@ import { formStyleVars } from '../formStyle';
 export default function EmailForm( { layer, videoId, className = '', preview = false, onDone, onDismiss } ) {
 	const [ email, setEmail ] = useState( '' );
 	const [ name, setName ] = useState( '' );
+	// Honeypot: real users never fill this hidden field. A non-empty value on
+	// submit tells the server-side handler to accept and drop the request so
+	// form-walking bots get no signal that anything was blocked.
+	const [ website, setWebsite ] = useState( '' );
 	const [ busy, setBusy ] = useState( false );
 	const [ error, setError ] = useState( '' );
 	const [ done, setDone ] = useState( false );
@@ -57,7 +61,7 @@ export default function EmailForm( { layer, videoId, className = '', preview = f
 		setError( '' );
 		try {
 			if ( ! preview ) {
-				await rest.post( 'optin', { video: videoId, email, name, layer: layer.id || '' } );
+				await rest.post( 'optin', { video: videoId, email, name, layer: layer.id || '', website } );
 			}
 			if ( onDone ) {
 				onDone();
@@ -73,6 +77,19 @@ export default function EmailForm( { layer, videoId, className = '', preview = f
 
 	return (
 		<form className={ classes } style={ formStyleVars( layer ) } onSubmit={ submit }>
+			{ /* Honeypot — kept off-screen with inline styles so a stylesheet
+			     load failure can't leave it visible. Real users never see or
+			     touch it; bots walking the inputs fill it and get a silent OK. */ }
+			<input
+				type="text"
+				name="website"
+				tabIndex={ -1 }
+				autoComplete="off"
+				value={ website }
+				onChange={ ( ev ) => setWebsite( ev.target.value ) }
+				aria-hidden="true"
+				style={ { position: 'absolute', left: '-10000px', top: 'auto', width: 1, height: 1, overflow: 'hidden' } }
+			/>
 			{ layer.title && <p className="tp-emailform-title">{ layer.title }</p> }
 			{ layer.description && <p className="tp-emailform-desc">{ layer.description }</p> }
 

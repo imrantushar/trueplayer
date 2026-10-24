@@ -81,6 +81,7 @@ class PresetsController extends WP_REST_Controller {
 		// but other REST consumers want to ask for one kind.
 		$type = $request ? sanitize_text_field( (string) $request->get_param( 'type' ) ) : '';
 		if ( 'audio' === $type ) {
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- splitting presets by their stored type is the point of the ?type filter; the result set is small (presets, not posts).
 			$args['meta_query'] = [
 				[
 					'key'   => '_trueplayer_preset_type',
@@ -90,6 +91,7 @@ class PresetsController extends WP_REST_Controller {
 		} elseif ( 'video' === $type ) {
 			// NOT EXISTS is load-bearing: a registered default writes no row, so
 			// every preset made before audio existed has no meta to match on.
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- as above; small preset table.
 			$args['meta_query'] = [
 				'relation' => 'OR',
 				[

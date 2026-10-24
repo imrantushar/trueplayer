@@ -14,10 +14,23 @@ use TruePlayer\Integrations;
 /**
  * POST /trueplayer/v1/optin — handles an in-player subscribe/email-capture
  * submission. The provider + target lists come from the VIDEO CONFIG (server
- * side), so the client can't redirect the subscription elsewhere. Public
- * (nonce-protected).
+ * side), so the client can't redirect the subscription elsewhere.
+ *
+ * Public endpoint but defended on three fronts because an open subscribe route
+ * is an obvious mail-bombing vector:
+ *   - permission_callback verifies the `wp_rest` nonce (the player ships one
+ *     via `assets.php`), so a scraper posting without a page load is rejected;
+ *   - a per-IP+video throttle caps rapid submissions regardless of nonce;
+ *   - a hidden honeypot field (`website`) short-circuits ordinary form bots
+ *     without needing JavaScript to clear it on the real form.
  */
 class OptinController extends WP_REST_Controller {
+
+	/** Minimum seconds between submissions from one IP for the same video. */
+	const THROTTLE_SECONDS = 10;
+
+	/** Max submissions from one IP for the same video in an hour. */
+	const HOURLY_CAP = 20;
 
 	public function __construct() {
 		$this->namespace = TRUEPLAYER_PLUGIN_SLUG . '/v1';
@@ -31,9 +44,23 @@ class OptinController extends WP_REST_Controller {
 			[
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => [ $this, 'handle' ],
-				'permission_callback' => '__return_true',
+				'permission_callback' => [ $this, 'can_submit' ],
 			]
 		);
+	}
+
+	/**
+	 * A valid `wp_rest` nonce means the request came from a browser that loaded
+	 * one of our pages; everything else is refused. Logged-in users get a fresh
+	 * nonce from the player's localized data; anonymous users get the 12-hour
+	 * anonymous `wp_rest` nonce (which is what we accept).
+	 */
+	public function can_submit( $request ) {
+		$nonce = $request->get_header( 'x_wp_nonce' );
+		if ( empty( $nonce ) ) {
+			$nonce = (string) $request->get_param( '_wpnonce' );
+		}
+		return (bool) wp_verify_nonce( $nonce, 'wp_rest' );
 	}
 
 	public function handle( $request ) {
@@ -42,6 +69,12 @@ class OptinController extends WP_REST_Controller {
 		$email    = isset( $body['email'] ) ? sanitize_email( $body['email'] ) : '';
 		$name     = isset( $body['name'] ) ? sanitize_text_field( $body['name'] ) : '';
 		$layer_id = isset( $body['layer'] ) ? sanitize_text_field( wp_unslash( (string) $body['layer'] ) ) : '';
+		$website  = isset( $body['website'] ) ? (string) $body['website'] : '';
+
+		// Honeypot — real forms never fill this; bots that walk every input will.
+		if ( '' !== trim( $website ) ) {
+			return rest_ensure_response( [ 'ok' => true ] );
+		}
 
 		if ( ! is_email( $email ) ) {
 			return new \WP_Error( 'bad_email', __( 'Please enter a valid email.', 'trueplayer' ), [ 'status' => 400 ] );
@@ -50,15 +83,13 @@ class OptinController extends WP_REST_Controller {
 			return new \WP_Error( 'not_found', __( 'Video not found.', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 
+		$throttle = $this->throttle( $video_id );
+		if ( is_wp_error( $throttle ) ) {
+			return $throttle;
+		}
+
 		$config = Helper::get_video_config( $video_id );
 		$target = self::destination( $config, $layer_id );
-
-		// A provider the licence doesn't cover must not be reachable by posting
-		// its id — the destination is resolved from stored config, but the
-		// config could predate a lapsed licence.
-		if ( '' !== $target['provider'] && ! \TruePlayer\Pro::active() && ! Integrations::is_free_provider( $target['provider'] ) ) {
-			return new \WP_Error( 'pro_required', __( 'That subscription provider requires TruePlayer Pro.', 'trueplayer' ), [ 'status' => 403 ] );
-		}
 
 		$result = Integrations::subscribe( [
 			'email'    => $email,
@@ -75,6 +106,63 @@ class OptinController extends WP_REST_Controller {
 		}
 
 		return rest_ensure_response( [ 'ok' => true ] );
+	}
+
+	/**
+	 * Per-IP+video rate limit, backed by two transients so a short burst and a
+	 * sustained hour-long drizzle are both caught. Returns a WP_Error (429) on
+	 * trip, true on allow.
+	 */
+	private function throttle( int $video_id ) {
+		$ip = self::client_ip_hash();
+		if ( '' === $ip ) {
+			return true; // No usable client identifier; let it through.
+		}
+		$burst  = 'trueplayer_optin_burst_' . $ip . '_' . $video_id;
+		$hourly = 'trueplayer_optin_hour_' . $ip . '_' . $video_id;
+
+		if ( false !== get_transient( $burst ) ) {
+			return new \WP_Error(
+				'rate_limited',
+				__( 'Please wait a moment before trying again.', 'trueplayer' ),
+				[ 'status' => 429 ]
+			);
+		}
+		$count = (int) get_transient( $hourly );
+		if ( $count >= self::HOURLY_CAP ) {
+			return new \WP_Error(
+				'rate_limited',
+				__( 'Too many submissions. Try again later.', 'trueplayer' ),
+				[ 'status' => 429 ]
+			);
+		}
+
+		set_transient( $burst, 1, self::THROTTLE_SECONDS );
+		set_transient( $hourly, $count + 1, HOUR_IN_SECONDS );
+		return true;
+	}
+
+	/**
+	 * Hash of the submitting IP, salted with the install's secret so one site's
+	 * transient key cannot be guessed from another. The IP itself is never
+	 * stored.
+	 */
+	private static function client_ip_hash(): string {
+		$ip = '';
+		foreach ( [ 'HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR' ] as $k ) {
+			if ( ! empty( $_SERVER[ $k ] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
+				$raw = sanitize_text_field( wp_unslash( (string) $_SERVER[ $k ] ) );
+				$raw = trim( explode( ',', $raw )[0] );
+				if ( filter_var( $raw, FILTER_VALIDATE_IP ) ) {
+					$ip = $raw;
+					break;
+				}
+			}
+		}
+		if ( '' === $ip ) {
+			return '';
+		}
+		return substr( wp_hash( $ip, 'nonce' ), 0, 16 );
 	}
 
 	/**

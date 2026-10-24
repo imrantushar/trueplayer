@@ -34,8 +34,9 @@ class MetaManager {
 			TRUEPLAYER_VIDEO_POST_TYPE,
 			'_trueplayer_config',
 			[
-				'type'          => 'string',
-				'single'        => true,
+				'type'              => 'string',
+				'single'            => true,
+				'sanitize_callback' => [ __CLASS__, 'sanitize_json_meta' ],
 				'show_in_rest'  => true,
 				'auth_callback' => function () {
 					return current_user_can( 'edit_posts' );
@@ -44,10 +45,10 @@ class MetaManager {
 		);
 
 		// Rendering engine for this item: 'native' (default — TruePlayer's own
-		// player) or 'h5p' (rendered by the bundled H5P runtime). A dedicated,
-		// queryable meta rather than a key inside `_trueplayer_config` so the
-		// Library screen and the frontend router can branch without decoding
-		// the whole JSON blob. Absent meta reads as 'native'.
+		// player) or another engine an add-on registers (see the
+		// `trueplayer/render_engine` filter). A dedicated, queryable meta so the
+		// library and the frontend router can branch without decoding the whole
+		// JSON blob. Absent meta reads as 'native'.
 		register_post_meta(
 			TRUEPLAYER_VIDEO_POST_TYPE,
 			'_trueplayer_engine',
@@ -62,28 +63,13 @@ class MetaManager {
 			]
 		);
 
-		// Links an H5P-engine video to its row in the H5P `contents` table. Only
-		// meaningful when `_trueplayer_engine` is `h5p`.
-		register_post_meta(
-			TRUEPLAYER_VIDEO_POST_TYPE,
-			'_trueplayer_h5p_content_id',
-			[
-				'type'          => 'integer',
-				'single'        => true,
-				'default'       => 0,
-				'show_in_rest'  => true,
-				'auth_callback' => function () {
-					return current_user_can( 'edit_posts' );
-				},
-			]
-		);
-
 		register_post_meta(
 			TRUEPLAYER_PRESET_POST_TYPE,
 			'_trueplayer_preset',
 			[
-				'type'          => 'string',
-				'single'        => true,
+				'type'              => 'string',
+				'single'            => true,
+				'sanitize_callback' => [ __CLASS__, 'sanitize_json_meta' ],
 				'show_in_rest'  => true,
 				'auth_callback' => function () {
 					return current_user_can( 'edit_posts' );
@@ -116,5 +102,22 @@ class MetaManager {
 				},
 			]
 		);
+	}
+
+	/**
+	 * Validate style values in a JSON config written through the REST meta API.
+	 *
+	 * @param mixed $value Raw (JSON string) meta value.
+	 * @return mixed
+	 */
+	public static function sanitize_json_meta( $value ) {
+		if ( ! is_string( $value ) || '' === $value ) {
+			return $value;
+		}
+		$data = json_decode( $value, true );
+		if ( ! is_array( $data ) ) {
+			return $value;
+		}
+		return wp_json_encode( \TruePlayer\Helper::sanitize_style_values( $data ) );
 	}
 }

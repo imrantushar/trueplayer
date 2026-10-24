@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo, useRef, createPortal } from '@wordpress/e
 import { api } from '../api';
 import { Card, Button, Input, Select, Field, Modal, OptionMenu } from '../components/UI';
 import { Icon } from '../components/icons';
-import { isPro } from '../pro';
 import { templatesFor, templateConfig } from '../data/preset-templates';
 import PlayerOptionsTab from './editor/PlayerOptionsTab';
 import PreviewPanel from './editor/PreviewPanel';
@@ -12,11 +11,12 @@ import { __ } from '@Utils/translation';
 /** A preset's type, defaulting to video for everything made before audio. */
 const presetType = ( p ) => ( 'audio' === p?.type ? 'audio' : 'video' );
 
-// Built-in samples so a preset can be previewed even before any media exists.
-// An audio preset previewed against a video sample shows nothing it controls,
-// so each type gets its own.
-const SAMPLE_SOURCE = { type: 'url', src: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', poster: '' };
-const SAMPLE_AUDIO_SOURCE = { type: 'url', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', poster: '', mediaType: 'audio' };
+// Placeholder sources so a preset can open a preview panel before any media is
+// chosen. Left empty on purpose: the preview is for visual settings (skin,
+// controls, overlays) and must not pull media from a third-party host just to
+// render — the editor's own media picker is where a real source gets wired in.
+const SAMPLE_SOURCE = { type: 'url', src: '', poster: '' };
+const SAMPLE_AUDIO_SOURCE = { type: 'url', src: '', poster: '', mediaType: 'audio' };
 
 function Editor( { preset, onBack, onSaved, onEditState } ) {
 	// A preset has no `source`, so the type it styles cannot be inferred the way
@@ -115,6 +115,16 @@ function Editor( { preset, onBack, onSaved, onEditState } ) {
 					     is the same kind of thing. The media editor deliberately does
 					     not get this — see the note in PlayerOptionsTab. */ }
 					<PlayerOptionsTab config={ config } patch={ patch } mediaType={ presetType } offerTemplates />
+					{ /* This screen has no sub-navigation — it renders whichever section
+					     PlayerOptionsTab defaults to, which is Appearance. The seek bar
+					     moved out of Appearance into its own section, so without this
+					     second render a preset could no longer carry one: Rapid Engage
+					     is exactly the kind of choice a "VSL" preset exists to stamp
+					     onto thirty videos at once, and the preset editor would have
+					     silently lost the ability to set it. */ }
+					<div className="mt-6">
+						<PlayerOptionsTab config={ config } patch={ patch } mediaType={ presetType } sub="seekbar" />
+					</div>
 				</div>
 
 				{ /* Sticky header (top-8) + its h-14 bar are ~88px; top-[104px] clears both with a small gap. */ }
@@ -239,8 +249,8 @@ export default function Presets( { onEditState } ) {
 						<Select value={ template } onChange={ ( e ) => setTemplate( e.target.value ) }>
 							<option value="blank">{ __( 'Blank (defaults)' ) }</option>
 							{ templatesFor( newType ).map( ( t ) => (
-								<option key={ t.key } value={ t.key } disabled={ t.pro && ! isPro() }>
-									{ t.label }{ t.pro && ! isPro() ? __( ' — needs Pro' ) : '' }
+								<option key={ t.key } value={ t.key }>
+									{ t.label }
 								</option>
 							) ) }
 						</Select>

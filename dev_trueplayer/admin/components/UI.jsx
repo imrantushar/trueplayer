@@ -336,7 +336,7 @@ export function OptionMenu( { items } ) {
 
 /**
  * Vertical sub-navigation column for a tab with many groups. `items` is a list
- * of [key, label] pairs; pairs may include a third `pro` flag for a badge.
+ * of [key, label] pairs.
  */
 export function SubSidebar( { items, value, onChange, className = '' } ) {
 	// Sticky lives directly on <nav> (not nested in a shrink-wrapped <aside>) —
@@ -345,7 +345,7 @@ export function SubSidebar( { items, value, onChange, className = '' } ) {
 	// ~88px; top-[104px] clears both with a small gap.
 	return (
 		<nav className={ `w-full md:w-44 md:shrink-0 space-y-1 md:sticky md:top-[104px] bg-white border border-line rounded-card p-2 ${ className }` }>
-			{ items.map( ( [ key, label, pro ] ) => (
+			{ items.map( ( [ key, label ] ) => (
 				<button
 					key={ key }
 					onClick={ () => onChange( key ) }
@@ -354,7 +354,6 @@ export function SubSidebar( { items, value, onChange, className = '' } ) {
 					}` }
 				>
 					<span className="truncate">{ label }</span>
-					{ pro && <span className="text-[10px] font-semibold text-brand-500">PRO</span> }
 				</button>
 			) ) }
 		</nav>

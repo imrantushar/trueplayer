@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use WP_REST_Server;
 
 /**
- * POST /trueplayer/v1/subtitles/youtube-import  { src, lang } (admin, pro)
+ * POST /trueplayer/v1/subtitles/youtube-import  { src, lang } (admin)
  *
  * Best-effort YouTube caption import: fetches the public timedtext track,
  * converts it to WebVTT, stores it in the media library, and returns the URL
@@ -36,7 +36,7 @@ class SubtitlesController {
 	}
 
 	public function admin() {
-		return current_user_can( 'manage_options' ) && \TruePlayer\Pro::active();
+		return current_user_can( 'manage_options' );
 	}
 
 	public function youtube_import( $request ) {
@@ -75,7 +75,13 @@ class SubtitlesController {
 			add_query_arg( [ 'lang' => $lang, 'v' => $vid, 'kind' => 'asr' ], 'https://www.youtube.com/api/timedtext' ),
 		];
 		foreach ( $urls as $url ) {
-			$res = wp_remote_get( $url, [ 'timeout' => 12, 'user-agent' => 'Mozilla/5.0' ] );
+			$res = wp_remote_get(
+				$url,
+				[
+					'timeout'    => 12,
+					'user-agent' => 'TruePlayer/' . TRUEPLAYER_VERSION . '; ' . home_url( '/' ),
+				]
+			);
 			if ( is_wp_error( $res ) ) {
 				continue;
 			}

@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Playlist {
 
-	const POST_TYPE = 'tp_playlist';
+	const POST_TYPE = 'truepl_playlist';
 	const TAG       = 'trueplayer_playlist';
 
 	public static function init() {
@@ -72,21 +72,8 @@ class Playlist {
 		$config = Media::normalize_config( Helper::get_video_config( $video_id ) );
 		$config = Helper::with_derived_poster( Helper::apply_preset( $config ) );
 
-		/**
-		 * The free clamp, in the same position the shortcode puts it.
-		 *
-		 * It was missing here, and this payload is JSON printed into the page —
-		 * so on a free install every member of a playlist arrived ungated: a
-		 * premium skin or audio layout rendered, pro-only `protection` and
-		 * `timedContent` shipped, and a premium source kept its real URL.
-		 * enforce_pro_limits() reduces that source to `[ type, locked ]`
-		 * precisely so the media location never reaches the page, and the
-		 * playlist route was handing it over anyway — signed manifest included.
-		 *
-		 * Verified on a free install before the fix: an `hls` member came out
-		 * with its full `src` in the playlist JSON.
-		 */
-		$config = Helper::enforce_pro_limits( $config );
+		/** Same add-on hook the shortcode runs (see Shortcode::resolved_config). */
+		$config = (array) apply_filters( 'trueplayer/player/config', $config, $video_id );
 		$config = Shortcode::strip_answer_keys( $config );
 		return [
 			'videoId' => $video_id,
@@ -126,9 +113,10 @@ class Playlist {
 			'items'        => $items,
 		];
 
+		// Config travels as an escaped data attribute, read by mount.js.
 		return sprintf(
-			'<div class="trueplayer-playlist" data-trueplayer-playlist><script type="application/json" class="trueplayer-playlist-config">%s</script></div>',
-			wp_json_encode( $data )
+			'<div class="trueplayer-playlist" data-trueplayer-playlist data-tp-config="%s"></div>',
+			esc_attr( wp_json_encode( $data ) )
 		);
 	}
 }

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Internal event bus — the single seam every server-side milestone flows
  * through. Watch-verification and quiz-grading call Events::emit(); the
- * webhook dispatcher, pro analytics, and Gem bridges subscribe via the
+ * add-ons (webhooks, analytics, CRM bridges) subscribe via the
  * `trueplayer/event/{name}` action.
  *
  * Known events: view.started, progress.milestone, view.completed,
