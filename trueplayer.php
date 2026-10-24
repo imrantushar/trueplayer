@@ -43,7 +43,6 @@ final class TruePlayer {
 
 	public function define_constants() {
 		define( 'TRUEPLAYER_VERSION', '1.7.3' );
-		define( 'TRUEPLAYER_DB_VERSION', '6' );
 		define( 'TRUEPLAYER_SETTINGS_NAME', 'trueplayer_settings' );
 		define( 'TRUEPLAYER_PLUGIN_FILE', __FILE__ );
 		define( 'TRUEPLAYER_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );

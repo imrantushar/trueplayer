@@ -3,13 +3,11 @@
 /**
  * Fires when the site owner uninstalls TruePlayer from Plugins → Delete.
  *
- * Cleans up data this plugin created so an uninstall actually uninstalls:
- * custom tables, plugin options, scheduled events, and the generated poster
- * attachments the editor produced. Content the author added themselves
- * (`truepl_video`, `truepl_preset`, `truepl_playlist` posts and their meta) is
- * left in place — those are user content, not plugin bookkeeping, and WP's own
- * post-type deregistration is enough to hide them until the plugin is
- * reinstalled or another post-type claims the slug.
+ * The free plugin owns no custom tables (Pro installs its own schema and is
+ * responsible for dropping it on its own uninstall). This cleanup removes the
+ * plugin's options, transients and generated poster attachments. Legacy option
+ * names (`trueplayer_db_version`, `trueplayer_first_install_time`) that older
+ * versions wrote are still deleted here so upgraders don't leave orphans.
  *
  * Honours the Settings → "Keep data on uninstall" switch (option
  * `trueplayer_keep_data_on_uninstall`). On a multisite network uninstall, runs
@@ -27,22 +25,10 @@ function trueplayer_uninstall_cleanup(): void {
 
 	global $wpdb;
 
-	// Custom tables created by Database::create_initial_custom_table().
-	$prefix = 'tp';
-	$tables = [
-		$wpdb->prefix . $prefix . '_progress',
-		$wpdb->prefix . $prefix . '_quiz_attempts',
-		$wpdb->prefix . $prefix . '_engagement',
-		$wpdb->prefix . $prefix . '_daily',
-	];
-	foreach ( $tables as $table ) {
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$wpdb->query( 'DROP TABLE IF EXISTS `' . esc_sql( $table ) . '`' );
-	}
-
 	// Plugin options. Named individually (no LIKE wildcard across autoloaded
 	// options) so a core option that happens to start with `trueplayer_` from a
-	// future WP release could never be caught.
+	// future WP release could never be caught. Legacy keys from pre-split
+	// versions are included so upgraders don't leave orphans.
 	$options = [
 		'trueplayer_version',
 		'trueplayer_db_version',
@@ -77,7 +63,7 @@ function trueplayer_uninstall_cleanup(): void {
 		wp_delete_attachment( (int) $pid, true );
 	}
 
-	// Allow add-ons to clean their own slice.
+	// Allow add-ons to clean their own slice (Pro drops its tables here).
 	do_action( 'trueplayer/uninstall' );
 }
 
