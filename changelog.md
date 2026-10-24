@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.4 - 2026-10-24
+
+- Changed: Removed the unused progress, quiz-attempts, engagement and daily tables from the free plugin; they are no longer created on activation, and uninstall cleanup was updated to match.
+
 ## 1.7.3 - 2026-10-17
 
 - Security: Colour settings (accent and other colour fields) are now strictly validated on save and at render time.
