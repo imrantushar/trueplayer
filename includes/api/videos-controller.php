@@ -468,19 +468,7 @@ class VideosController extends WP_REST_Controller {
 	 * Empty means rejected; the caller turns that into a 400.
 	 */
 	private function sanitize_source_src( string $type, string $raw ): string {
-		$raw = trim( $raw );
-		if ( '' === $raw ) {
-			return '';
-		}
-		if ( preg_match( '#^(?:https?:)?//#i', $raw ) ) {
-			return esc_url_raw( $raw, [ 'http', 'https' ] );
-		}
-		// `esc_url_raw` would turn an id like `dQw4w9WgXcQ` into
-		// `http://dQw4w9WgXcQ`, so provider ids are matched rather than escaped.
-		if ( in_array( $type, [ 'youtube', 'vimeo' ], true ) && preg_match( '/^[\w-]{1,64}$/', $raw ) ) {
-			return $raw;
-		}
-		return '';
+		return Helper::sanitize_source_src( $type, $raw );
 	}
 
 	/**

@@ -1,0 +1,194 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "trueplayer/player",
+	"title": "TruePlayer",
+	"category": "embed",
+	"icon": "format-video",
+	"description": "A fast video and audio player. Upload a file, drop one in, or paste a YouTube, Vimeo or media link.",
+	"keywords": [
+		"video",
+		"audio",
+		"player",
+		"youtube",
+		"vimeo",
+		"mp4",
+		"podcast"
+	],
+	"textdomain": "trueplayer",
+	"supports": {
+		"html": false,
+		"align": [
+			"wide",
+			"full"
+		],
+		"anchor": true,
+		"customClassName": true,
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"attributes": {
+		"videoId": {
+			"type": "number",
+			"default": 0
+		},
+		"sourceType": {
+			"type": "string",
+			"default": ""
+		},
+		"src": {
+			"type": "string",
+			"default": ""
+		},
+		"mediaId": {
+			"type": "number",
+			"default": 0
+		},
+		"title": {
+			"type": "string",
+			"default": ""
+		},
+		"poster": {
+			"type": "string",
+			"default": ""
+		},
+		"captionUrl": {
+			"type": "string",
+			"default": ""
+		},
+		"captionLabel": {
+			"type": "string",
+			"default": ""
+		},
+		"captionLang": {
+			"type": "string",
+			"default": ""
+		},
+		"aspectRatio": {
+			"type": "string",
+			"default": ""
+		},
+		"skin": {
+			"type": "string",
+			"default": ""
+		},
+		"accent": {
+			"type": "string",
+			"default": ""
+		},
+		"autoplayMode": {
+			"type": "string",
+			"default": ""
+		},
+		"muted": {
+			"type": "boolean",
+			"default": false
+		},
+		"loop": {
+			"type": "boolean",
+			"default": false
+		},
+		"controls": {
+			"type": "boolean",
+			"default": true
+		},
+		"download": {
+			"type": "boolean",
+			"default": false
+		},
+		"sticky": {
+			"type": "boolean",
+			"default": false
+		},
+		"preload": {
+			"type": "string",
+			"default": ""
+		},
+		"loadStrategy": {
+			"type": "string",
+			"default": ""
+		},
+		"mediaType": {
+			"type": "string",
+			"default": ""
+		},
+		"chapters": {
+			"type": "string",
+			"default": ""
+		},
+		"description": {
+			"type": "string",
+			"default": ""
+		},
+		"resume": {
+			"type": "boolean",
+			"default": true
+		},
+		"presetId": {
+			"type": "number",
+			"default": 0
+		}
+	},
+	"variations": [
+		{
+			"name": "video",
+			"title": "TruePlayer Video",
+			"description": "Self-hosted or linked video.",
+			"icon": "format-video",
+			"isDefault": true,
+			"attributes": {},
+			"scope": [
+				"inserter",
+				"transform"
+			]
+		},
+		{
+			"name": "audio",
+			"title": "TruePlayer Audio",
+			"description": "Audio and podcast player.",
+			"icon": "format-audio",
+			"attributes": {
+				"mediaType": "audio"
+			},
+			"isActive": [
+				"mediaType"
+			],
+			"scope": [
+				"inserter",
+				"transform"
+			]
+		},
+		{
+			"name": "youtube",
+			"title": "TruePlayer YouTube",
+			"description": "A YouTube video in the fast player.",
+			"icon": "video-alt3",
+			"attributes": {
+				"sourceType": "youtube"
+			},
+			"isActive": [
+				"sourceType"
+			],
+			"scope": [
+				"inserter"
+			]
+		},
+		{
+			"name": "vimeo",
+			"title": "TruePlayer Vimeo",
+			"description": "A Vimeo video in the fast player.",
+			"icon": "video-alt2",
+			"attributes": {
+				"sourceType": "vimeo"
+			},
+			"isActive": [
+				"sourceType"
+			],
+			"scope": [
+				"inserter"
+			]
+		}
+	]
+}

@@ -102,17 +102,31 @@ class Shortcode {
 			return (string) $engine;
 		}
 
+		return self::embed( $video_id, get_the_title( $video_id ), self::resolved_config( $video_id ) );
+	}
+
+	/**
+	 * The mount markup for an already-resolved config.
+	 *
+	 * Split out of `render()` so the block's attribute-driven embeds (no library
+	 * post behind them) go through the exact same facade, load-strategy and
+	 * schema code as a shortcode embed.
+	 *
+	 * @param int    $video_id Library post id, or a stable key for an inline embed.
+	 * @param string $title    Accessible name / schema name.
+	 * @param array  $config   Output of `resolved_config()` or its inline twin.
+	 */
+	public static function embed( int $video_id, string $title, array $config ): string {
 		// Ensure the runtime is on the page.
 		wp_enqueue_style( Assets::FRONTEND_STYLE_HANDLE );
 		wp_enqueue_script( Assets::FRONTEND_SCRIPT_HANDLE );
 
-		$config = self::resolved_config( $video_id );
 		self::maybe_enqueue_quizpress( $config );
 
 		$json = wp_json_encode(
 			[
 				'videoId' => $video_id,
-				'title'   => get_the_title( $video_id ),
+				'title'   => $title,
 				'config'  => $config,
 			]
 		);
@@ -145,7 +159,7 @@ class Shortcode {
 			$attrs .= ' data-tp-autoplay="1"';
 		}
 
-		self::video_schema( $video_id, $config );
+		self::video_schema( $video_id, $config, $title );
 		return sprintf(
 			'<div class="trueplayer-mount tp-v%1$d" data-trueplayer data-video-id="%1$d"%4$s data-tp-config="%2$s">%3$s</div>%5$s',
 			$video_id,
@@ -166,7 +180,15 @@ class Shortcode {
 		// its shape — and an item that was never explicitly marked (an import, a
 		// pasted URL, anything predating first-class audio) has no answer until
 		// this runs. Read-time only; nothing is written back.
-		$config = Media::normalize_config( Helper::get_video_config( $video_id ) );
+		return self::finish_config( Helper::get_video_config( $video_id ), $video_id );
+	}
+
+	/**
+	 * The part of the pipeline that does not care where the config came from: a
+	 * library post's meta or a block's own attributes.
+	 */
+	public static function finish_config( array $config, int $video_id ): array {
+		$config = Media::normalize_config( $config );
 		$config = Helper::apply_preset( $config );
 		$config = Helper::with_derived_poster( $config );
 		$config = Helper::apply_global_branding( $config );
@@ -189,7 +211,7 @@ class Shortcode {
 	 * thumbnail — provider posters are derived upstream (Helper::with_derived_poster)
 	 * when none is set. Filterable/disable-able via `trueplayer/seo_schema`.
 	 */
-	private static function video_schema( int $video_id, array $config ): string {
+	private static function video_schema( int $video_id, array $config, string $title = '' ): string {
 		$source = is_array( $config['source'] ?? null ) ? $config['source'] : [];
 		$poster = is_string( $source['poster'] ?? null ) ? $source['poster'] : '';
 		// Google requires a thumbnail — skip schema rather than emit an invalid one.
@@ -197,16 +219,20 @@ class Shortcode {
 			return '';
 		}
 		$post   = get_post( $video_id );
+		$title  = '' !== $title ? $title : get_the_title( $video_id );
+		// An inline block embed has no library post of its own, so it is dated
+		// by the post it sits in — an empty uploadDate is invalid for Google.
+		$dated = $post ? $post : get_post();
 		$schema = [
 			'@context'     => 'https://schema.org',
 			// An audio item described as a VideoObject is simply wrong data for
 			// search engines, and the thumbnail requirement below reads as cover
 			// art rather than a video still.
 			'@type'        => Media::is_audio( $source ) ? 'AudioObject' : 'VideoObject',
-			'name'         => get_the_title( $video_id ),
-			'description'  => wp_strip_all_tags( $post && $post->post_excerpt ? $post->post_excerpt : get_the_title( $video_id ) ),
+			'name'         => $title,
+			'description'  => wp_strip_all_tags( $post && $post->post_excerpt ? $post->post_excerpt : $title ),
 			'thumbnailUrl' => $poster,
-			'uploadDate'   => $post ? get_post_time( 'c', true, $post ) : '',
+			'uploadDate'   => $dated ? get_post_time( 'c', true, $dated ) : '',
 		];
 		if ( ! empty( $source['src'] ) && in_array( $source['type'] ?? '', [ 'url', 'hls' ], true ) ) {
 			$schema['contentUrl'] = $source['src'];

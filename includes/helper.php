@@ -428,4 +428,27 @@ class Helper {
 		}
 		return 'transparent' === $value ? $value : '';
 	}
+
+	/**
+	 * A source URL (or, for YouTube and Vimeo, a bare id) made safe to store.
+	 * Shared by the quick-create routes and the block's inline attributes.
+	 *
+	 * http(s) only, so no `javascript:` or `data:` reaches a src attribute.
+	 * Empty means rejected.
+	 */
+	public static function sanitize_source_src( string $type, string $raw ): string {
+		$raw = trim( $raw );
+		if ( '' === $raw ) {
+			return '';
+		}
+		if ( preg_match( '#^(?:https?:)?//#i', $raw ) ) {
+			return esc_url_raw( $raw, [ 'http', 'https' ] );
+		}
+		// `esc_url_raw` would turn an id like `dQw4w9WgXcQ` into
+		// `http://dQw4w9WgXcQ`, so provider ids are matched rather than escaped.
+		if ( in_array( $type, [ 'youtube', 'vimeo' ], true ) && preg_match( '/^[\w-]{1,64}$/', $raw ) ) {
+			return $raw;
+		}
+		return '';
+	}
 }

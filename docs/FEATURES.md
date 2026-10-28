@@ -83,6 +83,17 @@ analyses, automates or extends sits behind `TruePlayer\Pro::active()`.
   page uses, so the post is laid out around what visitors actually get. An unselected
   block shields the player so a click selects it; selecting lifts the shield and the
   preview plays.
+  - **Self-contained (1.8.0):** the block stores its own source and options as attributes
+    (`blocks/player/block.json`), so no library entry or settings page is needed. Upload,
+    drag-drop or paste a link (YouTube, Vimeo, media URL); sidebar panels cover playback
+    (autoplay, muted, loop, controls, resume, download, float), look (preset, skin, aspect,
+    accent), chapters + description, captions and load strategy. Values are whitelisted in
+    `Block::config_from_attributes()`; unset options inherit the site defaults. A saved
+    library video (`videoId`) still works. Converts to/from core Video, Audio, YouTube/Vimeo
+    Embed and the shortcode; pasting a media or YouTube/Vimeo link creates the block
+    (disable with the `trueplayer.block.pasteConvertProviders` JS filter). Variations: Video,
+    Audio, YouTube, Vimeo. Stateless preview route: `POST videos/../block/preview`
+    (`trueplayer/v1/block/preview`, `edit_posts`).
   - **Create new** and **Edit** (block toolbar + inspector) both open a dialog *inside the
     editor* — no trip to wp-admin. Name + source type (self-hosted / YouTube / Vimeo /
     external URL) + the source itself, so a video is finished when it is created, and
