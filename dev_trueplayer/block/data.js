@@ -18,6 +18,9 @@ const G = () => window.TruePlayerBlock || {};
 /** The product name, or the site owner's own when white-label is on. */
 export const brand = () => G().brand || 'TruePlayer';
 
+/** The white-label logo URL, or '' to use the video dashicon (as the admin menu does). */
+export const logo = () => G().logo || '';
+
 /** Saved presets the author may apply: [ { id, title, type } ]. */
 export const presets = () => ( Array.isArray( G().presets ) ? G().presets : [] );
 

@@ -11,33 +11,31 @@
  * `videos/{id}/preview` for a library video), so what an author arranges their
  * post around is what a visitor gets.
  *
- * The chrome around it is all @wordpress/components, so it inherits the
- * editor's styles. The player's own stylesheet is enqueued into the canvas
+ * Variation switching and alignment are WordPress's own toolbar controls
+ * (block.json declares both). Everything else — the empty state, the Replace
+ * menu and the sidebar sections — is drawn from the block design with the
+ * small kit in ui.jsx. The player's own stylesheet is enqueued into the canvas
  * iframe by PHP (Block::canvas_assets) and deliberately never imported here —
  * see that method for why.
  */
-import { useCallback, useEffect, useState } from '@wordpress/element';
-import { useBlockProps, InspectorControls, BlockControls, MediaPlaceholder, MediaUpload, MediaUploadCheck } from '@wordpress/block-editor';
+import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
 import {
-	Button,
-	ColorPalette,
-	Flex,
-	FlexItem,
-	Notice,
-	PanelBody,
-	Placeholder,
-	SelectControl,
-	Spinner,
-	TextControl,
-	TextareaControl,
-	ToggleControl,
-	ToolbarButton,
-	ToolbarGroup,
-} from '@wordpress/components';
-import { __, sprintf } from '@Utils/translation';
+	useBlockProps,
+	InspectorControls,
+	BlockControls,
+	MediaUpload,
+	MediaUploadCheck,
+	store as blockEditorStore,
+} from '@wordpress/block-editor';
+import { Dropdown, MenuGroup, MenuItem, Notice, Placeholder, Spinner, ToolbarButton, ToolbarGroup } from '@wordpress/components';
+import { __, _n, sprintf } from '@Utils/translation';
 import Player from '@Player/Player';
 import NativeEmbed, { needsNativeEmbed } from './NativeEmbed';
 import VideoModal from './VideoModal';
+import SavedModal from './SavedModal';
+import { TruePlayerIcon } from './icon';
+import { Check, Help, Label, Pills, RadioCards, Section, Segmented, Styles, Toggle } from './ui';
 import {
 	brand,
 	canCreate,
@@ -47,47 +45,96 @@ import {
 	fetchVideos,
 	presets,
 	previewAttributes,
+	typeLabel,
 } from './data';
 
 const ASPECTS = [
-	{ label: __( 'Site default' ), value: '' },
-	{ label: '16:9', value: '16:9' },
-	{ label: '9:16', value: '9:16' },
-	{ label: '4:3', value: '4:3' },
-	{ label: '1:1', value: '1:1' },
-	{ label: '21:9', value: '21:9' },
-	{ label: __( 'Match the video' ), value: 'auto' },
+	[ '', __( 'Site default' ) ],
+	[ '16:9', '16:9' ],
+	[ '9:16', '9:16' ],
+	[ '4:3', '4:3' ],
+	[ '1:1', '1:1' ],
+	[ '21:9', '21:9' ],
+	[ 'auto', __( 'Match the video' ) ],
 ];
 
 const SKINS = [
-	{ label: __( 'Site default' ), value: '' },
-	{ label: __( 'Default' ), value: 'default' },
-	{ label: __( 'Modern' ), value: 'modern' },
-	{ label: __( 'Simple' ), value: 'simple' },
-	{ label: __( 'Minimal' ), value: 'minimal' },
-	{ label: __( 'Standard' ), value: 'standard' },
+	[ '', __( 'Site default' ) ],
+	[ 'default', __( 'Default' ) ],
+	[ 'modern', __( 'Modern' ) ],
+	[ 'simple', __( 'Simple' ) ],
+	[ 'minimal', __( 'Minimal' ) ],
+	[ 'standard', __( 'Standard' ) ],
 ];
+
+/** How each skin draws its control bar in the little swatch: inset, height, radius, background. */
+const SKIN_BAR = {
+	default: { l: 0, b: 0, h: 14, r: 0, bg: 'linear-gradient(transparent,rgba(0,0,0,.7))' },
+	modern: { l: 4, b: 4, h: 10, r: 5, bg: 'rgba(255,255,255,.55)' },
+	simple: { l: 0, b: 0, h: 8, r: 0, bg: 'rgba(255,255,255,.55)' },
+	minimal: { l: 0, b: 0, h: 2, r: 0, bg: '#fff' },
+	standard: { l: 0, b: 0, h: 10, r: 0, bg: '#fff' },
+};
 
 const AUTOPLAY = [
-	{ label: __( 'Site default' ), value: '' },
-	{ label: __( 'Off' ), value: 'off' },
-	{ label: __( 'Muted' ), value: 'muted' },
-	{ label: __( 'With sound (may be blocked)' ), value: 'sound' },
+	[ '', __( 'Default' ) ],
+	[ 'off', __( 'Off' ) ],
+	[ 'muted', __( 'Muted' ) ],
+	[ 'sound', __( 'With sound' ) ],
 ];
 
+const AUTOPLAY_HINT = {
+	'': __( 'Uses the site-wide setting.' ),
+	off: __( 'The viewer presses play.' ),
+	muted: __( 'Starts automatically with the sound off. Works in every browser.' ),
+	sound: __( 'Browsers often block autoplay with sound until the viewer has interacted with the page.' ),
+};
+
 const PRELOAD = [
-	{ label: __( 'Site default' ), value: '' },
-	{ label: __( 'Metadata only' ), value: 'metadata' },
-	{ label: __( 'Whole file' ), value: 'auto' },
-	{ label: __( 'Nothing' ), value: 'none' },
+	[ '', __( 'Default' ) ],
+	[ 'metadata', __( 'Metadata' ) ],
+	[ 'auto', __( 'Whole file' ) ],
+	[ 'none', __( 'Nothing' ) ],
 ];
 
 const LOAD = [
-	{ label: __( 'Site default' ), value: '' },
-	{ label: __( 'Click to load (fastest page)' ), value: 'facade' },
-	{ label: __( 'Load when scrolled into view' ), value: 'onvisible' },
-	{ label: __( 'Load immediately' ), value: 'eager' },
+	{ value: '', label: __( 'Site default' ) },
+	{ value: 'facade', label: __( 'Click to load (fastest page)' ) },
+	{ value: 'onvisible', label: __( 'Load when scrolled into view' ) },
+	{ value: 'eager', label: __( 'Load immediately' ) },
 ];
+
+const ACCENTS = [
+	[ __( 'Indigo' ), '#4f46e5' ],
+	[ __( 'Blue' ), '#2563eb' ],
+	[ __( 'Green' ), '#16a34a' ],
+	[ __( 'Orange' ), '#ea580c' ],
+	[ __( 'Black' ), '#111827' ],
+];
+
+const CAPTION_LANGS = [
+	[ 'en', __( 'English' ) ],
+	[ 'es', __( 'Spanish' ) ],
+	[ 'fr', __( 'French' ) ],
+	[ 'de', __( 'German' ) ],
+	[ 'bn', __( 'Bengali' ) ],
+];
+
+/** What the empty card says and asks for, per the kind of block it is. */
+const WANT = {
+	video: {
+		desc: __( 'A fast video and audio player. Upload a file or paste a YouTube, Vimeo or media link.' ),
+		label: __( 'Or paste a link' ),
+		ph: __( 'YouTube, Vimeo or media URL' ),
+	},
+	audio: {
+		desc: __( 'Upload an audio file, drop one here, or paste a link.' ),
+		label: __( 'Or paste a link' ),
+		ph: 'https://example.com/episode.mp3',
+	},
+	youtube: { desc: __( 'Paste a YouTube link.' ), label: __( 'Link' ), ph: 'https://youtube.com/watch?v=' },
+	vimeo: { desc: __( 'Paste a Vimeo link.' ), label: __( 'Link' ), ph: 'https://vimeo.com/' },
+};
 
 /** Waits for a value to stop changing, so typing doesn't fire a request per key. */
 function useDebounced( value, ms = 350 ) {
@@ -99,15 +146,44 @@ function useDebounced( value, ms = 350 ) {
 	return v;
 }
 
+/** The same line shape the server parses (Block::parse_chapters); only counts, never saves. */
+function countChapters( text ) {
+	let found = 0;
+	let skipped = 0;
+	( text || '' ).split( /\r?\n/ ).forEach( ( line ) => {
+		if ( ! line.trim() ) {
+			return;
+		}
+		if ( /^\s*\[?(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\]?\s*[-–—:]?\s*(.+?)\s*$/.test( line ) ) {
+			found++;
+		} else {
+			skipped++;
+		}
+	} );
+	return { found, skipped };
+}
+
+const fileLabel = ( src ) => {
+	try {
+		return decodeURIComponent( ( src || '' ).split( '?' )[ 0 ].split( '/' ).pop() ) || src;
+	} catch ( e ) {
+		return src;
+	}
+};
+
 export default function Edit( { attributes, setAttributes, isSelected } ) {
 	const { videoId, src, sourceType } = attributes;
 	const inline = ! videoId && !! src;
 	const blockProps = useBlockProps();
+	const mediaUpload = useSelect( ( select ) => select( blockEditorStore ).getSettings().mediaUpload, [] );
+	const fileInput = useRef( null );
 
 	const [ videos, setVideos ] = useState( null ); // null until asked for.
-	const [ showLibrary, setShowLibrary ] = useState( false );
+	const [ savedOpen, setSavedOpen ] = useState( false );
 	const [ editing, setEditing ] = useState( false );
 	const [ draftUrl, setDraftUrl ] = useState( '' );
+	const [ linkErr, setLinkErr ] = useState( '' );
+	const [ uploading, setUploading ] = useState( false );
 
 	// The render-ready payload for the preview, from either mode.
 	const [ item, setItem ] = useState( null );
@@ -120,7 +196,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 	// The library is only fetched when it is needed — an attribute-only block
 	// never asks for it.
 	useEffect( () => {
-		if ( ! showLibrary && ! videoId ) {
+		if ( ! savedOpen && ! videoId ) {
 			return undefined;
 		}
 		let live = true;
@@ -130,7 +206,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 		return () => {
 			live = false;
 		};
-	}, [ showLibrary, videoId ] );
+	}, [ savedOpen, videoId ] );
 
 	// Everything the preview depends on, as one comparable string.
 	const previewKey = useDebounced( JSON.stringify( previewAttributes( attributes ) ) );
@@ -159,12 +235,35 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 
 	const set = useCallback( ( patch ) => setAttributes( patch ), [ setAttributes ] );
 
-	const applyLink = ( value ) => {
-		const url = value.trim();
-		if ( url ) {
-			set( { videoId: 0, src: url, sourceType: detectSourceType( url ), mediaId: 0 } );
-			setDraftUrl( '' );
+	const providerOnly = [ 'youtube', 'vimeo' ].includes( sourceType ) && ! src;
+	const want = audio ? 'audio' : providerOnly ? sourceType : 'video';
+	const providerName = 'youtube' === sourceType ? 'YouTube' : 'Vimeo';
+
+	const applyLink = () => {
+		const url = draftUrl.trim();
+		if ( ! url ) {
+			setLinkErr( __( 'Choose a file or paste a link first.' ) );
+			return;
 		}
+		if ( ! /^https?:\/\//i.test( url ) ) {
+			setLinkErr( __( 'Paste a full link starting with https://' ) );
+			return;
+		}
+		const detected = detectSourceType( url );
+		if ( providerOnly && detected !== sourceType ) {
+			setLinkErr( sprintf( /* translators: %s: YouTube or Vimeo. */ __( 'That is not a %s link.' ), providerName ) );
+			return;
+		}
+		set( {
+			videoId: 0,
+			src: url,
+			sourceType: detected,
+			mediaId: 0,
+			// A link to an audio file says what it is, the way a picked file does.
+			mediaType: /\.(mp3|m4a|wav|ogg|aac)($|\?)/i.test( url ) ? 'audio' : attributes.mediaType,
+		} );
+		setDraftUrl( '' );
+		setLinkErr( '' );
 	};
 
 	const applyFile = ( media ) =>
@@ -178,349 +277,440 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 			title: attributes.title || media.title || '',
 		} );
 
-	const clearSource = () =>
+	const clearSource = () => {
 		set( { videoId: 0, src: '', sourceType: '', mediaId: 0, poster: '', captionUrl: '' } );
+		setLinkErr( '' );
+	};
+
+	const chooseSaved = ( video ) => {
+		set( { videoId: video.id, src: '', sourceType: '', mediaId: 0, title: '', poster: '', captionUrl: '' } );
+		setSavedOpen( false );
+	};
+
+	// Upload straight from the block: the editor's own uploader, so permissions,
+	// size limits and the media library entry all behave as they do everywhere.
+	const startUpload = () => fileInput.current?.click();
+
+	const onFilePicked = ( e ) => {
+		const files = Array.from( e.target.files || [] ).slice( 0, 1 );
+		e.target.value = '';
+		if ( ! files.length || ! mediaUpload ) {
+			return;
+		}
+		setUploading( true );
+		setLinkErr( '' );
+		mediaUpload( {
+			allowedTypes: audio ? [ 'audio' ] : [ 'video', 'audio' ],
+			filesList: files,
+			onFileChange: ( [ media ] ) => {
+				// The first call carries a temporary blob; wait for the saved file.
+				if ( media && media.id && ! ( media.url || '' ).startsWith( 'blob:' ) ) {
+					applyFile( media );
+					setUploading( false );
+				}
+			},
+			onError: ( message ) => {
+				setUploading( false );
+				setLinkErr( typeof message === 'string' ? message : message?.message || __( 'That file could not be uploaded.' ) );
+			},
+		} );
+	};
 
 	const libraryMissing = !! videoId && null !== videos && ! videos.some( ( v ) => v.id === videoId ) && !! itemError;
 	const hasSource = !! videoId || !! src;
+	const ready = hasSource && ! libraryMissing;
+	const showEmpty = ! ready || uploading;
 
-	const presetOptions = [ { label: __( 'None' ), value: 0 } ].concat(
-		presets()
-			.filter( ( p ) => ( 'audio' === p.type ) === audio )
-			.map( ( p ) => ( { label: p.title, value: p.id } ) )
-	);
+	const canEditSaved = !! videoId && canCreate() && !! item;
+	const canEdit = inline || canEditSaved;
 
-	const libraryOptions = [ { label: __( '— Select a video —' ), value: 0 } ].concat(
-		( videos || [] ).map( ( v ) => ( { label: v.title, value: v.id } ) )
-	);
+	const savedVideo = ( videos || [] ).find( ( v ) => v.id === videoId );
+	const displayName = inline ? attributes.title || fileLabel( src ) : item?.title || savedVideo?.title || '';
+	const srcType = inline ? sourceType : item?.config?.source?.type;
 
-	const savedLibrary = ( video ) => {
+	const savedUpdated = ( video ) => {
 		setVideos( ( list ) => [ video, ...( list || [] ).filter( ( v ) => v.id !== video.id ) ] );
 		set( { videoId: video.id } );
 		setEditing( false );
 		setBump( ( b ) => b + 1 );
 	};
 
-	const providerOnly = [ 'youtube', 'vimeo' ].includes( sourceType ) && ! src;
-	const providerName = 'youtube' === sourceType ? 'YouTube' : 'Vimeo';
+	const presetOptions = presets().filter( ( p ) => ( 'audio' === p.type ) === audio );
+	const chapters = countChapters( attributes.chapters );
+	const accent = attributes.accent;
+	const canPreload = ! [ 'youtube', 'vimeo' ].includes( srcType );
+	const canCaptions = inline && 'self' === sourceType && ! audio;
+	const openInTP = !! item && !! editUrl( item.id ) ? editUrl( item.id ) : '';
 
-	const linkField = (
-		<Flex justify="flex-start" gap={ 3 } align="flex-end" wrap style={ { width: '100%', marginTop: 8 } }>
-			<FlexItem isBlock style={ { minWidth: 240 } }>
-				<TextControl
-					__nextHasNoMarginBottom
-					label={ providerOnly ? sprintf( /* translators: %s: YouTube or Vimeo. */ __( '%s link' ), providerName ) : __( 'Or paste a link' ) }
-					placeholder={ providerOnly ? '' : 'https://youtu.be/…  ·  vimeo.com/…  ·  https://…/file.mp4' }
-					value={ draftUrl }
-					onChange={ setDraftUrl }
-					onKeyDown={ ( e ) => 'Enter' === e.key && applyLink( draftUrl ) }
-				/>
-			</FlexItem>
-			<Button variant="secondary" disabled={ ! draftUrl.trim() } onClick={ () => applyLink( draftUrl ) }>
-				{ __( 'Use link' ) }
-			</Button>
-		</Flex>
+	const toggle = ( key, label, hint ) => (
+		<Toggle key={ key } label={ label } hint={ hint } checked={ attributes[ key ] } onChange={ ( v ) => set( { [ key ]: v } ) } />
 	);
 
-	// Chosen by variation or transform before any source exists.
-	const sourcePicker = providerOnly ? (
-		linkField
-	) : (
-		<MediaPlaceholder
-			icon={ audio ? 'format-audio' : 'format-video' }
-			labels={ {
-				title: brand(),
-				instructions: audio
-					? __( 'Upload an audio file, drop one here, or paste a link.' )
-					: __( 'Upload a video or audio file, drop one here, or paste a YouTube, Vimeo or media link.' ),
+	const linkRow = (
+		<>
+			<span className="tpb-label" style={ { fontWeight: 500, color: '#344054' } }>{ WANT[ want ].label }</span>
+			<div style={ { display: 'flex', gap: 8, maxWidth: 520 } }>
+				<input
+					className={ `tpb-input tpb-input--lg${ linkErr ? ' tpb-input--err' : '' }` }
+					aria-label={ WANT[ want ].label }
+					value={ draftUrl }
+					placeholder={ WANT[ want ].ph }
+					onChange={ ( e ) => {
+						setDraftUrl( e.target.value );
+						setLinkErr( '' );
+					} }
+					onKeyDown={ ( e ) => 'Enter' === e.key && applyLink() }
+				/>
+				<button type="button" className="tpb-btn tpb-btn--lg" onClick={ applyLink }>
+					{ __( 'Use link' ) }
+				</button>
+			</div>
+			{ !! linkErr && <div className="tpb-err" role="alert">{ linkErr }</div> }
+		</>
+	);
+
+	const posterThumb = (
+		<span
+			className="tpb-thumb"
+			style={ {
+				width: 72,
+				height: 44,
+				backgroundImage: attributes.poster ? `url(${ attributes.poster })` : undefined,
+				backgroundSize: 'cover',
+				backgroundPosition: 'center',
 			} }
-			allowedTypes={ audio ? [ 'audio' ] : [ 'video', 'audio' ] }
-			accept={ audio ? 'audio/*' : 'video/*,audio/*' }
-			onSelect={ applyFile }
-			onSelectURL={ applyLink }
-			disableURLInput
-		>
-			{ linkField }
-		</MediaPlaceholder>
+		/>
 	);
 
 	return (
 		<div { ...blockProps }>
-			{ hasSource && (
+			<input
+				ref={ fileInput }
+				type="file"
+				hidden
+				accept={ audio ? 'audio/*' : 'video/*,audio/*' }
+				onChange={ onFilePicked }
+			/>
+
+			{ ready && (
 				<BlockControls>
 					<ToolbarGroup>
-						<ToolbarButton onClick={ clearSource }>{ __( 'Replace' ) }</ToolbarButton>
-						{ !! videoId && canCreate() && !! item && (
-							<ToolbarButton onClick={ () => setEditing( true ) }>{ __( 'Edit' ) }</ToolbarButton>
-						) }
+						<Dropdown
+							popoverProps={ { placement: 'bottom-start' } }
+							renderToggle={ ( { isOpen, onToggle } ) => (
+								<ToolbarButton onClick={ onToggle } aria-expanded={ isOpen } icon={ null }>
+									{ __( 'Replace' ) }
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={ { marginLeft: 4 } }>
+										<path d="M7.4 8.6L12 13.2l4.6-4.6L18 10l-6 6-6-6z" />
+									</svg>
+								</ToolbarButton>
+							) }
+							renderContent={ ( { onClose } ) => (
+								<MenuGroup>
+									<MenuItem onClick={ () => { onClose(); startUpload(); } }>{ __( 'Upload a file' ) }</MenuItem>
+									<MenuItem onClick={ () => { onClose(); setSavedOpen( true ); } }>{ __( 'Choose a saved video' ) }</MenuItem>
+									<MenuItem isDestructive onClick={ () => { onClose(); clearSource(); } }>{ __( 'Remove' ) }</MenuItem>
+								</MenuGroup>
+							) }
+						/>
+						{ canEdit && <ToolbarButton onClick={ () => setEditing( true ) }>{ __( 'Edit' ) }</ToolbarButton> }
 					</ToolbarGroup>
 				</BlockControls>
 			) }
 
 			<InspectorControls>
-				{ !! videoId && (
-					<PanelBody title={ brand() }>
-						{ !! videoId && (
-							<>
-								<SelectControl
-									__nextHasNoMarginBottom
-									label={ __( 'Saved video' ) }
-									value={ videoId }
-									options={ libraryOptions }
-									onChange={ ( v ) => set( { videoId: parseInt( v, 10 ) || 0 } ) }
-								/>
-								{ canCreate() && !! item && (
-									<Button variant="secondary" style={ { marginTop: 12 } } onClick={ () => setEditing( true ) }>
-										{ __( 'Edit' ) }
-									</Button>
-								) }
-								{ !! item && !! editUrl( item.id ) && (
-									<p style={ { marginTop: 12, marginBottom: 0, fontSize: 12, color: '#757575' } }>
-										<a href={ editUrl( item.id ) } target="_blank" rel="noreferrer">
-											{ sprintf(
-												/* translators: %s: product name, e.g. TruePlayer. */
-												__( 'Open in %s' ),
-												brand()
-											) }
-										</a>
-										{ ' — ' }
-										{ __( 'chapters, appearance and more.' ) }
-									</p>
-								) }
-							</>
-						) }
-					</PanelBody>
-				) }
+				<Styles />
+				<div className="tpb">
+					{ ! ready && (
+						<div style={ { padding: '32px 24px', textAlign: 'center' } }>
+							<div style={ { fontSize: 15, fontWeight: 500, marginBottom: 4 } }>{ __( 'No source yet' ) }</div>
+							<div style={ { fontSize: 12, color: '#646C73', lineHeight: 1.5 } }>
+								{ __( 'Choose a file or paste a link in the block to see playback and appearance options.' ) }
+							</div>
+						</div>
+					) }
 
-				{ hasSource && (
-					<>
-						{ inline && (
-						<PanelBody title={ __( 'Source' ) } initialOpen>
-							<TextControl
-								__nextHasNoMarginBottom
-								label={ sprintf(
-									/* translators: %s: source type, e.g. YouTube. */
-									__( 'Link (%s)' ),
-									{ self: __( 'Your file' ), youtube: 'YouTube', vimeo: 'Vimeo', url: __( 'Media URL' ) }[ sourceType ] || sourceType
-								) }
-								value={ src }
-								onChange={ ( v ) => set( { src: v, sourceType: detectSourceType( v ), mediaId: 0 } ) }
-							/>
-							<TextControl
-								__nextHasNoMarginBottom
-								style={ { marginTop: 12 } }
-								label={ __( 'Title' ) }
-								help={ __( 'Used as the accessible name and for search engines.' ) }
-								value={ attributes.title }
-								onChange={ ( v ) => set( { title: v } ) }
-							/>
-							<MediaUploadCheck>
-								<div style={ { marginTop: 12 } }>
-									<MediaUpload
-										allowedTypes={ [ 'image' ] }
-										onSelect={ ( m ) => set( { poster: m.url || '' } ) }
-										render={ ( { open } ) => (
-											<Flex justify="flex-start" gap={ 2 }>
-												<Button variant="secondary" onClick={ open }>
-													{ attributes.poster ? __( 'Change poster' ) : __( 'Set poster image' ) }
-												</Button>
-												{ !! attributes.poster && (
-													<Button variant="tertiary" isDestructive onClick={ () => set( { poster: '' } ) }>
-														{ __( 'Remove' ) }
-													</Button>
-												) }
-											</Flex>
-										) }
-									/>
+					{ ready && (
+						<>
+							<Section title={ __( 'Source' ) } initialOpen>
+								<div className="tpb-media">
+									<span className="tpb-thumb" style={ { width: 64, height: 40 } }>
+										<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+											<path d={ audio ? 'M12 3v10.55A4 4 0 1014 17V7h4V3h-6z' : 'M8 5v14l11-7z' } />
+										</svg>
+									</span>
+									<span style={ { minWidth: 0, flex: 1 } }>
+										<span style={ { display: 'block', fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }>{ displayName }</span>
+										<span style={ { display: 'block', fontSize: 12, color: '#646C73' } }>
+											{ inline ? typeLabel( sourceType ) : sprintf( /* translators: %s: source type, e.g. YouTube. */ __( 'Saved video · %s' ), typeLabel( srcType ) ) }
+										</span>
+									</span>
 								</div>
-							</MediaUploadCheck>
-						</PanelBody>
-						) }
 
-						<PanelBody title={ __( 'Playback' ) } initialOpen={ false }>
-							<SelectControl
-								__nextHasNoMarginBottom
-								label={ __( 'Autoplay' ) }
-								value={ attributes.autoplayMode }
-								options={ AUTOPLAY }
-								onChange={ ( v ) => set( { autoplayMode: v } ) }
-							/>
-							<ToggleControl
-								__nextHasNoMarginBottom
-								label={ __( 'Start muted' ) }
-								checked={ attributes.muted }
-								onChange={ ( v ) => set( { muted: v } ) }
-							/>
-							<ToggleControl
-								__nextHasNoMarginBottom
-								label={ __( 'Loop' ) }
-								checked={ attributes.loop }
-								onChange={ ( v ) => set( { loop: v } ) }
-							/>
-							<ToggleControl
-								__nextHasNoMarginBottom
-								label={ __( 'Show playback controls' ) }
-								checked={ attributes.controls }
-								onChange={ ( v ) => set( { controls: v } ) }
-							/>
-							<ToggleControl
-								__nextHasNoMarginBottom
-								label={ __( 'Resume where the viewer left off' ) }
-								checked={ attributes.resume }
-								onChange={ ( v ) => set( { resume: v } ) }
-							/>
-							<ToggleControl
-								__nextHasNoMarginBottom
-								label={ __( 'Allow download' ) }
-								checked={ attributes.download }
-								onChange={ ( v ) => set( { download: v } ) }
-							/>
-							<ToggleControl
-								__nextHasNoMarginBottom
-								label={ __( 'Float when scrolled out of view' ) }
-								checked={ attributes.sticky }
-								onChange={ ( v ) => set( { sticky: v } ) }
-							/>
-						</PanelBody>
+								{ inline && (
+									<>
+										<div className="tpb-mono" style={ { marginTop: 6, fontSize: 11, color: '#646C73', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }>{ src }</div>
+										<div style={ { display: 'flex', gap: 8, marginTop: 10 } }>
+											<MediaUploadCheck>
+												<MediaUpload
+													allowedTypes={ audio ? [ 'audio' ] : [ 'video', 'audio' ] }
+													value={ attributes.mediaId || undefined }
+													onSelect={ applyFile }
+													render={ ( { open } ) => (
+														<button type="button" className="tpb-btn" style={ { flex: 1 } } onClick={ open }>{ __( 'Replace' ) }</button>
+													) }
+												/>
+											</MediaUploadCheck>
+											<button type="button" className="tpb-btn" style={ { flex: 1 } } onClick={ () => setEditing( true ) }>{ __( 'Edit' ) }</button>
+										</div>
+									</>
+								) }
 
-						<PanelBody title={ __( 'Look' ) } initialOpen={ false }>
-							{ inline && presetOptions.length > 1 && (
-								<SelectControl
-									__nextHasNoMarginBottom
-									label={ __( 'Saved preset' ) }
-									help={ __( 'Your own settings below still win over the preset.' ) }
-									value={ attributes.presetId }
-									options={ presetOptions }
-									onChange={ ( v ) => set( { presetId: parseInt( v, 10 ) || 0 } ) }
-								/>
-							) }
-							{ ! audio && (
-								<>
-									<SelectControl
-										__nextHasNoMarginBottom
-										label={ __( 'Skin' ) }
-										value={ attributes.skin }
-										options={ SKINS }
-										onChange={ ( v ) => set( { skin: v } ) }
-									/>
-									<SelectControl
-										__nextHasNoMarginBottom
-										label={ __( 'Aspect ratio' ) }
-										value={ attributes.aspectRatio }
-										options={ ASPECTS }
-										onChange={ ( v ) => set( { aspectRatio: v } ) }
-									/>
-								</>
-							) }
-							<p style={ { margin: '12px 0 4px' } }>{ __( 'Accent colour' ) }</p>
-							<ColorPalette
-								colors={ [
-									{ name: 'Indigo', color: '#4f46e5' },
-									{ name: 'Blue', color: '#2563eb' },
-									{ name: 'Green', color: '#16a34a' },
-									{ name: 'Orange', color: '#ea580c' },
-									{ name: 'Red', color: '#dc2626' },
-									{ name: 'Black', color: '#111827' },
-								] }
-								value={ attributes.accent || undefined }
-								onChange={ ( v ) => set( { accent: v || '' } ) }
-								clearable
-							/>
-						</PanelBody>
+								{ ! inline && (
+									<>
+										<Help>{ __( 'This block shows a video from your library. Settings below apply on this page only.' ) }</Help>
+										<div style={ { display: 'flex', gap: 8, marginTop: 10 } }>
+											<button type="button" className="tpb-btn" style={ { flex: '1 1 0' } } onClick={ () => setSavedOpen( true ) }>{ __( 'Choose something else' ) }</button>
+											{ !! openInTP && (
+												<a className="tpb-btn" style={ { flex: '1 1 0', textDecoration: 'none' } } href={ openInTP } target="_blank" rel="noreferrer">
+													{ sprintf( /* translators: %s: product name, e.g. TruePlayer. */ __( 'Open in %s' ), brand() ) }
+												</a>
+											) }
+										</div>
+									</>
+								) }
 
-						<PanelBody title={ __( 'Chapters & description' ) } initialOpen={ false }>
-							<TextareaControl
-								__nextHasNoMarginBottom
-								label={ __( 'Chapters' ) }
-								help={ __( 'One per line, e.g. 0:00 Intro. Paste them straight from a YouTube description.' ) }
-								rows={ 5 }
-								value={ attributes.chapters }
-								onChange={ ( v ) => set( { chapters: v } ) }
-							/>
-							<TextareaControl
-								__nextHasNoMarginBottom
-								style={ { marginTop: 12 } }
-								label={ __( 'Description under the player' ) }
-								help={ __( 'Basic HTML allowed.' ) }
-								rows={ 4 }
-								value={ attributes.description }
-								onChange={ ( v ) => set( { description: v } ) }
-							/>
-						</PanelBody>
+								{ inline && (
+									<>
+										<Label gap>{ __( 'Title' ) }</Label>
+										<input
+											className="tpb-input"
+											aria-label={ __( 'Title' ) }
+											value={ attributes.title }
+											placeholder={ fileLabel( src ) }
+											onChange={ ( e ) => set( { title: e.target.value } ) }
+										/>
+										<Help>{ __( 'Used as the accessible name and for search engines.' ) }</Help>
 
-						{ inline && 'self' === sourceType && (
-							<PanelBody title={ __( 'Captions' ) } initialOpen={ false }>
-								<TextControl
-									__nextHasNoMarginBottom
-									label={ __( 'WebVTT file URL' ) }
-									value={ attributes.captionUrl }
-									onChange={ ( v ) => set( { captionUrl: v } ) }
-								/>
-								<MediaUploadCheck>
-									<MediaUpload
-										onSelect={ ( m ) => set( { captionUrl: m.url || '' } ) }
-										render={ ( { open } ) => (
-											<Button variant="secondary" style={ { margin: '8px 0 12px' } } onClick={ open }>
-												{ __( 'Choose .vtt file' ) }
-											</Button>
+										{ ! audio && (
+											<>
+												<Label gap>{ __( 'Poster' ) }</Label>
+												<MediaUploadCheck>
+													<MediaUpload
+														allowedTypes={ [ 'image' ] }
+														onSelect={ ( m ) => set( { poster: m.url || '' } ) }
+														render={ ( { open } ) =>
+															attributes.poster ? (
+																<div style={ { display: 'flex', flexWrap: 'wrap', gap: '8px 10px', alignItems: 'center' } }>
+																	{ posterThumb }
+																	<button type="button" className="tpb-btn" onClick={ open }>{ __( 'Change poster' ) }</button>
+																	<button type="button" className="tpb-btn tpb-btn--danger" onClick={ () => set( { poster: '' } ) }>{ __( 'Remove' ) }</button>
+																</div>
+															) : (
+																<button type="button" className="tpb-btn tpb-btn--dashed" onClick={ open }>{ __( 'Set poster image' ) }</button>
+															)
+														}
+													/>
+												</MediaUploadCheck>
+											</>
 										) }
+									</>
+								) }
+							</Section>
+
+							<Section title={ __( 'Playback' ) } initialOpen>
+								<Label>{ __( 'Autoplay' ) }</Label>
+								<Segmented label={ __( 'Autoplay' ) } value={ attributes.autoplayMode } options={ AUTOPLAY } onChange={ ( v ) => set( { autoplayMode: v } ) } />
+								<Help>{ AUTOPLAY_HINT[ attributes.autoplayMode ] }</Help>
+								<div style={ { marginTop: 8 } }>
+									{ toggle( 'muted', __( 'Start muted' ) ) }
+									{ toggle( 'loop', __( 'Loop' ) ) }
+									{ toggle( 'controls', __( 'Show playback controls' ), __( 'Off keeps only the play button.' ) ) }
+									{ toggle( 'resume', __( 'Resume where the viewer left off' ) ) }
+									{ toggle( 'download', __( 'Allow download' ) ) }
+									{ toggle( 'sticky', __( 'Float when scrolled out of view' ) ) }
+								</div>
+							</Section>
+
+							<Section title={ __( 'Look' ) } initialOpen>
+								{ inline && presetOptions.length > 0 && (
+									<>
+										<Label>{ __( 'Saved preset' ) }</Label>
+										<select
+											className="tpb-input"
+											aria-label={ __( 'Saved preset' ) }
+											value={ attributes.presetId }
+											onChange={ ( e ) => set( { presetId: parseInt( e.target.value, 10 ) || 0 } ) }
+										>
+											<option value={ 0 }>{ __( 'None' ) }</option>
+											{ presetOptions.map( ( p ) => (
+												<option key={ p.id } value={ p.id }>{ p.title }</option>
+											) ) }
+										</select>
+										{ !! attributes.presetId && <Help>{ __( 'Your own settings below still win over the preset.' ) }</Help> }
+									</>
+								) }
+
+								{ ! audio && (
+									<>
+										<Label gap>{ __( 'Skin' ) }</Label>
+										<div role="radiogroup" aria-label={ __( 'Skin' ) } style={ { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 } }>
+											{ SKINS.map( ( [ value, label ] ) => {
+												const bar = SKIN_BAR[ value || 'default' ];
+												return (
+													<button key={ value } type="button" role="radio" aria-checked={ attributes.skin === value } className="tpb-skin" onClick={ () => set( { skin: value } ) }>
+														<span style={ { display: 'block', height: 34, borderRadius: 4, background: '#1B2330', position: 'relative', overflow: 'hidden' } }>
+															<span style={ { position: 'absolute', left: bar.l, right: bar.l, bottom: bar.b, height: bar.h, borderRadius: bar.r, background: bar.bg } } />
+														</span>
+														<span style={ { display: 'block', fontSize: 12, fontWeight: 500, marginTop: 6 } }>{ label }</span>
+													</button>
+												);
+											} ) }
+										</div>
+
+										<Label gap>{ __( 'Aspect ratio' ) }</Label>
+										<Pills label={ __( 'Aspect ratio' ) } value={ attributes.aspectRatio } options={ ASPECTS } onChange={ ( v ) => set( { aspectRatio: v } ) } />
+									</>
+								) }
+
+								<Label gap>{ __( 'Accent colour' ) }</Label>
+								<div role="radiogroup" aria-label={ __( 'Accent colour' ) } style={ { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' } }>
+									<button
+										type="button"
+										role="radio"
+										aria-checked={ ! accent }
+										aria-label={ __( 'Site default' ) }
+										title={ __( 'Site default' ) }
+										className="tpb-sw"
+										style={ { background: 'repeating-linear-gradient(135deg,#E0E4E8 0 4px,#fff 4px 8px)' } }
+										onClick={ () => set( { accent: '' } ) }
+									>
+										{ ! accent && <Check color="#141A24" /> }
+									</button>
+									{ ACCENTS.map( ( [ name, color ] ) => (
+										<button
+											key={ color }
+											type="button"
+											role="radio"
+											aria-checked={ accent === color }
+											aria-label={ name }
+											title={ name }
+											className="tpb-sw"
+											style={ { background: color } }
+											onClick={ () => set( { accent: color } ) }
+										>
+											{ accent === color && <Check /> }
+										</button>
+									) ) }
+									<label className="tpb-sw tpb-sw--custom" title={ __( 'Custom colour' ) }>
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+											<path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z" />
+										</svg>
+										<input type="color" aria-label={ __( 'Custom colour' ) } value={ /^#[0-9a-f]{6}$/i.test( accent ) ? accent : '#4f46e5' } onChange={ ( e ) => set( { accent: e.target.value } ) } />
+									</label>
+								</div>
+								<Help>
+									{ accent
+										? `${ ( ACCENTS.find( ( a ) => a[ 1 ] === accent ) || [ __( 'Custom' ) ] )[ 0 ] } · ${ accent }`
+										: __( 'Site default' ) }
+								</Help>
+							</Section>
+
+							<Section title={ __( 'Chapters & description' ) } badge={ chapters.found || '' }>
+								<Label>{ __( 'Chapters' ) }</Label>
+								<textarea
+									className="tpb-input tpb-mono"
+									aria-label={ __( 'Chapters' ) }
+									rows={ 5 }
+									placeholder="0:00 Intro"
+									value={ attributes.chapters }
+									onChange={ ( e ) => set( { chapters: e.target.value } ) }
+								/>
+								<Help>{ __( 'One per line, e.g. 0:00 Intro. Paste them straight from a YouTube description.' ) }</Help>
+								{ chapters.found > 0 && (
+									<div style={ { fontSize: 12, color: '#166534', marginTop: 6, fontWeight: 500 } }>
+										{ sprintf( /* translators: %d: number of chapters. */ __( '%d chapters detected' ), chapters.found ) }
+										{ chapters.skipped > 0 && ` · ${ sprintf( /* translators: %d: number of lines. */ _n( '%d line skipped', '%d lines skipped', chapters.skipped ), chapters.skipped ) }` }
+									</div>
+								) }
+								<Label gap>{ __( 'Description under the player' ) }</Label>
+								<textarea
+									className="tpb-input"
+									aria-label={ __( 'Description under the player' ) }
+									rows={ 3 }
+									value={ attributes.description }
+									onChange={ ( e ) => set( { description: e.target.value } ) }
+								/>
+								<Help>{ __( 'Basic HTML allowed.' ) }</Help>
+							</Section>
+
+							{ canCaptions && (
+								<Section title={ __( 'Captions' ) }>
+									<Label>{ __( 'WebVTT file URL' ) }</Label>
+									<input
+										className="tpb-input"
+										aria-label={ __( 'WebVTT file URL' ) }
+										placeholder="https://"
+										value={ attributes.captionUrl }
+										onChange={ ( e ) => set( { captionUrl: e.target.value } ) }
 									/>
-								</MediaUploadCheck>
-								{ !! attributes.captionUrl && (
-									<Flex gap={ 2 }>
-										<FlexItem isBlock>
-											<TextControl
-												__nextHasNoMarginBottom
-												label={ __( 'Label' ) }
+									<MediaUploadCheck>
+										<MediaUpload
+											onSelect={ ( m ) => set( { captionUrl: m.url || '' } ) }
+											render={ ( { open } ) => (
+												<button type="button" className="tpb-btn" style={ { marginTop: 8 } } onClick={ open }>{ __( 'Choose .vtt file' ) }</button>
+											) }
+										/>
+									</MediaUploadCheck>
+									<div style={ { display: 'flex', gap: 8, marginTop: 16 } }>
+										<div style={ { flex: 1 } }>
+											<Label>{ __( 'Label' ) }</Label>
+											<input
+												className="tpb-input"
+												aria-label={ __( 'Label' ) }
 												placeholder="English"
 												value={ attributes.captionLabel }
-												onChange={ ( v ) => set( { captionLabel: v } ) }
+												onChange={ ( e ) => set( { captionLabel: e.target.value } ) }
 											/>
-										</FlexItem>
-										<FlexItem isBlock>
-											<TextControl
-												__nextHasNoMarginBottom
-												label={ __( 'Language' ) }
-												placeholder="en"
-												value={ attributes.captionLang }
-												onChange={ ( v ) => set( { captionLang: v } ) }
-											/>
-										</FlexItem>
-									</Flex>
+										</div>
+										<div style={ { flex: 1 } }>
+											<Label>{ __( 'Language' ) }</Label>
+											<select
+												className="tpb-input"
+												aria-label={ __( 'Language' ) }
+												value={ attributes.captionLang || 'en' }
+												onChange={ ( e ) => set( { captionLang: e.target.value } ) }
+											>
+												{ CAPTION_LANGS.map( ( [ code, name ] ) => (
+													<option key={ code } value={ code }>{ name }</option>
+												) ) }
+											</select>
+										</div>
+									</div>
+								</Section>
+							) }
+
+							<Section title={ __( 'Performance' ) }>
+								<Label>{ __( 'When to load the player' ) }</Label>
+								<RadioCards label={ __( 'When to load the player' ) } value={ attributes.loadStrategy } options={ LOAD } onChange={ ( v ) => set( { loadStrategy: v } ) } />
+								{ canPreload && (
+									<>
+										<Label gap>{ __( 'Preload' ) }</Label>
+										<Segmented label={ __( 'Preload' ) } value={ attributes.preload } options={ PRELOAD } onChange={ ( v ) => set( { preload: v } ) } />
+									</>
 								) }
-							</PanelBody>
-						) }
+							</Section>
 
-						<PanelBody title={ __( 'Performance' ) } initialOpen={ false }>
-							<SelectControl
-								__nextHasNoMarginBottom
-								label={ __( 'When to load the player' ) }
-								value={ attributes.loadStrategy }
-								options={ LOAD }
-								onChange={ ( v ) => set( { loadStrategy: v } ) }
-							/>
-							<SelectControl
-								__nextHasNoMarginBottom
-								label={ __( 'Preload' ) }
-								value={ attributes.preload }
-								options={ PRELOAD }
-								onChange={ ( v ) => set( { preload: v } ) }
-							/>
-						</PanelBody>
-					</>
-				) }
-
-				{ inline && (
-					<PanelBody title={ __( 'More options' ) } initialOpen={ false }>
-						<p style={ { margin: 0, fontSize: 12, color: '#757575' } }>
-							{ __( 'Chapters, call-to-action overlays, email capture and quizzes live in the full editor. Save this as a video there to use them.' ) }
-						</p>
-					</PanelBody>
-				) }
+							<div style={ { padding: 16, fontSize: 12, color: '#646C73', lineHeight: 1.5 } }>
+								{ __( 'Chapters, call-to-action overlays, email capture and quizzes live in the full editor. Save this as a video there to use them.' ) }
+							</div>
+						</>
+					) }
+				</div>
 			</InspectorControls>
 
 			{ /* The real player, full width. */ }
-			{ hasSource && !! item && (
+			{ ready && ! uploading && !! item && (
 				<div style={ { position: 'relative' } }>
 					{ needsNativeEmbed( item.config?.source ) ? (
 						// YouTube and Vimeo cannot be driven inside the editor's blob
@@ -550,7 +740,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 			) }
 
 			{ /* Chosen, but the config hasn't arrived — or couldn't. */ }
-			{ hasSource && ! item && ! libraryMissing && (
+			{ ready && ! uploading && ! item && (
 				<Placeholder icon="format-video" label={ brand() }>
 					{ itemError ? (
 						<Notice status="error" isDismissible={ false }>
@@ -560,51 +750,76 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 						<Spinner />
 					) }
 					{ !! itemError && (
-						<Button variant="secondary" onClick={ clearSource }>
+						<button type="button" className="tpb-btn" onClick={ clearSource }>
 							{ __( 'Choose something else' ) }
-						</Button>
+						</button>
 					) }
 				</Placeholder>
 			) }
 
-			{ /* Nothing chosen yet, or the saved video is gone. */ }
-			{ ( ! hasSource || libraryMissing ) && (
-				<>
+			{ /* Nothing chosen yet, an upload in flight, or the saved video is gone. */ }
+			{ showEmpty && (
+				<div className="tpb">
+					<Styles />
 					{ libraryMissing && (
 						<Notice status="warning" isDismissible={ false }>
 							{ __( 'That video is no longer in your library. Choose another one.' ) }
 						</Notice>
 					) }
+					<div className="tpb-empty">
+						<div style={ { display: 'flex', alignItems: 'center', gap: 10, fontSize: 15, fontWeight: 600, marginBottom: 6 } }>
+							<TruePlayerIcon size={ 22 } />
+							{ brand() }
+						</div>
+						<div style={ { fontSize: 13, color: '#434A51', marginBottom: 20 } }>{ WANT[ want ].desc }</div>
 
-					{ sourcePicker }
-
-					<div style={ { marginTop: 8 } }>
-						{ ! showLibrary && (
-							<Button variant="link" onClick={ () => setShowLibrary( true ) }>
-								{ __( 'Use a saved video instead' ) }
-							</Button>
-						) }
-						{ showLibrary && null !== videos && (
-							<div style={ { maxWidth: 360 } }>
-								<SelectControl
-									__nextHasNoMarginBottom
-									label={ __( 'Saved video' ) }
-									value={ videoId }
-									options={ libraryOptions }
-									onChange={ ( v ) => set( { videoId: parseInt( v, 10 ) || 0, src: '' } ) }
-								/>
-								{ 0 === videos.length && (
-									<p style={ { fontSize: 12, color: '#757575' } }>{ __( 'No saved videos yet.' ) }</p>
+						{ uploading ? (
+							<>
+								<div style={ { marginBottom: 8, fontSize: 13, color: '#434A51' } }>{ __( 'Uploading…' ) }</div>
+								<div className="tpb-bar" role="progressbar" aria-label={ __( 'Uploading…' ) } />
+							</>
+						) : (
+							<>
+								{ ( 'video' === want || 'audio' === want ) && (
+									<div style={ { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 } }>
+										<button type="button" className="tpb-btn tpb-btn--lg tpb-btn--primary" onClick={ startUpload }>
+											<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.5 15v3.5H5.7V15H4v3.5A1.7 1.7 0 005.7 20h12.8a1.7 1.7 0 001.7-1.5V15zM12 4L7.5 8.5l1.2 1.2 2.4-2.4V16h1.8V7.3l2.4 2.4 1.2-1.2z" /></svg>
+											{ __( 'Upload' ) }
+										</button>
+										<MediaUploadCheck>
+											<MediaUpload
+												allowedTypes={ audio ? [ 'audio' ] : [ 'video', 'audio' ] }
+												onSelect={ applyFile }
+												render={ ( { open } ) => (
+													<button type="button" className="tpb-btn tpb-btn--lg" onClick={ open }>{ __( 'Choose a file' ) }</button>
+												) }
+											/>
+										</MediaUploadCheck>
+										<button type="button" className="tpb-btn tpb-btn--lg" onClick={ () => setSavedOpen( true ) }>{ __( 'Use a saved video instead' ) }</button>
+									</div>
 								) }
-							</div>
+								{ linkRow }
+							</>
 						) }
-						{ showLibrary && null === videos && <Spinner /> }
 					</div>
-				</>
+				</div>
 			) }
 
-			{ editing && !! videoId && (
-				<VideoModal video={ item } onClose={ () => setEditing( false ) } onSaved={ savedLibrary } />
+			{ savedOpen && <SavedModal videos={ videos } selected={ videoId } onPick={ chooseSaved } onClose={ () => setSavedOpen( false ) } /> }
+
+			{ editing && inline && (
+				<VideoModal
+					inline={ { type: sourceType, src, mediaType: attributes.mediaType } }
+					mediaType={ attributes.mediaType }
+					onClose={ () => setEditing( false ) }
+					onApply={ ( patch ) => {
+						set( patch );
+						setEditing( false );
+					} }
+				/>
+			) }
+			{ editing && ! inline && !! videoId && (
+				<VideoModal video={ item } onClose={ () => setEditing( false ) } onSaved={ savedUpdated } />
 			) }
 		</div>
 	);

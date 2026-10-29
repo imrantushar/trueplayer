@@ -279,6 +279,15 @@ class Shortcode {
 		// Match the player's aspect ratio so the boot swap causes no layout shift.
 		if ( $ratio && '16:9' !== $ratio && ! $is_audio && preg_match( '/^\d+:\d+$/', $ratio ) ) {
 			$rules[] = 'aspect-ratio:' . str_replace( ':', ' / ', $ratio );
+			// Same narrower frame the player draws for tall and square ratios (Player.jsx FRAME_WIDTH).
+			$frame = [
+				'9:16' => 'min(100%, max(34%, 280px))',
+				'1:1'  => 'min(100%, max(62%, 280px))',
+				'4:3'  => 'min(100%, max(80%, 280px))',
+			];
+			if ( isset( $frame[ $ratio ] ) ) {
+				$rules[] = '--tp-stage-w:' . $frame[ $ratio ];
+			}
 		}
 		$style = $rules ? sprintf( ' style="%s"', esc_attr( implode( ';', $rules ) ) ) : '';
 		// A derived poster asks for the widest size first, which YouTube 404s

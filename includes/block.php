@@ -380,6 +380,8 @@ class Block {
 			'trueplayer/block/editor_data',
 			[
 				'brand'      => Helper::brand_name(),
+				// The same mark the admin menu uses: a white-label logo, else the video dashicon.
+				'logo'       => (string) Helper::brand_logo(),
 				'presets'    => $this->preset_options(),
 				// Mirrors the REST permission callback rather than restating
 				// it, so the dialog can never be offered to someone the
