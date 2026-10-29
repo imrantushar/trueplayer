@@ -35,7 +35,7 @@ import NativeEmbed, { needsNativeEmbed } from './NativeEmbed';
 import VideoModal from './VideoModal';
 import SavedModal from './SavedModal';
 import { TruePlayerIcon } from './icon';
-import { Check, Help, Label, Pills, RadioCards, Section, Segmented, Styles, Toggle } from './ui';
+import { ColorSwatches, Help, Label, Pills, RadioCards, Section, Segmented, Styles, Toggle } from './ui';
 import {
 	brand,
 	canCreate,
@@ -110,6 +110,35 @@ const ACCENTS = [
 	[ __( 'Green' ), '#16a34a' ],
 	[ __( 'Orange' ), '#ea580c' ],
 	[ __( 'Black' ), '#111827' ],
+];
+
+const HOVERS = [
+	[ __( 'White' ), '#ffffff' ],
+	[ __( 'Light grey' ), '#e5e7eb' ],
+	[ __( 'Blue' ), '#2563eb' ],
+	[ __( 'Orange' ), '#ea580c' ],
+	[ __( 'Black' ), '#111827' ],
+];
+
+const PLAY_STYLES = [
+	{ value: '', label: __( 'Site default' ) },
+	{ value: 'circle', label: __( 'Circle' ) },
+	{ value: 'soft', label: __( 'Soft' ) },
+	{ value: 'square', label: __( 'Square' ) },
+];
+
+const PLAY_SIZES = [
+	{ value: 0, label: __( 'Auto' ) },
+	{ value: 56, label: __( 'Small' ) },
+	{ value: 72, label: __( 'Medium' ) },
+	{ value: 88, label: __( 'Large' ) },
+	{ value: 108, label: __( 'Extra large' ) },
+];
+
+const SEEK_BARS = [
+	{ value: '', label: __( 'Site default' ) },
+	{ value: 'default', label: __( 'Default' ) },
+	{ value: 'waveform', label: __( 'Waveform' ) },
 ];
 
 const CAPTION_LANGS = [
@@ -418,6 +447,47 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 				</BlockControls>
 			) }
 
+			{ /* The "color" slot renders ahead of Dimensions; Styles neutralises its panel chrome. */ }
+			{ ready && (
+				<InspectorControls group="color">
+					<Styles />
+					<div className="tpb tpb-lead">
+						<Section title={ __( 'Player style' ) } initialOpen>
+							{ ! audio && (
+								<>
+									<Label>{ __( 'Aspect ratio' ) }</Label>
+									<Pills label={ __( 'Aspect ratio' ) } value={ attributes.aspectRatio } options={ ASPECTS } onChange={ ( v ) => set( { aspectRatio: v } ) } />
+								</>
+							) }
+
+							<Label gap={ ! audio }>{ __( 'Accent colour' ) }</Label>
+							<ColorSwatches value={ accent } presets={ ACCENTS } label={ __( 'Accent colour' ) } fallback="#4f46e5" onChange={ ( v ) => set( { accent: v } ) } />
+
+							<Label gap>{ __( 'Button hover colour' ) }</Label>
+							<ColorSwatches value={ attributes.hoverColor } presets={ HOVERS } label={ __( 'Button hover colour' ) } fallback="#ffffff" onChange={ ( v ) => set( { hoverColor: v } ) } />
+							<Help>{ __( 'The highlight behind a control when the viewer points at it.' ) }</Help>
+						</Section>
+
+						{ ! audio && (
+							<>
+								<Section title={ __( 'Play button' ) } initialOpen>
+									<Label>{ __( 'Play button style' ) }</Label>
+									<RadioCards dense label={ __( 'Play button style' ) } value={ attributes.playButtonStyle } options={ PLAY_STYLES } onChange={ ( v ) => set( { playButtonStyle: v } ) } />
+									<Label gap>{ __( 'Play button size' ) }</Label>
+									<RadioCards dense label={ __( 'Play button size' ) } value={ attributes.playButtonSize } options={ PLAY_SIZES } onChange={ ( v ) => set( { playButtonSize: v } ) } />
+								</Section>
+
+								<Section title={ __( 'Seek bar' ) } initialOpen>
+									<Label>{ __( 'Seek bar style' ) }</Label>
+									<RadioCards dense label={ __( 'Seek bar style' ) } value={ attributes.seekBarStyle } options={ SEEK_BARS } onChange={ ( v ) => set( { seekBarStyle: v } ) } />
+									<Help>{ attributes.seekBarStyle === 'waveform' ? __( 'The track drawn as audio bars. Chapter markers give way to it.' ) : __( 'A plain progress track.' ) }</Help>
+								</Section>
+							</>
+						) }
+					</div>
+				</InspectorControls>
+			) }
+
 			<InspectorControls>
 				<Styles />
 				<div className="tpb">
@@ -532,6 +602,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 								</div>
 							</Section>
 
+							{ ( ! audio || ( inline && presetOptions.length > 0 ) ) && (
 							<Section title={ __( 'Look' ) } initialOpen>
 								{ inline && presetOptions.length > 0 && (
 									<>
@@ -567,54 +638,11 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 												);
 											} ) }
 										</div>
-
-										<Label gap>{ __( 'Aspect ratio' ) }</Label>
-										<Pills label={ __( 'Aspect ratio' ) } value={ attributes.aspectRatio } options={ ASPECTS } onChange={ ( v ) => set( { aspectRatio: v } ) } />
 									</>
 								) }
 
-								<Label gap>{ __( 'Accent colour' ) }</Label>
-								<div role="radiogroup" aria-label={ __( 'Accent colour' ) } style={ { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' } }>
-									<button
-										type="button"
-										role="radio"
-										aria-checked={ ! accent }
-										aria-label={ __( 'Site default' ) }
-										title={ __( 'Site default' ) }
-										className="tpb-sw"
-										style={ { background: 'repeating-linear-gradient(135deg,#E0E4E8 0 4px,#fff 4px 8px)' } }
-										onClick={ () => set( { accent: '' } ) }
-									>
-										{ ! accent && <Check color="#141A24" /> }
-									</button>
-									{ ACCENTS.map( ( [ name, color ] ) => (
-										<button
-											key={ color }
-											type="button"
-											role="radio"
-											aria-checked={ accent === color }
-											aria-label={ name }
-											title={ name }
-											className="tpb-sw"
-											style={ { background: color } }
-											onClick={ () => set( { accent: color } ) }
-										>
-											{ accent === color && <Check /> }
-										</button>
-									) ) }
-									<label className="tpb-sw tpb-sw--custom" title={ __( 'Custom colour' ) }>
-										<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-											<path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z" />
-										</svg>
-										<input type="color" aria-label={ __( 'Custom colour' ) } value={ /^#[0-9a-f]{6}$/i.test( accent ) ? accent : '#4f46e5' } onChange={ ( e ) => set( { accent: e.target.value } ) } />
-									</label>
-								</div>
-								<Help>
-									{ accent
-										? `${ ( ACCENTS.find( ( a ) => a[ 1 ] === accent ) || [ __( 'Custom' ) ] )[ 0 ] } · ${ accent }`
-										: __( 'Site default' ) }
-								</Help>
 							</Section>
+							) }
 
 							<Section title={ __( 'Chapters & description' ) } badge={ chapters.found || '' }>
 								<Label>{ __( 'Chapters' ) }</Label>

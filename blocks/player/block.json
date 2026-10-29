@@ -78,6 +78,22 @@
 			"type": "string",
 			"default": ""
 		},
+		"hoverColor": {
+			"type": "string",
+			"default": ""
+		},
+		"playButtonStyle": {
+			"type": "string",
+			"default": ""
+		},
+		"playButtonSize": {
+			"type": "number",
+			"default": 0
+		},
+		"seekBarStyle": {
+			"type": "string",
+			"default": ""
+		},
 		"autoplayMode": {
 			"type": "string",
 			"default": ""

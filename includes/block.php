@@ -209,6 +209,22 @@ class Block {
 		if ( '' !== $accent ) {
 			$appearance['accent'] = $accent;
 		}
+		$hover = Helper::sanitize_css_color( isset( $a['hoverColor'] ) ? $a['hoverColor'] : '' );
+		if ( '' !== $hover ) {
+			$appearance['hoverColor'] = $hover;
+		}
+		$play_style = isset( $a['playButtonStyle'] ) ? (string) $a['playButtonStyle'] : '';
+		if ( in_array( $play_style, [ 'circle', 'soft', 'square' ], true ) ) {
+			$appearance['playButtonStyle'] = $play_style;
+		}
+		$play_size = isset( $a['playButtonSize'] ) ? (int) $a['playButtonSize'] : 0;
+		if ( in_array( $play_size, [ 56, 72, 88, 108 ], true ) ) {
+			$appearance['playButtonSize'] = $play_size;
+		}
+		$seek_bar = isset( $a['seekBarStyle'] ) ? (string) $a['seekBarStyle'] : '';
+		if ( in_array( $seek_bar, [ 'default', 'waveform' ], true ) ) {
+			$appearance['seekBarStyle'] = $seek_bar;
+		}
 
 		$behavior = [];
 		$mode     = isset( $a['autoplayMode'] ) ? (string) $a['autoplayMode'] : '';

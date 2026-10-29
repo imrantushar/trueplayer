@@ -9,6 +9,7 @@
  * CSS entries and stop emitting one of them (see Block::canvas_assets).
  */
 import { useState } from '@wordpress/element';
+import { __ } from '@Utils/translation';
 
 const INK = '#1e1e1e';
 
@@ -24,6 +25,9 @@ const CSS = `
 .block-editor-block-inspector .block-editor-block-card .block-editor-block-icon svg,.block-editor-block-inspector .block-editor-block-card .block-editor-block-icon img{width:22px;height:22px}
 .block-editor-block-inspector .block-editor-block-card__title{font-size:14px;font-weight:600;line-height:1.3;margin:0}
 .block-editor-block-inspector .block-editor-block-card__description{font-size:12px;color:#646C73;line-height:1.45;margin-top:2px;display:block}
+.components-tools-panel:has(.tpb-lead){display:block;padding:0;gap:0;border-top:0}
+.components-tools-panel:has(.tpb-lead)>.components-tools-panel-header,.components-tools-panel:has(.tpb-lead)>h2{display:none}
+.color-block-support-panel__inner-wrapper:has(.tpb-lead){display:block!important;grid-template-columns:none!important;grid-column:1/-1}
 .tpb-sec{border-bottom:1px solid #E0E4E8}
 .tpb-sec__head{width:100%;height:48px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;background:none;border:0;cursor:pointer;font-family:inherit;font-weight:600;font-size:13px;line-height:1;color:#141A24;text-align:left}
 .tpb-sec__head:hover{background:#F6F7F8}
@@ -188,5 +192,53 @@ export function Pills( { value, options, onChange, label } ) {
 				</button>
 			) ) }
 		</div>
+	);
+}
+
+/**
+ * A "site default" swatch, a row of preset colours and a custom picker.
+ * `presets` are [ name, colour ]; an empty `value` means the site default.
+ */
+export function ColorSwatches( { value, presets, onChange, label, fallback } ) {
+	const known = presets.find( ( p ) => p[ 1 ] === value );
+	return (
+		<>
+			<div role="radiogroup" aria-label={ label } style={ { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' } }>
+				<button
+					type="button"
+					role="radio"
+					aria-checked={ ! value }
+					aria-label={ __( 'Site default' ) }
+					title={ __( 'Site default' ) }
+					className="tpb-sw"
+					style={ { background: 'repeating-linear-gradient(135deg,#E0E4E8 0 4px,#fff 4px 8px)' } }
+					onClick={ () => onChange( '' ) }
+				>
+					{ ! value && <Check color="#141A24" /> }
+				</button>
+				{ presets.map( ( [ name, color ] ) => (
+					<button
+						key={ color }
+						type="button"
+						role="radio"
+						aria-checked={ value === color }
+						aria-label={ name }
+						title={ name }
+						className="tpb-sw"
+						style={ { background: color } }
+						onClick={ () => onChange( color ) }
+					>
+						{ value === color && <Check color={ color === '#ffffff' ? '#141A24' : '#fff' } /> }
+					</button>
+				) ) }
+				<label className="tpb-sw tpb-sw--custom" title={ __( 'Custom colour' ) }>
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+						<path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z" />
+					</svg>
+					<input type="color" aria-label={ __( 'Custom colour' ) } value={ /^#[0-9a-f]{6}$/i.test( value ) ? value : fallback } onChange={ ( e ) => onChange( e.target.value ) } />
+				</label>
+			</div>
+			<div className="tpb-help">{ value ? `${ known ? known[ 0 ] : __( 'Custom' ) } · ${ value }` : __( 'Site default' ) }</div>
+		</>
 	);
 }
