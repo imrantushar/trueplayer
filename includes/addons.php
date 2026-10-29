@@ -69,7 +69,7 @@ class Addons {
 	public function get_all_addons() {
 		$security = isset( $_POST['security'] ) ? sanitize_text_field( wp_unslash( $_POST['security'] ) ) : '';
 		if ( ! wp_verify_nonce( $security, 'trueplayer_nonce' ) ) {
-			wp_send_json_error( [ 'message' => 'Invalid nonce' ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid nonce', 'trueplayer' ) ] );
 		}
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( 'Insufficient permissions.', 401 );
@@ -82,7 +82,7 @@ class Addons {
 	public function save_addon_status() {
 		$security = isset( $_POST['security'] ) ? sanitize_text_field( wp_unslash( $_POST['security'] ) ) : '';
 		if ( ! wp_verify_nonce( $security, 'trueplayer_nonce' ) ) {
-			wp_send_json_error( [ 'message' => 'Invalid nonce' ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid nonce', 'trueplayer' ) ] );
 		}
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( 'Insufficient permissions.', 401 );
