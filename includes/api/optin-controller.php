@@ -64,12 +64,12 @@ class OptinController extends WP_REST_Controller {
 	}
 
 	public function handle( $request ) {
-		$body     = $request->get_json_params();
-		$video_id = isset( $body['video'] ) ? (int) $body['video'] : 0;
-		$email    = isset( $body['email'] ) ? sanitize_email( $body['email'] ) : '';
-		$name     = isset( $body['name'] ) ? sanitize_text_field( $body['name'] ) : '';
-		$layer_id = isset( $body['layer'] ) ? sanitize_text_field( wp_unslash( (string) $body['layer'] ) ) : '';
-		$website  = isset( $body['website'] ) ? (string) $body['website'] : '';
+		$body     = (array) $request->get_json_params();
+		$video_id = isset( $body['video'] ) && is_scalar( $body['video'] ) ? (int) $body['video'] : 0;
+		$email    = isset( $body['email'] ) && is_string( $body['email'] ) ? sanitize_email( $body['email'] ) : '';
+		$name     = Helper::text_value( $body['name'] ?? '' );
+		$layer_id = Helper::text_value( $body['layer'] ?? '' );
+		$website  = isset( $body['website'] ) && is_scalar( $body['website'] ) ? (string) $body['website'] : '';
 
 		// Honeypot — real forms never fill this; bots that walk every input will.
 		if ( '' !== trim( $website ) ) {
@@ -146,10 +146,16 @@ class OptinController extends WP_REST_Controller {
 	 * Hash of the submitting IP, salted with the install's secret so one site's
 	 * transient key cannot be guessed from another. The IP itself is never
 	 * stored.
+	 *
+	 * Only `REMOTE_ADDR` is trusted by default: forwarding headers are written by
+	 * the client, so honouring them would let a bot dodge the throttle by sending
+	 * a new one with every request. A site behind a proxy it controls can opt a
+	 * header in through `trueplayer/optin/ip_headers`.
 	 */
 	private static function client_ip_hash(): string {
-		$ip = '';
-		foreach ( [ 'HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR' ] as $k ) {
+		$ip      = '';
+		$headers = (array) apply_filters( 'trueplayer/optin/ip_headers', [ 'REMOTE_ADDR' ] );
+		foreach ( $headers as $k ) {
 			if ( ! empty( $_SERVER[ $k ] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
 				$raw = sanitize_text_field( wp_unslash( (string) $_SERVER[ $k ] ) );
 				$raw = trim( explode( ',', $raw )[0] );

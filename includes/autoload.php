@@ -38,7 +38,7 @@ class Autoload {
 				$class_to_load = $class;
 				$filename      = strtolower(
 					preg_replace(
-						[ '/^' . $namespace . '\\\/', '/([a-z])([A-Z])/', '/_/', '/\\\/' ],
+						[ '/^' . preg_quote( $namespace, '/' ) . '\\\/', '/([a-z])([A-Z])/', '/_/', '/\\\/' ],
 						[ '', '$1-$2', '-', DIRECTORY_SEPARATOR ],
 						$class_to_load
 					)

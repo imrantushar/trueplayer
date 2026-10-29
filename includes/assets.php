@@ -183,7 +183,7 @@ class Assets {
 		';
 	}
 
-private function load_asset_deps( string $entry ): array {
+	private function load_asset_deps( string $entry ): array {
 		$file = self::build_dir() . sprintf( '%s.%s.asset.php', $entry, TRUEPLAYER_VERSION );
 		if ( ! file_exists( $file ) ) {
 			return [ 'dependencies' => [], 'version' => TRUEPLAYER_VERSION ];
@@ -257,7 +257,7 @@ private function load_asset_deps( string $entry ): array {
 			'rest_url'              => rest_url(),
 			'namespace'             => TRUEPLAYER_PLUGIN_SLUG . '/v1/',
 			'plugin_root_url'       => TRUEPLAYER_PLUGIN_ROOT_URI,
-			'ajax_url'              => esc_url( admin_url( 'admin-ajax.php' ) ),
+			'ajax_url'              => admin_url( 'admin-ajax.php' ),
 			'site_url'              => site_url(),
 			'admin_url'             => admin_url(),
 			'is_login'              => (bool) is_user_logged_in(),
@@ -334,9 +334,7 @@ private function load_asset_deps( string $entry ): array {
 
 	/** One top-level settings key, decoded, guaranteed to be an array. */
 	private static function settings_blob( string $key ): array {
-		$settings = json_decode( get_option( TRUEPLAYER_SETTINGS_NAME, '{}' ), true );
-		return ( is_array( $settings ) && ! empty( $settings[ $key ] ) && is_array( $settings[ $key ] ) )
-			? $settings[ $key ]
-			: [];
+		$settings = \TruePlayer\Helper::get_settings();
+		return ( ! empty( $settings[ $key ] ) && is_array( $settings[ $key ] ) ) ? $settings[ $key ] : [];
 	}
 }

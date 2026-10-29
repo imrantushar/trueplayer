@@ -104,8 +104,13 @@ final class TruePlayer {
 	}
 
 	public function set_global_settings() {
-		$GLOBALS['trueplayer_settings'] = json_decode( get_option( TRUEPLAYER_SETTINGS_NAME, '{}' ) );
-		$GLOBALS['trueplayer_addons']   = json_decode( get_option( TRUEPLAYER_ADDONS_SETTINGS, '{}' ) );
+		// Cast first: json_decode() throws on a non-string in PHP 8, and an option
+		// stored as an array must not fatal the site.
+		$settings = json_decode( (string) get_option( TRUEPLAYER_SETTINGS_NAME, '{}' ) );
+		$addons   = json_decode( (string) get_option( TRUEPLAYER_ADDONS_SETTINGS, '{}' ) );
+
+		$GLOBALS['trueplayer_settings'] = is_object( $settings ) ? $settings : new stdClass();
+		$GLOBALS['trueplayer_addons']   = is_object( $addons ) ? $addons : new stdClass();
 	}
 
 	public function load_dependency() {

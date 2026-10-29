@@ -54,14 +54,15 @@ class PlaylistsController extends WP_REST_Controller {
 	public function show( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== Playlist::POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 		return rest_ensure_response( $this->to_item( get_post( $id ) ) );
 	}
 
 	public function create( $request ) {
-		$body = $request->get_json_params();
-		$id   = wp_insert_post( [ 'post_type' => Playlist::POST_TYPE, 'post_status' => 'publish', 'post_title' => sanitize_text_field( $body['title'] ?? __( 'Untitled playlist', 'trueplayer' ) ) ] );
+		$body  = (array) $request->get_json_params();
+		$title = Helper::text_value( $body['title'] ?? '' );
+		$id    = wp_insert_post( [ 'post_type' => Playlist::POST_TYPE, 'post_status' => 'publish', 'post_title' => '' !== $title ? $title : __( 'Untitled playlist', 'trueplayer' ) ], true );
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
@@ -72,11 +73,11 @@ class PlaylistsController extends WP_REST_Controller {
 	public function update( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== Playlist::POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
-		$body = $request->get_json_params();
+		$body = (array) $request->get_json_params();
 		if ( isset( $body['title'] ) ) {
-			wp_update_post( [ 'ID' => $id, 'post_title' => sanitize_text_field( $body['title'] ) ] );
+			wp_update_post( [ 'ID' => $id, 'post_title' => Helper::text_value( $body['title'] ) ] );
 		}
 		if ( array_key_exists( 'config', $body ) ) {
 			Helper::update_json_meta( $id, '_trueplayer_playlist', $this->sanitize( $body['config'] ) );
@@ -87,7 +88,7 @@ class PlaylistsController extends WP_REST_Controller {
 	public function destroy( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== Playlist::POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 		wp_delete_post( $id, true );
 		return rest_ensure_response( [ 'deleted' => true ] );
@@ -96,7 +97,7 @@ class PlaylistsController extends WP_REST_Controller {
 	private function sanitize( $config ) {
 		$config = is_array( $config ) ? $config : [];
 		return [
-			'title'        => sanitize_text_field( $config['title'] ?? '' ),
+			'title'        => Helper::text_value( $config['title'] ?? '' ),
 			'layout'       => in_array( $config['layout'] ?? 'sidebar', [ 'sidebar', 'grid' ], true ) ? $config['layout'] : 'sidebar',
 			'videos'       => array_values( array_filter( array_map( 'absint', (array) ( $config['videos'] ?? [] ) ) ) ),
 			'autoplayNext' => ! empty( $config['autoplayNext'] ),

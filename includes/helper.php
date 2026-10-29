@@ -46,6 +46,19 @@ class Helper {
 		return gmdate( 'Y-m-d\TH:i:s\Z' );
 	}
 
+	/**
+	 * Plain single-line text from a request value, or '' when it is not a scalar.
+	 *
+	 * `sanitize_text_field()` and friends assume a string; a JSON body that sends
+	 * an array or object where a name belongs would otherwise reach them as one.
+	 *
+	 * @param mixed $raw Request value.
+	 * @return string
+	 */
+	public static function text_value( $raw ): string {
+		return is_scalar( $raw ) && ! is_bool( $raw ) ? sanitize_text_field( (string) $raw ) : '';
+	}
+
 	/** The global TruePlayer settings option, decoded (empty array if unset). */
 	public static function get_settings(): array {
 		$raw = get_option( TRUEPLAYER_SETTINGS_NAME, '{}' );
