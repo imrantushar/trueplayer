@@ -1427,6 +1427,9 @@
 		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 		transition-duration: 150ms;
 }
+.ease-in-out {
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
 
 /* Scoped mini-preflight. Tailwind's preflight is disabled globally (so it
    can't fight WP admin), which means raw elements keep UA borders + button
