@@ -116,7 +116,9 @@ class OptinController extends WP_REST_Controller {
 	private function throttle( int $video_id ) {
 		$ip = self::client_ip_hash();
 		if ( '' === $ip ) {
-			return true; // No usable client identifier; let it through.
+			// No usable client identifier: share one bucket per video rather than
+			// skipping the limit, so a missing address can't be used to bypass it.
+			$ip = 'unknown';
 		}
 		$burst  = 'trueplayer_optin_burst_' . $ip . '_' . $video_id;
 		$hourly = 'trueplayer_optin_hour_' . $ip . '_' . $video_id;

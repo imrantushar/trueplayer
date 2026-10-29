@@ -117,6 +117,9 @@ class Helper {
 		if ( ! is_array( $config ) ) {
 			$config = [];
 		}
+		// Configs saved before link values were validated on write are cleaned
+		// on read too, so a stored `javascript:` URL never reaches the player.
+		$config = self::sanitize_style_values( $config );
 		/**
 		 * Central seam: add-ons and integrations mutate the resolved player
 		 * config (inject layers, override gating, etc.) without touching core.
@@ -414,9 +417,27 @@ class Helper {
 				$data[ $key ] = self::sanitize_style_values( $value );
 			} elseif ( is_string( $key ) && preg_match( '/(color|accent)$/i', $key ) ) {
 				$data[ $key ] = self::sanitize_css_color( $value );
+			} elseif ( is_string( $key ) && preg_match( '/(url|href|link)$/i', $key ) ) {
+				$data[ $key ] = self::sanitize_link_url( $value );
 			}
 		}
 		return $data;
+	}
+
+	/**
+	 * A link target (`buttonUrl`, `logoUrl`, …) that ends up in an `href`, or ''
+	 * when the value is anything else. Only http(s), mailto and tel schemes pass,
+	 * so `javascript:` and `data:` can never reach an anchor. Relative paths and
+	 * fragments are kept.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public static function sanitize_link_url( $value ): string {
+		if ( ! is_string( $value ) ) {
+			return '';
+		}
+		return esc_url_raw( trim( $value ), [ 'http', 'https', 'mailto', 'tel' ] );
 	}
 
 	/**
