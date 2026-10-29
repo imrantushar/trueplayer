@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: TruePlayer 1.7.4\n"
+"Project-Id-Version: TruePlayer 1.8.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/trueplayer\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-24T14:24:28+00:00\n"
+"POT-Creation-Date: 2026-10-29T09:28:23+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 
@@ -38,7 +38,21 @@ msgstr ""
 msgid "https://kodezen.com"
 msgstr ""
 
-#: includes/addons.php:103
+#: includes/addons.php:72
+#: includes/addons.php:85
+msgid "Invalid nonce"
+msgstr ""
+
+#: includes/addons.php:75
+#: includes/addons.php:88
+msgid "Insufficient permissions."
+msgstr ""
+
+#: includes/addons.php:93
+msgid "Missing addon."
+msgstr ""
+
+#: includes/addons.php:106
 msgid "This addon cannot be activated right now."
 msgstr ""
 
@@ -91,25 +105,41 @@ msgstr ""
 msgid "Too many submissions. Try again later."
 msgstr ""
 
-#: includes/api/playlists-controller.php:64
+#: includes/api/playlists-controller.php:57
+#: includes/api/playlists-controller.php:76
+#: includes/api/playlists-controller.php:91
+#: includes/api/presets-controller.php:114
+#: includes/api/presets-controller.php:155
+#: includes/api/presets-controller.php:170
+#: includes/api/videos-controller.php:374
+#: includes/api/videos-controller.php:447
+#: includes/api/videos-controller.php:556
+#: includes/api/videos-controller.php:596
+#: includes/api/videos-controller.php:641
+#: includes/api/videos-controller.php:715
+#: includes/api/videos-controller.php:793
+msgid "Not found"
+msgstr ""
+
+#: includes/api/playlists-controller.php:65
 #: dev_trueplayer/admin/screens/Library.jsx:161
 msgid "Untitled playlist"
 msgstr ""
 
-#: includes/api/presets-controller.php:121
+#: includes/api/presets-controller.php:123
 #: dev_trueplayer/admin/screens/Presets.jsx:176
 msgid "Untitled preset"
 msgstr ""
 
-#: includes/api/subtitles-controller.php:46
+#: includes/api/subtitles-controller.php:51
 msgid "Not a valid YouTube URL or ID."
 msgstr ""
 
-#: includes/api/subtitles-controller.php:51
+#: includes/api/subtitles-controller.php:56
 msgid "No public captions found for this video."
 msgstr ""
 
-#: includes/api/subtitles-controller.php:56
+#: includes/api/subtitles-controller.php:61
 msgid "Captions could not be parsed."
 msgstr ""
 
@@ -127,19 +157,16 @@ msgstr ""
 
 #: includes/api/videos-controller.php:327
 #: includes/api/videos-controller.php:406
+#: includes/block.php:59
+#: dev_trueplayer/block/edit.jsx:274
 msgid "Choose a file or paste a link first."
 msgstr ""
 
 #: includes/api/videos-controller.php:337
-#: includes/api/videos-controller.php:580
-#: includes/api/videos-controller.php:617
+#: includes/api/videos-controller.php:568
+#: includes/api/videos-controller.php:606
 #: dev_trueplayer/admin/screens/Library.jsx:156
 msgid "Untitled video"
-msgstr ""
-
-#: includes/api/videos-controller.php:374
-#: includes/api/videos-controller.php:447
-msgid "Not found"
 msgstr ""
 
 #: includes/api/videos-controller.php:382
@@ -150,18 +177,182 @@ msgstr ""
 msgid "This video uses a source that is set up in the full editor."
 msgstr ""
 
-#: includes/api/videos-controller.php:659
+#: includes/api/videos-controller.php:648
 msgid "The captured frame was empty or too large to store."
 msgstr ""
 
-#: includes/api/videos-controller.php:670
+#: includes/api/videos-controller.php:659
 msgid "That frame was not a readable image."
 msgstr ""
 
 #. translators: %s: video title.
-#: includes/api/videos-controller.php:684
+#: includes/api/videos-controller.php:673
 #, php-format
 msgid "%s poster"
+msgstr ""
+
+#: includes/block.php:63
+msgid "Sorry, you are not allowed to do that."
+msgstr ""
+
+#: includes/cli.php:31
+msgid "Demo — Self-hosted MP4 (chapters)"
+msgstr ""
+
+#: includes/cli.php:35
+msgid "Opening"
+msgstr ""
+
+#: includes/cli.php:36
+msgid "The reef"
+msgstr ""
+
+#: includes/cli.php:37
+msgid "Open water"
+msgstr ""
+
+#: includes/cli.php:38
+msgid "Closing"
+msgstr ""
+
+#: includes/cli.php:43
+msgid "Demo — YouTube"
+msgstr ""
+
+#: includes/cli.php:47
+msgid "Demo — Vimeo"
+msgstr ""
+
+#: includes/cli.php:51
+msgid "Demo — HLS stream"
+msgstr ""
+
+#: includes/cli.php:55
+msgid "Demo — Audio / podcast"
+msgstr ""
+
+#: includes/cli.php:59
+msgid "Demo — Bunny.net (placeholder ids)"
+msgstr ""
+
+#: includes/cli.php:63
+msgid "Demo — Showcase (skin, overlays, action bar, layers)"
+msgstr ""
+
+#. translators: %s: the words "dynamic description" in bold.
+#: includes/cli.php:68
+#, php-format
+msgid "A %s rendered under the player — links, resources, anything."
+msgstr ""
+
+#: includes/cli.php:69
+msgid "dynamic description"
+msgstr ""
+
+#: includes/cli.php:77
+msgid "Chapter 1"
+msgstr ""
+
+#: includes/cli.php:77
+msgid "The open ocean"
+msgstr ""
+
+#: includes/cli.php:78
+msgid "Enjoyed it?"
+msgstr ""
+
+#: includes/cli.php:78
+msgid "See the full series."
+msgstr ""
+
+#: includes/cli.php:78
+msgid "Browse"
+msgstr ""
+
+#: includes/cli.php:80
+msgid "Limited offer — full course 30% off"
+msgstr ""
+
+#: includes/cli.php:80
+msgid "Get it"
+msgstr ""
+
+#: includes/cli.php:82
+msgid "What is this?"
+msgstr ""
+
+#: includes/cli.php:83
+msgid "Get the bonus pack"
+msgstr ""
+
+#: includes/cli.php:83
+msgid "Send it"
+msgstr ""
+
+#: includes/cli.php:90
+msgid "Demo — Watch-verify + quiz (no-skip)"
+msgstr ""
+
+#: includes/cli.php:99
+msgid "Quick check"
+msgstr ""
+
+#: includes/cli.php:99
+msgid "What is in the video?"
+msgstr ""
+
+#: includes/cli.php:99
+msgid "Ocean"
+msgstr ""
+
+#: includes/cli.php:99
+msgid "Desert"
+msgstr ""
+
+#: includes/cli.php:101
+msgid "Final"
+msgstr ""
+
+#: includes/cli.php:101
+msgid "You watched the video"
+msgstr ""
+
+#. translators: %d: sequence number of the extra demo video.
+#: includes/cli.php:123
+#, php-format
+msgid "Demo — Extra %d"
+msgstr ""
+
+#. translators: %d: number of demo videos created.
+#: includes/cli.php:130
+#, php-format
+msgid "Created %d demo videos."
+msgstr ""
+
+#: includes/cli.php:135
+msgid "Demo — Course playlist"
+msgstr ""
+
+#: includes/cli.php:136
+msgid "Demo course"
+msgstr ""
+
+#. translators: 1: playlist post ID, 2: playlist post ID used in the shortcode.
+#: includes/cli.php:140
+#, php-format
+msgid "Created playlist #%1$d — shortcode: [trueplayer_playlist id=\"%2$d\"]"
+msgstr ""
+
+#. translators: %d: video post ID.
+#: includes/cli.php:148
+#, php-format
+msgid "Sample embed: [trueplayer id=\"%d\"]"
+msgstr ""
+
+#. translators: %d: number of seeded items removed.
+#: includes/cli.php:166
+#, php-format
+msgid "Removed %d seeded items."
 msgstr ""
 
 #: includes/database/post-type.php:34
@@ -181,8 +372,12 @@ msgstr ""
 msgid "No subscription provider is configured."
 msgstr ""
 
+#: includes/integrations/base-integration.php:31
+msgid "Not supported."
+msgstr ""
+
 #: includes/integrations/wp-mail.php:31
-#: dev_trueplayer/admin/screens/Settings.jsx:804
+#: dev_trueplayer/admin/screens/Settings.jsx:807
 #: dev_trueplayer/ext/admin.js:53
 msgid "Email notification"
 msgstr ""
@@ -235,11 +430,11 @@ msgstr ""
 msgid "Watch video"
 msgstr ""
 
-#: includes/shortcode.php:277
+#: includes/shortcode.php:312
 msgid "Play audio"
 msgstr ""
 
-#: includes/shortcode.php:277
+#: includes/shortcode.php:312
 #: dev_trueplayer/player/Playlist.jsx:52
 msgid "Play video"
 msgstr ""
@@ -273,6 +468,8 @@ msgstr ""
 #: dev_trueplayer/admin/components/Header.jsx:39
 #: dev_trueplayer/admin/screens/CreateModal.jsx:112
 #: dev_trueplayer/admin/screens/editor/SourceTab.jsx:159
+#: dev_trueplayer/block/edit.jsx:555
+#: dev_trueplayer/block/edit.jsx:558
 msgid "Title"
 msgstr ""
 
@@ -281,7 +478,7 @@ msgid "Media Library"
 msgstr ""
 
 #: dev_trueplayer/admin/components/MediaFileCard.jsx:20
-#: dev_trueplayer/block/data.js:37
+#: dev_trueplayer/block/data.js:44
 msgid "External URL"
 msgstr ""
 
@@ -299,7 +496,7 @@ msgid "Choose an audio file"
 msgstr ""
 
 #: dev_trueplayer/admin/components/MediaFileCard.jsx:59
-#: dev_trueplayer/block/VideoModal.jsx:163
+#: dev_trueplayer/block/VideoModal.jsx:141
 msgid "Choose a video"
 msgstr ""
 
@@ -315,7 +512,8 @@ msgstr ""
 #: dev_trueplayer/admin/components/MediaPicker.jsx:24
 #: dev_trueplayer/admin/components/PosterField.jsx:57
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:137
-#: dev_trueplayer/block/edit.jsx:143
+#: dev_trueplayer/block/edit.jsx:431
+#: dev_trueplayer/block/edit.jsx:530
 msgid "Replace"
 msgstr ""
 
@@ -324,10 +522,13 @@ msgstr ""
 #: dev_trueplayer/admin/components/PosterField.jsx:61
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:138
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:204
+#: dev_trueplayer/block/edit.jsx:441
+#: dev_trueplayer/block/edit.jsx:577
 msgid "Remove"
 msgstr ""
 
 #: dev_trueplayer/admin/components/MediaPicker.jsx:10
+#: dev_trueplayer/block/edit.jsx:815
 msgid "Upload"
 msgstr ""
 
@@ -372,7 +573,7 @@ msgstr ""
 #: dev_trueplayer/player/components/InfoPanel.jsx:101
 #: dev_trueplayer/player/components/Overlay.jsx:14
 #: dev_trueplayer/player/mount.js:279
-#: dev_trueplayer/player/Player.jsx:993
+#: dev_trueplayer/player/Player.jsx:1009
 msgid "Close"
 msgstr ""
 
@@ -422,6 +623,10 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:210
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:25
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:54
+#: dev_trueplayer/block/edit.jsx:63
+#: dev_trueplayer/block/edit.jsx:80
+#: dev_trueplayer/block/edit.jsx:94
+#: dev_trueplayer/block/edit.jsx:140
 msgid "Default"
 msgstr ""
 
@@ -431,6 +636,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:13
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:26
+#: dev_trueplayer/block/edit.jsx:64
 msgid "Modern"
 msgstr ""
 
@@ -440,6 +646,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:14
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:27
+#: dev_trueplayer/block/edit.jsx:65
 msgid "Simple"
 msgstr ""
 
@@ -452,6 +659,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:28
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:48
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:266
+#: dev_trueplayer/block/edit.jsx:66
 msgid "Minimal"
 msgstr ""
 
@@ -461,6 +669,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/data/preset-templates.js:16
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:29
+#: dev_trueplayer/block/edit.jsx:67
 msgid "Standard"
 msgstr ""
 
@@ -533,31 +742,28 @@ msgstr ""
 #: dev_trueplayer/admin/screens/CreateModal.jsx:87
 #: dev_trueplayer/admin/screens/Library.jsx:321
 #: dev_trueplayer/admin/screens/Presets.jsx:219
-#: dev_trueplayer/block/VideoModal.jsx:230
 msgid "Cancel"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:91
 #: dev_trueplayer/admin/screens/Presets.jsx:220
-#: dev_trueplayer/block/VideoModal.jsx:242
 msgid "Creating…"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:91
 #: dev_trueplayer/admin/screens/Library.jsx:377
-#: dev_trueplayer/block/VideoModal.jsx:242
 msgid "Create"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:111
 #: dev_trueplayer/admin/screens/Presets.jsx:246
-#: dev_trueplayer/block/VideoModal.jsx:134
+#: dev_trueplayer/block/VideoModal.jsx:160
 #: dev_trueplayer/player/components/EmailForm.jsx:103
 msgid "Name"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/CreateModal.jsx:111
-#: dev_trueplayer/block/VideoModal.jsx:135
+#: dev_trueplayer/block/VideoModal.jsx:162
 msgid "Shown in your library. You can rename it later."
 msgstr ""
 
@@ -569,8 +775,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/Library.jsx:30
 #: dev_trueplayer/admin/screens/Presets.jsx:229
 #: dev_trueplayer/admin/screens/Presets.jsx:263
-#: dev_trueplayer/admin/screens/Settings.jsx:646
-#: dev_trueplayer/block/edit.jsx:124
+#: dev_trueplayer/admin/screens/Settings.jsx:649
 msgid "Video"
 msgstr ""
 
@@ -579,7 +784,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/Library.jsx:31
 #: dev_trueplayer/admin/screens/Presets.jsx:229
 #: dev_trueplayer/admin/screens/Presets.jsx:263
-#: dev_trueplayer/admin/screens/Settings.jsx:646
+#: dev_trueplayer/admin/screens/Settings.jsx:649
 #: dev_trueplayer/utils/source-types.js:93
 msgid "Audio"
 msgstr ""
@@ -587,7 +792,9 @@ msgstr ""
 #: dev_trueplayer/admin/screens/CreateModal.jsx:161
 #: dev_trueplayer/admin/screens/CreateModal.jsx:162
 #: dev_trueplayer/admin/screens/Editor.jsx:25
-#: dev_trueplayer/block/VideoModal.jsx:144
+#: dev_trueplayer/block/edit.jsx:505
+#: dev_trueplayer/block/VideoModal.jsx:121
+#: dev_trueplayer/block/VideoModal.jsx:122
 msgid "Source"
 msgstr ""
 
@@ -708,7 +915,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/Playlists.jsx:132
 #: dev_trueplayer/admin/screens/Presets.jsx:103
 #: dev_trueplayer/admin/screens/Settings.jsx:568
-#: dev_trueplayer/block/VideoModal.jsx:241
+#: dev_trueplayer/block/VideoModal.jsx:168
 msgid "Saving…"
 msgstr ""
 
@@ -731,6 +938,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:55
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:63
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:207
+#: dev_trueplayer/block/edit.jsx:145
 msgid "English"
 msgstr ""
 
@@ -763,7 +971,7 @@ msgid "Logo / watermark"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:147
-#: dev_trueplayer/admin/screens/Settings.jsx:875
+#: dev_trueplayer/admin/screens/Settings.jsx:878
 msgid "Upload a logo"
 msgstr ""
 
@@ -772,7 +980,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:429
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:66
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:151
-#: dev_trueplayer/admin/screens/Settings.jsx:879
+#: dev_trueplayer/admin/screens/Settings.jsx:882
 msgid "Position"
 msgstr ""
 
@@ -780,7 +988,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:18
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:17
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:433
-#: dev_trueplayer/admin/screens/Settings.jsx:882
+#: dev_trueplayer/admin/screens/Settings.jsx:885
 msgid "Top right"
 msgstr ""
 
@@ -788,7 +996,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:18
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:17
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:434
-#: dev_trueplayer/admin/screens/Settings.jsx:881
+#: dev_trueplayer/admin/screens/Settings.jsx:884
 msgid "Top left"
 msgstr ""
 
@@ -796,7 +1004,7 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:20
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:19
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:431
-#: dev_trueplayer/admin/screens/Settings.jsx:884
+#: dev_trueplayer/admin/screens/Settings.jsx:887
 msgid "Bottom right"
 msgstr ""
 
@@ -804,17 +1012,17 @@ msgstr ""
 #: dev_trueplayer/admin/screens/editor/LayersTab.jsx:20
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:19
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:432
-#: dev_trueplayer/admin/screens/Settings.jsx:883
+#: dev_trueplayer/admin/screens/Settings.jsx:886
 msgid "Bottom left"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:165
-#: dev_trueplayer/admin/screens/Settings.jsx:891
+#: dev_trueplayer/admin/screens/Settings.jsx:894
 msgid "Click-through link"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:165
-#: dev_trueplayer/admin/screens/Settings.jsx:891
+#: dev_trueplayer/admin/screens/Settings.jsx:894
 msgid "Optional — makes the logo clickable."
 msgstr ""
 
@@ -849,6 +1057,8 @@ msgid "Change"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:207
+#: dev_trueplayer/block/edit.jsx:695
+#: dev_trueplayer/block/edit.jsx:698
 msgid "Label"
 msgstr ""
 
@@ -869,6 +1079,8 @@ msgid "What this video covers, links, resources…"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/AppearanceTab.jsx:238
+#: dev_trueplayer/block/edit.jsx:648
+#: dev_trueplayer/block/edit.jsx:651
 #: dev_trueplayer/player/components/InfoPanel.jsx:92
 msgid "Chapters"
 msgstr ""
@@ -1249,6 +1461,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/OverlaysTab.jsx:50
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:372
+#: dev_trueplayer/block/edit.jsx:81
 #: dev_trueplayer/player/components/Controls.jsx:385
 #: dev_trueplayer/player/components/Controls.jsx:386
 #: dev_trueplayer/player/components/Controls.jsx:440
@@ -1410,10 +1623,12 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:17
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:284
+#: dev_trueplayer/block/edit.jsx:480
 msgid "Seek bar"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:18
+#: dev_trueplayer/block/edit.jsx:676
 #: dev_trueplayer/utils/controls.js:64
 msgid "Captions"
 msgstr ""
@@ -1429,6 +1644,7 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:21
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:459
+#: dev_trueplayer/block/edit.jsx:591
 msgid "Playback"
 msgstr ""
 
@@ -1449,14 +1665,17 @@ msgid "Play button and a waveform, nothing else."
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:54
+#: dev_trueplayer/block/edit.jsx:483
 msgid "A plain progress track."
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:55
+#: dev_trueplayer/block/edit.jsx:141
 msgid "Waveform"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:55
+#: dev_trueplayer/block/edit.jsx:483
 msgid "The track drawn as audio bars. Chapter markers give way to it."
 msgstr ""
 
@@ -1478,12 +1697,15 @@ msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:189
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:442
-#: dev_trueplayer/admin/screens/Settings.jsx:744
+#: dev_trueplayer/admin/screens/Settings.jsx:747
+#: dev_trueplayer/block/edit.jsx:616
 msgid "None"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:203
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:217
+#: dev_trueplayer/block/edit.jsx:627
+#: dev_trueplayer/block/edit.jsx:628
 msgid "Skin"
 msgstr ""
 
@@ -1492,7 +1714,9 @@ msgid "Overall player theme."
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:227
-#: dev_trueplayer/admin/screens/Settings.jsx:768
+#: dev_trueplayer/admin/screens/Settings.jsx:771
+#: dev_trueplayer/block/edit.jsx:458
+#: dev_trueplayer/block/edit.jsx:459
 msgid "Aspect ratio"
 msgstr ""
 
@@ -1501,7 +1725,7 @@ msgid "9:16 for vertical / Shorts-style video."
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:233
-#: dev_trueplayer/admin/screens/Settings.jsx:853
+#: dev_trueplayer/admin/screens/Settings.jsx:856
 msgid "Accent color"
 msgstr ""
 
@@ -1510,7 +1734,7 @@ msgid "Scrubber, buttons, highlights."
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:236
-#: dev_trueplayer/admin/screens/Settings.jsx:859
+#: dev_trueplayer/admin/screens/Settings.jsx:862
 msgid "Button hover color"
 msgstr ""
 
@@ -1519,15 +1743,18 @@ msgid "Optional; default is a light overlay."
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:237
-#: dev_trueplayer/admin/screens/Settings.jsx:862
+#: dev_trueplayer/admin/screens/Settings.jsx:865
 msgid "(none)"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:242
+#: dev_trueplayer/block/edit.jsx:474
+#: dev_trueplayer/block/edit.jsx:475
 msgid "Play button style"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:244
+#: dev_trueplayer/block/edit.jsx:125
 msgid "Circle"
 msgstr ""
 
@@ -1536,10 +1763,13 @@ msgid "Soft (rounded)"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:246
+#: dev_trueplayer/block/edit.jsx:127
 msgid "Square"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:252
+#: dev_trueplayer/block/edit.jsx:476
+#: dev_trueplayer/block/edit.jsx:477
 msgid "Play button size"
 msgstr ""
 
@@ -1548,18 +1778,22 @@ msgid "Auto (skin default)"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:255
+#: dev_trueplayer/block/edit.jsx:132
 msgid "Small"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:256
+#: dev_trueplayer/block/edit.jsx:133
 msgid "Medium"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:257
+#: dev_trueplayer/block/edit.jsx:134
 msgid "Large"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:258
+#: dev_trueplayer/block/edit.jsx:135
 msgid "Extra large"
 msgstr ""
 
@@ -1588,6 +1822,8 @@ msgid "An audio player’s bar comes from its skin — see Appearance."
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:297
+#: dev_trueplayer/block/edit.jsx:481
+#: dev_trueplayer/block/edit.jsx:482
 msgid "Seek bar style"
 msgstr ""
 
@@ -1612,6 +1848,8 @@ msgid "Behavior"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:355
+#: dev_trueplayer/block/edit.jsx:592
+#: dev_trueplayer/block/edit.jsx:593
 msgid "Autoplay"
 msgstr ""
 
@@ -1628,10 +1866,12 @@ msgid "On, with sound"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:379
+#: dev_trueplayer/block/edit.jsx:596
 msgid "Start muted"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:381
+#: dev_trueplayer/block/edit.jsx:597
 msgid "Loop"
 msgstr ""
 
@@ -1697,6 +1937,8 @@ msgid "Float position"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/PlayerOptionsTab.jsx:438
+#: dev_trueplayer/block/edit.jsx:726
+#: dev_trueplayer/block/edit.jsx:727
 msgid "Preload"
 msgstr ""
 
@@ -1797,7 +2039,10 @@ msgid "Video URL or ID"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/editor/SourceTab.jsx:197
-#: dev_trueplayer/block/data.js:69
+#: dev_trueplayer/block/data.js:76
+#: dev_trueplayer/block/VideoModal.jsx:29
+#: dev_trueplayer/block/VideoModal.jsx:32
+#: dev_trueplayer/block/VideoModal.jsx:33
 msgid "Media URL"
 msgstr ""
 
@@ -1904,15 +2149,15 @@ msgstr ""
 #: dev_trueplayer/admin/screens/Library.jsx:399
 #: dev_trueplayer/admin/screens/Library.jsx:400
 #: dev_trueplayer/admin/screens/Presets.jsx:301
-#: dev_trueplayer/block/edit.jsx:147
-#: dev_trueplayer/block/edit.jsx:162
+#: dev_trueplayer/block/edit.jsx:445
+#: dev_trueplayer/block/edit.jsx:534
 msgid "Edit"
 msgstr ""
 
 #: dev_trueplayer/admin/screens/Playlists.jsx:132
 #: dev_trueplayer/admin/screens/Presets.jsx:103
 #: dev_trueplayer/admin/screens/Settings.jsx:568
-#: dev_trueplayer/block/VideoModal.jsx:241
+#: dev_trueplayer/block/VideoModal.jsx:168
 msgid "Save"
 msgstr ""
 
@@ -2118,105 +2363,110 @@ msgstr ""
 msgid "Site-wide defaults. Any single video can override these in its own editor."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:673
+#: dev_trueplayer/admin/screens/Settings.jsx:607
+msgid "These are optional site-wide defaults. The TruePlayer block works without them — set anything it needs from the block sidebar in the editor."
+msgstr ""
+
+#: dev_trueplayer/admin/screens/Settings.jsx:676
 msgid "A default preset is in control, so these starting points are not applied."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:679
+#: dev_trueplayer/admin/screens/Settings.jsx:682
 msgid "Use a starting point instead"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:734
+#: dev_trueplayer/admin/screens/Settings.jsx:737
 msgid "…or use a saved preset"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:736
+#: dev_trueplayer/admin/screens/Settings.jsx:739
 msgid "A preset overrides the starting points above for every item that has not chosen one of its own."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:737
+#: dev_trueplayer/admin/screens/Settings.jsx:740
 msgid "No presets of this type yet — create one under Presets to reuse a look across items."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:758
+#: dev_trueplayer/admin/screens/Settings.jsx:761
 msgid "New items are not given a copy of this — they read it at playback. So changing it later still updates every item that has not set a look of its own, and never disturbs one that has."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:765
+#: dev_trueplayer/admin/screens/Settings.jsx:768
 msgid "Default video aspect ratio"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:766
+#: dev_trueplayer/admin/screens/Settings.jsx:769
 msgid "The frame shape new videos use unless overridden per video. Audio has no frame, so this never reaches an audio item."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:788
-#: dev_trueplayer/block/data.js:35
+#: dev_trueplayer/admin/screens/Settings.jsx:791
+#: dev_trueplayer/block/data.js:42
+#: dev_trueplayer/block/VideoModal.jsx:30
 #: dev_trueplayer/utils/source-types.js:35
 msgid "YouTube"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:789
+#: dev_trueplayer/admin/screens/Settings.jsx:792
 msgid "Privacy-enhanced mode plays via youtube-nocookie.com — no cookies until a visitor presses play."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:791
+#: dev_trueplayer/admin/screens/Settings.jsx:794
 msgid "Enable privacy-enhanced mode (no-cookie)"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:805
+#: dev_trueplayer/admin/screens/Settings.jsx:808
 msgid "Where captured addresses are sent when a video's email form has no CRM provider selected."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:807
+#: dev_trueplayer/admin/screens/Settings.jsx:810
 msgid "Send notifications to"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:807
+#: dev_trueplayer/admin/screens/Settings.jsx:810
 msgid "Leave empty to use this site's admin email address."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:819
+#: dev_trueplayer/admin/screens/Settings.jsx:822
 msgid "Google Analytics"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:820
+#: dev_trueplayer/admin/screens/Settings.jsx:823
 msgid "Send player events (video_start, video_complete) to GA4. Uses your existing site tag, or loads one from a measurement ID."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:825
+#: dev_trueplayer/admin/screens/Settings.jsx:828
 msgid "Send player events to Google Analytics"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:829
+#: dev_trueplayer/admin/screens/Settings.jsx:832
 msgid "Measurement ID"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:829
+#: dev_trueplayer/admin/screens/Settings.jsx:832
 msgid "Optional — leave blank to use the site's existing GA tag."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:850
+#: dev_trueplayer/admin/screens/Settings.jsx:853
 msgid "Brand colors"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:851
+#: dev_trueplayer/admin/screens/Settings.jsx:854
 msgid "The default accent for the scrubber, buttons & highlights. Any video or preset can override it."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:859
+#: dev_trueplayer/admin/screens/Settings.jsx:862
 msgid "Optional."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:869
+#: dev_trueplayer/admin/screens/Settings.jsx:872
 msgid "Player logo"
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:870
+#: dev_trueplayer/admin/screens/Settings.jsx:873
 msgid "A watermark logo shown on every player by default."
 msgstr ""
 
-#: dev_trueplayer/admin/screens/Settings.jsx:874
+#: dev_trueplayer/admin/screens/Settings.jsx:877
 msgid "Logo image"
 msgstr ""
 
@@ -2288,121 +2538,469 @@ msgstr ""
 msgid "Select media"
 msgstr ""
 
-#: dev_trueplayer/block/data.js:34
+#: dev_trueplayer/block/data.js:41
+#: dev_trueplayer/block/VideoModal.jsx:29
 #: dev_trueplayer/utils/source-types.js:30
 msgid "Self-hosted"
 msgstr ""
 
-#: dev_trueplayer/block/data.js:36
+#: dev_trueplayer/block/data.js:43
+#: dev_trueplayer/block/VideoModal.jsx:31
 #: dev_trueplayer/utils/source-types.js:42
 msgid "Vimeo"
 msgstr ""
 
-#: dev_trueplayer/block/data.js:38
+#: dev_trueplayer/block/data.js:45
 msgid "HLS stream"
 msgstr ""
 
-#: dev_trueplayer/block/data.js:59
+#: dev_trueplayer/block/data.js:66
+#: dev_trueplayer/block/VideoModal.jsx:30
 msgid "YouTube URL or video ID"
 msgstr ""
 
-#: dev_trueplayer/block/data.js:64
+#: dev_trueplayer/block/data.js:71
+#: dev_trueplayer/block/VideoModal.jsx:31
 msgid "Vimeo URL or video ID"
 msgstr ""
 
-#: dev_trueplayer/block/edit.jsx:56
-msgid "The video library could not be loaded."
+#: dev_trueplayer/block/edit.jsx:52
+#: dev_trueplayer/block/edit.jsx:62
+#: dev_trueplayer/block/edit.jsx:101
+#: dev_trueplayer/block/edit.jsx:124
+#: dev_trueplayer/block/edit.jsx:139
+#: dev_trueplayer/block/ui.jsx:211
+#: dev_trueplayer/block/ui.jsx:212
+#: dev_trueplayer/block/ui.jsx:241
+msgid "Site default"
 msgstr ""
 
-#: dev_trueplayer/block/edit.jsx:84
-msgid "That video could not be loaded."
+#: dev_trueplayer/block/edit.jsx:58
+msgid "Match the video"
 msgstr ""
 
+#: dev_trueplayer/block/edit.jsx:82
+msgid "Muted"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:83
+msgid "With sound"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:87
+msgid "Uses the site-wide setting."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:88
+msgid "The viewer presses play."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:89
+msgid "Starts automatically with the sound off. Works in every browser."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:90
+msgid "Browsers often block autoplay with sound until the viewer has interacted with the page."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:95
+msgid "Metadata"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:96
+msgid "Whole file"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:97
+msgid "Nothing"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:102
+msgid "Click to load (fastest page)"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:103
+msgid "Load when scrolled into view"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:104
+msgid "Load immediately"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:108
+msgid "Indigo"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:109
 #: dev_trueplayer/block/edit.jsx:118
-msgid "— Select a video —"
+msgid "Blue"
 msgstr ""
 
-#: dev_trueplayer/block/edit.jsx:133
-msgid "Create new"
+#: dev_trueplayer/block/edit.jsx:110
+msgid "Green"
 msgstr ""
 
-#. translators: %s: product name, e.g. TruePlayer.
-#: dev_trueplayer/block/edit.jsx:172
-#, js-format
-msgid "Open in %s"
+#: dev_trueplayer/block/edit.jsx:111
+#: dev_trueplayer/block/edit.jsx:119
+msgid "Orange"
 msgstr ""
 
-#: dev_trueplayer/block/edit.jsx:177
-msgid "chapters, appearance and more."
+#: dev_trueplayer/block/edit.jsx:112
+#: dev_trueplayer/block/edit.jsx:120
+msgid "Black"
 msgstr ""
 
-#: dev_trueplayer/block/edit.jsx:226
-msgid "Show a video from your library, or add a new one."
+#: dev_trueplayer/block/edit.jsx:116
+msgid "White"
 msgstr ""
 
-#: dev_trueplayer/block/edit.jsx:238
-msgid "That video is no longer in your library. Choose another one."
+#: dev_trueplayer/block/edit.jsx:117
+msgid "Light grey"
 msgstr ""
 
-#: dev_trueplayer/block/edit.jsx:251
-msgid "There are no videos yet. An administrator can add one."
+#: dev_trueplayer/block/edit.jsx:126
+msgid "Soft"
 msgstr ""
 
-#: dev_trueplayer/block/index.js:13
-msgid "Watch-verified, quiz-gated video."
-msgstr ""
-
-#: dev_trueplayer/block/VideoModal.jsx:91
-msgid "That video could not be saved."
-msgstr ""
-
-#: dev_trueplayer/block/VideoModal.jsx:92
-msgid "That video could not be created."
-msgstr ""
-
-#. translators: %s: product name, e.g. TruePlayer.
-#: dev_trueplayer/block/VideoModal.jsx:109
-#, js-format
-msgid "Edit %s media"
-msgstr ""
-
-#. translators: %s: product name, e.g. TruePlayer.
-#: dev_trueplayer/block/VideoModal.jsx:114
-#, js-format
-msgid "Add %s media"
-msgstr ""
-
-#: dev_trueplayer/block/VideoModal.jsx:138
-msgid "e.g. Lesson 1"
-msgstr ""
-
-#: dev_trueplayer/block/VideoModal.jsx:156
-msgid "You do not have permission to upload files."
-msgstr ""
-
-#: dev_trueplayer/block/VideoModal.jsx:175
-msgid "Replace file"
-msgstr ""
-
-#: dev_trueplayer/block/VideoModal.jsx:176
-msgid "Choose a file"
-msgstr ""
-
-#: dev_trueplayer/block/VideoModal.jsx:211
-msgid "Other sources, chapters and appearance are set up in the full editor."
-msgstr ""
-
-#. translators: %s: product name, e.g. TruePlayer.
-#: dev_trueplayer/block/VideoModal.jsx:218
-#, js-format
-msgid "Open %s"
-msgstr ""
-
+#: dev_trueplayer/block/edit.jsx:131
 #: dev_trueplayer/player/components/Controls.jsx:277
 #: dev_trueplayer/player/providers/html5.js:125
 #: dev_trueplayer/player/providers/vimeo.js:87
 #: dev_trueplayer/player/providers/youtube.js:131
 msgid "Auto"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:146
+msgid "Spanish"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:147
+msgid "French"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:148
+msgid "German"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:149
+msgid "Bengali"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:155
+msgid "A fast video and audio player. Upload a file or paste a YouTube, Vimeo or media link."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:156
+#: dev_trueplayer/block/edit.jsx:161
+msgid "Or paste a link"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:157
+msgid "YouTube, Vimeo or media URL"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:160
+msgid "Upload an audio file, drop one here, or paste a link."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:164
+#: dev_trueplayer/block/VideoModal.jsx:30
+#: dev_trueplayer/utils/source-types.js:36
+msgid "Paste a YouTube link."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:164
+#: dev_trueplayer/block/edit.jsx:165
+msgid "Link"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:165
+#: dev_trueplayer/block/VideoModal.jsx:31
+#: dev_trueplayer/utils/source-types.js:43
+msgid "Paste a Vimeo link."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:257
+msgid "That media could not be loaded."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:278
+#: dev_trueplayer/block/VideoModal.jsx:80
+msgid "Paste a full link starting with https://"
+msgstr ""
+
+#. translators: %s: YouTube or Vimeo.
+#: dev_trueplayer/block/edit.jsx:283
+#, js-format
+msgid "That is not a %s link."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:343
+msgid "That file could not be uploaded."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:394
+msgid "Use link"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:439
+msgid "Upload a file"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:440
+#: dev_trueplayer/block/SavedModal.jsx:14
+msgid "Choose a saved video"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:455
+msgid "Player style"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:463
+#: dev_trueplayer/block/edit.jsx:464
+msgid "Accent colour"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:466
+#: dev_trueplayer/block/edit.jsx:467
+msgid "Button hover colour"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:468
+msgid "The highlight behind a control when the viewer points at it."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:473
+msgid "Play button"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:496
+msgid "No source yet"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:498
+msgid "Choose a file or paste a link in the block to see playback and appearance options."
+msgstr ""
+
+#. translators: %s: source type, e.g. YouTube.
+#: dev_trueplayer/block/edit.jsx:515
+#, js-format
+msgid "Saved video · %s"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:541
+msgid "This block shows a video from your library. Settings below apply on this page only."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:543
+#: dev_trueplayer/block/edit.jsx:782
+msgid "Choose something else"
+msgstr ""
+
+#. translators: %s: product name, e.g. TruePlayer.
+#: dev_trueplayer/block/edit.jsx:546
+#, js-format
+msgid "Open in %s"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:563
+msgid "Used as the accessible name and for search engines."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:567
+msgid "Poster"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:576
+msgid "Change poster"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:580
+msgid "Set poster image"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:598
+msgid "Show playback controls"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:598
+msgid "Off keeps only the play button."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:599
+msgid "Resume where the viewer left off"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:600
+msgid "Allow download"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:601
+msgid "Float when scrolled out of view"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:606
+msgid "Look"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:609
+#: dev_trueplayer/block/edit.jsx:612
+msgid "Saved preset"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:621
+msgid "Your own settings below still win over the preset."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:647
+msgid "Chapters & description"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:657
+msgid "One per line, e.g. 0:00 Intro. Paste them straight from a YouTube description."
+msgstr ""
+
+#. translators: %d: number of chapters.
+#: dev_trueplayer/block/edit.jsx:660
+#, js-format
+msgid "%d chapters detected"
+msgstr ""
+
+#. translators: %d: number of lines.
+#: dev_trueplayer/block/edit.jsx:661
+#, js-format
+msgid "%d line skipped"
+msgid_plural "%d lines skipped"
+msgstr[0] ""
+msgstr[1] ""
+
+#: dev_trueplayer/block/edit.jsx:664
+#: dev_trueplayer/block/edit.jsx:667
+msgid "Description under the player"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:672
+msgid "Basic HTML allowed."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:677
+#: dev_trueplayer/block/edit.jsx:680
+msgid "WebVTT file URL"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:689
+msgid "Choose .vtt file"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:705
+#: dev_trueplayer/block/edit.jsx:708
+msgid "Language"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:721
+msgid "Performance"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:722
+#: dev_trueplayer/block/edit.jsx:723
+msgid "When to load the player"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:733
+msgid "Chapters, call-to-action overlays, email capture and quizzes live in the full editor. Save this as a video there to use them."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:794
+msgid "That video is no longer in your library. Choose another one."
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:806
+#: dev_trueplayer/block/edit.jsx:807
+msgid "Uploading…"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:822
+#: dev_trueplayer/block/VideoModal.jsx:150
+msgid "Choose a file"
+msgstr ""
+
+#: dev_trueplayer/block/edit.jsx:826
+msgid "Use a saved video instead"
+msgstr ""
+
+#: dev_trueplayer/block/index.js:17
+msgid "A fast video and audio player. Upload a file, drop one in, or paste a YouTube, Vimeo or media link."
+msgstr ""
+
+#: dev_trueplayer/block/NativeEmbed.jsx:72
+msgid "Video preview"
+msgstr ""
+
+#: dev_trueplayer/block/NativeEmbed.jsx:85
+msgid "Playing in the provider’s own player here. Visitors see your TruePlayer skin and controls."
+msgstr ""
+
+#: dev_trueplayer/block/SavedModal.jsx:19
+msgid "No saved videos yet."
+msgstr ""
+
+#: dev_trueplayer/block/SavedModal.jsx:37
+msgid "Selected"
+msgstr ""
+
+#: dev_trueplayer/block/ui.jsx:234
+#: dev_trueplayer/block/ui.jsx:238
+msgid "Custom colour"
+msgstr ""
+
+#: dev_trueplayer/block/ui.jsx:241
+msgid "Custom"
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:29
+msgid "Upload to this site"
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:32
+#: dev_trueplayer/utils/source-types.js:49
+msgid "External URL (mp4/webm)"
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:32
+#: dev_trueplayer/utils/source-types.js:50
+msgid "A media file hosted anywhere."
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:33
+#: dev_trueplayer/utils/source-types.js:56
+msgid "HLS stream (.m3u8)"
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:33
+#: dev_trueplayer/utils/source-types.js:57
+msgid "Any adaptive HLS manifest."
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:99
+msgid "That video could not be saved."
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:104
+msgid "audio"
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:104
+msgid "video"
+msgstr ""
+
+#. translators: %s: video or audio.
+#: dev_trueplayer/block/VideoModal.jsx:108
+#, js-format
+msgid "Edit %s media"
+msgstr ""
+
+#: dev_trueplayer/block/VideoModal.jsx:161
+msgid "e.g. Lesson 1"
 msgstr ""
 
 #: dev_trueplayer/player/components/Controls.jsx:283
@@ -2530,24 +3128,24 @@ msgstr ""
 msgid "Loading"
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:224
+#: dev_trueplayer/player/Player.jsx:231
 msgid "This video is not available."
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:245
+#: dev_trueplayer/player/Player.jsx:252
 msgid "Unable to load the player."
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:404
+#: dev_trueplayer/player/Player.jsx:411
 #: dev_trueplayer/player/providers/html5.js:217
 msgid "Playback error."
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:1192
+#: dev_trueplayer/player/Player.jsx:1208
 msgid "Playing in a floating window"
 msgstr ""
 
-#: dev_trueplayer/player/Player.jsx:1193
+#: dev_trueplayer/player/Player.jsx:1209
 msgid "Bring back"
 msgstr ""
 
@@ -2656,30 +3254,51 @@ msgstr ""
 msgid "A file already in this site’s media library."
 msgstr ""
 
-#: dev_trueplayer/utils/source-types.js:36
-msgid "Paste a YouTube link."
-msgstr ""
-
-#: dev_trueplayer/utils/source-types.js:43
-msgid "Paste a Vimeo link."
-msgstr ""
-
-#: dev_trueplayer/utils/source-types.js:49
-msgid "External URL (mp4/webm)"
-msgstr ""
-
-#: dev_trueplayer/utils/source-types.js:50
-msgid "A media file hosted anywhere."
-msgstr ""
-
-#: dev_trueplayer/utils/source-types.js:56
-msgid "HLS stream (.m3u8)"
-msgstr ""
-
-#: dev_trueplayer/utils/source-types.js:57
-msgid "Any adaptive HLS manifest."
-msgstr ""
-
 #: dev_trueplayer/utils/source-types.js:96
 msgid "no source"
+msgstr ""
+
+#: blocks/player/block.json
+msgctxt "block title"
+msgid "TruePlayer"
+msgstr ""
+
+#: blocks/player/block.json
+msgctxt "block description"
+msgid "A fast video and audio player. Upload a file, drop one in, or paste a YouTube, Vimeo or media link."
+msgstr ""
+
+#: blocks/player/block.json
+msgctxt "block keyword"
+msgid "video"
+msgstr ""
+
+#: blocks/player/block.json
+msgctxt "block keyword"
+msgid "audio"
+msgstr ""
+
+#: blocks/player/block.json
+msgctxt "block keyword"
+msgid "player"
+msgstr ""
+
+#: blocks/player/block.json
+msgctxt "block keyword"
+msgid "youtube"
+msgstr ""
+
+#: blocks/player/block.json
+msgctxt "block keyword"
+msgid "vimeo"
+msgstr ""
+
+#: blocks/player/block.json
+msgctxt "block keyword"
+msgid "mp4"
+msgstr ""
+
+#: blocks/player/block.json
+msgctxt "block keyword"
+msgid "podcast"
 msgstr ""
