@@ -46,6 +46,19 @@ class Helper {
 		return gmdate( 'Y-m-d\TH:i:s\Z' );
 	}
 
+	/**
+	 * Plain single-line text from a request value, or '' when it is not a scalar.
+	 *
+	 * `sanitize_text_field()` and friends assume a string; a JSON body that sends
+	 * an array or object where a name belongs would otherwise reach them as one.
+	 *
+	 * @param mixed $raw Request value.
+	 * @return string
+	 */
+	public static function text_value( $raw ): string {
+		return is_scalar( $raw ) && ! is_bool( $raw ) ? sanitize_text_field( (string) $raw ) : '';
+	}
+
 	/** The global TruePlayer settings option, decoded (empty array if unset). */
 	public static function get_settings(): array {
 		$raw = get_option( TRUEPLAYER_SETTINGS_NAME, '{}' );
@@ -104,6 +117,9 @@ class Helper {
 		if ( ! is_array( $config ) ) {
 			$config = [];
 		}
+		// Configs saved before link values were validated on write are cleaned
+		// on read too, so a stored `javascript:` URL never reaches the player.
+		$config = self::sanitize_style_values( $config );
 		/**
 		 * Central seam: add-ons and integrations mutate the resolved player
 		 * config (inject layers, override gating, etc.) without touching core.
@@ -401,9 +417,27 @@ class Helper {
 				$data[ $key ] = self::sanitize_style_values( $value );
 			} elseif ( is_string( $key ) && preg_match( '/(color|accent)$/i', $key ) ) {
 				$data[ $key ] = self::sanitize_css_color( $value );
+			} elseif ( is_string( $key ) && preg_match( '/(url|href|link)$/i', $key ) ) {
+				$data[ $key ] = self::sanitize_link_url( $value );
 			}
 		}
 		return $data;
+	}
+
+	/**
+	 * A link target (`buttonUrl`, `logoUrl`, …) that ends up in an `href`, or ''
+	 * when the value is anything else. Only http(s), mailto and tel schemes pass,
+	 * so `javascript:` and `data:` can never reach an anchor. Relative paths and
+	 * fragments are kept.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public static function sanitize_link_url( $value ): string {
+		if ( ! is_string( $value ) ) {
+			return '';
+		}
+		return esc_url_raw( trim( $value ), [ 'http', 'https', 'mailto', 'tel' ] );
 	}
 
 	/**
@@ -427,5 +461,28 @@ class Helper {
 			return $value;
 		}
 		return 'transparent' === $value ? $value : '';
+	}
+
+	/**
+	 * A source URL (or, for YouTube and Vimeo, a bare id) made safe to store.
+	 * Shared by the quick-create routes and the block's inline attributes.
+	 *
+	 * http(s) only, so no `javascript:` or `data:` reaches a src attribute.
+	 * Empty means rejected.
+	 */
+	public static function sanitize_source_src( string $type, string $raw ): string {
+		$raw = trim( $raw );
+		if ( '' === $raw ) {
+			return '';
+		}
+		if ( preg_match( '#^(?:https?:)?//#i', $raw ) ) {
+			return esc_url_raw( $raw, [ 'http', 'https' ] );
+		}
+		// `esc_url_raw` would turn an id like `dQw4w9WgXcQ` into
+		// `http://dQw4w9WgXcQ`, so provider ids are matched rather than escaped.
+		if ( in_array( $type, [ 'youtube', 'vimeo' ], true ) && preg_match( '/^[\w-]{1,64}$/', $raw ) ) {
+			return $raw;
+		}
+		return '';
 	}
 }

@@ -4,7 +4,7 @@ Tags: video, player, audio, playlist, hls
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.7.4
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,7 +31,7 @@ Everything in this plugin works on its own. A separate add-on, TruePlayer Pro, a
 
 TruePlayer connects to the following third-party services. Each one is only contacted for the feature it supports, and only when that feature is used.
 
-* **Vimeo oEmbed** (`https://vimeo.com/api/oembed.json`) — used to resolve a thumbnail for a Vimeo video when none is set, so the poster image is populated. The video's public Vimeo URL is sent. Called in the admin only, when saving a Vimeo-sourced video. Terms: https://vimeo.com/terms — Privacy: https://vimeo.com/privacy
+* **Vimeo oEmbed** (`https://vimeo.com/api/oembed.json`) — used to resolve a thumbnail for a Vimeo video when none is set, so the poster image is populated. The video's public Vimeo URL is sent. Called when a Vimeo-sourced video is saved in the admin and, if no poster is cached yet, once when a page showing it is first rendered (the result is cached for a day). Terms: https://vimeo.com/terms — Privacy: https://vimeo.com/privacy
 * **YouTube captions** (`https://www.youtube.com/api/timedtext`) — used by the subtitles importer to fetch public captions for a YouTube video when an administrator imports them. Only the public video id is sent. Terms: https://www.youtube.com/t/terms — Privacy: https://policies.google.com/privacy
 * **Google Analytics (GA4) via Google Tag Manager** (`https://www.googletagmanager.com/gtag/js`) — only loaded when the site administrator turns on Google Analytics in TruePlayer's Settings → Integrations screen and enters a GA4 Measurement ID. Standard GA4 playback events are then sent from the viewer's browser to Google. Off by default. Terms: https://marketingplatform.google.com/about/analytics/terms/us/ — Privacy: https://policies.google.com/privacy
 * **Kodezen usage insights** (`https://store.kodezen.com/`) — optional, anonymous usage telemetry sent only if a site administrator opts in from the notice TruePlayer shows in the admin; it sends the site URL, WordPress/PHP/plugin versions and the admin email given at opt-in. When the plugin is deactivated, an optional feedback form can send the reason the administrator chooses. Nothing is sent without that action. Terms: https://kodezen.com/terms-and-conditions/ — Privacy: https://store.kodezen.com/privacy-policy/
@@ -57,6 +57,11 @@ Every file in `assets/build/` maps to a source entry:
 To rebuild: install Node.js 20+, then run `npm install` and `npm run build` in the plugin folder. The build uses `@wordpress/scripts` (webpack) with the config in `webpack.config.js`.
 
 == Changelog ==
+
+= 1.8.0 - 29-10-2026 =
+* Added - TruePlayer block rebuilt with a saved-video picker, native embed support, block transforms and more style controls.
+* Security - Hardened REST controllers, opt-in, import, meta handling and WP-CLI input and output (security audit fixes).
+* Fixed - Translation issues in add-ons, WP-CLI and integrations.
 
 = 1.7.4 - 24-10-2026 =
 * Changed - Removed the unused progress, quiz-attempts, engagement and daily tables from the free plugin; they are no longer created on activation, and uninstall cleanup was updated to match.

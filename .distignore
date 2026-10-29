@@ -16,6 +16,13 @@ composer.lock
 /.build-cache/
 /dist/
 
+# === JS sources & build tooling (only assets/build ships) ===
+/dev_trueplayer/
+package.json
+webpack.config.js
+tailwind.config.js
+postcss.config.js
+
 # === JS / editor configs ===
 .babelrc
 .eslintignore
@@ -24,6 +31,13 @@ composer.lock
 .prettierrc*
 jsconfig.json
 .editorconfig
+
+# === Internal notes & test output (never shipped) ===
+/bug-reports/
+/.playwright-mcp/
+/test-results/
+/tests/
+/.auth/
 
 # === VCS / IDE / OS / AI workspace ===
 .git

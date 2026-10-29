@@ -11,11 +11,18 @@
 import apiFetch from '@wordpress/api-fetch';
 import { sourceType as sourceTypeInfo } from '@Utils/source-types';
 import { __ } from '@Utils/translation';
+import metadata from '../../blocks/player/block.json';
 
 const G = () => window.TruePlayerBlock || {};
 
 /** The product name, or the site owner's own when white-label is on. */
 export const brand = () => G().brand || 'TruePlayer';
+
+/** The white-label logo URL, or '' to use the video dashicon (as the admin menu does). */
+export const logo = () => G().logo || '';
+
+/** Saved presets the author may apply: [ { id, title, type } ]. */
+export const presets = () => ( Array.isArray( G().presets ) ? G().presets : [] );
 
 /** Mirrors the quick-create REST permission callback — never assume it. */
 export const canCreate = () => !! G().canCreate;
@@ -101,3 +108,41 @@ export const updateVideo = ( id, { title, type, src } ) =>
  * clamped, quiz answer keys stripped.
  */
 export const fetchPreview = ( id ) => apiFetch( { path: `/trueplayer/v1/videos/${ id }/preview` } );
+
+/**
+ * The attributes that change what the player shows, and nothing else.
+ *
+ * Alignment, spacing, anchor and class are layout the editor already
+ * applies around the block, so they must not re-request the preview (and remount
+ * the player) every time one of them moves.
+ */
+export const previewAttributes = ( attributes ) =>
+	Object.fromEntries( Object.keys( metadata.attributes ).map( ( k ) => [ k, attributes[ k ] ] ) );
+
+/**
+ * The config this block will publish with, built by the same PHP the front
+ * end runs (Block::resolve) — a saved video or an inline source, with the
+ * block's own settings layered on top — so the canvas can't drift from the page.
+ */
+export const fetchBlockPreview = ( attributes ) =>
+	apiFetch( {
+		path: '/trueplayer/v1/block/preview',
+		method: 'POST',
+		data: previewAttributes( attributes ),
+	} );
+
+/**
+ * Which source type a pasted link is. YouTube and Vimeo are recognised by
+ * host; anything else is a plain media URL. The server re-validates, so this
+ * only decides what the player is told to expect.
+ */
+export const detectSourceType = ( value ) => {
+	const v = ( value || '' ).trim();
+	if ( /^(?:https?:)?\/\/(?:[\w-]+\.)?(?:youtube\.com|youtu\.be|youtube-nocookie\.com)\//i.test( v ) ) {
+		return 'youtube';
+	}
+	if ( /^(?:https?:)?\/\/(?:[\w-]+\.)?vimeo\.com\//i.test( v ) ) {
+		return 'vimeo';
+	}
+	return 'url';
+};

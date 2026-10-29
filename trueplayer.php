@@ -4,7 +4,7 @@
  * Plugin Name: TruePlayer
  * Plugin URI: https://true-player.net/
  * Description: A watch-verified, quiz-gated video & audio player for WordPress — knows whether a viewer actually watched, locks the video on quiz failure, and fires webhooks for automation.
- * Version: 1.7.4
+ * Version: 1.8.0
  * Author: Kodezen
  * Author URI: https://kodezen.com
  * License: GPLv2 or later
@@ -42,7 +42,7 @@ final class TruePlayer {
 	}
 
 	public function define_constants() {
-		define( 'TRUEPLAYER_VERSION', '1.7.4' );
+		define( 'TRUEPLAYER_VERSION', '1.8.0' );
 		define( 'TRUEPLAYER_SETTINGS_NAME', 'trueplayer_settings' );
 		define( 'TRUEPLAYER_PLUGIN_FILE', __FILE__ );
 		define( 'TRUEPLAYER_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -104,8 +104,13 @@ final class TruePlayer {
 	}
 
 	public function set_global_settings() {
-		$GLOBALS['trueplayer_settings'] = json_decode( get_option( TRUEPLAYER_SETTINGS_NAME, '{}' ) );
-		$GLOBALS['trueplayer_addons']   = json_decode( get_option( TRUEPLAYER_ADDONS_SETTINGS, '{}' ) );
+		// Cast first: json_decode() throws on a non-string in PHP 8, and an option
+		// stored as an array must not fatal the site.
+		$settings = json_decode( (string) get_option( TRUEPLAYER_SETTINGS_NAME, '{}' ) );
+		$addons   = json_decode( (string) get_option( TRUEPLAYER_ADDONS_SETTINGS, '{}' ) );
+
+		$GLOBALS['trueplayer_settings'] = is_object( $settings ) ? $settings : new stdClass();
+		$GLOBALS['trueplayer_addons']   = is_object( $addons ) ? $addons : new stdClass();
 	}
 
 	public function load_dependency() {

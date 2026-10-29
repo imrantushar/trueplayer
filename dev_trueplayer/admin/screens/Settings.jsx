@@ -603,6 +603,9 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 
 					{tab === 'general' && (
 						<div className="space-y-6">
+							<p className="text-sm text-muted !m-0">
+								{ __( 'These are optional site-wide defaults. The TruePlayer block works without them — set anything it needs from the block sidebar in the editor.' ) }
+							</p>
 							{(() => {
 								// One card per media type rather than two parallel ones.
 								// A template and a default preset answer the same

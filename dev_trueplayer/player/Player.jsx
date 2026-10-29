@@ -14,6 +14,13 @@ import Overlay from './components/Overlay';
 import Layers from './components/Layers';
 import { BigPlay, Message, Spinner } from './components/Overlays';
 
+/** Frame width for ratios that would otherwise fill the column as a tall block. */
+const FRAME_WIDTH = {
+	'9:16': 'min(100%, max(34%, 280px))',
+	'1:1': 'min(100%, max(62%, 280px))',
+	'4:3': 'min(100%, max(80%, 280px))',
+};
+
 const containerPipSupported = supportsContainerPiP();
 
 /** Best-effort filename for the download button — from the title, else the URL. */
@@ -930,6 +937,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		stageStyle.aspectRatio = appearance.aspectRatio === 'auto'
 			? ( nativeRatio || '16 / 9' )
 			: appearance.aspectRatio.replace( ':', ' / ' );
+		// A tall or square frame at full column width is a tower of black with
+		// the video floating in it, so those ratios take a narrower, centred
+		// frame (the facade in Shortcode::facade matches, to avoid a jump).
+		if ( FRAME_WIDTH[ appearance.aspectRatio ] ) {
+			stageStyle[ '--tp-stage-w' ] = FRAME_WIDTH[ appearance.aspectRatio ];
+		}
 	}
 
 	// Caption cues are styled by a real rule carrying literal values, not by
@@ -967,6 +980,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		// A className diff costs nothing and works while playing.
 		source.mediaType === 'audio' ? `tp-audio-${ appearance.audioLayout || 'compact' }` : '',
 		`tp-bar-${ appearance.controlBarStyle }`,
+		// A frame the author picked (not 16:9, not "match the video") is filled
+		// edge to edge, cropping the video, rather than letterboxed in black.
+		source.mediaType !== 'audio' && appearance.aspectRatio && ! [ '16:9', 'auto' ].includes( appearance.aspectRatio ) ? 'tp-fill' : '',
 		`tp-play-${ appearance.playButtonStyle }`,
 		// A real OS PiP window replaces the in-page floating corner — the two
 		// floating mechanisms together would fight over `position: fixed`.

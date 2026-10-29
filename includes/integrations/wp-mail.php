@@ -43,7 +43,7 @@ class WpMail extends BaseIntegration {
 	 * site's own admin address so it works before anyone configures anything.
 	 */
 	private function recipient(): string {
-		$settings = json_decode( (string) get_option( TRUEPLAYER_SETTINGS_NAME, '{}' ), true );
+		$settings = \TruePlayer\Helper::get_settings();
 		$to       = $settings['integrations']['wp_mail']['to'] ?? '';
 		$to       = is_string( $to ) ? trim( $to ) : '';
 		if ( '' === $to ) {
@@ -69,7 +69,7 @@ class WpMail extends BaseIntegration {
 		$subject = sprintf(
 			/* translators: %s: video title. */
 			__( 'New subscriber from %s', 'trueplayer' ),
-			$title !== '' ? $title : __( 'your video', 'trueplayer' )
+			'' !== $title ? $title : __( 'your video', 'trueplayer' )
 		);
 
 		$lines = [
@@ -83,15 +83,11 @@ class WpMail extends BaseIntegration {
 		}
 		$lines[] = sprintf( /* translators: %s: site name. */ __( 'Site: %s', 'trueplayer' ), get_bloginfo( 'name' ) );
 
-		$sent = wp_mail( $to, $subject, implode( "\n", $lines ) );
-
-		// A viewer must never be told their address was rejected because the
-		// site's own mail transport is down — the capture itself succeeded, and
-		// `subscriber.added` still carries it to any webhook that is listening.
-		if ( ! $sent ) {
-			// Mail transport failed; the capture itself still succeeded.
-			unset( $sent );
-		}
+		// The result is deliberately ignored. A viewer must never be told their
+		// address was rejected because the site's own mail transport is down — the
+		// capture itself succeeded, and `subscriber.added` still carries it to any
+		// webhook that is listening.
+		wp_mail( $to, $subject, implode( "\n", $lines ) );
 
 		return [ 'ok' => true ];
 	}

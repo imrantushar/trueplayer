@@ -1,23 +1,25 @@
 import { registerBlockType } from '@wordpress/blocks';
-import { __ } from '@Utils/translation';
+import metadata from '../../blocks/player/block.json';
 import Edit from './edit';
+import transforms from './transforms';
+import { __ } from '@Utils/translation';
 import { brand } from './data';
+import { TruePlayerIcon } from './icon';
 
-registerBlockType( 'trueplayer/player', {
-	// Matches includes/block.php. v3 declares this block safe inside the
-	// editor's iframed canvas, which WordPress now always uses.
-	apiVersion: 3,
+// Attributes, supports and the name come from block.json, which PHP registers
+// from too — one description, so the editor and the server cannot disagree.
+registerBlockType( metadata.name, {
+	...metadata,
 	// The site owner's own name when white-label is on, so the inserter agrees
 	// with the admin menu.
 	title: brand(),
-	description: __( 'Watch-verified, quiz-gated video.' ),
-	icon: 'format-video',
-	category: 'embed',
-	attributes: { videoId: { type: 'number', default: 0 } },
+	icon: <TruePlayerIcon />,
+	description: __( 'A fast video and audio player. Upload a file, drop one in, or paste a YouTube, Vimeo or media link.' ),
 
 	edit: Edit,
+	transforms,
 
 	save() {
-		return null; // dynamic — rendered server-side via the shortcode
+		return null; // dynamic — rendered server-side
 	},
 } );

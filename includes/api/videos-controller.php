@@ -310,8 +310,8 @@ class VideosController extends WP_REST_Controller {
 	 * someone who can already reach the full editor.
 	 */
 	public function quick_create( $request ) {
-		$body = $request->get_json_params();
-		$type = isset( $body['type'] ) ? (string) $body['type'] : '';
+		$body = (array) $request->get_json_params();
+		$type = isset( $body['type'] ) && is_string( $body['type'] ) ? $body['type'] : '';
 		if ( ! in_array( $type, self::QUICK_SOURCE_TYPES, true ) ) {
 			return new \WP_Error(
 				'tp_source_type',
@@ -320,7 +320,7 @@ class VideosController extends WP_REST_Controller {
 			);
 		}
 
-		$src = $this->sanitize_source_src( $type, isset( $body['src'] ) ? (string) $body['src'] : '' );
+		$src = $this->sanitize_source_src( $type, isset( $body['src'] ) && is_string( $body['src'] ) ? $body['src'] : '' );
 		if ( '' === $src ) {
 			return new \WP_Error(
 				'tp_source_src',
@@ -374,8 +374,8 @@ class VideosController extends WP_REST_Controller {
 			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 
-		$body = $request->get_json_params();
-		$type = isset( $body['type'] ) ? (string) $body['type'] : '';
+		$body = (array) $request->get_json_params();
+		$type = isset( $body['type'] ) && is_string( $body['type'] ) ? $body['type'] : '';
 		if ( ! in_array( $type, self::QUICK_SOURCE_TYPES, true ) ) {
 			return new \WP_Error(
 				'tp_source_type',
@@ -399,7 +399,7 @@ class VideosController extends WP_REST_Controller {
 			);
 		}
 
-		$src = $this->sanitize_source_src( $type, isset( $body['src'] ) ? (string) $body['src'] : '' );
+		$src = $this->sanitize_source_src( $type, isset( $body['src'] ) && is_string( $body['src'] ) ? $body['src'] : '' );
 		if ( '' === $src ) {
 			return new \WP_Error(
 				'tp_source_src',
@@ -468,19 +468,7 @@ class VideosController extends WP_REST_Controller {
 	 * Empty means rejected; the caller turns that into a 400.
 	 */
 	private function sanitize_source_src( string $type, string $raw ): string {
-		$raw = trim( $raw );
-		if ( '' === $raw ) {
-			return '';
-		}
-		if ( preg_match( '#^(?:https?:)?//#i', $raw ) ) {
-			return esc_url_raw( $raw, [ 'http', 'https' ] );
-		}
-		// `esc_url_raw` would turn an id like `dQw4w9WgXcQ` into
-		// `http://dQw4w9WgXcQ`, so provider ids are matched rather than escaped.
-		if ( in_array( $type, [ 'youtube', 'vimeo' ], true ) && preg_match( '/^[\w-]{1,64}$/', $raw ) ) {
-			return $raw;
-		}
-		return '';
+		return Helper::sanitize_source_src( $type, $raw );
 	}
 
 	/**
@@ -558,20 +546,20 @@ class VideosController extends WP_REST_Controller {
 		if ( ! is_array( $tags ) ) {
 			return;
 		}
-		$names = array_values( array_filter( array_map( 'sanitize_text_field', $tags ) ) );
+		$names = array_values( array_filter( array_map( [ Helper::class, 'text_value' ], $tags ) ) );
 		wp_set_object_terms( (int) $id, $names, \TruePlayer\Database\PostType::VIDEO_TAXONOMY, false );
 	}
 
 	public function show( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 		return rest_ensure_response( $this->to_item( get_post( $id ) ) );
 	}
 
 	public function create( $request ) {
-		$body  = $request->get_json_params();
+		$body  = (array) $request->get_json_params();
 		$title = $this->clean_title( $body['title'] ?? '' );
 		if ( is_wp_error( $title ) ) {
 			return $title;
@@ -584,12 +572,13 @@ class VideosController extends WP_REST_Controller {
 				'post_type'   => TRUEPLAYER_VIDEO_POST_TYPE,
 				'post_status' => 'publish',
 				'post_title'  => $title,
-			]
+			],
+			true
 		);
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
-		if ( isset( $body['config'] ) ) {
+		if ( isset( $body['config'] ) && is_array( $body['config'] ) ) {
 			Helper::update_json_meta( $id, '_trueplayer_config', $body['config'] );
 			// Resolve the provider poster now (Vimeo needs a remote call) so the
 			// first page render reads a warm cache instead of paying for it.
@@ -604,9 +593,9 @@ class VideosController extends WP_REST_Controller {
 	public function update( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
-		$body = $request->get_json_params();
+		$body = (array) $request->get_json_params();
 		if ( isset( $body['title'] ) ) {
 			$title = $this->clean_title( $body['title'] );
 			if ( is_wp_error( $title ) ) {
@@ -616,7 +605,7 @@ class VideosController extends WP_REST_Controller {
 			// worse than a placeholder in every list that shows the name.
 			wp_update_post( [ 'ID' => $id, 'post_title' => '' !== $title ? $title : __( 'Untitled video', 'trueplayer' ) ] );
 		}
-		if ( array_key_exists( 'config', $body ) ) {
+		if ( array_key_exists( 'config', $body ) && is_array( $body['config'] ) ) {
 			Helper::update_json_meta( $id, '_trueplayer_config', $body['config'] );
 			// Resolve the provider poster now (Vimeo needs a remote call) so the
 			// first page render reads a warm cache instead of paying for it.
@@ -649,7 +638,7 @@ class VideosController extends WP_REST_Controller {
 	public function save_poster( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 
 		$bytes = (string) $request->get_body();
@@ -723,7 +712,7 @@ class VideosController extends WP_REST_Controller {
 	public function discard_posters( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 		$saved  = $this->config_of( $id );
 		$in_use = (string) ( $saved['source']['poster'] ?? '' );
@@ -801,7 +790,7 @@ class VideosController extends WP_REST_Controller {
 	public function destroy( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 		// Deleting a post re-parents its attachments rather than removing them,
 		// so a poster we generated would outlive the only video that used it.
@@ -813,13 +802,13 @@ class VideosController extends WP_REST_Controller {
 	private function to_item( $post ) {
 		$terms = wp_get_object_terms( $post->ID, \TruePlayer\Database\PostType::VIDEO_TAXONOMY );
 		$tags  = is_wp_error( $terms ) ? [] : wp_list_pluck( $terms, 'name' );
-		$item = [
-			'id'         => $post->ID,
-			'title'      => $post->post_title,
-			'shortcode'  => sprintf( '[trueplayer id="%d"]', $post->ID ),
-			'config'     => $this->config_of( $post->ID ),
-			'tags'       => array_values( $tags ),
-			'modified'   => $post->post_modified_gmt,
+		$item  = [
+			'id'        => $post->ID,
+			'title'     => $post->post_title,
+			'shortcode' => sprintf( '[trueplayer id="%d"]', $post->ID ),
+			'config'    => $this->config_of( $post->ID ),
+			'tags'      => array_values( $tags ),
+			'modified'  => $post->post_modified_gmt,
 		];
 		return (array) apply_filters( 'trueplayer/video/item', $item, $post );
 	}

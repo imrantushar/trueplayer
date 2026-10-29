@@ -69,26 +69,29 @@ class Addons {
 	public function get_all_addons() {
 		$security = isset( $_POST['security'] ) ? sanitize_text_field( wp_unslash( $_POST['security'] ) ) : '';
 		if ( ! wp_verify_nonce( $security, 'trueplayer_nonce' ) ) {
-			wp_send_json_error( [ 'message' => 'Invalid nonce' ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid nonce', 'trueplayer' ) ] );
 		}
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( 'Insufficient permissions.', 401 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'trueplayer' ), 403 );
 		}
 
-		$addons = json_decode( get_option( TRUEPLAYER_ADDONS_SETTINGS, '{}' ) );
+		$addons = json_decode( (string) get_option( TRUEPLAYER_ADDONS_SETTINGS, '{}' ) );
 		wp_send_json_success( $addons );
 	}
 
 	public function save_addon_status() {
 		$security = isset( $_POST['security'] ) ? sanitize_text_field( wp_unslash( $_POST['security'] ) ) : '';
 		if ( ! wp_verify_nonce( $security, 'trueplayer_nonce' ) ) {
-			wp_send_json_error( [ 'message' => 'Invalid nonce' ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid nonce', 'trueplayer' ) ] );
 		}
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( 'Insufficient permissions.', 401 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'trueplayer' ), 403 );
 		}
 
-		$addon_slug = isset( $_POST['addon_slug'] ) ? sanitize_text_field( wp_unslash( $_POST['addon_slug'] ) ) : '';
+		$addon_slug = isset( $_POST['addon_slug'] ) ? sanitize_key( wp_unslash( $_POST['addon_slug'] ) ) : '';
+		if ( '' === $addon_slug ) {
+			wp_send_json_error( [ 'message' => __( 'Missing addon.', 'trueplayer' ) ], 400 );
+		}
 		$status     = isset( $_POST['status'] ) ? filter_var( wp_unslash( $_POST['status'] ), FILTER_VALIDATE_BOOLEAN ) : false;
 
 		if ( $status ) {
@@ -104,7 +107,7 @@ class Addons {
 			}
 		}
 
-		$saved                = (array) json_decode( get_option( TRUEPLAYER_ADDONS_SETTINGS, '{}' ), true );
+		$saved                = (array) json_decode( (string) get_option( TRUEPLAYER_ADDONS_SETTINGS, '{}' ), true );
 		$saved[ $addon_slug ] = $status;
 		update_option( TRUEPLAYER_ADDONS_SETTINGS, wp_json_encode( $saved ) );
 		$GLOBALS['trueplayer_addons'] = (object) $saved;

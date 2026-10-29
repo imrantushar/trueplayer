@@ -74,6 +74,8 @@ class Playlist {
 
 		/** Same add-on hook the shortcode runs (see Shortcode::resolved_config). */
 		$config = (array) apply_filters( 'trueplayer/player/config', $config, $video_id );
+		// Same render-time colour validation the shortcode applies.
+		$config = Helper::sanitize_style_values( $config );
 		$config = Shortcode::strip_answer_keys( $config );
 		return [
 			'videoId' => $video_id,

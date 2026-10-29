@@ -38,9 +38,7 @@ class MetaManager {
 				'single'            => true,
 				'sanitize_callback' => [ __CLASS__, 'sanitize_json_meta' ],
 				'show_in_rest'  => true,
-				'auth_callback' => function () {
-					return current_user_can( 'edit_posts' );
-				},
+				'auth_callback' => [ __CLASS__, 'can_manage_meta' ],
 			]
 		);
 
@@ -55,11 +53,10 @@ class MetaManager {
 			[
 				'type'          => 'string',
 				'single'        => true,
-				'default'       => 'native',
+				'default'           => 'native',
+				'sanitize_callback' => 'sanitize_key',
 				'show_in_rest'  => true,
-				'auth_callback' => function () {
-					return current_user_can( 'edit_posts' );
-				},
+				'auth_callback' => [ __CLASS__, 'can_manage_meta' ],
 			]
 		);
 
@@ -71,9 +68,7 @@ class MetaManager {
 				'single'            => true,
 				'sanitize_callback' => [ __CLASS__, 'sanitize_json_meta' ],
 				'show_in_rest'  => true,
-				'auth_callback' => function () {
-					return current_user_can( 'edit_posts' );
-				},
+				'auth_callback' => [ __CLASS__, 'can_manage_meta' ],
 			]
 		);
 
@@ -95,13 +90,28 @@ class MetaManager {
 			[
 				'type'          => 'string',
 				'single'        => true,
-				'default'       => 'video',
+				'default'           => 'video',
+				'sanitize_callback' => [ __CLASS__, 'sanitize_preset_type' ],
 				'show_in_rest'  => true,
-				'auth_callback' => function () {
-					return current_user_can( 'edit_posts' );
-				},
+				'auth_callback' => [ __CLASS__, 'can_manage_meta' ],
 			]
 		);
+	}
+
+	/**
+	 * Who may write this plugin's meta through core's REST API.
+	 *
+	 * The config holds layers, gating and other content that only the admin app
+	 * is meant to author; editors reach the narrower quick-create route instead.
+	 * Gating the meta on `edit_posts` would let any author bypass that.
+	 */
+	public static function can_manage_meta(): bool {
+		return current_user_can( 'manage_options' );
+	}
+
+	/** A preset is either an audio or a video preset; anything else is video. */
+	public static function sanitize_preset_type( $value ): string {
+		return 'audio' === $value ? 'audio' : 'video';
 	}
 
 	/**

@@ -88,6 +88,16 @@
 	margin-left: 3px;
 }
 
+/* Narrow, centred frame for 9:16 / 1:1 / 4:3 (set by Player.jsx and the facade). */
+.tp-facade {
+	width: var( --tp-stage-w, 100% );
+	margin-inline: auto;
+}
+.tp-stage:not( .tp-sticky ) {
+	width: var( --tp-stage-w, auto );
+	margin-inline: auto;
+}
+
 .tp-stage {
 	position: relative;
 	aspect-ratio: 16 / 9;
@@ -291,6 +301,11 @@
 	-o-object-fit: contain;
 	   object-fit: contain;
 	background: #000;
+}
+/* An explicit ratio fills the frame (cropped) instead of leaving black bars. */
+.tp-fill .tp-media {
+	-o-object-fit: cover;
+	   object-fit: cover;
 }
 .tp-media-container iframe {
 	width: 100%;

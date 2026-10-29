@@ -41,7 +41,12 @@ class SubtitlesController {
 
 	public function youtube_import( $request ) {
 		$vid  = self::youtube_id( (string) $request->get_param( 'src' ) );
-		$lang = sanitize_text_field( (string) $request->get_param( 'lang' ) ) ?: 'en';
+		$lang = (string) $request->get_param( 'lang' );
+		// A BCP 47-style tag (`en`, `pt-BR`, `zh-Hant`). It ends up in a query
+		// string and a filename, so anything else is not a language code.
+		if ( ! preg_match( '/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8}){0,2}$/', $lang ) ) {
+			$lang = 'en';
+		}
 		if ( ! $vid ) {
 			return new \WP_Error( 'bad_source', __( 'Not a valid YouTube URL or ID.', 'trueplayer' ), [ 'status' => 400 ] );
 		}
@@ -56,7 +61,7 @@ class SubtitlesController {
 			return rest_ensure_response( [ 'ok' => false, 'message' => __( 'Captions could not be parsed.', 'trueplayer' ) ] );
 		}
 
-		$upload = wp_upload_bits( 'youtube-' . $vid . '-' . $lang . '.vtt', null, $vtt );
+		$upload = wp_upload_bits( sanitize_file_name( 'youtube-' . $vid . '-' . $lang . '.vtt' ), null, $vtt );
 		if ( ! empty( $upload['error'] ) ) {
 			return new \WP_Error( 'upload_failed', $upload['error'], [ 'status' => 500 ] );
 		}

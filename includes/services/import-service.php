@@ -123,6 +123,17 @@ class ImportService {
 		);
 	}
 
+	/**
+	 * The other plugin's meta is untrusted input to this one: a source is only
+	 * carried over if it is an http(s) URL (or a provider id), the same rule the
+	 * editor applies.
+	 */
+	private static function clean_src( string $type, string $src ): string {
+		return 'bunny' === $type || 'mux' === $type
+			? sanitize_text_field( $src )
+			: Helper::sanitize_source_src( $type, $src );
+	}
+
 	/* ---------------- adapters ---------------- */
 
 	/** Presto Player: source lives in a `presto-player/*` block in post_content. */
@@ -145,9 +156,9 @@ class ImportService {
 		];
 		$type = $map[ $name ] ?? 'url';
 
-		$source = [ 'type' => $type, 'src' => $src ];
-		if ( ! empty( $attrs['poster'] ) ) {
-			$source['poster'] = (string) $attrs['poster'];
+		$source = [ 'type' => $type, 'src' => self::clean_src( $type, $src ) ];
+		if ( ! empty( $attrs['poster'] ) && is_scalar( $attrs['poster'] ) ) {
+			$source['poster'] = esc_url_raw( (string) $attrs['poster'], [ 'http', 'https' ] );
 		}
 		if ( 'presto-player/audio' === $name ) {
 			$source['mediaType'] = 'audio';
@@ -188,7 +199,8 @@ class ImportService {
 		}
 
 		$provider = strtolower( (string) ( $settings['provider'] ?? $settings['source_type'] ?? 'self' ) );
-		$src       = (string) ( $settings['src'] ?? $settings['source_url'] ?? $settings['media_url'] ?? $settings['url'] ?? '' );
+		$src      = $settings['src'] ?? $settings['source_url'] ?? $settings['media_url'] ?? $settings['url'] ?? '';
+		$src      = is_scalar( $src ) ? (string) $src : '';
 
 		$map = [
 			'html5'        => 'self',
@@ -206,18 +218,19 @@ class ImportService {
 		];
 		$type = $map[ $provider ] ?? 'url';
 
-		$source = [ 'type' => $type, 'src' => $src ];
-		$poster = (string) ( $settings['poster'] ?? $settings['thumbnail'] ?? $settings['featured_image'] ?? '' );
-		if ( $poster ) {
+		$source = [ 'type' => $type, 'src' => self::clean_src( $type, $src ) ];
+		$poster = $settings['poster'] ?? $settings['thumbnail'] ?? $settings['featured_image'] ?? '';
+		$poster = is_scalar( $poster ) ? esc_url_raw( (string) $poster, [ 'http', 'https' ] ) : '';
+		if ( '' !== $poster ) {
 			$source['poster'] = $poster;
 		}
-		if ( 'audio' === $provider || ( $settings['media_type'] ?? '' ) === 'audio' ) {
+		if ( 'audio' === $provider || 'audio' === ( $settings['media_type'] ?? '' ) ) {
 			$source['mediaType'] = 'audio';
 		}
 
 		$tags = [];
 		if ( ! empty( $settings['tags'] ) && is_array( $settings['tags'] ) ) {
-			$tags = array_values( array_filter( array_map( 'strval', $settings['tags'] ) ) );
+			$tags = array_values( array_filter( array_map( [ Helper::class, 'text_value' ], $settings['tags'] ) ) );
 		}
 
 		return [ 'title' => $post->post_title, 'config' => [ 'source' => $source ], 'tags' => $tags ];

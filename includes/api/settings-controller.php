@@ -40,8 +40,7 @@ class SettingsController extends WP_REST_Controller {
 	}
 
 	public function get_settings() {
-		$settings = json_decode( get_option( TRUEPLAYER_SETTINGS_NAME, '{}' ), true );
-		return rest_ensure_response( is_array( $settings ) ? $settings : [] );
+		return rest_ensure_response( \TruePlayer\Helper::get_settings() );
 	}
 
 	public function update_settings( $request ) {

@@ -28,7 +28,7 @@ abstract class BaseIntegration implements IntegrationInterface {
 	}
 
 	public function subscribe( array $data ): array {
-		return [ 'ok' => false, 'message' => 'Not supported.' ];
+		return [ 'ok' => false, 'message' => __( 'Not supported.', 'trueplayer' ) ];
 	}
 
 	/** Summary shown in the admin integrations list. */

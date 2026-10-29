@@ -111,25 +111,29 @@ class PresetsController extends WP_REST_Controller {
 	public function show( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== TRUEPLAYER_PRESET_POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 		return rest_ensure_response( $this->to_item( get_post( $id ) ) );
 	}
 
 	public function create( $request ) {
-		$body  = $request->get_json_params();
-		$title = isset( $body['title'] ) ? sanitize_text_field( $body['title'] ) : __( 'Untitled preset', 'trueplayer' );
+		$body  = (array) $request->get_json_params();
+		$title = Helper::text_value( $body['title'] ?? '' );
+		if ( '' === $title ) {
+			$title = __( 'Untitled preset', 'trueplayer' );
+		}
 		$id    = wp_insert_post(
 			[
 				'post_type'   => TRUEPLAYER_PRESET_POST_TYPE,
 				'post_status' => 'publish',
 				'post_title'  => $title,
-			]
+			],
+			true
 		);
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
-		if ( isset( $body['config'] ) ) {
+		if ( isset( $body['config'] ) && is_array( $body['config'] ) ) {
 			Helper::update_json_meta( $id, '_trueplayer_preset', $body['config'] );
 		}
 		// Set at creation and never afterwards — see update() for why.
@@ -148,13 +152,13 @@ class PresetsController extends WP_REST_Controller {
 	public function update( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== TRUEPLAYER_PRESET_POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
-		$body = $request->get_json_params();
+		$body = (array) $request->get_json_params();
 		if ( isset( $body['title'] ) ) {
-			wp_update_post( [ 'ID' => $id, 'post_title' => sanitize_text_field( $body['title'] ) ] );
+			wp_update_post( [ 'ID' => $id, 'post_title' => Helper::text_value( $body['title'] ) ] );
 		}
-		if ( array_key_exists( 'config', $body ) ) {
+		if ( array_key_exists( 'config', $body ) && is_array( $body['config'] ) ) {
 			Helper::update_json_meta( $id, '_trueplayer_preset', $body['config'] );
 		}
 		return rest_ensure_response( $this->to_item( get_post( $id ) ) );
@@ -163,7 +167,7 @@ class PresetsController extends WP_REST_Controller {
 	public function destroy( $request ) {
 		$id = (int) $request['id'];
 		if ( get_post_type( $id ) !== TRUEPLAYER_PRESET_POST_TYPE ) {
-			return new \WP_Error( 'not_found', 'Not found', [ 'status' => 404 ] );
+			return new \WP_Error( 'not_found', __( 'Not found', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 		wp_delete_post( $id, true );
 		return rest_ensure_response( [ 'deleted' => true ] );
