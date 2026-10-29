@@ -4,7 +4,7 @@ Tags: video, player, audio, playlist, hls
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.7.4
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,6 +57,11 @@ Every file in `assets/build/` maps to a source entry:
 To rebuild: install Node.js 20+, then run `npm install` and `npm run build` in the plugin folder. The build uses `@wordpress/scripts` (webpack) with the config in `webpack.config.js`.
 
 == Changelog ==
+
+= 1.8.0 - 29-10-2026 =
+* Added - TruePlayer block rebuilt with a saved-video picker, native embed support, block transforms and more style controls.
+* Security - Hardened REST controllers, opt-in, import, meta handling and WP-CLI input and output (security audit fixes).
+* Fixed - Translation issues in add-ons, WP-CLI and integrations.
 
 = 1.7.4 - 24-10-2026 =
 * Changed - Removed the unused progress, quiz-attempts, engagement and daily tables from the free plugin; they are no longer created on activation, and uninstall cleanup was updated to match.

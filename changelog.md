@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0 - 2026-10-29
+
+- Added: TruePlayer block rebuilt with a saved-video picker, native embed support, block transforms and more style controls.
+- Security: Hardened REST controllers, opt-in, import, meta handling and WP-CLI input and output (security audit fixes).
+- Fixed: Translation issues in add-ons, WP-CLI and integrations.
+
 ## 1.7.4 - 2026-10-24
 
 - Changed: Removed the unused progress, quiz-attempts, engagement and daily tables from the free plugin; they are no longer created on activation, and uninstall cleanup was updated to match.
