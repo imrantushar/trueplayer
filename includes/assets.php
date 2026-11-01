@@ -186,10 +186,16 @@ class Assets {
 	private function load_asset_deps( string $entry ): array {
 		$file = self::build_dir() . sprintf( '%s.%s.asset.php', $entry, TRUEPLAYER_VERSION );
 		if ( ! file_exists( $file ) ) {
-			return [ 'dependencies' => [], 'version' => TRUEPLAYER_VERSION ];
+			return [
+				'dependencies' => [],
+				'version'      => TRUEPLAYER_VERSION,
+			];
 		}
 		$deps = include $file;
-		return is_array( $deps ) ? $deps : [ 'dependencies' => [], 'version' => TRUEPLAYER_VERSION ];
+		return is_array( $deps ) ? $deps : [
+			'dependencies' => [],
+			'version'      => TRUEPLAYER_VERSION,
+		];
 	}
 
 	/**

@@ -23,21 +23,35 @@ class ImportController extends WP_REST_Controller {
 	}
 
 	public function register_routes() {
-		register_rest_route( $this->namespace, '/' . $this->rest_base . '/scan', [
-			'methods'             => WP_REST_Server::READABLE,
-			'callback'            => [ $this, 'scan' ],
-			'permission_callback' => [ $this, 'admin' ],
-		] );
+		register_rest_route(
+			$this->namespace,
+			'/' . $this->rest_base . '/scan',
+			[
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => [ $this, 'scan' ],
+				'permission_callback' => [ $this, 'admin' ],
+			]
+		);
 
-		register_rest_route( $this->namespace, '/' . $this->rest_base, [
-			'methods'             => WP_REST_Server::CREATABLE,
-			'callback'            => [ $this, 'run' ],
-			'permission_callback' => [ $this, 'admin' ],
-			'args'                => [
-				'source' => [ 'required' => true, 'sanitize_callback' => 'sanitize_key' ],
-				'limit'  => [ 'sanitize_callback' => 'absint', 'default' => 50 ],
-			],
-		] );
+		register_rest_route(
+			$this->namespace,
+			'/' . $this->rest_base,
+			[
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => [ $this, 'run' ],
+				'permission_callback' => [ $this, 'admin' ],
+				'args'                => [
+					'source' => [
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_key',
+					],
+					'limit'  => [
+						'sanitize_callback' => 'absint',
+						'default'           => 50,
+					],
+				],
+			]
+		);
 	}
 
 	public function admin() {

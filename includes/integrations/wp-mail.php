@@ -62,7 +62,7 @@ class WpMail extends BaseIntegration {
 		}
 
 		$video_id = (int) ( $data['video_id'] ?? 0 );
-		$title    = $video_id ? get_the_title( $video_id ) : '';
+		$title    = $video_id ? sanitize_text_field( get_the_title( $video_id ) ) : '';
 		$email    = (string) ( $data['email'] ?? '' );
 		$name     = (string) ( $data['name'] ?? '' );
 

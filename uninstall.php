@@ -68,7 +68,12 @@ function trueplayer_uninstall_cleanup(): void {
 }
 
 if ( is_multisite() ) {
-	$trueplayer_sites = get_sites( [ 'number' => 0, 'fields' => 'ids' ] );
+	$trueplayer_sites = get_sites(
+		[
+			'number' => 0,
+			'fields' => 'ids',
+		]
+	);
 	foreach ( (array) $trueplayer_sites as $trueplayer_site_id ) {
 		switch_to_blog( (int) $trueplayer_site_id );
 		trueplayer_uninstall_cleanup();

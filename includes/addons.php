@@ -18,7 +18,7 @@ class Addons {
 
 	private function addons_loader() {
 
-		$Autoload = \TruePlayer\Autoload::get_instance();
+		$autoload = \TruePlayer\Autoload::get_instance();
 
 		// Add-on plugins contribute their addons through the
 		// `trueplayer/addons/loader_filtered` filter below.
@@ -45,7 +45,7 @@ class Addons {
 				continue;
 			}
 
-			$Autoload->add_namespace_directory( $addon_namespace, $addon_root );
+			$autoload->add_namespace_directory( $addon_namespace, $addon_root );
 
 			$class = $addon_namespace . '\\' . $addon_class;
 
@@ -92,15 +92,17 @@ class Addons {
 		if ( '' === $addon_slug ) {
 			wp_send_json_error( [ 'message' => __( 'Missing addon.', 'trueplayer' ) ], 400 );
 		}
-		$status     = isset( $_POST['status'] ) ? filter_var( wp_unslash( $_POST['status'] ), FILTER_VALIDATE_BOOLEAN ) : false;
+		$status = isset( $_POST['status'] ) ? filter_var( wp_unslash( $_POST['status'] ), FILTER_VALIDATE_BOOLEAN ) : false;
 
 		if ( $status ) {
 			$can_activate = apply_filters( "trueplayer/addons/can_activate_{$addon_slug}", true, $addon_slug );
 			if ( is_wp_error( $can_activate ) ) {
-				wp_send_json_error( [
-					'message' => $can_activate->get_error_message(),
-					'code'    => $can_activate->get_error_code(),
-				] );
+				wp_send_json_error(
+					[
+						'message' => $can_activate->get_error_message(),
+						'code'    => $can_activate->get_error_code(),
+					]
+				);
 			}
 			if ( true !== $can_activate ) {
 				wp_send_json_error( [ 'message' => __( 'This addon cannot be activated right now.', 'trueplayer' ) ] );

@@ -20,9 +20,9 @@ class Helper {
 	/**
 	 * Read a single value from the plugin settings object.
 	 */
-	public static function get_specific_setting( $key, $default = null ) {
+	public static function get_specific_setting( $key, $fallback = null ) {
 		$settings = isset( $GLOBALS['trueplayer_settings'] ) ? (array) $GLOBALS['trueplayer_settings'] : [];
-		return array_key_exists( $key, $settings ) ? $settings[ $key ] : $default;
+		return array_key_exists( $key, $settings ) ? $settings[ $key ] : $fallback;
 	}
 
 	/**
@@ -176,7 +176,7 @@ class Helper {
 		}
 		$preset = self::get_preset_config( $preset_id );
 		if ( ! empty( $preset['customize'] ) && is_array( $preset['customize'] ) ) {
-			$over               = isset( $config['customize'] ) && is_array( $config['customize'] ) ? $config['customize'] : [];
+			$over                = isset( $config['customize'] ) && is_array( $config['customize'] ) ? $config['customize'] : [];
 			$config['customize'] = self::deep_merge( $preset['customize'], $over );
 		}
 		if ( ! empty( $preset['branding'] ) && is_array( $preset['branding'] ) ) {
@@ -222,7 +222,7 @@ class Helper {
 	/**
 	 * Re-request a Vimeo CDN thumbnail at a given width.
 	 *
-	 * oEmbed hands back a small render (…-d_960), and the size lives in a
+	 * The oEmbed response hands back a small render (…-d_960), and the size lives in a
 	 * mandatory `-d_<width>` path suffix — strip it and the URL 404s, so this
 	 * rewrites the suffix rather than removing it. Width alone (no `x<height>`)
 	 * keeps the frame's own aspect ratio; the stage crops via CSS.
@@ -353,6 +353,8 @@ class Helper {
 	/**
 	 * What happens once a viewer has used every quiz attempt.
 	 *
+	 * Policies:
+	 *
 	 *   lock_retry_after_rewatch — lock the video and wipe the watch coverage, so
 	 *                              re-reaching the completion threshold earns a
 	 *                              fresh set of attempts. The original, and the
@@ -467,7 +469,7 @@ class Helper {
 	 * A source URL (or, for YouTube and Vimeo, a bare id) made safe to store.
 	 * Shared by the quick-create routes and the block's inline attributes.
 	 *
-	 * http(s) only, so no `javascript:` or `data:` reaches a src attribute.
+	 * Only http(s) is accepted, so no `javascript:` or `data:` reaches a src attribute.
 	 * Empty means rejected.
 	 */
 	public static function sanitize_source_src( string $type, string $raw ): string {

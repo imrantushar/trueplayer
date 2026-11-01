@@ -283,8 +283,14 @@ class VideosController extends WP_REST_Controller {
 			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- excluding another engine's items is the point of the list; small post type.
 			'meta_query'     => [
 				'relation' => 'OR',
-				[ 'key' => \TruePlayer\Database\MetaManager::ENGINE_META, 'compare' => 'NOT EXISTS' ],
-				[ 'key' => \TruePlayer\Database\MetaManager::ENGINE_META, 'value' => 'native' ],
+				[
+					'key'     => \TruePlayer\Database\MetaManager::ENGINE_META,
+					'compare' => 'NOT EXISTS',
+				],
+				[
+					'key'   => \TruePlayer\Database\MetaManager::ENGINE_META,
+					'value' => 'native',
+				],
 			],
 		];
 	}
@@ -349,7 +355,12 @@ class VideosController extends WP_REST_Controller {
 			return $id;
 		}
 
-		$config = [ 'source' => [ 'type' => $type, 'src' => $src ] ];
+		$config = [
+			'source' => [
+				'type' => $type,
+				'src'  => $src,
+			],
+		];
 		Helper::update_json_meta( $id, '_trueplayer_config', $config );
 		// Records that this video was made from inside a post, so one abandoned
 		// with the draft that prompted it can be told apart later from a video
@@ -411,7 +422,7 @@ class VideosController extends WP_REST_Controller {
 		// A poster we derived or captured belongs to the file it was made for,
 		// so pointing the video somewhere else retires it. One the author chose
 		// themselves is left alone — same rule the full editor follows.
-		if ( $src !== ( $source['src'] ?? '' ) && ( ! empty( $source['posterAuto'] ) || ! empty( $source['posterDerived'] ) ) ) {
+		if ( ( $source['src'] ?? '' ) !== $src && ( ! empty( $source['posterAuto'] ) || ! empty( $source['posterDerived'] ) ) ) {
 			unset( $source['poster'], $source['posterAuto'], $source['posterDerived'], $source['posterFallbacks'] );
 		}
 
@@ -426,7 +437,12 @@ class VideosController extends WP_REST_Controller {
 			return $title;
 		}
 		if ( '' !== $title ) {
-			wp_update_post( [ 'ID' => $id, 'post_title' => $title ] );
+			wp_update_post(
+				[
+					'ID'         => $id,
+					'post_title' => $title,
+				]
+			);
 		}
 
 		return rest_ensure_response( $this->to_option( get_post( $id ) ) );
@@ -534,7 +550,12 @@ class VideosController extends WP_REST_Controller {
 		}
 		$out = array_map(
 			static function ( $t ) {
-				return [ 'id' => $t->term_id, 'name' => $t->name, 'slug' => $t->slug, 'count' => (int) $t->count ];
+				return [
+					'id'    => $t->term_id,
+					'name'  => $t->name,
+					'slug'  => $t->slug,
+					'count' => (int) $t->count,
+				];
 			},
 			$terms
 		);
@@ -567,7 +588,7 @@ class VideosController extends WP_REST_Controller {
 		if ( '' === $title ) {
 			$title = __( 'Untitled video', 'trueplayer' );
 		}
-		$id    = wp_insert_post(
+		$id = wp_insert_post(
 			[
 				'post_type'   => TRUEPLAYER_VIDEO_POST_TYPE,
 				'post_status' => 'publish',
@@ -603,7 +624,12 @@ class VideosController extends WP_REST_Controller {
 			}
 			// An author who clears the field is renaming it to nothing, which is
 			// worse than a placeholder in every list that shows the name.
-			wp_update_post( [ 'ID' => $id, 'post_title' => '' !== $title ? $title : __( 'Untitled video', 'trueplayer' ) ] );
+			wp_update_post(
+				[
+					'ID'         => $id,
+					'post_title' => '' !== $title ? $title : __( 'Untitled video', 'trueplayer' ),
+				]
+			);
 		}
 		if ( array_key_exists( 'config', $body ) && is_array( $body['config'] ) ) {
 			Helper::update_json_meta( $id, '_trueplayer_config', $body['config'] );
@@ -651,7 +677,11 @@ class VideosController extends WP_REST_Controller {
 		}
 
 		$size  = @getimagesizefromstring( $bytes ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- a non-image body is an expected outcome, reported below.
-		$types = [ IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp' ];
+		$types = [
+			IMAGETYPE_JPEG => 'jpg',
+			IMAGETYPE_PNG  => 'png',
+			IMAGETYPE_WEBP => 'webp',
+		];
 		$ext   = $size && isset( $types[ $size[2] ] ) ? $types[ $size[2] ] : '';
 		if ( ! $ext ) {
 			return new \WP_Error(
@@ -738,7 +768,10 @@ class VideosController extends WP_REST_Controller {
 		}
 		$base = $src ? pathinfo( (string) wp_parse_url( $src, PHP_URL_PATH ), PATHINFO_FILENAME ) : '';
 		if ( '' === $base ) {
-			$base = get_post_field( 'post_name', $id ) ?: 'video-' . $id;
+			$base = get_post_field( 'post_name', $id );
+			if ( empty( $base ) ) {
+				$base = 'video-' . $id;
+			}
 		}
 		return sanitize_file_name( $base . '-poster.' . $ext );
 	}

@@ -44,10 +44,15 @@ class Menu {
 				continue;
 			}
 			wp_safe_redirect(
-				admin_url( add_query_arg(
-					[ 'page' => $slug . '-videos', 'kind' => $kind ],
-					'admin.php'
-				) )
+				admin_url(
+					add_query_arg(
+						[
+							'page' => $slug . '-videos',
+							'kind' => $kind,
+						],
+						'admin.php'
+					)
+				)
 			);
 			exit;
 		}
@@ -69,8 +74,8 @@ class Menu {
 		// gets a real URL and appears in the WP admin submenu. All boot the same SPA.
 		$slug = TRUEPLAYER_PLUGIN_SLUG;
 		$subs = [
-			$slug             => __( 'Dashboard', 'trueplayer' ),
-			$slug . '-videos' => __( 'Media', 'trueplayer' ),
+			$slug               => __( 'Dashboard', 'trueplayer' ),
+			$slug . '-videos'   => __( 'Media', 'trueplayer' ),
 			$slug . '-presets'  => __( 'Presets', 'trueplayer' ),
 			$slug . '-settings' => __( 'Settings', 'trueplayer' ),
 		];

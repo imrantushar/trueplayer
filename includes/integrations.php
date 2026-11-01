@@ -35,6 +35,8 @@ class Integrations {
 	}
 
 	/**
+	 * Every registered integration, available or not.
+	 *
 	 * @return \TruePlayer\Interfaces\IntegrationInterface[]
 	 */
 	public static function all(): array {
@@ -47,12 +49,19 @@ class Integrations {
 	}
 
 	/**
+	 * The integrations that can accept a contact right now.
+	 *
 	 * @return \TruePlayer\Interfaces\IntegrationInterface[]
 	 */
 	public static function available(): array {
-		return array_values( array_filter( self::all(), function ( $i ) {
-			return $i->is_available();
-		} ) );
+		return array_values(
+			array_filter(
+				self::all(),
+				function ( $i ) {
+					return $i->is_available();
+				}
+			)
+		);
 	}
 
 	public static function get( string $id ) {
@@ -73,7 +82,10 @@ class Integrations {
 		$provider    = $data['provider'] ?? '';
 		$integration = $provider ? self::get( $provider ) : null;
 
-		$result = [ 'ok' => false, 'message' => __( 'No subscription provider is configured.', 'trueplayer' ) ];
+		$result = [
+			'ok'      => false,
+			'message' => __( 'No subscription provider is configured.', 'trueplayer' ),
+		];
 
 		if ( $integration && $integration->is_available() ) {
 			$result = $integration->subscribe( $data );
@@ -87,11 +99,17 @@ class Integrations {
 
 		// Fire an event so webhooks + automation see opt-ins too.
 		if ( ! empty( $result['ok'] ) ) {
-			Events::emit( 'subscriber.added', [
-				'video_id' => (int) ( $data['video_id'] ?? 0 ),
-				'provider' => $provider,
-				'subject'  => [ 'email' => $data['email'] ?? '', 'name' => $data['name'] ?? '' ],
-			] );
+			Events::emit(
+				'subscriber.added',
+				[
+					'video_id' => (int) ( $data['video_id'] ?? 0 ),
+					'provider' => $provider,
+					'subject'  => [
+						'email' => $data['email'] ?? '',
+						'name'  => $data['name'] ?? '',
+					],
+				]
+			);
 		}
 
 		return $result;

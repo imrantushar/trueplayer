@@ -28,8 +28,14 @@ class SubtitlesController {
 				'callback'            => [ $this, 'youtube_import' ],
 				'permission_callback' => [ $this, 'admin' ],
 				'args'                => [
-					'src'  => [ 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ],
-					'lang' => [ 'sanitize_callback' => 'sanitize_text_field', 'default' => 'en' ],
+					'src'  => [
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_text_field',
+					],
+					'lang' => [
+						'sanitize_callback' => 'sanitize_text_field',
+						'default'           => 'en',
+					],
 				],
 			]
 		);
@@ -53,12 +59,22 @@ class SubtitlesController {
 
 		$xml = self::fetch_timedtext( $vid, $lang );
 		if ( '' === $xml ) {
-			return rest_ensure_response( [ 'ok' => false, 'message' => __( 'No public captions found for this video.', 'trueplayer' ) ] );
+			return rest_ensure_response(
+				[
+					'ok'      => false,
+					'message' => __( 'No public captions found for this video.', 'trueplayer' ),
+				]
+			);
 		}
 
 		$vtt = self::xml_to_vtt( $xml );
 		if ( '' === $vtt ) {
-			return rest_ensure_response( [ 'ok' => false, 'message' => __( 'Captions could not be parsed.', 'trueplayer' ) ] );
+			return rest_ensure_response(
+				[
+					'ok'      => false,
+					'message' => __( 'Captions could not be parsed.', 'trueplayer' ),
+				]
+			);
 		}
 
 		$upload = wp_upload_bits( sanitize_file_name( 'youtube-' . $vid . '-' . $lang . '.vtt' ), null, $vtt );
@@ -66,21 +82,36 @@ class SubtitlesController {
 			return new \WP_Error( 'upload_failed', $upload['error'], [ 'status' => 500 ] );
 		}
 
-		return rest_ensure_response( [
-			'ok'      => true,
-			'url'     => $upload['url'],
-			'label'   => strtoupper( $lang ) . ' (YouTube)',
-			'srclang' => $lang,
-		] );
+		return rest_ensure_response(
+			[
+				'ok'      => true,
+				'url'     => $upload['url'],
+				'label'   => strtoupper( $lang ) . ' (YouTube)',
+				'srclang' => $lang,
+			]
+		);
 	}
 
 	private static function fetch_timedtext( string $vid, string $lang ): string {
 		$urls = [
-			add_query_arg( [ 'lang' => $lang, 'v' => $vid ], 'https://www.youtube.com/api/timedtext' ),
-			add_query_arg( [ 'lang' => $lang, 'v' => $vid, 'kind' => 'asr' ], 'https://www.youtube.com/api/timedtext' ),
+			add_query_arg(
+				[
+					'lang' => $lang,
+					'v'    => $vid,
+				],
+				'https://www.youtube.com/api/timedtext'
+			),
+			add_query_arg(
+				[
+					'lang' => $lang,
+					'v'    => $vid,
+					'kind' => 'asr',
+				],
+				'https://www.youtube.com/api/timedtext'
+			),
 		];
 		foreach ( $urls as $url ) {
-			$res = wp_remote_get(
+			$res = wp_safe_remote_get(
 				$url,
 				[
 					'timeout'    => 12,
@@ -105,7 +136,7 @@ class SubtitlesController {
 		// entity in it is ever allowed to pull another one. Entity substitution
 		// is already off by default (LIBXML_NOENT is not passed) — this closes
 		// the other half rather than relying on a default staying put.
-		$doc  = simplexml_load_string( $xml, 'SimpleXMLElement', LIBXML_NONET );
+		$doc = simplexml_load_string( $xml, 'SimpleXMLElement', LIBXML_NONET );
 		libxml_use_internal_errors( $prev );
 		if ( ! $doc || ! isset( $doc->text ) ) {
 			return '';

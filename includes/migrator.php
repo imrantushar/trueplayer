@@ -101,13 +101,15 @@ class Migrator {
 		}
 		update_option( $done, Helper::now_iso(), false );
 
-		$ids = get_posts( [
-			'post_type'      => TRUEPLAYER_VIDEO_POST_TYPE,
-			'post_status'    => 'any',
-			'posts_per_page' => -1,
-			'fields'         => 'ids',
-			'meta_key'       => '_trueplayer_config', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-		] );
+		$ids = get_posts(
+			[
+				'post_type'      => TRUEPLAYER_VIDEO_POST_TYPE,
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'meta_key'       => '_trueplayer_config', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			]
+		);
 
 		foreach ( $ids as $id ) {
 			$raw    = get_post_meta( $id, '_trueplayer_config', true );
@@ -153,12 +155,14 @@ class Migrator {
 		// arriving mid-pass must not start the same walk again.
 		update_option( $done, 1 );
 
-		$ids = get_posts( [
-			'post_type'      => TRUEPLAYER_VIDEO_POST_TYPE,
-			'post_status'    => 'any',
-			'posts_per_page' => -1,
-			'fields'         => 'ids',
-		] );
+		$ids = get_posts(
+			[
+				'post_type'      => TRUEPLAYER_VIDEO_POST_TYPE,
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			]
+		);
 
 		foreach ( $ids as $id ) {
 			$raw    = get_post_meta( $id, '_trueplayer_config', true );
@@ -223,12 +227,14 @@ class Migrator {
 		}
 		update_option( $done, 1 );
 
-		$ids = get_posts( [
-			'post_type'      => TRUEPLAYER_VIDEO_POST_TYPE,
-			'post_status'    => 'any',
-			'posts_per_page' => -1,
-			'fields'         => 'ids',
-		] );
+		$ids = get_posts(
+			[
+				'post_type'      => TRUEPLAYER_VIDEO_POST_TYPE,
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			]
+		);
 
 		foreach ( $ids as $id ) {
 			$raw    = get_post_meta( $id, '_trueplayer_config', true );

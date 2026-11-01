@@ -122,7 +122,7 @@ class PresetsController extends WP_REST_Controller {
 		if ( '' === $title ) {
 			$title = __( 'Untitled preset', 'trueplayer' );
 		}
-		$id    = wp_insert_post(
+		$id = wp_insert_post(
 			[
 				'post_type'   => TRUEPLAYER_PRESET_POST_TYPE,
 				'post_status' => 'publish',
@@ -156,7 +156,12 @@ class PresetsController extends WP_REST_Controller {
 		}
 		$body = (array) $request->get_json_params();
 		if ( isset( $body['title'] ) ) {
-			wp_update_post( [ 'ID' => $id, 'post_title' => Helper::text_value( $body['title'] ) ] );
+			wp_update_post(
+				[
+					'ID'         => $id,
+					'post_title' => Helper::text_value( $body['title'] ),
+				]
+			);
 		}
 		if ( array_key_exists( 'config', $body ) && is_array( $body['config'] ) ) {
 			Helper::update_json_meta( $id, '_trueplayer_preset', $body['config'] );
