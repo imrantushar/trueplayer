@@ -358,17 +358,9 @@ const EMPTY = {
 };
 
 function RowList( { rows, kind, byId, copied, onCopy, onEdit, onNavigate, onRemove, onAdd } ) {
+	// Nothing while the list loads; an empty state here would flash first.
 	if ( null === rows ) {
-		return (
-			<div className="space-y-3">
-				{ [ 0, 1, 2 ].map( ( i ) => (
-					<Card key={ i } className="p-4 flex items-center gap-4">
-						<div className="w-24 aspect-video rounded bg-gray-100 animate-pulse shrink-0" />
-						<div className="flex-1 space-y-2"><div className="h-4 w-1/3 bg-gray-100 rounded animate-pulse" /><div className="h-3 w-1/4 bg-gray-100 rounded animate-pulse" /></div>
-					</Card>
-				) ) }
-			</div>
-		);
+		return null;
 	}
 
 	if ( 0 === rows.length ) {

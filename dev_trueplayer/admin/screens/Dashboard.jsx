@@ -73,7 +73,6 @@ export default function Dashboard( { onNavigate, onCreate } ) {
 						<h3 className="font-semibold text-ink">{ __( 'Recent media' ) }</h3>
 						<button className="text-sm text-brand-600 font-medium hover:text-brand-700" onClick={ () => onNavigate( 'library' ) }>{ __( 'View all →' ) }</button>
 					</div>
-					{ videos === null && <p className="text-gray-400 text-sm">{ __( 'Loading…' ) }</p> }
 					{ videos && recent.length === 0 && (
 						<div className="text-center py-10 border border-dashed border-line rounded-lg">
 							<div className="mx-auto mb-3 w-11 h-11 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="video" className="w-5 h-5" /></div>

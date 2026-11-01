@@ -556,7 +556,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 	};
 
 	if (!settings) {
-		return <p className="text-gray-400">{ __( 'Loading…' ) }</p>;
+		return null;
 	}
 
 	return (
