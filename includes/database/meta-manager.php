@@ -37,8 +37,8 @@ class MetaManager {
 				'type'              => 'string',
 				'single'            => true,
 				'sanitize_callback' => [ __CLASS__, 'sanitize_json_meta' ],
-				'show_in_rest'  => true,
-				'auth_callback' => [ __CLASS__, 'can_manage_meta' ],
+				'show_in_rest'      => true,
+				'auth_callback'     => [ __CLASS__, 'can_manage_meta' ],
 			]
 		);
 
@@ -51,12 +51,12 @@ class MetaManager {
 			TRUEPLAYER_VIDEO_POST_TYPE,
 			'_trueplayer_engine',
 			[
-				'type'          => 'string',
-				'single'        => true,
+				'type'              => 'string',
+				'single'            => true,
 				'default'           => 'native',
 				'sanitize_callback' => 'sanitize_key',
-				'show_in_rest'  => true,
-				'auth_callback' => [ __CLASS__, 'can_manage_meta' ],
+				'show_in_rest'      => true,
+				'auth_callback'     => [ __CLASS__, 'can_manage_meta' ],
 			]
 		);
 
@@ -67,8 +67,8 @@ class MetaManager {
 				'type'              => 'string',
 				'single'            => true,
 				'sanitize_callback' => [ __CLASS__, 'sanitize_json_meta' ],
-				'show_in_rest'  => true,
-				'auth_callback' => [ __CLASS__, 'can_manage_meta' ],
+				'show_in_rest'      => true,
+				'auth_callback'     => [ __CLASS__, 'can_manage_meta' ],
 			]
 		);
 
@@ -88,12 +88,12 @@ class MetaManager {
 			TRUEPLAYER_PRESET_POST_TYPE,
 			'_trueplayer_preset_type',
 			[
-				'type'          => 'string',
-				'single'        => true,
+				'type'              => 'string',
+				'single'            => true,
 				'default'           => 'video',
 				'sanitize_callback' => [ __CLASS__, 'sanitize_preset_type' ],
-				'show_in_rest'  => true,
-				'auth_callback' => [ __CLASS__, 'can_manage_meta' ],
+				'show_in_rest'      => true,
+				'auth_callback'     => [ __CLASS__, 'can_manage_meta' ],
 			]
 		);
 	}

@@ -92,7 +92,11 @@ class Block {
 					$config[ $key ] = $over[ $key ];
 				}
 			}
-			return [ 'id' => $id, 'title' => get_the_title( $id ), 'config' => $config ];
+			return [
+				'id'     => $id,
+				'title'  => get_the_title( $id ),
+				'config' => $config,
+			];
 		}
 
 		$config = self::config_from_attributes( $attributes );
@@ -166,14 +170,17 @@ class Block {
 
 	/** The `source` block of an inline embed. */
 	private static function source_from_attributes( array $a, string $type, string $src ): array {
-		$source = [ 'type' => $type, 'src' => $src ];
+		$source = [
+			'type' => $type,
+			'src'  => $src,
+		];
 		$poster = esc_url_raw( isset( $a['poster'] ) ? (string) $a['poster'] : '', [ 'http', 'https' ] );
 		if ( '' !== $poster ) {
 			$source['poster'] = $poster;
 		}
 		$caption = esc_url_raw( isset( $a['captionUrl'] ) ? (string) $a['captionUrl'] : '', [ 'http', 'https' ] );
 		if ( '' !== $caption && 'self' === $type ) {
-			$lang                 = isset( $a['captionLang'] ) ? preg_replace( '/[^A-Za-z-]/', '', (string) $a['captionLang'] ) : '';
+			$lang                = isset( $a['captionLang'] ) ? preg_replace( '/[^A-Za-z-]/', '', (string) $a['captionLang'] ) : '';
 			$source['subtitles'] = [
 				[
 					'src'     => $caption,
@@ -261,7 +268,11 @@ class Block {
 		}
 
 		$customize = array_filter(
-			[ 'appearance' => $appearance, 'behavior' => $behavior, 'controls' => $controls ]
+			[
+				'appearance' => $appearance,
+				'behavior'   => $behavior,
+				'controls'   => $controls,
+			]
 		);
 
 		$config = [];
@@ -302,7 +313,10 @@ class Block {
 			if ( '' === $label ) {
 				continue;
 			}
-			$out[] = [ 'at' => (int) $m[1] * 3600 + (int) $m[2] * 60 + (int) $m[3], 'label' => $label ];
+			$out[] = [
+				'at'    => (int) $m[1] * 3600 + (int) $m[2] * 60 + (int) $m[3],
+				'label' => $label,
+			];
 		}
 		usort( $out, static fn( $x, $y ) => $x['at'] <=> $y['at'] );
 		return array_slice( $out, 0, 60 );
@@ -328,8 +342,11 @@ class Block {
 	}
 
 	public function editor_assets() {
-		$deps = Assets::build_dir() . sprintf( 'block.%s.asset.php', TRUEPLAYER_VERSION );
-		$asset = file_exists( $deps ) ? include $deps : [ 'dependencies' => [], 'version' => TRUEPLAYER_VERSION ];
+		$deps  = Assets::build_dir() . sprintf( 'block.%s.asset.php', TRUEPLAYER_VERSION );
+		$asset = file_exists( $deps ) ? include $deps : [
+			'dependencies' => [],
+			'version'      => TRUEPLAYER_VERSION,
+		];
 
 		wp_enqueue_script(
 			self::SCRIPT_HANDLE,

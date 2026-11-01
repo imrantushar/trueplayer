@@ -24,27 +24,21 @@ import { __, sprintf } from '@Utils/translation';
 import { RadioCards, Styles, Label, Help } from './ui';
 import { updateVideo } from './data';
 
-/** The design's source list. HLS is stored as a plain URL: the player spots `.m3u8` by itself. */
+/** The sources the block's dialog can finish on its own. HLS is a Pro source, set up in the full editor. */
 const TYPES = [
 	{ value: 'self', label: __( 'Self-hosted' ), hint: __( 'Upload to this site' ), field: __( 'Media URL' ), ph: 'https://' },
 	{ value: 'youtube', label: __( 'YouTube' ), hint: __( 'Paste a YouTube link.' ), field: __( 'YouTube URL or video ID' ), ph: 'https://youtube.com/watch?v=' },
 	{ value: 'vimeo', label: __( 'Vimeo' ), hint: __( 'Paste a Vimeo link.' ), field: __( 'Vimeo URL or video ID' ), ph: 'https://vimeo.com/' },
 	{ value: 'url', label: __( 'External URL (mp4/webm)' ), hint: __( 'A media file hosted anywhere.' ), field: __( 'Media URL' ), ph: 'https://example.com/video.mp4' },
-	{ value: 'hls', label: __( 'HLS stream (.m3u8)' ), hint: __( 'Any adaptive HLS manifest.' ), field: __( 'Media URL' ), ph: 'https://example.com/stream.m3u8' },
 ];
-
-const isHls = ( src ) => /\.m3u8($|\?)/i.test( src || '' );
 
 export default function VideoModal( { video = null, inline = null, mediaType = '', onClose, onSaved, onApply } ) {
 	const editing = !! video;
 	const source = video?.config?.source || inline || {};
-	// A saved video can only take the types the server accepts.
-	const types = editing ? TYPES.filter( ( t ) => 'hls' !== t.value ) : TYPES;
-
-	const startType = 'url' === source.type && isHls( source.src ) && ! editing ? 'hls' : source.type;
+	const types = TYPES;
 
 	const [ title, setTitle ] = useState( video?.title || '' );
-	const [ type, setType ] = useState( types.some( ( t ) => t.value === startType ) ? startType : 'self' );
+	const [ type, setType ] = useState( types.some( ( t ) => t.value === source.type ) ? source.type : 'self' );
 	const [ src, setSrc ] = useState( source.src || '' );
 	const [ media, setMedia ] = useState( null ); // The chosen attachment, for `self`.
 	const [ busy, setBusy ] = useState( false );
@@ -83,7 +77,7 @@ export default function VideoModal( { video = null, inline = null, mediaType = '
 		if ( ! editing ) {
 			onApply( {
 				src: value,
-				sourceType: 'hls' === type ? 'url' : type,
+				sourceType: type,
 				mediaId: 'self' === type ? media?.id || 0 : 0,
 			} );
 			return;

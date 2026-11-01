@@ -32,11 +32,11 @@ class Shortcode {
 	 * `AcademyQuizpress\Frontend::maybe_enqueue_quizpress_player()`.
 	 */
 	private static function maybe_enqueue_quizpress( array $config ) {
-		$gating = is_array( $config['gating'] ?? null ) ? $config['gating'] : [];
+		$gating         = is_array( $config['gating'] ?? null ) ? $config['gating'] : [];
 		$uses_quizpress = static function ( $quiz ) {
 			return is_array( $quiz ) && 'quizpress' === ( $quiz['source'] ?? '' ) && ! empty( $quiz['quizpressId'] );
 		};
-		$has_quizpress = $uses_quizpress( $gating['finalQuiz'] ?? null );
+		$has_quizpress  = $uses_quizpress( $gating['finalQuiz'] ?? null );
 		if ( ! $has_quizpress && ! empty( $gating['checkpoints'] ) && is_array( $gating['checkpoints'] ) ) {
 			foreach ( $gating['checkpoints'] as $cp ) {
 				if ( $uses_quizpress( $cp ) ) {
@@ -58,7 +58,14 @@ class Shortcode {
 	 * that opens the player in a lightbox. Nothing loads until it's clicked.
 	 */
 	public function render_popup( $atts, $content = '' ) {
-		$atts     = shortcode_atts( [ 'id' => 0, 'label' => '' ], $atts, 'trueplayer_popup' );
+		$atts     = shortcode_atts(
+			[
+				'id'    => 0,
+				'label' => '',
+			],
+			$atts,
+			'trueplayer_popup'
+		);
 		$video_id = (int) $atts['id'];
 		if ( ! $video_id || get_post_type( $video_id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
 			return '';
@@ -68,8 +75,14 @@ class Shortcode {
 
 		$config = self::resolved_config( $video_id );
 		self::maybe_enqueue_quizpress( $config );
-		$json   = wp_json_encode( [ 'videoId' => $video_id, 'title' => get_the_title( $video_id ), 'config' => $config ] );
-		$label  = '' !== trim( (string) $content ) ? do_shortcode( $content ) : ( $atts['label'] ?: __( 'Watch video', 'trueplayer' ) );
+		$json   = wp_json_encode(
+			[
+				'videoId' => $video_id,
+				'title'   => get_the_title( $video_id ),
+				'config'  => $config,
+			]
+		);
+		$label  = '' !== trim( (string) $content ) ? do_shortcode( $content ) : ( ! empty( $atts['label'] ) ? $atts['label'] : __( 'Watch video', 'trueplayer' ) );
 		$accent = Helper::sanitize_css_color( $config['customize']['appearance']['accent'] ?? '' );
 		$style  = $accent ? sprintf( ' style="--tp-accent:%s"', esc_attr( $accent ) ) : '';
 
@@ -136,9 +149,9 @@ class Shortcode {
 		$autoplay = $ap_mode ? 'off' !== $ap_mode : ! empty( $behavior['autoplay'] );
 
 		// Load strategy — when the real player boots:
-		//   facade    (default): a lightweight poster; nothing loads until click.
-		//   eager     : boot the player on page load (no facade, no auto-play).
-		//   onvisible : boot when scrolled into view (facade until then).
+		// facade    (default): a lightweight poster; nothing loads until click.
+		// eager     : boot the player on page load (no facade, no auto-play).
+		// onvisible : boot when scrolled into view (facade until then).
 		// Autoplay forces eager (there is nothing to wait for).
 		$strategy = in_array( $behavior['loadStrategy'] ?? '', [ 'facade', 'eager', 'onvisible' ], true )
 			? $behavior['loadStrategy']
@@ -218,11 +231,11 @@ class Shortcode {
 		if ( '' === $poster ) {
 			return '';
 		}
-		$post   = get_post( $video_id );
-		$title  = '' !== $title ? $title : get_the_title( $video_id );
+		$post  = get_post( $video_id );
+		$title = '' !== $title ? $title : get_the_title( $video_id );
 		// An inline block embed has no library post of its own, so it is dated
 		// by the post it sits in — an empty uploadDate is invalid for Google.
-		$dated = $post ? $post : get_post();
+		$dated  = $post ? $post : get_post();
 		$schema = [
 			'@context'     => 'https://schema.org',
 			// An audio item described as a VideoObject is simply wrong data for
@@ -297,7 +310,7 @@ class Shortcode {
 		$chain     = $fallbacks
 			? sprintf( ' data-tp-poster-fallback="%s"', esc_attr( wp_json_encode( $fallbacks ) ) )
 			: '';
-		$img = $poster
+		$img       = $poster
 			? sprintf(
 				'<img class="tp-facade-poster" src="%s" alt="" loading="lazy" decoding="async"%s />',
 				esc_url( $poster ),

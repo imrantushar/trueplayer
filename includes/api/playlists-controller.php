@@ -27,17 +27,37 @@ class PlaylistsController extends WP_REST_Controller {
 			$this->namespace,
 			'/' . $this->rest_base,
 			[
-				[ 'methods' => WP_REST_Server::READABLE, 'callback' => [ $this, 'index' ], 'permission_callback' => [ $this, 'admin' ] ],
-				[ 'methods' => WP_REST_Server::CREATABLE, 'callback' => [ $this, 'create' ], 'permission_callback' => [ $this, 'admin' ] ],
+				[
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => [ $this, 'index' ],
+					'permission_callback' => [ $this, 'admin' ],
+				],
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'create' ],
+					'permission_callback' => [ $this, 'admin' ],
+				],
 			]
 		);
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base . '/(?P<id>\d+)',
 			[
-				[ 'methods' => WP_REST_Server::READABLE, 'callback' => [ $this, 'show' ], 'permission_callback' => [ $this, 'admin' ] ],
-				[ 'methods' => WP_REST_Server::EDITABLE, 'callback' => [ $this, 'update' ], 'permission_callback' => [ $this, 'admin' ] ],
-				[ 'methods' => WP_REST_Server::DELETABLE, 'callback' => [ $this, 'destroy' ], 'permission_callback' => [ $this, 'admin' ] ],
+				[
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => [ $this, 'show' ],
+					'permission_callback' => [ $this, 'admin' ],
+				],
+				[
+					'methods'             => WP_REST_Server::EDITABLE,
+					'callback'            => [ $this, 'update' ],
+					'permission_callback' => [ $this, 'admin' ],
+				],
+				[
+					'methods'             => WP_REST_Server::DELETABLE,
+					'callback'            => [ $this, 'destroy' ],
+					'permission_callback' => [ $this, 'admin' ],
+				],
 			]
 		);
 	}
@@ -47,7 +67,15 @@ class PlaylistsController extends WP_REST_Controller {
 	}
 
 	public function index() {
-		$posts = get_posts( [ 'post_type' => Playlist::POST_TYPE, 'post_status' => [ 'publish', 'draft' ], 'posts_per_page' => 500, 'orderby' => 'date', 'order' => 'DESC' ] );
+		$posts = get_posts(
+			[
+				'post_type'      => Playlist::POST_TYPE,
+				'post_status'    => [ 'publish', 'draft' ],
+				'posts_per_page' => 500,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+			]
+		);
 		return rest_ensure_response( array_map( [ $this, 'to_item' ], $posts ) );
 	}
 
@@ -62,7 +90,14 @@ class PlaylistsController extends WP_REST_Controller {
 	public function create( $request ) {
 		$body  = (array) $request->get_json_params();
 		$title = Helper::text_value( $body['title'] ?? '' );
-		$id    = wp_insert_post( [ 'post_type' => Playlist::POST_TYPE, 'post_status' => 'publish', 'post_title' => '' !== $title ? $title : __( 'Untitled playlist', 'trueplayer' ) ], true );
+		$id    = wp_insert_post(
+			[
+				'post_type'   => Playlist::POST_TYPE,
+				'post_status' => 'publish',
+				'post_title'  => '' !== $title ? $title : __( 'Untitled playlist', 'trueplayer' ),
+			],
+			true
+		);
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
@@ -77,7 +112,12 @@ class PlaylistsController extends WP_REST_Controller {
 		}
 		$body = (array) $request->get_json_params();
 		if ( isset( $body['title'] ) ) {
-			wp_update_post( [ 'ID' => $id, 'post_title' => Helper::text_value( $body['title'] ) ] );
+			wp_update_post(
+				[
+					'ID'         => $id,
+					'post_title' => Helper::text_value( $body['title'] ),
+				]
+			);
 		}
 		if ( array_key_exists( 'config', $body ) ) {
 			Helper::update_json_meta( $id, '_trueplayer_playlist', $this->sanitize( $body['config'] ) );

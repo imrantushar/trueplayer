@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from '@wordpress/element';
 import { formatTime } from '@Utils/format';
 import { CONTROL_DEFAULTS } from '@Utils/controls';
+import { rapidRatio } from '../rapid-engage';
 import { __, __sprintf } from '@Utils/translation';
 
 const Icon = ( { d } ) => (
@@ -66,10 +67,11 @@ function waveBars( seed, n ) {
 	return out;
 }
 
-function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, waveform, waveSeed, disabled, prefer, scrubMap } ) {
-	// An optional display mapping for the played fill ({ ratio, className }).
-	// It only changes what is drawn; seeking always works in real time.
-	const mapped = !! scrubMap;
+function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, waveform, waveSeed, disabled, prefer, rapidSpeed } ) {
+	// The Rapid Engage Bar is a drawing mode, not a seek mode: Player.jsx has
+	// already forced `disabled` on before we get here (a scrubbable fake bar
+	// exposes itself on the first drag), so nothing below has to re-decide it.
+	const rapid = prefer === 'rapid-engage';
 	const [ hover, setHover ] = useState( null );
 	// While dragging, the thumb/fill follow the pointer immediately instead of
 	// waiting on the provider's (occasionally laggy) timeupdate — this is what
@@ -141,12 +143,15 @@ function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, wa
 
 	const effectiveCurrent = drag !== null ? drag * duration : current;
 	const realRatio = duration ? effectiveCurrent / duration : 0;
-	const pct = ( mapped ? scrubMap.ratio( realRatio ) : realRatio ) * 100;
-	// Buffered and the no-skip lockline are drawn in real ratio space, so they
-	// are left out when the fill is mapped — they would sit somewhere else.
-	const bpct = duration && ! mapped ? ( buffered / duration ) * 100 : 0;
+	const pct = ( rapid ? rapidRatio( realRatio, rapidSpeed ) : realRatio ) * 100;
+	// Buffered and the no-skip lockline are both drawn in REAL ratio space, so
+	// under the rapid bar they would sit at a different place than the played
+	// fill and give the mismatch away. Neither is worth keeping: a locked
+	// timeline has nothing to preview a buffer for, and the lockline marks a
+	// seek boundary on a bar that cannot be seeked.
+	const bpct = duration && ! rapid ? ( buffered / duration ) * 100 : 0;
 	const spct = duration && seekable < duration ? ( seekable / duration ) * 100 : 100;
-	const showLock = ! mapped && seekable < duration;
+	const showLock = ! rapid && seekable < duration;
 
 	// Chapters and the waveform are two renderings of the same track and only
 	// one can win. Chapters used to take it unconditionally, which quietly
@@ -154,9 +159,11 @@ function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, wa
 	// you noticed the bar had changed shape. `prefer` makes the choice explicit:
 	// the minimal audio layout keeps its waveform (there, the waveform IS the
 	// control), everything else still prefers chapter segments.
-	// Chapter segments are laid out from real timestamps too, so a mapped fill
-	// drops them the same way (the chapter list in the info panel is unaffected).
-	const segs = prefer === 'waveform' || mapped ? [] : buildSegments( chapters, duration );
+	// Chapter segments are laid out from real timestamps, so under the rapid bar
+	// they would contradict the fill running over them. Dropped there for the
+	// same reason as the lockline — the chapter list in the info panel is
+	// unaffected, only this rendering of it.
+	const segs = prefer === 'waveform' || rapid ? [] : buildSegments( chapters, duration );
 	const fill = ( value, start, end ) => {
 		const span = end - start;
 		return span > 0 ? Math.min( 100, Math.max( 0, ( ( value - start ) / span ) * 100 ) ) : 0;
@@ -165,11 +172,15 @@ function Scrubber( { current, duration, buffered, chapters, seekable, onSeek, wa
 	return (
 		<div
 			ref={ trackRef }
-			className={ `tp-scrubber${ disabled ? ' is-disabled' : '' }${ mapped && scrubMap.className ? ' ' + scrubMap.className : '' }` }
+			className={ `tp-scrubber${ disabled ? ' is-disabled' : '' }${ rapid ? ' is-rapid' : '' }` }
 			onPointerDown={ onPointerDown }
-			{ ...( mapped
-				// A mapped fill is a decoration, not a slider: it does not report
-				// the real position, so it is not exposed as one.
+			{ ...( rapid
+				// A slider that reports a position it is not drawing, on a track
+				// that cannot be moved, is worse than no slider: assistive tech
+				// would read out a real timestamp the sighted viewer is being
+				// kept from, and offer a control that does nothing. Present the
+				// rapid bar as the decoration it is and let the play/pause
+				// button carry the interaction.
 				? { role: 'presentation' }
 				: {
 					role: 'slider',
@@ -456,9 +467,10 @@ export default function Controls( props ) {
 		playing, current, duration, buffered, muted, volume, rate, quality, activeQuality, track, seekable,
 		chapters, provider, capabilities, controls = {}, speeds, qualities = [], skipSeconds = 10, scrubDisabled, hidePiP,
 		onPlayPause, onSeek, onVolume, onMute, onRate, onQuality, onTrack, onPiP, onFullscreen, onSkip, onDownload,
-		onInfo, hasInfo, infoOpen, audio, title, waveSeed, onPrev, onNext, scrubberStyle, scrubMap = null,
+		onInfo, hasInfo, infoOpen, audio, title, waveSeed, onPrev, onNext, scrubberStyle, rapidSpeed,
 	} = props;
 
+	const rapid = 'rapid-engage' === scrubberStyle;
 	// The waveform used to be an audio-only rendering, reached only through the
 	// minimal audio layout. It is now also a seek-bar style a video can pick,
 	// so the flag is "was asked for" rather than "is audio".
@@ -477,9 +489,12 @@ export default function Controls( props ) {
 	// without the middle step a control declared off, like `speed`, would
 	// render for anyone whose stored config predates it.
 	const show = ( key, fallback = true ) => {
-		// A mapped fill can ask for the clock to be hidden, since a real-time
-		// readout beside it would disagree with it.
-		if ( scrubMap && scrubMap.hideClock && ( 'currentTime' === key || 'duration' === key ) ) {
+		// The clock is the one control that cannot coexist with the rapid bar:
+		// a readout counting real seconds beside a bar drawing fake ones gives
+		// the whole thing away in about two seconds. Forced here rather than
+		// written into the author's stored `controls` so the toggles come back
+		// untouched the moment the bar is switched off again.
+		if ( rapid && ( 'currentTime' === key || 'duration' === key ) ) {
 			return false;
 		}
 		if ( controls[ key ] !== undefined ) {
@@ -500,7 +515,7 @@ export default function Controls( props ) {
 		<div className="tp-controls">
 			{ audio && title && <div className="tp-audio-title" title={ title }>{ title }</div> }
 			{ show( 'progress' ) && (
-				<Scrubber current={ current } duration={ duration } buffered={ buffered } chapters={ chapters } seekable={ seekable } onSeek={ onSeek } waveform={ wave } waveSeed={ waveSeed } disabled={ scrubDisabled } prefer={ scrubberStyle } scrubMap={ scrubMap } />
+				<Scrubber current={ current } duration={ duration } buffered={ buffered } chapters={ chapters } seekable={ seekable } onSeek={ onSeek } waveform={ wave } waveSeed={ waveSeed } disabled={ scrubDisabled } prefer={ scrubberStyle } rapidSpeed={ rapidSpeed } />
 			) }
 			<div className="tp-controls-row">
 				{ /* Track navigation. The callback's presence is the availability

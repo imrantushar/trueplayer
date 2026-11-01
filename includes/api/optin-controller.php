@@ -79,7 +79,7 @@ class OptinController extends WP_REST_Controller {
 		if ( ! is_email( $email ) ) {
 			return new \WP_Error( 'bad_email', __( 'Please enter a valid email.', 'trueplayer' ), [ 'status' => 400 ] );
 		}
-		if ( get_post_type( $video_id ) !== TRUEPLAYER_VIDEO_POST_TYPE ) {
+		if ( get_post_type( $video_id ) !== TRUEPLAYER_VIDEO_POST_TYPE || 'publish' !== get_post_status( $video_id ) ) {
 			return new \WP_Error( 'not_found', __( 'Video not found.', 'trueplayer' ), [ 'status' => 404 ] );
 		}
 
@@ -91,15 +91,17 @@ class OptinController extends WP_REST_Controller {
 		$config = Helper::get_video_config( $video_id );
 		$target = self::destination( $config, $layer_id );
 
-		$result = Integrations::subscribe( [
-			'email'    => $email,
-			'name'     => $name,
-			'video_id' => $video_id,
-			'layer_id' => $layer_id,
-			'provider' => $target['provider'],
-			'lists'    => $target['lists'],
-			'tags'     => $target['tags'],
-		] );
+		$result = Integrations::subscribe(
+			[
+				'email'    => $email,
+				'name'     => $name,
+				'video_id' => $video_id,
+				'layer_id' => $layer_id,
+				'provider' => $target['provider'],
+				'lists'    => $target['lists'],
+				'tags'     => $target['tags'],
+			]
+		);
 
 		if ( empty( $result['ok'] ) ) {
 			return new \WP_Error( 'subscribe_failed', $result['message'] ?? __( 'Could not subscribe.', 'trueplayer' ), [ 'status' => 422 ] );
@@ -214,6 +216,10 @@ class OptinController extends WP_REST_Controller {
 		// Nothing configured anywhere. Notifying the site beats discarding a
 		// contact a viewer deliberately handed over — which is what used to
 		// happen, as a 422 the viewer read as their own address being rejected.
-		return [ 'provider' => 'wp_mail', 'lists' => [], 'tags' => [] ];
+		return [
+			'provider' => 'wp_mail',
+			'lists'    => [],
+			'tags'     => [],
+		];
 	}
 }

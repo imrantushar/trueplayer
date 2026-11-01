@@ -20,7 +20,7 @@ abstract class BaseIntegration implements IntegrationInterface {
 	}
 
 	public function register(): void {
-		// no-op by default
+		// No-op by default.
 	}
 
 	public function lists(): array {
@@ -28,16 +28,19 @@ abstract class BaseIntegration implements IntegrationInterface {
 	}
 
 	public function subscribe( array $data ): array {
-		return [ 'ok' => false, 'message' => __( 'Not supported.', 'trueplayer' ) ];
+		return [
+			'ok'      => false,
+			'message' => __( 'Not supported.', 'trueplayer' ),
+		];
 	}
 
 	/** Summary shown in the admin integrations list. */
 	public function to_array(): array {
 		return [
-			'id'        => $this->id(),
-			'name'      => $this->name(),
-			'available' => $this->is_available(),
-			'lists'     => $this->is_available() ? $this->lists() : [],
+			'id'                => $this->id(),
+			'name'              => $this->name(),
+			'available'         => $this->is_available(),
+			'lists'             => $this->is_available() ? $this->lists() : [],
 			'supportsSubscribe' => true,
 		];
 	}

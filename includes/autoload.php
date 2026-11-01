@@ -28,22 +28,22 @@ class Autoload {
 		return self::$instance;
 	}
 
-	public function add_namespace_directory( $namespace, $directory ) {
-		$this->autoload_directories[ $namespace ] = $directory;
+	public function add_namespace_directory( $ns, $directory ) {
+		$this->autoload_directories[ $ns ] = $directory;
 	}
 
-	public function autoload( $class ) {
-		foreach ( $this->autoload_directories as $namespace => $directory ) {
-			if ( 0 === strpos( $class, $namespace ) ) {
-				$class_to_load = $class;
+	public function autoload( $class_name ) {
+		foreach ( $this->autoload_directories as $ns => $directory ) {
+			if ( 0 === strpos( $class_name, $ns ) ) {
+				$class_to_load = $class_name;
 				$filename      = strtolower(
 					preg_replace(
-						[ '/^' . preg_quote( $namespace, '/' ) . '\\\/', '/([a-z])([A-Z])/', '/_/', '/\\\/' ],
+						[ '/^' . preg_quote( $ns, '/' ) . '\\\/', '/([a-z])([A-Z])/', '/_/', '/\\\/' ],
 						[ '', '$1-$2', '-', DIRECTORY_SEPARATOR ],
 						$class_to_load
 					)
 				);
-				$file = $directory . $filename . '.php';
+				$file          = $directory . $filename . '.php';
 				if ( is_readable( $file ) ) {
 					require_once $file;
 				}

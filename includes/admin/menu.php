@@ -9,11 +9,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Menu {
 
 	/**
-	 * Playlists used to be their own submenu page. They're a filter of the
-	 * Media screen now; the old slug redirects there.
+	 * Playlists and interactive content used to be their own submenu pages.
+	 * They're filters of the Media screen now; the old slugs redirect there.
 	 */
 	const LEGACY_PAGES = [
-		'-playlists' => 'playlist',
+		'-playlists'   => 'playlist',
+		'-interactive' => 'interactive',
 	];
 
 	public static function init() {
@@ -43,10 +44,15 @@ class Menu {
 				continue;
 			}
 			wp_safe_redirect(
-				admin_url( add_query_arg(
-					[ 'page' => $slug . '-videos', 'kind' => $kind ],
-					'admin.php'
-				) )
+				admin_url(
+					add_query_arg(
+						[
+							'page' => $slug . '-videos',
+							'kind' => $kind,
+						],
+						'admin.php'
+					)
+				)
 			);
 			exit;
 		}
@@ -68,8 +74,8 @@ class Menu {
 		// gets a real URL and appears in the WP admin submenu. All boot the same SPA.
 		$slug = TRUEPLAYER_PLUGIN_SLUG;
 		$subs = [
-			$slug             => __( 'Dashboard', 'trueplayer' ),
-			$slug . '-videos' => __( 'Media', 'trueplayer' ),
+			$slug               => __( 'Dashboard', 'trueplayer' ),
+			$slug . '-videos'   => __( 'Media', 'trueplayer' ),
 			$slug . '-presets'  => __( 'Presets', 'trueplayer' ),
 			$slug . '-settings' => __( 'Settings', 'trueplayer' ),
 		];
