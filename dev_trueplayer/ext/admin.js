@@ -49,6 +49,19 @@ export const libraryKinds = [
 	},
 ];
 
+/**
+ * Pro addons the Settings → Addons screen lists as locked teasers while Pro
+ * is not active: [ { slug, label, description, icon, note } ].
+ */
+export const proAddons = [
+	{
+		slug: 'interactive',
+		label: __( 'Interactive content' ),
+		description: __( 'Quizzes, flashcards, fill in the blanks and other interactive activities, embedded with a shortcode like any other player. Results feed the same analytics, webhooks and LMS pipeline as video.' ),
+		icon: 'spark',
+	},
+];
+
 /** Extra row menu items for a library row. */
 export function rowActions( row, { navigate } ) {
 	return 'media' === row.kind
