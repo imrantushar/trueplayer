@@ -1,7 +1,9 @@
 import { useState } from '@wordpress/element';
-import { Card, Button, Badge, Toast, Toggle } from '../../components/UI';
+import { Card, Badge, Toast, Toggle } from '../../components/UI';
 import { Icon } from '../../components/icons';
 import { api } from '../../api';
+import { proAddons } from '@Ext/admin';
+import { upgradeUrl } from '../../components/ProTeaser';
 import { __ } from '@Utils/translation';
 
 /**
@@ -17,7 +19,10 @@ import { __ } from '@Utils/translation';
  * localises into every screen, so the page has to be re-read.
  */
 export default function AddonsPanel() {
-	const addons = ( window.TruePlayerGlobal && window.TruePlayerGlobal.addons_registry ) || [];
+	const registered = ( window.TruePlayerGlobal && window.TruePlayerGlobal.addons_registry ) || [];
+	// Pro's own addons, shown locked until Pro registers the real ones.
+	const teasers = proAddons.filter( ( t ) => ! registered.some( ( a ) => a.slug === t.slug ) ).map( ( t ) => ( { ...t, teaser: true } ) );
+	const addons = [ ...registered, ...teasers ];
 	const [ busy, setBusy ] = useState( '' );
 	const [ toast, setToast ] = useState( null );
 
@@ -62,9 +67,11 @@ export default function AddonsPanel() {
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-2 flex-wrap">
 										<span className="font-medium text-ink">{ addon.label }</span>
-										{ addon.active
-											? <Badge tone="green">{ __( 'Enabled' ) }</Badge>
-											: <Badge tone="gray">{ __( 'Disabled' ) }</Badge> }
+										{ addon.teaser
+											? <Badge tone="brand">{ __( 'Pro' ) }</Badge>
+											: ( addon.active
+												? <Badge tone="green">{ __( 'Enabled' ) }</Badge>
+												: <Badge tone="gray">{ __( 'Disabled' ) }</Badge> ) }
 										{ missing && <Badge tone="amber">{ __( 'Not available in this build' ) }</Badge> }
 									</div>
 									{ addon.description && <p className="text-sm text-muted mt-1 mb-0">{ addon.description }</p> }
@@ -72,7 +79,9 @@ export default function AddonsPanel() {
 								</div>
 
 								<div className="shrink-0 pt-1">
-									{ busy === addon.slug ? (
+									{ addon.teaser ? (
+										<a href={ upgradeUrl( 'addon-' + addon.slug ) } target="_blank" rel="noreferrer" className="inline-block text-[13px] font-semibold text-white hover:text-white focus:text-white no-underline hover:no-underline focus:no-underline bg-brand-500 hover:bg-brand-600 rounded-md px-3 py-1.5">{ __( 'Upgrade to Pro' ) }</a>
+									) : busy === addon.slug ? (
 										<span className="text-xs text-muted">{ __( 'Working…' ) }</span>
 									) : (
 										<Toggle

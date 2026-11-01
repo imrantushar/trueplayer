@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from '@wordpress/element';
-import { Card, Field, FieldGroup, Input, Select, Button, Textarea, Toggle, ColorInput } from '../../components/UI';
+import { Card, Field, FieldGroup, Input, Select, Button, Toggle, ColorInput } from '../../components/UI';
 import { BsTrash } from 'react-icons/bs';
 import { Icon } from '../../components/icons';
 import { formatTime } from '@Utils/format';
@@ -256,7 +256,7 @@ function EmailFormContent( { layer, set } ) {
 					<option value="">{ __( '— Select a provider —' ) }</option>
 					{ ( providers || [] ).map( ( p ) => (
 						<option key={ p.id } value={ p.id } disabled={ ! p.available }>
-							{ p.name }{ ! p.available ? __( ' (not installed)' ) : '' }
+							{ p.name }{ ! p.available ? ' ' + __( '(not installed)' ) : '' }
 						</option>
 					) ) }
 				</Select>

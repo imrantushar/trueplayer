@@ -276,7 +276,6 @@ export default function Presets( { onEditState } ) {
 				</div>
 			) }
 
-			{ presets === null && <p className="text-gray-400">{ __( 'Loading…' ) }</p> }
 			{ presets && shown.length === 0 && (
 				<Card className="p-12 text-center border-dashed">
 					<div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="presets" className="w-6 h-6" /></div>

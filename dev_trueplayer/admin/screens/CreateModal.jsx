@@ -18,6 +18,17 @@ import { __, __sprintf } from '@Utils/translation';
 // three of the five places that used to keep their own copy.
 const MEDIA_TYPES = SOURCE_TYPES;
 
+// Sources that ship in TruePlayer Pro, listed so they are discoverable. With
+// Pro active its own descriptors are already in SOURCE_TYPES, so only the
+// ones missing from it are drawn — as locked tiles.
+const PRO_SOURCE_TILES = [
+	{ value: 'bunny', label: __( 'Bunny.net Stream' ), hint: __( 'A video in a Bunny.net video library.' ), audio: false },
+	{ value: 'bunnyStorage', label: __( 'Bunny.net Storage (file)' ), hint: __( 'Upload straight to your Bunny.net storage zone.' ), audio: true },
+	{ value: 'gumlet', label: __( 'Gumlet Stream' ), hint: __( 'A video that already exists in your Gumlet workspace.' ), audio: false },
+	{ value: 'gumletStorage', label: __( 'Gumlet (upload a file)' ), hint: __( 'Upload a file and let Gumlet transcode it for streaming.' ), audio: true },
+	{ value: 'mux', label: __( 'Mux' ), hint: __( 'A Mux playback ID.' ), audio: false },
+].filter( ( t ) => ! SOURCE_TYPES.some( ( s ) => s.value === t.value ) ).map( ( t ) => ( { ...t, pro: true } ) );
+
 const KIND_LABEL = {
 	media: __( 'Media' ),
 	playlist: __( 'Playlist' ),
@@ -49,7 +60,7 @@ export default function CreateModal( { initialKind = 'media', initialMediaKind =
 
 	// Only sources that can carry audio when the Audio tab is showing. This is
 	// AUDIO_SOURCES' second consumer — it had exactly one before.
-	const sourceTiles = 'audio' === mediaKind ? MEDIA_TYPES.filter( ( t ) => t.audio ) : MEDIA_TYPES;
+	const sourceTiles = [ ...MEDIA_TYPES, ...PRO_SOURCE_TILES ].filter( ( t ) => 'audio' !== mediaKind || t.audio );
 
 	// Every extension kind's create state, called unconditionally (hooks).
 	const extCreate = Object.fromEntries( libraryKinds.map( ( k ) => [ k.kind, k.useCreate( { active: kind === k.kind, onError } ) ] ) );
@@ -84,7 +95,6 @@ export default function CreateModal( { initialKind = 'media', initialMediaKind =
 					<div className="mr-auto text-[13px] text-muted">
 						{ ext && ext.note }
 					</div>
-					<Button variant="ghost" onClick={ onClose }>{ __( 'Cancel' ) }</Button>
 					{ ext && ext.action ? (
 						ext.action
 					) : (
@@ -108,9 +118,11 @@ export default function CreateModal( { initialKind = 'media', initialMediaKind =
 				</div>
 			) }
 
-			<Field label={ __( 'Name' ) } hint={ __( 'Shown in your library. You can rename it later.' ) }>
-				<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ onKeyDown } placeholder={ __( 'Title' ) } />
-			</Field>
+			{ ! ( ext && ext.hideName ) && (
+				<Field label={ __( 'Name' ) } hint={ __( 'Shown in your library. You can rename it later.' ) }>
+					<Input autoFocus value={ title } onChange={ ( e ) => setTitle( e.target.value ) } onKeyDown={ onKeyDown } placeholder={ __( 'Title' ) } />
+				</Field>
+			) }
 
 			{ 'media' === kind && (
 				<div className="mb-1">
@@ -164,13 +176,16 @@ export default function CreateModal( { initialKind = 'media', initialMediaKind =
 							<RadioOption
 								key={ t.value }
 								option={ t }
+								locked={ !! t.pro }
 								active={ sourceType === t.value }
-								onPick={ () => setSourceType( t.value ) }
+								onPick={ () => ! t.pro && setSourceType( t.value ) }
 							/>
 						) ) }
 					</div>
 					<span className="block text-xs text-gray-400 mt-2">
-						{ __( 'Change the source details in the editor.' ) }
+						{ PRO_SOURCE_TILES.length > 0
+							? __( 'Sources marked PRO need TruePlayer Pro.' )
+							: __( 'Change the source details in the editor.' ) }
 					</span>
 				</div>
 			) }
@@ -181,15 +196,18 @@ export default function CreateModal( { initialKind = 'media', initialMediaKind =
 }
 
 /** One media source, as a radio option. */
-function RadioOption( { option, active, onPick } ) {
+function RadioOption( { option, active, locked, onPick } ) {
 	return (
 		<button
 			type="button"
 			role="radio"
 			aria-checked={ active }
+			disabled={ locked }
 			onClick={ onPick }
 			className={ `w-full text-left flex items-start gap-2.5 px-3 py-2.5 rounded border transition-colors ${
-				active
+				locked
+					? 'border-line bg-gray-50 opacity-60 cursor-not-allowed'
+					: active
 					? 'border-brand-500 bg-brand-50'
 					: 'border-line bg-white hover:border-brand-200 hover:bg-gray-50'
 			}` }
@@ -204,6 +222,7 @@ function RadioOption( { option, active, onPick } ) {
 			<span className="min-w-0 flex-1">
 				<span className="flex items-center gap-1.5">
 					<span className="text-[13px] font-medium text-ink truncate">{ option.label }</span>
+					{ locked && <span className="text-[9px] font-semibold text-brand-500 shrink-0">{ __( 'PRO' ) }</span> }
 				</span>
 				{ option.hint && <span className="block text-xs text-muted mt-0.5 leading-4">{ option.hint }</span> }
 			</span>

@@ -1,10 +1,9 @@
-import { Card, Field, Input, Select, Toggle, Textarea, ColorInput } from '../../components/UI';
+import { Card, Field, Input, Select, Toggle, ColorInput } from '../../components/UI';
 import { resolveCustomize, CUSTOMIZE_DEFAULTS } from '@Player/customize';
 import { extOptions, seekBarLocks, ExtSlot } from '@Ext/admin';
 import { availableControls } from '@Utils/controls';
 import { isAudioSource as isAudioSourceUtil } from '@Utils/audio';
 import { templatesFor, applyTemplateToBlob } from '../../data/preset-templates';
-import { createInterpolateElement } from '@wordpress/element';
 import { __, __sprintf } from '@Utils/translation';
 
 // Player sub-sections. Exported so the editor's left-nav accordion (Editor.jsx)

@@ -83,7 +83,3 @@ export const api = {
 		return json.data;
 	},
 };
-
-function nonce() {
-	return ( window.TruePlayerGlobal || {} ).nonce || '';
-}

@@ -2,20 +2,9 @@ import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
 import { Card, Button, Thumb, Badge, sourceMeta } from '../components/UI';
 import { Icon } from '../components/icons';
-import { PURCHASE } from '../components/ProTeaser';
-import { libraryKinds, extended } from '@Ext/admin';
+import { libraryKinds } from '@Ext/admin';
 import { isAudioSource } from '@Utils/audio';
 import { __ } from '@Utils/translation';
-
-// What TruePlayer Pro adds. A teaser only: the features themselves ship in the Pro add-on.
-const PRO_FEATURES = [
-	__( 'Watch verification and quiz gating' ),
-	__( 'Analytics, webhooks and CRM integrations' ),
-	__( 'Interactive layers and timed content' ),
-	__( 'Private video, watermark and instant pages' ),
-	__( 'Bunny.net, Gumlet, Mux and HLS sources' ),
-	__( 'Premium skins, audio bars and interactive (H5P) content' ),
-];
 
 function Stat( { icon, label, value, tone = 'brand' } ) {
 	const tones = {
@@ -84,7 +73,6 @@ export default function Dashboard( { onNavigate, onCreate } ) {
 						<h3 className="font-semibold text-ink">{ __( 'Recent media' ) }</h3>
 						<button className="text-sm text-brand-600 font-medium hover:text-brand-700" onClick={ () => onNavigate( 'library' ) }>{ __( 'View all →' ) }</button>
 					</div>
-					{ videos === null && <p className="text-gray-400 text-sm">{ __( 'Loading…' ) }</p> }
 					{ videos && recent.length === 0 && (
 						<div className="text-center py-10 border border-dashed border-line rounded-lg">
 							<div className="mx-auto mb-3 w-11 h-11 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><Icon name="video" className="w-5 h-5" /></div>
@@ -121,29 +109,6 @@ export default function Dashboard( { onNavigate, onCreate } ) {
 							<QuickLink icon="settings" label={ __( 'Player defaults' ) } onClick={ () => onNavigate( 'settings' ) } />
 						</div>
 					</Card>
-					{ ! extended && (
-						<Card className="p-6 border-brand-100 bg-gradient-to-br from-brand-50 to-white">
-							<div className="flex items-center gap-1.5 font-semibold text-ink"><Icon name="spark" className="w-4 h-4 text-brand-500" /> { __( 'Unlock Pro' ) }</div>
-							{ /* `!mb-` because admin/style.css zeroes UA spacing with `.tp-admin p
-							     { margin: 0 }`, which outranks a plain `.mb-*` utility on both
-							     specificity and source order — a bare `mb-2.5` here does nothing
-							     at all. Same escape hatch the other screens use. */ }
-							<p className="text-[13px] text-gray-600 mt-1.5 !mb-2.5 leading-snug">{ __( 'Prove students watched, gate with quizzes, and see deep analytics.' ) }</p>
-							<ul className="text-[13px] text-gray-700 !mb-3 space-y-1 list-none !pl-0">
-								{ PRO_FEATURES.map( ( feature ) => (
-									<li key={ feature } className="flex items-start gap-1.5">
-										<Icon name="checkmark" className="w-3.5 h-3.5 mt-0.5 text-brand-500 shrink-0" />
-										<span>{ feature }</span>
-									</li>
-								) ) }
-							</ul>
-							{ /* `hover:`/`focus:text-white` are load-bearing: WP admin styles every
-							     anchor (`a:hover` → #135e96, `a:focus` → #043959), and those beat a
-							     bare `.text-white`, so this button's label turned blue on the blue
-							     fill the moment you pointed at it. */ }
-							<a href={ PURCHASE } target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-white hover:text-white focus:text-white bg-brand-500 hover:bg-brand-600 rounded-md px-4 py-2">{ __( 'See Pro features' ) }</a>
-						</Card>
-					) }
 				</div>
 			</div>
 		</div>

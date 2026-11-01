@@ -1,6 +1,6 @@
-import { createInterpolateElement, useEffect, useState, useRef, createPortal } from '@wordpress/element';
+import { useEffect, useState, useRef, createPortal } from '@wordpress/element';
 import { api } from '../api';
-import { Card, CollapsibleCard, Button, Badge, Field, Input, Select, Textarea, Toggle } from '../components/UI';
+import { Card, Button, Badge, Field, Input, Select, Toggle } from '../components/UI';
 import { Icon } from '../components/icons';
 import { ExtSlot, settingsTabs } from '@Ext/admin';
 import AddonsPanel from './settings/AddonsPanel';
@@ -556,7 +556,7 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 	};
 
 	if (!settings) {
-		return <p className="text-gray-400">{ __( 'Loading…' ) }</p>;
+		return null;
 	}
 
 	return (

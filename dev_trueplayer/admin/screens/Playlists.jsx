@@ -163,7 +163,7 @@ export function PlaylistEditor( { playlist, videos, onBack, onSaved, onEditState
 									key={ id }
 									draggable
 									onDragStart={ () => setDragIndex( i ) }
-									onDragOver={ ( e ) => { e.preventDefault(); if ( overIndex !== i ) setOverIndex( i ); } }
+									onDragOver={ ( e ) => { e.preventDefault(); if ( overIndex !== i ) { setOverIndex( i ); } } }
 									onDrop={ () => { reorder( dragIndex, i ); setDragIndex( null ); setOverIndex( null ); } }
 									onDragEnd={ () => { setDragIndex( null ); setOverIndex( null ); } }
 									className={ `flex items-center gap-2 border rounded-md p-2 bg-white transition ${ overIndex === i && dragIndex !== i ? 'border-brand-400 ring-2 ring-brand-100' : 'border-line' } ${ dragIndex === i ? 'opacity-50' : '' }` }
