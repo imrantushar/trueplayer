@@ -1,5 +1,5 @@
 import { useState } from '@wordpress/element';
-import { Card, Button, Badge, Toast, Toggle } from '../../components/UI';
+import { Card, Badge, Toast, Toggle } from '../../components/UI';
 import { Icon } from '../../components/icons';
 import { api } from '../../api';
 import { proAddons } from '@Ext/admin';

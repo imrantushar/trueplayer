@@ -50,13 +50,6 @@ export default function AppearanceTab( { config, patch, duration = 0 } ) {
 
 	const setBranding = ( partial ) => patch( { branding: { ...branding, ...partial } } );
 
-	const setCaptions = ( url ) => {
-		const next = url
-			? [ { label: subtitles[ 0 ]?.label || __( 'English' ), srclang: subtitles[ 0 ]?.srclang || 'en', src: url, default: true } ]
-			: [];
-		patch( { source: { ...source, subtitles: next } } );
-	};
-
 	// Multi-track subtitle editing.
 	const setTracks = ( next ) => patch( { source: { ...source, subtitles: next } } );
 	const setTrack = ( i, partial ) => setTracks( subtitles.map( ( t, idx ) => ( idx === i ? { ...t, ...partial } : t ) ) );
