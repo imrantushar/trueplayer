@@ -390,7 +390,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 					} }
 					onKeyDown={ ( e ) => 'Enter' === e.key && applyLink() }
 				/>
-				<button type="button" className="tpb-btn tpb-btn--lg" onClick={ applyLink }>
+				<button type="button" className="tpb-btn tpb-btn--lg" style={ { flexShrink: 0, whiteSpace: 'nowrap' } } onClick={ applyLink }>
 					{ __( 'Use link' ) }
 				</button>
 			</div>
