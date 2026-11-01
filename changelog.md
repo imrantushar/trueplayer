@@ -17,7 +17,7 @@
 
 ### Changed
 
-- The Pro admin and player screens (gating, analytics, webhooks, layers, protection, premium sources and skins, interactive content, license) are back in this plugin and stay locked until TruePlayer Pro is active. Pro provides the functionality behind them.
+- The Dashboard's Pro teaser now lists what TruePlayer Pro adds. The features themselves, with their screens and code, ship only in the TruePlayer Pro add-on.
 
 ## 1.7.4 - 2026-10-24
 

@@ -57,6 +57,9 @@ const config = {
 			'@Providers': path.resolve(__dirname, 'dev_trueplayer/player/providers/'),
 			'@Global': path.resolve(__dirname, 'dev_trueplayer/global/'),
 			'@Utils': path.resolve(__dirname, 'dev_trueplayer/utils/'),
+			// Extension seam. Resolves to inert stubs here; an addon build can
+			// point it at its own modules (see dev_trueplayer/ext/README.md).
+			'@Ext': path.resolve(__dirname, 'dev_trueplayer/ext/'),
 		},
 	},
 };

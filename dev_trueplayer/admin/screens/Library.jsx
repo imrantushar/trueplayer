@@ -4,26 +4,18 @@ import { api } from '../api';
 import { Button, Card, Badge, Modal, Pagination, Thumb, sourceMeta, OptionMenu, SplitButton, Toast } from '../components/UI';
 import { Icon } from '../components/icons';
 import { PlaylistEditor } from './Playlists';
-import H5pEditor from './H5pEditor';
 import CreateModal from './CreateModal';
 import { isAudioSource } from '@Utils/audio';
-import InteractiveTeaser from '../components/InteractiveTeaser';
-import { h5pEnabled, h5pInstalled } from '../h5p';
+import { libraryKinds, rowActions, rowBadges } from '@Ext/admin';
 
 /**
  * The library — one screen for every kind of thing TruePlayer can embed:
- * players (tp_video), playlists (tp_playlist), and interactive items (tp_video
- * on the H5P engine). The WP submenu still has three entries, but each is a
- * deep link into this screen with its filter preselected (see nav.js), and
- * creating anything runs through the one CreateModal.
+ * players (tp_video) and playlists (tp_playlist), plus any kind an extension
+ * registers through `@Ext/admin`'s `libraryKinds`. Creating anything runs
+ * through the one CreateModal.
  */
 
 const PER_PAGE = 10;
-
-// `h5pEnabled` gates anything that reads or writes interactive content;
-// `h5pInstalled` only says the engine could be switched on, which is what the
-// Interactive tab needs in order to offer the teaser instead of vanishing.
-const h5pAvailable = h5pEnabled;
 
 // Filter chips. All five are the one library route with a different ?kind=.
 //
@@ -38,7 +30,7 @@ const FILTERS = [
 	{ kind: 'video', label: __( 'Video' ) },
 	{ kind: 'audio', label: __( 'Audio' ) },
 	{ kind: 'playlist', label: __( 'Playlists' ) },
-	{ kind: 'interactive', label: __( 'Interactive' ) },
+	...libraryKinds.map( ( k ) => ( { kind: k.kind, label: k.label } ) ),
 ];
 
 /** Kinds that draw from the media list. */
@@ -77,13 +69,14 @@ function legacyCopy( text ) {
 	return ok;
 }
 
-export default function Library( { kind = 'all', onEdit, onViewers, onEditState, onNavigate, createIntent = null, onCreateHandled } ) {
+export default function Library( { kind = 'all', onEdit, onEditState, onNavigate, createIntent = null, onCreateHandled } ) {
 	const [ videos, setVideos ] = useState( null );
 	const [ playlists, setPlaylists ] = useState( null );
-	const [ interactive, setInteractive ] = useState( h5pAvailable() ? null : [] );
+	// Items of each extension kind, keyed by kind (null = still loading).
+	const [ extItems, setExtItems ] = useState( () => Object.fromEntries( libraryKinds.map( ( k ) => [ k.kind, null ] ) ) );
 
 	const [ editingPlaylist, setEditingPlaylist ] = useState( null );
-	const [ editingH5p, setEditingH5p ] = useState( null ); // { video } | { machineName, title }
+	const [ editingExt, setEditingExt ] = useState( null ); // { kind, row } | { kind, create }
 
 	const [ create, setCreate ] = useState( null ); // null | initial kind
 	const [ confirming, setConfirming ] = useState( null ); // row pending delete
@@ -94,8 +87,10 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 
 	const loadVideos = () => api.listVideos().then( setVideos );
 	const loadPlaylists = () => api.listPlaylists().then( setPlaylists );
-	const loadInteractive = () => ( h5pAvailable() ? api.h5pItems().then( setInteractive ) : Promise.resolve() );
-	const loadAll = () => Promise.all( [ loadVideos(), loadPlaylists(), loadInteractive() ] );
+	const loadExt = ( k ) => k.load()
+		.then( ( items ) => setExtItems( ( m ) => ( { ...m, [ k.kind ]: items || [] } ) ) )
+		.catch( () => setExtItems( ( m ) => ( { ...m, [ k.kind ]: [] } ) ) );
+	const loadAll = () => Promise.all( [ loadVideos(), loadPlaylists(), ...libraryKinds.map( loadExt ) ] );
 
 	useEffect( () => { loadAll(); }, [] );
 	useEffect( () => { setPage( 1 ); }, [ kind ] );
@@ -123,16 +118,18 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 		if ( 'all' === kind || 'playlist' === kind ) {
 			( playlists || [] ).forEach( ( p ) => out.push( { kind: 'playlist', key: `p${ p.id }`, id: p.id, title: p.title, shortcode: p.shortcode, modified: p.modified, item: p } ) );
 		}
-		if ( 'all' === kind || 'interactive' === kind ) {
-			( interactive || [] ).forEach( ( i ) => out.push( { kind: 'interactive', key: `h${ i.video }`, id: i.video, title: i.title, shortcode: i.shortcode, modified: i.modified, item: i } ) );
-		}
+		libraryKinds.forEach( ( k ) => {
+			if ( 'all' === kind || k.kind === kind ) {
+				( extItems[ k.kind ] || [] ).forEach( ( i ) => out.push( { ...k.toRow( i ), kind: k.kind, item: i } ) );
+			}
+		} );
 		return out.sort( ( a, b ) => String( b.modified || '' ).localeCompare( String( a.modified || '' ) ) );
-	}, [ kind, videos, playlists, interactive ] );
+	}, [ kind, videos, playlists, extItems ] );
 
 	// Still loading if any source this filter needs hasn't landed yet.
 	const loading = ( MEDIA_KINDS.includes( kind ) && null === videos )
 		|| ( ( 'all' === kind || 'playlist' === kind ) && null === playlists )
-		|| ( ( 'all' === kind || 'interactive' === kind ) && null === interactive );
+		|| libraryKinds.some( ( k ) => ( 'all' === kind || k.kind === kind ) && null === extItems[ k.kind ] );
 
 	const pages = Math.max( 1, Math.ceil( rows.length / PER_PAGE ) );
 	const current = Math.min( page, pages );
@@ -144,7 +141,7 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 		}
 	};
 
-	const submitCreate = async ( { kind: newKind, title, sourceType, mediaKind, machineName } ) => {
+	const submitCreate = async ( { kind: newKind, title, sourceType, mediaKind, ...extra } ) => {
 		try {
 			if ( 'media' === newKind ) {
 				// `mediaType` is written only for audio. Stamping 'video' would be
@@ -167,7 +164,7 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 				setEditingPlaylist( p );
 			} else {
 				setCreate( null );
-				setEditingH5p( { machineName, title } );
+				setEditingExt( { kind: newKind, create: { title, ...extra } } );
 			}
 		} catch ( e ) {
 			setError( e.message || __( 'Could not create that.' ) );
@@ -181,8 +178,8 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 		}
 		setBusy( true );
 		try {
-			// Interactive items are tp_video posts, so they delete like players.
-			await ( 'playlist' === row.kind ? api.deletePlaylist( row.id ) : api.deleteVideo( row.id ) );
+			const ext = libraryKinds.find( ( k ) => k.kind === row.kind );
+			await ( 'playlist' === row.kind ? api.deletePlaylist( row.id ) : ( ext && ext.remove ? ext.remove( row ) : api.deleteVideo( row.id ) ) );
 			setConfirming( null );
 			await loadAll();
 		} catch ( e ) {
@@ -217,11 +214,11 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 		} else if ( 'playlist' === row.kind ) {
 			setEditingPlaylist( row.item );
 		} else {
-			setEditingH5p( { video: row.id } );
+			setEditingExt( { kind: row.kind, row } );
 		}
 	};
 
-	// Editing a playlist or an interactive item takes over the screen; players
+	// Editing a playlist (or an extension item) takes over the screen; players
 	// get their own route (the step-sidebar Editor).
 	if ( editingPlaylist ) {
 		return (
@@ -234,40 +231,31 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 			/>
 		);
 	}
-	if ( editingH5p ) {
-		return (
-			<H5pEditor
-				video={ editingH5p.video || null }
-				machineName={ editingH5p.machineName || '' }
-				title={ editingH5p.title || '' }
-				onBack={ () => { setEditingH5p( null ); loadInteractive(); } }
-			/>
-		);
+	if ( editingExt ) {
+		const ext = libraryKinds.find( ( k ) => k.kind === editingExt.kind );
+		if ( ext ) {
+			return (
+				<ext.Editor
+					row={ editingExt.row || null }
+					create={ editingExt.create || null }
+					onBack={ () => { setEditingExt( null ); loadExt( ext ); } }
+				/>
+			);
+		}
 	}
 
 	const byId = Object.fromEntries( ( videos || [] ).map( ( v ) => [ v.id, v ] ) );
-	// The tab stays visible while the engine is merely installed, so the feature
-	// is discoverable. That now applies to the create dialog too: hiding the
-	// Interactive tab there meant the only way to find out the addon existed was
-	// to already know to filter the library by it. Opening the tab with the addon
-	// switched off shows the teaser instead of the type picker — creating is
-	// still gated on it actually being enabled (see CreateModal).
-	const filters = FILTERS.filter( ( f ) => 'interactive' !== f.kind || h5pInstalled() );
-	const createKinds = [ 'media', 'playlist', ...( h5pInstalled() ? [ 'interactive' ] : [] ) ];
-	const teasing = 'interactive' === kind && h5pInstalled() && ! h5pEnabled();
+	const filters = FILTERS;
+	const createKinds = [ 'media', 'playlist', ...libraryKinds.map( ( k ) => k.kind ) ];
 
 	// The split button's default is the kind you're looking at — so the filter
-	// you deep-linked to is also the thing you create in one click. On the
-	// teaser there is nothing to create yet, so it falls back to media:
-	// `createKinds` now carries `interactive` even when the addon is off, so
-	// `teasing` is what keeps the one-click action from re-opening the same
-	// teaser the page is already showing. It stays in the dropdown.
-	const defaultKind = ( 'all' === kind || teasing || ! createKinds.includes( kind ) ) ? 'media' : kind;
+	// you deep-linked to is also the thing you create in one click.
+	const defaultKind = ( 'all' === kind || ! createKinds.includes( kind ) ) ? 'media' : kind;
 	const menuKinds = createKinds.filter( ( k ) => k !== defaultKind );
 	const KIND_MENU = {
 		media: { label: __( 'Media' ), hint: __( 'A video or audio player' ) },
 		playlist: { label: __( 'Playlist' ), hint: __( 'Group players into one embed' ) },
-		interactive: { label: __( 'Interactive' ), hint: __( 'A quiz, flashcards, and more' ) },
+		...Object.fromEntries( libraryKinds.map( ( k ) => [ k.kind, k.menu ] ) ),
 	};
 
 	return (
@@ -275,7 +263,7 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 			<div className="flex items-center justify-between mb-6">
 				<div>
 					<h1 className="text-2xl font-bold text-gray-900">{ __( 'Media' ) }</h1>
-					<p className="text-sm text-muted">{ __( 'Watch-verified players, playlists, and interactive content.' ) }</p>
+					<p className="text-sm text-muted">{ __( 'Players and playlists, ready to embed anywhere.' ) }</p>
 				</div>
 				<SplitButton
 					onClick={ () => setCreate( defaultKind ) }
@@ -297,24 +285,18 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 				) ) }
 			</div>
 
-			{ teasing ? (
-				<InteractiveTeaser onEnable={ () => onNavigate( 'settings', { tab: 'addons' } ) } />
-			) : (
-				<>
-					<RowList
-						rows={ loading ? null : paged }
-						kind={ kind }
-						byId={ byId }
-						copied={ copied }
-						onCopy={ copy }
-						onEdit={ editRow }
-						onViewers={ onViewers }
-						onRemove={ setConfirming }
-						onAdd={ () => setCreate( defaultKind ) }
-					/>
-					{ ! loading && <Pagination page={ current } pages={ pages } onPage={ setPage } /> }
-				</>
-			) }
+			<RowList
+				rows={ loading ? null : paged }
+				kind={ kind }
+				byId={ byId }
+				copied={ copied }
+				onCopy={ copy }
+				onEdit={ editRow }
+				onNavigate={ onNavigate }
+				onRemove={ setConfirming }
+				onAdd={ () => setCreate( defaultKind ) }
+			/>
+			{ ! loading && <Pagination page={ current } pages={ pages } onPage={ setPage } /> }
 
 			{ create && (
 				<CreateModal
@@ -327,7 +309,6 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 					onClose={ () => setCreate( null ) }
 					onSubmit={ submitCreate }
 					onError={ setError }
-					onEnableInteractive={ () => onNavigate && onNavigate( 'settings', { tab: 'addons' } ) }
 				/>
 			) }
 
@@ -361,7 +342,7 @@ export default function Library( { kind = 'all', onEdit, onViewers, onEditState,
 }
 
 const EMPTY = {
-	all: { icon: 'video', title: __( 'Nothing here yet' ), body: __( 'Create a player, a playlist, or an interactive item — they all embed with a shortcode.' ) },
+	all: { icon: 'video', title: __( 'Nothing here yet' ), body: __( 'Create a player or a playlist — they all embed with a shortcode.' ) },
 	media: { icon: 'video', title: __( 'No media yet' ), body: __( 'Create your first watch-verified player.' ) },
 	video: { icon: 'video', title: __( 'No video yet' ), body: __( 'Create your first watch-verified video player.' ) },
 	// `music` rather than `video`: the empty state is the one place the chip
@@ -369,10 +350,10 @@ const EMPTY = {
 	// is nothing on screen to look at.
 	audio: { icon: 'music', title: __( 'No audio yet' ), body: __( 'Create a podcast episode, an album track or an audiobook chapter.' ) },
 	playlist: { icon: 'playlist', title: __( 'No playlists yet' ), body: __( 'Group players into a grid or sidebar playlist.' ) },
-	interactive: { icon: 'spark', title: __( 'No interactive content yet' ), body: __( 'Build a quiz, flashcard deck, or drag-the-words exercise and embed it anywhere.' ) },
+	...Object.fromEntries( libraryKinds.map( ( k ) => [ k.kind, k.empty ] ) ),
 };
 
-function RowList( { rows, kind, byId, copied, onCopy, onEdit, onViewers, onRemove, onAdd } ) {
+function RowList( { rows, kind, byId, copied, onCopy, onEdit, onNavigate, onRemove, onAdd } ) {
 	if ( null === rows ) {
 		return (
 			<div className="space-y-3">
@@ -422,9 +403,7 @@ function RowList( { rows, kind, byId, copied, onCopy, onEdit, onViewers, onRemov
 						<Icon name="edit" className="w-[18px] h-[18px]" />
 					</button>
 					<OptionMenu items={ [
-						// Analytics is per-player; playlists have no viewer record of
-						// their own and interactive results land on the H5P item.
-						...( 'playlist' === row.kind ? [] : [ { label: __( 'Analytics' ), icon: 'analytics', onClick: () => onViewers( row.id ) } ] ),
+						...rowActions( row, { navigate: onNavigate } ),
 						{ label: __( 'Delete' ), icon: 'trash', danger: true, onClick: () => onRemove( row ) },
 					] } />
 				</Card>
@@ -434,12 +413,9 @@ function RowList( { rows, kind, byId, copied, onCopy, onEdit, onViewers, onRemov
 }
 
 function RowThumb( { row, byId } ) {
-	if ( 'interactive' === row.kind ) {
-		return (
-			<span className="w-24 aspect-video shrink-0 rounded bg-brand-50 text-brand-500 flex items-center justify-center">
-				<Icon name="spark" className="w-5 h-5" />
-			</span>
-		);
+	const ext = libraryKinds.find( ( k ) => k.kind === row.kind );
+	if ( ext ) {
+		return <ext.Thumb row={ row } />;
 	}
 	if ( 'playlist' === row.kind ) {
 		const first = ( row.item.config?.videos || [] ).map( ( id ) => byId[ id ] ).find( Boolean );
@@ -451,13 +427,9 @@ function RowThumb( { row, byId } ) {
 }
 
 function RowBadges( { row } ) {
-	if ( 'interactive' === row.kind ) {
-		return (
-			<>
-				<Badge tone="brand">{ row.item.type || __( 'Interactive' ) }</Badge>
-				{ 'draft' === row.item.status && <Badge tone="amber">draft</Badge> }
-			</>
-		);
+	const ext = libraryKinds.find( ( k ) => k.kind === row.kind );
+	if ( ext ) {
+		return <ext.Badges row={ row } />;
 	}
 	if ( 'playlist' === row.kind ) {
 		const ids = row.item.config?.videos || [];
@@ -470,14 +442,12 @@ function RowBadges( { row } ) {
 		);
 	}
 	const src = row.item.config?.source || {};
-	const g = row.item.config?.gating || {};
-	const hasQuiz = ( g.checkpoints?.length || 0 ) > 0 || !! g.finalQuiz;
 	const chapters = row.item.config?.chapters?.length || 0;
 	const meta = sourceMeta( src );
 	return (
 		<>
 			<Badge tone={ meta.tone }>{ meta.label }</Badge>
-			{ hasQuiz && <Badge tone="amber">quiz-gated</Badge> }
+			{ rowBadges( row ) }
 			{ chapters > 0 && <Badge>{ chapters } chapter{ 1 === chapters ? '' : 's' }</Badge> }
 		</>
 	);
