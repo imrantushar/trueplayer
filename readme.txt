@@ -59,8 +59,10 @@ To rebuild: install Node.js 20+, then run `npm install` and `npm run build` in t
 == Changelog ==
 
 = 1.8.0 - 29-10-2026 =
+* Changed - The Pro admin and player screens (gating, analytics, webhooks, layers, protection, premium sources and skins, interactive content, license) are back in this plugin and stay locked until TruePlayer Pro is active. Pro provides the functionality behind them.
 * Added - TruePlayer block rebuilt with a saved-video picker, native embed support, block transforms and more style controls.
 * Security - Hardened REST controllers, opt-in, import, meta handling and WP-CLI input and output (security audit fixes).
+* Security - Link URLs in the player config are sanitized, and the opt-in throttle can no longer be bypassed.
 * Fixed - Translation issues in add-ons, WP-CLI and integrations.
 
 = 1.7.4 - 24-10-2026 =

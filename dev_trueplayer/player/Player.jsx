@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState, useCallback, createPortal } from '@wordpress/element';
 import { createProvider } from './providers';
+import { CoverageTracker } from './coverage';
 import { resolveCustomize, autoplayMode } from './customize';
+import { rapidEligible, isMobileViewer, resolveRapidSpeed } from './rapid-engage';
 import { gaEvent } from './ga';
 import { rest } from '@Utils/rest';
-import { isEmbedSource } from '@Utils/source-types';
-import { usePlayerExt, useScrubMap, wrapStage } from '@Ext/player';
+import { isEmbedSource, isProSource } from '@Utils/source-types';
 import { __ } from '@Utils/translation';
 import { supportsContainerPiP, cloneStylesInto } from './pip';
 import Controls from './components/Controls';
 import InfoPanel from './components/InfoPanel';
+import Quiz from './components/Quiz';
 import Optin from './components/Optin';
 import Overlay from './components/Overlay';
 import Layers from './components/Layers';
-import { BigPlay, Message, Spinner } from './components/Overlays';
+import TimedContent from './components/TimedContent';
+import { LockScreen, BigPlay, Message, Spinner } from './components/Overlays';
 
 /** Frame width for ratios that would otherwise fill the column as a tall block. */
 const FRAME_WIDTH = {
@@ -22,6 +25,8 @@ const FRAME_WIDTH = {
 };
 
 const containerPipSupported = supportsContainerPiP();
+
+const DEFAULT_GATING = { completionThreshold: 90, antiSkip: true, checkpoints: [], finalQuiz: null };
 
 /** Best-effort filename for the download button — from the title, else the URL. */
 function downloadFilename( url, title ) {
@@ -76,6 +81,18 @@ function rememberQuality( id ) {
 	} catch ( e ) {}
 }
 
+// A checkpoint/final quiz has something to show either way: native questions
+// authored here, or a QuizPress quiz picked in place of them.
+function hasQuizContent( quiz ) {
+	if ( ! quiz ) {
+		return false;
+	}
+	if ( 'quizpress' === quiz.source ) {
+		return !! quiz.quizpressId;
+	}
+	return !! ( quiz.questions && quiz.questions.length );
+}
+
 export default function Player( { videoId, config, title = '', preview = false, onEnded: onEndedProp, onDuration: onDurationProp, autoStart = false, previewCue = null, onPrev = null, onNext = null } ) {
 	const stageRef = useRef( null );
 	const stickySentinelRef = useRef( null );
@@ -83,11 +100,23 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const pipWinRef = useRef( null );
 	const containerRef = useRef( null );
 	const providerRef = useRef( null );
+	const coverageRef = useRef( null );
+	const passedCheckpoints = useRef( new Set() );
 	const furthestRef = useRef( 0 ); // furthest naturally-watched second (for no-skip)
 	// Scopes this player's ::cue rule to its own stage — several players can
 	// share a page with different caption styling.
 	const cueUid = useRef( Math.random().toString( 36 ).slice( 2, 9 ) ).current;
 
+	const gating = { ...DEFAULT_GATING, ...( config.gating || {} ) };
+	// Anti-skip is an opt-in restriction the admin sets per video (Questions &
+	// gating tab). DEFAULT_GATING.antiSkip is only a form default for that tab
+	// — a video whose config has never been saved with gating at all must not
+	// silently inherit it just because Pro happens to be active, or every
+	// video's forward-seeking gets capped at "furthest watched" with no admin
+	// choice behind it (this is what looked like "can't drag forward").
+	if ( ! config.gating ) {
+		gating.antiSkip = false;
+	}
 	const source = config.source || {};
 	const branding = config.branding || {};
 	const optinDoneRef = useRef( false );
@@ -97,6 +126,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	const overlays = allOverlays.filter( ( o ) => ( o.type || 'cta' ) !== 'text' );
 	const textOverlays = allOverlays.filter( ( o ) => o.type === 'text' );
 	const actionBar = config.actionBar || {};
+	// Pro: interactive layers + protection (server strips both when free).
 	const allLayers = Array.isArray( config.layers ) ? config.layers : [];
 	/**
 	 * The email-capture gate, which is an Email form layer in `mode: 'gate'`.
@@ -112,12 +142,22 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// the layer stack must not draw it a second time as an inline panel.
 	const layers = optinGate ? allLayers.filter( ( l ) => l.id !== optinGate.id ) : allLayers;
 	const optinKey = `tp_optin_${ videoId }_${ optinGate ? optinGate.id : 'none' }`;
+	const watermark = { ...( ( config.protection && config.protection.dynamicWatermark ) || {} ) };
+	if ( preview && watermark.enabled && ! watermark.text ) {
+		watermark.text = 'viewer@example.com'; // live text is resolved server-side
+	}
 	const firedOverlays = useRef( new Set() );
 	const overlayActiveRef = useRef( false );
 	// Text overlay the editor's eye toggle has hidden; syncTextOverlays skips it
 	// until a new cue or a play releases it.
 	const hiddenTextRef = useRef( null );
 	const gaStartedRef = useRef( false );
+
+	// "Player free, intelligence pro": watch-verification, quiz-gating and
+	// opt-in only run with a pro license. In admin preview we simulate them so
+	// the merchant can see how they'll behave.
+	const proActive = !! ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.is_pro_active );
+	const gatingOn = proActive || preview;
 
 	const cz = resolveCustomize( config );
 	const appearance = cz.appearance;
@@ -147,7 +187,16 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 	}, [ ui.duration, onDurationProp ] );
 
+	const [ gate, setGate ] = useState( null );
+	const [ activeQuiz, setActiveQuiz ] = useState( null );
+	const [ locked, setLocked ] = useState( false );
+	const [ frontier, setFrontier ] = useState( 0 );
 	const [ idle, setIdle ] = useState( false );
+	// Which Rapid Engage speed applies. Tracked as state rather than read at
+	// render because a tablet rotating, or a desktop window narrowing past the
+	// fallback breakpoint, changes the answer mid-playback — and the bar would
+	// otherwise keep drawing the old curve until something else re-rendered it.
+	const [ isMobile, setIsMobile ] = useState( isMobileViewer );
 	const [ sticky, setSticky ] = useState( false );
 	const [ pipWin, setPipWin ] = useState( null );
 	const [ activeOptin, setActiveOptin ] = useState( false );
@@ -168,29 +217,6 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	 * for a viewer who opened the menu before pressing play.
 	 */
 	const [ qualities, setQualities ] = useState( [] );
-
-	// Optional extension (gating, tracking, protection …). Inert by default:
-	// every method resolves to "nothing to do" and every render slot is null.
-	const ext = usePlayerExt( {
-		videoId,
-		config,
-		title,
-		preview,
-		providerRef,
-		furthestRef,
-		current: ui.current,
-		setStarted,
-		// A blocking step the extension showed at the end has been cleared:
-		// carry on with what the end of the video does next.
-		onEndCleared: () => {
-			if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
-				setActiveOptin( true );
-			} else if ( behavior.resetOnEnd && providerRef.current ) {
-				providerRef.current.seek( 0 );
-				setStarted( false );
-			}
-		},
-	} );
 
 	const getCues = useCallback( () => ( providerRef.current?.getCues ? providerRef.current.getCues() : [] ), [] );
 
@@ -223,13 +249,43 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		setNativeRatio( null );
 
 		( async () => {
-			const gateState = await ext.load();
+			// Premium sources are pro-only. The server has already stripped the
+			// URL out of the config on a free install (Helper::enforce_pro_limits),
+			// so this is the message rather than the gate — but it has to cover
+			// every premium type or the stripped source reads as a broken video
+			// instead of a locked one. It used to be a hand-kept list that had
+			// already fallen behind by one.
+			if ( isProSource( source.type ) && ! gatingOn ) {
+				setError( __( 'This video source requires TruePlayer Pro.' ) );
+				return;
+			}
+
+			let gateState = null;
+			if ( preview || ! proActive ) {
+				// Free / preview: no server gate — always playable, no tracking.
+				gateState = { canPlay: true, status: 'in_progress', completed: false, resumeAt: 0 };
+			} else {
+				try {
+					gateState = await rest.get( `gate?video=${ videoId }` );
+				} catch ( e ) {
+					gateState = { canPlay: true };
+				}
+			}
 			if ( disposed ) {
 				return;
 			}
+			setGate( gateState );
 			if ( gateState.canPlay === false ) {
-				setError( gateState.message || __( 'This video is not available.' ) );
+				const messages = {
+					login_required: __( 'Please log in to watch this video.' ),
+					enroll_required: __( 'Enroll in this course to watch.' ),
+					purchase_required: __( 'Purchase this course to watch.' ),
+				};
+				setError( gateState.message || messages[ gateState.reason ] || __( 'This video is not available.' ) );
 				return;
+			}
+			if ( gateState.locked ) {
+				setLocked( true );
 			}
 
 			let provider;
@@ -258,6 +314,26 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			}
 			providerRef.current = provider;
 
+			// Watch-verification tracking runs only with pro (or in preview).
+			let tracker = null;
+			if ( gatingOn ) {
+				tracker = new CoverageTracker( {
+					videoId,
+					preview,
+					getDuration: () => provider.getDuration(),
+					onState: ( st ) => {
+						if ( st && typeof st.percent === 'number' ) {
+							setGate( ( g ) => ( { ...( g || {} ), ...st } ) );
+							if ( st.status === 'in_progress' && locked ) {
+								setLocked( false );
+							}
+						}
+					},
+				} );
+				tracker.start( () => provider.getCurrentTime() );
+				coverageRef.current = tracker;
+			}
+
 			// Resume position: server value wins, else localStorage (savePosition).
 			let resumeAt = gateState.resumeAt || 0;
 			// Not in the editor preview: it shares the `tp_pos_` key with the
@@ -270,9 +346,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				}
 			}
 			if ( resumeAt ) {
+				if ( tracker ) {
+					tracker.frontier = resumeAt;
+				}
 				furthestRef.current = resumeAt;
+				setFrontier( resumeAt );
 			}
-			ext.attach( provider, { ...gateState, resumeAt } );
 
 			// Keyed per gate now that a video can carry more than one form, but the
 			// pre-merge key still counts — someone who already subscribed must not
@@ -355,12 +434,17 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					if ( t > furthestRef.current && t - furthestRef.current < 6 ) {
 						furthestRef.current = t;
 					}
-					ext.onTime( t );
+					if ( tracker ) {
+						tracker.mark( t );
+						if ( tracker.frontier > frontier ) {
+							setFrontier( tracker.frontier );
+						}
+					}
 					if ( behavior.savePosition && ! preview ) {
 						window.localStorage.setItem( `tp_pos_${ videoId }`, String( Math.floor( t ) ) );
 					}
 					if ( ! maybeOptin( t ) ) {
-						ext.onCue( t );
+						maybeCheckpoint( t );
 					}
 					maybeOverlay( t );
 				}
@@ -379,7 +463,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					setStarted( true );
 					sync();
 				} );
-			provider.on( 'pause', () => { ext.onPause(); sync(); } );
+			provider.on( 'pause', () => { if ( tracker ) { tracker.flush(); } sync(); } );
 			provider.on( 'playing', sync );
 			provider.on( 'waiting', sync );
 			provider.on( 'ratechange', sync );
@@ -422,13 +506,26 @@ export default function Player( { videoId, config, title = '', preview = false, 
 
 		return () => {
 			disposed = true;
-			ext.dispose();
+			if ( coverageRef.current ) {
+				coverageRef.current.flush( true );
+				coverageRef.current.stop();
+			}
 			if ( providerRef.current ) {
 				providerRef.current.destroy();
 			}
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [ videoId ] );
+
+	useEffect( () => {
+		const onHide = () => coverageRef.current && coverageRef.current.flush( true );
+		document.addEventListener( 'visibilitychange', onHide );
+		window.addEventListener( 'pagehide', onHide );
+		return () => {
+			document.removeEventListener( 'visibilitychange', onHide );
+			window.removeEventListener( 'pagehide', onHide );
+		};
+	}, [] );
 
 	// Sticky-on-scroll: pin the player to a corner when scrolled out of view
 	// while playing. Watches a fixed sentinel that stays put in the document
@@ -462,7 +559,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	}, [ behavior.sticky, ui.playing ] );
 
 	const maybeOptin = ( t ) => {
-		if ( activeOptin || ext.blocking || optinDoneRef.current ) {
+		if ( activeOptin || activeQuiz || optinDoneRef.current ) {
 			return false;
 		}
 		if ( optinGate && 'time' === ( optinGate.trigger || 'time' ) && t >= ( optinGate.start || 0 ) ) {
@@ -471,6 +568,25 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			return true;
 		}
 		return false;
+	};
+
+	const maybeCheckpoint = ( t ) => {
+		if ( activeQuiz || activeOptin ) {
+			return;
+		}
+		for ( const cp of gating.checkpoints || [] ) {
+			if ( ! hasQuizContent( cp ) ) {
+				continue;
+			}
+			if ( passedCheckpoints.current.has( cp.id ) ) {
+				continue;
+			}
+			if ( t >= cp.at ) {
+				providerRef.current.pause();
+				setActiveQuiz( { gateId: `checkpoint:${ cp.id }`, quiz: cp, title: cp.title || __( 'Checkpoint question' ) } );
+				break;
+			}
+		}
 	};
 
 	// Time/pause-triggered marketing overlays. Deduped via a ref so a fired
@@ -632,11 +748,30 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	};
 
 	const onEnded = async () => {
-		const extGated = await ext.onEnded();
+		const finalQuiz = gatingOn && hasQuizContent( gating.finalQuiz );
+		if ( coverageRef.current ) {
+			// The last stretch of coverage has to reach the server BEFORE the
+			// quiz is graded against it. A viewer who was locked out and has
+			// just re-watched earns their fresh attempts on this very flush —
+			// and the beacon path is fire-and-forget, so grading would race it
+			// and read the old, exhausted attempt count, locking them again on
+			// their first mistake. Guaranteed to lose, not merely likely, when
+			// the threshold is 100% (must-watch strict): the unlock can only
+			// happen on the final second.
+			//
+			// Only the quiz waits. Everything else keeps its old timing, and
+			// unload still uses the beacon (see the flush() call sites above).
+			if ( finalQuiz ) {
+				await coverageRef.current.flush( true, false );
+			} else {
+				coverageRef.current.flush( true );
+			}
+		}
 		gaEvent( 'video_complete', { video_id: videoId, video_title: title } );
-		let gated = extGated;
-		if ( gated ) {
-			// The extension claimed the end; it calls onEndCleared when done.
+		let gated = false;
+		if ( finalQuiz ) {
+			setActiveQuiz( { gateId: 'final', quiz: gating.finalQuiz, title: gating.finalQuiz.title || __( 'Final quiz' ) } );
+			gated = true;
 		} else if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
 			setActiveOptin( true );
 			gated = true;
@@ -662,7 +797,9 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		// author who wanted the next item would have left Loop off.
 		if ( ! gated && behavior.loop ) {
 			providerRef.current.seek( 0 );
-			ext.onLoop();
+			if ( coverageRef.current ) {
+				coverageRef.current.newSession();
+			}
 			providerRef.current.play();
 			return;
 		}
@@ -685,25 +822,59 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 	};
 
-	// Optional display mapping for the scrubber's fill ({ ratio, className,
-	// hideClock, locksSeek }), or null for the ordinary bar.
-	const scrubMap = useScrubMap( appearance, ui.duration, source.mediaType === 'audio', preview );
-	const scrubLocks = !! ( scrubMap && scrubMap.locksSeek );
+	// The Rapid Engage Bar, resolved in ONE place because three separate things
+	// hang off it — the scrubber's drawing mode, the locked timeline, and the
+	// hidden clock — and a viewer only has to catch one of them disagreeing to
+	// see through the whole effect.
+	//
+	// Checked against the live duration rather than the source type: a live
+	// stream reports none (see rapid-engage.js), and `hls`/`mux`/`bunny`/
+	// `gumlet` serve live and VOD from the same type, so nothing here can be
+	// decided ahead of playback. Before metadata arrives this is false and the
+	// ordinary scrubber renders — which is also what we want on a source that
+	// turns out to have no duration at all.
+	// Split in two, because the editor preview needs one half without the other.
+	//
+	// DRAWN covers the preview as well: the speed slider beside it is picking a
+	// curve, and a slider whose effect only appears after publishing cannot be
+	// judged at all — the author would be tuning the one thing they cannot see.
+	//
+	// ACTIVE — the locked timeline and the withheld PiP — stays off in preview,
+	// matching what the anti-skip toggles already promise there ("the preview
+	// stays scrubbable on purpose"). The author gets the look without losing
+	// the ability to scrub around their own video while setting it up.
+	const rapidDrawn = rapidEligible( appearance, ui.duration, source.mediaType === 'audio' );
+	const rapidActive = rapidDrawn && ! preview;
 
-	// What the timeline lock actually is, everywhere below.
-	const seekLocked = !! behavior.disableSeek || scrubLocks;
+	// What the timeline lock actually is, everywhere below. The author's own
+	// "disable the timeline" toggle, or the rapid bar demanding the same thing.
+	const seekLocked = !! behavior.disableSeek || rapidActive;
 
-	// Cap seeking to the furthest point watched when "no skip" is on (never in
-	// preview, released once the extension reports the video completed), and to
-	// any limit an extension sets.
-	const limits = [];
-	if ( ! preview && ! ext.completed && behavior.noSkip ) {
-		limits.push( Math.max( furthestRef.current + 1.5, ui.current + 0.5 ) );
-	}
-	if ( typeof ext.seekLimit === 'number' ) {
-		limits.push( ext.seekLimit );
-	}
-	const seekable = limits.length ? Math.min( ui.duration, ...limits ) : ui.duration;
+	// Cap seeking to the furthest point watched when "no skip" (free behavior)
+	// or pro anti-skip is on. Never in preview, and released once completed.
+	const noSkipActive = ! preview && ! ( gate && gate.completed ) &&
+		( behavior.noSkip || ( gatingOn && gating.antiSkip ) );
+	const watchedTo = Math.max( furthestRef.current, frontier );
+	const seekable = noSkipActive
+		? Math.min( ui.duration, Math.max( watchedTo + 1.5, ui.current + 0.5 ) )
+		: ui.duration;
+
+	useEffect( () => {
+		if ( typeof window === 'undefined' || ! window.matchMedia ) {
+			return undefined;
+		}
+		const mq = window.matchMedia( '(hover: none) and (pointer: coarse)' );
+		const onChange = () => setIsMobile( isMobileViewer() );
+		// Safari below 14 has addListener only. Cheap to keep: the player is
+		// embedded on other people's sites and does not get to choose the
+		// browser it lands in.
+		mq.addEventListener ? mq.addEventListener( 'change', onChange ) : mq.addListener( onChange );
+		window.addEventListener( 'resize', onChange );
+		return () => {
+			mq.removeEventListener ? mq.removeEventListener( 'change', onChange ) : mq.removeListener( onChange );
+			window.removeEventListener( 'resize', onChange );
+		};
+	}, [] );
 
 	useEffect( () => {
 		if ( ! behavior.hideControls ) {
@@ -743,7 +914,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			return;
 		}
 		p.seek( t );
-		ext.onSeek( t );
+		coverageRef.current && coverageRef.current.resync( t );
 	};
 	const skip = ( delta ) => {
 		const p = providerRef.current;
@@ -752,6 +923,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		}
 		// "Disable the timeline entirely" has to mean the keyboard and the
 		// rewind/forward buttons too, not just the scrubber — both land here.
+		// The rapid bar rides the same guard: arrow keys that jump the video
+		// while the fake bar crawls are the loudest possible tell.
 		if ( seekLocked ) {
 			return;
 		}
@@ -811,9 +984,13 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		// button is hidden entirely for sources with neither this nor the
 		// fallback available, e.g. YouTube on a non-Chromium browser).
 		//
-		// Not under a locking scrub map: native PiP hands the raw <video> to the
-		// browser, which draws its own scrubber from the real duration.
-		if ( scrubLocks ) {
+		// Never under the rapid bar. Container PiP above portals our own DOM,
+		// so the simulated bar floats with it; native PiP hands the raw <video>
+		// to the browser, which draws its own scrubber from the real duration —
+		// one click and the viewer is looking at the timeline we hid. The button
+		// is already hidden in this case (see `pipAvailable`); this is the guard
+		// for the path that reaches here anyway, e.g. a keyboard shortcut.
+		if ( rapidActive ) {
 			return;
 		}
 		const p = providerRef.current;
@@ -880,7 +1057,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	};
 
 	const onKeyDown = ( e ) => {
-		if ( ext.blocking ) {
+		if ( activeQuiz ) {
 			return;
 		}
 		const p = providerRef.current;
@@ -901,6 +1078,38 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			case 'f': fullscreen(); break;
 			default: break;
 		}
+	};
+
+	const onQuizPass = () => {
+		const q = activeQuiz;
+		setActiveQuiz( null );
+		if ( q.gateId.startsWith( 'checkpoint:' ) ) {
+			passedCheckpoints.current.add( q.gateId.split( ':' )[ 1 ] );
+			providerRef.current.play();
+		} else {
+			setGate( ( g ) => ( { ...( g || {} ), completed: true } ) );
+			if ( optinGate && 'end' === optinGate.trigger && ! optinDoneRef.current ) {
+				setActiveOptin( true );
+			} else if ( behavior.resetOnEnd ) {
+				providerRef.current.seek( 0 );
+				setStarted( false );
+			}
+		}
+	};
+	const onQuizFail = () => {};
+	const onQuizLocked = () => {
+		setActiveQuiz( null );
+		setLocked( true );
+		setGate( ( g ) => ( { ...( g || {} ), locked: true, requireRewatch: true } ) );
+	};
+	const rewatch = () => {
+		setLocked( false );
+		passedCheckpoints.current = new Set();
+		if ( coverageRef.current ) {
+			coverageRef.current.newSession();
+		}
+		seek( 0 );
+		providerRef.current.play();
 	};
 
 	const stageStyle = {
@@ -992,12 +1201,12 @@ export default function Player( { videoId, config, title = '', preview = false, 
 	// Container PiP works regardless of provider (it just floats the whole
 	// stage), so it can make the button available even where the provider has
 	// no native fallback of its own (YouTube).
-	// Container PiP keeps our controls and is safe always;
+	// Container PiP keeps our controls (rapid bar included) and is safe always;
 	// the native fallback exposes the browser's real scrubber, so under the
-	// a locking scrub map it is not an option and the button goes away rather
+	// rapid bar it is not an option and the button goes away with it rather
 	// than sitting there doing nothing.
 	const pipAvailable = containerPipSupported ||
-		( ! scrubLocks && !! providerRef.current?.capabilities?.pip );
+		( ! rapidActive && !! providerRef.current?.capabilities?.pip );
 
 	const stage = (
 		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
@@ -1013,7 +1222,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					} }
 				>×</button>
 			) }
-			<div ref={ containerRef } className="tp-media-container" onClick={ () => ready && ! ext.blocking && playPause() } />
+			<div ref={ containerRef } className="tp-media-container" onClick={ () => ready && ! activeQuiz && playPause() } />
 
 			{ /* Audio has no picture — show a compact "now playing" tile (album art
 			     if provided, otherwise a note glyph) so the bar reads as a player. */ }
@@ -1031,7 +1240,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			     events so their in-frame links — title, "Watch on YouTube", channel,
 			     end-screen suggestions — can't be clicked through to leave the site.
 			     Clicking still toggles play, exactly like the native players. */ }
-			{ isEmbedProvider && ! ext.blocking && ! error && (
+			{ isEmbedProvider && ! activeQuiz && ! locked && ! error && (
 				// eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
 				<div className="tp-shield" aria-hidden="true" onClick={ () => ready && playPause() } />
 			) }
@@ -1077,8 +1286,8 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					</div>
 				) ) }
 
-			{ /* Layers. */ }
-			{ layers.length > 0 && ! ext.blocking && ! activeOptin && (
+			{ /* Interactive layers (pro). */ }
+			{ layers.length > 0 && ! activeQuiz && ! activeOptin && ! locked && (
 				<Layers
 					layers={ layers }
 					current={ ui.current }
@@ -1092,7 +1301,16 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				/>
 			) }
 
-			{ ext.stage }
+			{ /* Dynamic watermark (pro): identity burned over the picture. */ }
+			{ watermark.enabled && watermark.text && (
+				<div
+					className={ `tp-watermark${ watermark.drift !== false ? ' is-drifting' : '' }` }
+					style={ { opacity: watermark.opacity ?? 0.35 } }
+					aria-hidden="true"
+				>
+					{ watermark.text }
+				</div>
+			) }
 
 			{ /* Persistent action bar. */ }
 			{ actionBar.enabled && ( actionBar.text || actionBar.buttonLabel ) && (
@@ -1112,7 +1330,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 			{ ! ready && ! error && <Spinner /> }
 			{ error && <Message>{ error }</Message> }
 
-			{ ready && ! ui.playing && ! ext.blocking && ! activeOptin && ! error && appearance.bigPlay && source.mediaType !== 'audio' && <BigPlay onPlay={ playPause } /> }
+			{ ready && ! ui.playing && ! locked && ! activeQuiz && ! activeOptin && ! error && appearance.bigPlay && source.mediaType !== 'audio' && <BigPlay onPlay={ playPause } /> }
 
 			{ activeOptin && optinGate && (
 				<Optin
@@ -1124,7 +1342,7 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				/>
 			) }
 
-			{ activeOverlay && ! ext.blocking && ! activeOptin && (
+			{ activeOverlay && ! activeQuiz && ! activeOptin && ! locked && (
 				<Overlay
 					overlay={ activeOverlay }
 					onClose={ closeOverlay }
@@ -1132,7 +1350,22 @@ export default function Player( { videoId, config, title = '', preview = false, 
 				/>
 			) }
 
-			{ ext.overlay }
+			{ locked && ! activeQuiz && (
+				<LockScreen requireRewatch={ gate && gate.requireRewatch } onRewatch={ rewatch } />
+			) }
+
+			{ activeQuiz && (
+				<Quiz
+					videoId={ videoId }
+					gateId={ activeQuiz.gateId }
+					quiz={ activeQuiz.quiz }
+					title={ activeQuiz.title }
+					preview={ preview }
+					onPass={ onQuizPass }
+					onFail={ onQuizFail }
+					onLocked={ onQuizLocked }
+				/>
+			) }
 
 			{ ready && ! error && (
 				<Controls
@@ -1169,17 +1402,21 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					onPrev={ onPrev }
 					onNext={ onNext }
 					/* The minimal audio bar IS its waveform, so chapters must not
-					   replace it there the way they do in the other layouts. */
+					   replace it there the way they do in the other layouts.
+					   Waveform wins outright over the rapid bar: that layout has
+					   no plain track to simulate, and `rapidDrawn` is false for
+					   audio anyway — the ordering here is belt and braces. */
 					scrubberStyle={
 						source.mediaType === 'audio' && ( appearance.audioLayout || 'compact' ) === 'minimal' ? 'waveform'
-							: 'waveform' === appearance.seekBarStyle ? 'waveform'
-								: undefined
+							: rapidDrawn ? 'rapid-engage'
+								: 'waveform' === appearance.seekBarStyle ? 'waveform'
+									: undefined
 					}
-					scrubMap={ scrubMap }
+					rapidSpeed={ resolveRapidSpeed( appearance, isMobile ) }
 				/>
 			) }
 
-			{ infoOpen && ready && ! error && ! ext.blocking && ! activeOptin && (
+			{ infoOpen && ready && ! error && ! activeQuiz && ! locked && ! activeOptin && (
 				<InfoPanel
 					chapters={ chapterList }
 					getCues={ getCues }
@@ -1212,14 +1449,37 @@ export default function Player( { videoId, config, title = '', preview = false, 
 		</div>
 	);
 
-	// An extension may wrap the stage (it must keep `stageInSlot` mounted in a
-	// stable position, or the provider's media element is recreated).
-	const content = wrapStage( stageInSlot, { skin, source, sticky } );
+	// Ambient skin: a blurred, oversized copy of the poster glows behind the
+	// stage (the stage clips its own children, so the glow needs a wrapper).
+	// The wrapper renders unconditionally for the skin — toggling it (e.g. on
+	// sticky) would remount the stage and destroy the provider's media element.
+	let content;
+	if ( skin === 'ambient' && source.mediaType !== 'audio' ) {
+		// Both children stay mounted (hidden via style) — removing the glow
+		// would shift the stage's reconciliation slot and recreate its DOM.
+		content = (
+			<div className="tp-ambient-wrap">
+				<div
+					className="tp-ambient-glow"
+					style={ {
+						backgroundImage: source.poster ? `url("${ source.poster }")` : undefined,
+						display: source.poster && ! sticky ? undefined : 'none',
+					} }
+					aria-hidden="true"
+				/>
+				{ stageInSlot }
+			</div>
+		);
+	} else {
+		content = stageInSlot;
+	}
 
 	return (
 		<>
 			{ content }
-			{ ext.below }
+			{ /* Timed content region (pro): a block below the player that swaps
+			     with the video timeline. Stays in flow under the stage. */ }
+			{ gatingOn && <TimedContent config={ config } current={ ui.current } /> }
 			{ /* The stage (video/iframe + controls) itself lives in the PiP
 			     window once open — a portal, not a copy, so it's the exact same
 			     live provider/DOM node, not a re-mounted one. */ }

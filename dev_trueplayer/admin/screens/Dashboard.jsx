@@ -1,8 +1,9 @@
 import { useEffect, useState } from '@wordpress/element';
+import { h5pEnabled } from '../h5p';
 import { api } from '../api';
 import { Card, Button, Thumb, Badge, sourceMeta } from '../components/UI';
 import { Icon } from '../components/icons';
-import { libraryKinds, extended } from '@Ext/admin';
+import { isPro } from '../pro';
 import { isAudioSource } from '@Utils/audio';
 import { __ } from '@Utils/translation';
 
@@ -35,17 +36,29 @@ function QuickLink( { icon, label, onClick } ) {
 	);
 }
 
+// Interactive content is an opt-in addon; until it is enabled there is nothing
+// to list or create, so the dashboard leaves it out entirely. Discovery lives
+// on the library's Interactive tab, which shows an activation teaser instead.
+const h5pAvailable = h5pEnabled;
+
 export default function Dashboard( { onNavigate, onCreate } ) {
 	const [ videos, setVideos ] = useState( null );
 	const [ playlists, setPlaylists ] = useState( [] );
+	const [ interactive, setInteractive ] = useState( [] );
 
 	useEffect( () => {
 		api.listVideos().then( setVideos ).catch( () => setVideos( [] ) );
 		api.listPlaylists().then( setPlaylists ).catch( () => {} );
+		if ( h5pAvailable() ) {
+			api.h5pItems().then( setInteractive ).catch( () => {} );
+		}
 	}, [] );
 
 	const vids = videos || [];
-	const audioCount = vids.filter( ( v ) => isAudioSource( v.config?.source || {} ) ).length;
+	const quizzed = vids.filter( ( v ) => {
+		const g = v.config?.gating || {};
+		return ( g.checkpoints?.length || 0 ) > 0 || !! g.finalQuiz;
+	} ).length;
 	const withChapters = vids.filter( ( v ) => ( v.config?.chapters?.length || 0 ) > 0 ).length;
 	const recent = vids.slice( 0, 5 );
 
@@ -65,7 +78,9 @@ export default function Dashboard( { onNavigate, onCreate } ) {
 			<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 				<Stat icon="video" label={ __( 'Videos' ) } value={ videos === null ? '—' : vids.length } tone="brand" />
 				<Stat icon="playlist" label={ __( 'Playlists' ) } value={ playlists.length } tone="gray" />
-				<Stat icon="music" label={ __( 'Audio' ) } value={ videos === null ? '—' : audioCount } tone="green" />
+				{ h5pAvailable()
+					? <Stat icon="spark" label={ __( 'Interactive' ) } value={ interactive.length } tone="green" />
+					: <Stat icon="check" label={ __( 'Quiz-gated' ) } value={ quizzed } tone="green" /> }
 				<Stat icon="book" label={ __( 'With chapters' ) } value={ withChapters } tone="amber" />
 			</div>
 
@@ -106,13 +121,11 @@ export default function Dashboard( { onNavigate, onCreate } ) {
 						<div className="space-y-1">
 							<QuickLink icon="video" label={ __( 'Add a video' ) } onClick={ () => onCreate( 'media' ) } />
 							<QuickLink icon="playlist" label={ __( 'Build a playlist' ) } onClick={ () => onCreate( 'playlist' ) } />
-							{ libraryKinds.filter( ( k ) => k.quickLink ).map( ( k ) => (
-								<QuickLink key={ k.kind } icon={ k.empty?.icon || 'spark' } label={ k.quickLink } onClick={ () => onCreate( k.kind ) } />
-							) ) }
+							{ h5pAvailable() && <QuickLink icon="spark" label={ __( 'Create interactive content' ) } onClick={ () => onCreate( 'interactive' ) } /> }
 							<QuickLink icon="settings" label={ __( 'Player defaults' ) } onClick={ () => onNavigate( 'settings' ) } />
 						</div>
 					</Card>
-					{ ! extended && (
+					{ ! isPro() && (
 						<Card className="p-6 border-brand-100 bg-gradient-to-br from-brand-50 to-white">
 							<div className="flex items-center gap-1.5 font-semibold text-ink"><Icon name="spark" className="w-4 h-4 text-brand-500" /> { __( 'Unlock Pro' ) }</div>
 							{ /* `!mb-` because admin/style.css zeroes UA spacing with `.tp-admin p

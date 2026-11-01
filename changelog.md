@@ -2,17 +2,34 @@
 
 ## 1.8.0 - 2026-10-29
 
-- Added: TruePlayer block rebuilt with a saved-video picker, native embed support, block transforms and more style controls.
-- Security: Hardened REST controllers, opt-in, import, meta handling and WP-CLI input and output (security audit fixes).
-- Fixed: Translation issues in add-ons, WP-CLI and integrations.
+### Added
+
+- TruePlayer block rebuilt with a saved-video picker, native embed support, block transforms and more style controls.
+
+### Fixed
+
+- Translation issues in add-ons, WP-CLI and integrations.
+
+### Security
+
+- Hardened REST controllers, opt-in, import, meta handling and WP-CLI input and output (security audit fixes).
+- Link URLs in the player config are sanitized, and the opt-in throttle can no longer be bypassed.
+
+### Changed
+
+- The Pro admin and player screens (gating, analytics, webhooks, layers, protection, premium sources and skins, interactive content, license) are back in this plugin and stay locked until TruePlayer Pro is active. Pro provides the functionality behind them.
 
 ## 1.7.4 - 2026-10-24
 
-- Changed: Removed the unused progress, quiz-attempts, engagement and daily tables from the free plugin; they are no longer created on activation, and uninstall cleanup was updated to match.
+### Changed
+
+- Removed the unused progress, quiz-attempts, engagement and daily tables from the free plugin; they are no longer created on activation, and uninstall cleanup was updated to match.
 
 ## 1.7.3 - 2026-10-17
 
-- Security: Colour settings (accent and other colour fields) are now strictly validated on save and at render time.
+### Security
+
+- Colour settings (accent and other colour fields) are now strictly validated on save and at render time.
 
 ## 1.7.2 - 2026-10-14
 
@@ -102,6 +119,44 @@
 - Firefox drew the volume fill thicker than the track it was filling.
 - The volume slider could be squashed by a host theme's input styles.
 
+## 1.5.0 - 2026-09-14
+
+### Added
+
+- Two more audio starting points: Audiobook and Playlist.
+- Podcast and Audiobook are now audio bars of their own, not just switched-on controls. Need Pro.
+- Video and Audio filters in the media library.
+- The create dialog names the look a new item will use.
+- "Start from a template" in the preset builder — a whole look in one click.
+- The site-wide default look is now set separately for video and audio.
+- A short description on every template tile, on hover or keyboard focus.
+
+### Fixed
+
+- A site-wide video template pushed its skin and aspect ratio onto audio items.
+- Choosing a template added to the saved look instead of replacing it.
+- A site-wide default preset never showed in the editor preview.
+- Saving Settings did not refresh the audio defaults until the page was reloaded.
+- A default preset overrode the template tiles with nothing on screen to say so.
+- Template tiles showed a PRO badge even with TruePlayer Pro active.
+- Audio items offered "Generate from video" for cover art, which could only fail.
+- The unsaved-changes dialog opened at full width for a single sentence.
+- The Minimal audio bar and the Simple video skin looked alike in the picker.
+
+### Security
+
+- Videos inside a playlist skipped the free-plan clamp, leaking premium source URLs into the page.
+- A video title containing markup could break out of the SEO data block and run script.
+- Hardened the importer, an interactive-engine query, and imported caption parsing.
+
+### Changed
+
+- Template tiles redesigned: light preview, and a brand-blue tick on the chosen one.
+- The audio bar's shape is now called "Skin", the same as video.
+- Free starting points sit above the Pro ones, which are grouped and labelled.
+- The default audio look is Minimal, so a fresh install starts on something it can use.
+- The default aspect ratio setting now says it never reaches an audio item.
+
 ## 1.4.0 - 2026-09-10
 
 ### Added
@@ -188,3 +243,55 @@
 - Fixed the frontend volume slider stretching to fill the control bar on some themes.
 - Fixed the settings/speed menu not closing on an outside click.
 - Fixed arrow key volume/seek shortcuts also scrolling the page.
+
+## 1.1.0 - 2026-09-01
+
+### Added
+
+- Email capture now works with no CRM connected: a built-in Email notification provider mails each capture to the site administrator.
+- An Email form layer with two modes, gate (pauses the video) and inline (does not interrupt). The old Email capture section merged into it and is converted on upgrade.
+- Conditional display rules on layers: logged in, CRM contact, tag or list, URL parameter, or having seen or completed another layer.
+- A poster field and media file card in the Source step, so a file and its poster are managed together.
+- Player preset templates in Settings, with presets resolved in the live preview.
+- A trueplayer:layer-rendered DOM event, so code that initialises at page load can pick up layers added mid-playback.
+
+### Improved
+
+- Removing a video now also removes the poster that came from it, instead of leaving it in the media library.
+- Video titles are reduced to plain single-line text and capped in length.
+- The control bar now appears as soon as the media is ready, not only after playback starts.
+- Layer timings are entered as hours, minutes and seconds instead of raw seconds, and layer rows read as timestamps.
+- The editor's eye toggle now genuinely previews a layer, ignoring its time window and taking it down again afterwards.
+- Settings the preview cannot demonstrate now say so, and "Reset to start when finished" is disabled while Loop is on.
+- Shortcode layers show a placeholder in the editor preview instead of appearing empty, and their inline scripts now run.
+- Self-hosted video workflow, audio player styling, H5P media options and admin submenu presentation.
+
+### Fixed
+
+- Saving a video, preset or playlist whose settings contained a double quote or a backslash wiped the whole configuration, source and layers included. Adding a shortcode layer was the easiest way to hit it.
+- Aspect ratio "Auto (native)" rendered an invisible player.
+- Caption background colour and background opacity had no effect during playback.
+- Loop stopped the end of a video ever being reached, silently disabling the final quiz, end screen, end email gate, reset-on-end and playlist auto-advance.
+- "Disable the timeline entirely" left the arrow keys and the rewind and fast-forward buttons still able to seek.
+- "Start muted" was ignored on YouTube and Vimeo sources.
+- The editor preview shared its saved playback position with the front end, so it could open part-way through a video.
+- A caption track marked as default reported itself as off while it was being displayed.
+- Playback failures gave no reason. A YouTube video that disallows embedding is now named as such.
+- Discarding a preset or playlist edit left the discarded changes on screen.
+- Video control, audio playback, source type and interactive email form issues reported during testing.
+
+## 1.0.0 - 2026-08-27
+
+First stable release. TruePlayer ships as a native WordPress video & audio player built for enforcement and automation.
+
+### Added
+
+- Native React player with multiple skins (default, modern, simple, minimal, standard).
+- Sources: self-hosted / direct URL, HLS, audio, YouTube and Vimeo.
+- Full customization: control toggles, autoplay/loop/save-position/sticky-float, preload & load strategy (facade/eager/on-visible), accent color, play-button style, roundness, control-bar style, aspect ratio, caption size/color/background, playback speeds, Picture-in-Picture.
+- Optional bundled H5P interactive engine (import + render H5P content, xAPI fed into the event pipeline).
+- Watch verification: server-authoritative coverage tracking proves a viewer genuinely watched (whole-second progress only), with anti-skip / seek-jump and playback-rate guards.
+- Quiz gating: checkpoint and end-gate questions attached to a video, graded on the server (answers never sent to the client). Failing locks the video and resets coverage until the viewer re-watches and re-attempts. Enforcement activates with TruePlayer Pro.
+- Events & webhooks: view.started, progress.milestone, view.completed, checkpoint.passed/failed, quiz.passed/failed, video.locked/unlocked and subscriber.added, delivered as HMAC-SHA256 signed JSON webhooks (X-TruePlayer-Signature header).
+- React single-page admin: Dashboard, Media library, Editor, Playlists, Presets, Settings.
+- WP-CLI `trueplayer` command, and a REST API across videos, progress, grading, playlists, presets, subtitles, viewers and webhooks.
