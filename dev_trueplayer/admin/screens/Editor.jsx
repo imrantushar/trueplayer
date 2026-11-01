@@ -7,33 +7,18 @@ import PlayerOptionsTab, { PLAYER_SUBS } from './editor/PlayerOptionsTab';
 import AppearanceTab from './editor/AppearanceTab';
 import OverlaysTab from './editor/OverlaysTab';
 import LayersTab from './editor/LayersTab';
-import TimedContentTab from './editor/TimedContentTab';
-import ProtectionTab from './editor/ProtectionTab';
-import GatingTab from './editor/GatingTab';
 import EmbedTab from './editor/EmbedTab';
 import PreviewPanel from './editor/PreviewPanel';
 import { isAudioSource } from '@Utils/audio';
-import UpsellPanel from '../components/UpsellPanel';
-import { isPro } from '../pro';
+import { editorTabs, editorSubs } from '@Ext/admin';
 import { hasVideoSource } from '../utils/videoSource';
 import { __ } from '@Utils/translation';
 
-// Interactions sub-sections. The 3rd tuple item flags a pro-gated sub so the
-// nav can badge it. Overlays (Call to action) is free; the rest are pro.
+// Interactions sub-sections; extensions can add their own.
 const INTERACTIONS_SUBS = [
 	[ 'overlays', __( 'Call to action' ) ],
-	// Not Pro-flagged: the Email form layer (formerly its own "Email capture"
-	// section) is free. The Pro half is the display-rules editor inside it, and
-	// LayersTab gates that itself.
 	[ 'layers', __( 'Layers' ) ],
-	[ 'timed', __( 'Timed content' ), true ],
-];
-
-// Access & gating sub-sections. No per-sub pro flag: the whole tab is pro, so
-// the parent nav item already carries the badge.
-const ACCESS_SUBS = [
-	[ 'gating', __( 'Verification & quiz' ) ],
-	[ 'protection', __( 'Protection' ) ],
+	...( editorSubs.interactions || [] ).map( ( x ) => [ x.key, x.label, x.pro ] ),
 ];
 
 const TABS = [
@@ -41,52 +26,18 @@ const TABS = [
 	{ key: 'player', label: __( 'Player' ), icon: 'sliders', subs: PLAYER_SUBS },
 	{ key: 'appearance', label: __( 'Chapters & branding' ), icon: 'bookmark' },
 	{ key: 'interactions', label: __( 'Interactions' ), icon: 'puzzle', subs: INTERACTIONS_SUBS },
-	{ key: 'access', label: __( 'Access & gating' ), icon: 'shield', pro: true, subs: ACCESS_SUBS },
+	...editorTabs.map( ( t ) => ( { key: t.key, label: t.label, icon: t.icon, subs: t.subs, pro: t.pro } ) ),
 ];
 
-const PRO_TAB_INFO = {
-	access: {
-		title: __( 'Access & gating' ),
-		features: [
-			__( 'Watch-verification (prove they watched, anti-skip)' ),
-			__( 'Checkpoint & final quizzes, lock on failure' ),
-			__( 'Private video with signed, expiring links' ),
-		],
-	},
-};
-
-// Interactions = everything shown on/around the video. Overlays are free;
-// layers / timed content / email capture are pro (gated inline). The sub-nav
-// lives in the editor's left-nav accordion, so this renders the active one only.
-function InteractionsTab( { config, patch, pro, sub = 'overlays', onPreviewOverlay, previewingId, onPreviewLayer, previewingLayerId } ) {
-	const gate = ( node, info ) => ( pro ? node : <UpsellPanel title={ info.title } features={ info.features } /> );
+// Interactions = everything shown on/around the video. The sub-nav lives in
+// the editor's left-nav accordion, so this renders the active one only.
+function InteractionsTab( { config, patch, sub = 'overlays', onPreviewOverlay, previewingId, onPreviewLayer, previewingLayerId } ) {
+	const extSub = ( editorSubs.interactions || [] ).find( ( x ) => x.key === sub );
 	return (
 		<div className="w-full min-w-0">
 			{ sub === 'overlays' && <OverlaysTab config={ config } patch={ patch } onPreviewOverlay={ onPreviewOverlay } previewingId={ previewingId } /> }
-			{ /* Ungated: email capture lives here now and is free. The layer types
-			     that do need Pro are stripped server-side, and the rules editor
-			     gates itself. */ }
 			{ sub === 'layers' && <LayersTab config={ config } patch={ patch } onPreviewLayer={ onPreviewLayer } previewingLayerId={ previewingLayerId } /> }
-			{ sub === 'timed' && gate( <TimedContentTab config={ config } patch={ patch } />, {
-				title: __( 'Timed content' ),
-				features: [
-					__( 'A content region below the player that changes with the video' ),
-					__( 'Time-synced forms, buttons & text' ),
-				],
-			} ) }
-		</div>
-	);
-}
-
-// Access & gating = who can watch + proving they watched. All pro (the Editor
-// upsells the whole tab for free users). Like Player and Interactions, the
-// sub-nav lives in the editor's left-nav accordion rather than in a second
-// column of its own, so this renders the active one only.
-function AccessTab( { config, patch, sub = 'gating' } ) {
-	return (
-		<div className="w-full min-w-0">
-			{ sub === 'gating' && <GatingTab config={ config } patch={ patch } /> }
-			{ sub === 'protection' && <ProtectionTab config={ config } patch={ patch } /> }
+			{ extSub && <extSub.Component config={ config } patch={ patch } /> }
 		</div>
 	);
 }
@@ -108,7 +59,12 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 	const initialTab = VALID_TABS.includes( tabProp ) ? tabProp : 'source';
 	const [ tabState, setTabState ] = useState( initialTab );
 	const [ activeSub, setActiveSub ] = useState( () => {
-		const base = { player: 'appearance', interactions: 'overlays', access: 'gating' };
+		const base = { player: 'appearance', interactions: 'overlays' };
+		editorTabs.forEach( ( t ) => {
+			if ( t.subs && t.subs.length ) {
+				base[ t.key ] = t.subs[ 0 ][ 0 ];
+			}
+		} );
 		if ( validSubOf( initialTab, subProp ) ) {
 			base[ initialTab ] = subProp;
 		}
@@ -134,11 +90,9 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 	const [ presets, setPresets ] = useState( [] );
 	const [ toolbarSlot, setToolbarSlot ] = useState( null );
 	const [ embedOpen, setEmbedOpen ] = useState( false );
-	// Whether the instant page is *published*, as opposed to switched on in the
-	// editor. The Embed dialog hands out a URL, so it has to know the
-	// difference: the toggle is an ordinary config edit and the page 404s until
-	// the video is saved.
-	const [ instantLive, setInstantLive ] = useState( false );
+	// The config as last saved, for anything that has to tell a saved setting
+	// from an unsaved edit (an extension's embed options, say).
+	const [ savedConfig, setSavedConfig ] = useState( {} );
 	const [ duration, setDuration ] = useState( 0 );
 	const [ toast, setToast ] = useState( null );
 	// The overlay list's eye button: a cue the preview player acts on. Clicking
@@ -160,7 +114,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 	useEffect( () => {
 		api.getVideo( id ).then( ( v ) => {
 			setVideo( v );
-			setInstantLive( !! v.config?.instantPage );
+			setSavedConfig( v.config || {} );
 		} );
 		api.listPresets().then( setPresets ).catch( () => {} );
 		setToolbarSlot( document.getElementById( 'tp-topbar-slot' ) );
@@ -219,7 +173,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 		try {
 			const updated = await api.updateVideo( id, { title: video.title, config: video.config || {} } );
 			setVideo( updated );
-			setInstantLive( !! updated.config?.instantPage );
+			setSavedConfig( updated.config || {} );
 			setDirty( false );
 			setToast( { message: __( 'Saved' ), tone: 'success' } );
 		} finally {
@@ -232,8 +186,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 	}
 
 	const config = video.config || {};
-	const pro = isPro();
-	const isProTab = !! TABS.find( ( t ) => t.key === tab )?.pro;
+	const extTab = editorTabs.find( ( t ) => t.key === tab );
 
 	return (
 		<>
@@ -258,7 +211,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 							video={ video }
 							config={ config }
 							patch={ patchConfig }
-							instantLive={ instantLive }
+							savedConfig={ savedConfig }
 							saving={ saving }
 							onSave={ save }
 						/>
@@ -298,11 +251,11 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 										>
 											<Icon name={ t.icon } className="w-[18px] h-[18px] shrink-0" />
 											<span className="flex-1">{ t.label }</span>
+											{ t.pro && <Badge tone="brand">{ __( 'Pro' ) }</Badge> }
 											{ t.subs && (
 												<svg className={ `w-3.5 h-3.5 shrink-0 transition-transform ${ open ? 'rotate-90' : '' }` } viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M9 6l6 6-6 6" /></svg>
 											) }
-											{ t.pro && ! pro && <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1">{ __( 'PRO' ) }</span> }
-										</button>
+											</button>
 
 										{ /* Sub-sections live inline in the nav (accordion), so the
 											content column shows only the active one. */ }
@@ -317,7 +270,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 														}` }
 													>
 														<span className="truncate">{ subLabel }</span>
-														{ subPro && ! pro && <span className="text-[10px] font-semibold text-brand-600 shrink-0">{ __( 'PRO' ) }</span> }
+														{ subPro && <Badge tone="brand">{ __( 'Pro' ) }</Badge> }
 													</button>
 												) ) }
 											</div>
@@ -330,17 +283,11 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 
 					{ /* Column 2 — the active tab. */ }
 					<div className="w-full min-w-0">
-						{ isProTab && ! pro ? (
-							<UpsellPanel title={ PRO_TAB_INFO[ tab ].title } features={ PRO_TAB_INFO[ tab ].features } />
-						) : (
-							<>
-								{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } videoId={ id } title={ video?.title || '' } onTitleChange={ setTitle } /> }
-								{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } sub={ activeSub.player } /> }
-								{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
-								{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } pro={ pro } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } previewingId={ previewCue?.overlayId || null } onPreviewLayer={ previewLayer } previewingLayerId={ previewCue?.layerId || null } /> }
-								{ tab === 'access' && <AccessTab config={ config } patch={ patchConfig } sub={ activeSub.access } /> }
-							</>
-						) }
+						{ tab === 'source' && <SourceTab config={ config } patch={ patchConfig } videoId={ id } title={ video?.title || '' } onTitleChange={ setTitle } /> }
+						{ tab === 'player' && <PlayerOptionsTab config={ config } patch={ patchConfig } presets={ presets } sub={ activeSub.player } /> }
+						{ tab === 'appearance' && <AppearanceTab config={ config } patch={ patchConfig } duration={ duration } /> }
+						{ tab === 'interactions' && <InteractionsTab config={ config } patch={ patchConfig } sub={ activeSub.interactions } onPreviewOverlay={ previewOverlay } previewingId={ previewCue?.overlayId || null } onPreviewLayer={ previewLayer } previewingLayerId={ previewCue?.layerId || null } /> }
+						{ extTab && <extTab.Component config={ config } patch={ patchConfig } sub={ activeSub[ tab ] } /> }
 					</div>
 
 					{ /* Column 3 — live preview, pinned so the author sees changes as

@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { Card, Field, FieldGroup, Input, Select, SectionTitle, Toggle } from '../../components/UI';
-import BunnyStorageField from '../../components/BunnyStorageField';
-import GumletField from '../../components/GumletField';
 import MediaFileCard from '../../components/MediaFileCard';
 import PosterField from '../../components/PosterField';
-import { isPro } from '../../pro';
+import { ExtSlot } from '@Ext/admin';
 import { api } from '../../api';
 import { canAutoCaptureFrame, canCaptureFrame, captureVideoFrame } from '../../utils/frameCapture';
 import { SOURCE_TYPES as TYPES, AUDIO_SOURCES } from '@Utils/source-types';
@@ -167,12 +165,10 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 				</Field>
 			) }
 
-			<Field label={ __( 'Source type' ) } hint={ ! isPro() ? __( 'Bunny.net & HLS streaming require TruePlayer Pro.' ) : undefined }>
+			<Field label={ __( 'Source type' ) }>
 				<Select value={ source.type || 'self' } onChange={ ( e ) => changeType( e.target.value ) }>
 					{ TYPES.map( ( t ) => (
-						<option key={ t.value } value={ t.value } disabled={ t.pro && ! isPro() }>
-							{ t.label }{ t.pro && ! isPro() ? __( ' (Pro)' ) : '' }
-						</option>
+						<option key={ t.value } value={ t.value }>{ t.label }</option>
 					) ) }
 				</Select>
 			</Field>
@@ -194,49 +190,12 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 				</FieldGroup>
 			) }
 
-			{ source.type === 'bunny' && (
-				<>
-					<Field label={ __( 'Pull-zone hostname' ) } required hint={ __( 'Your Bunny Stream CDN hostname, e.g. vz-abc123.b-cdn.net' ) }>
-						<Input value={ source.pullZone || '' } onChange={ ( e ) => set( { pullZone: e.target.value.replace( /^https?:\/\//, '' ).replace( /\/$/, '' ) } ) } placeholder="vz-abc123.b-cdn.net" />
-					</Field>
-					<Field label={ __( 'Video ID' ) } required hint={ __( 'The Bunny library video GUID. We build the HLS URL and play it with your custom controls.' ) }>
-						<Input value={ source.videoId || '' } onChange={ ( e ) => set( { videoId: e.target.value.trim() } ) } placeholder={ __( 'e.g. 8f3b…-video-guid' ) } />
-					</Field>
-				</>
-			) }
+			<ExtSlot name="source.fields" source={ source } set={ set } audio={ audio } />
 
-			{ source.type === 'mux' && (
-				<Field label={ __( 'Mux playback ID' ) } required hint={ __( 'From your Mux asset. Or paste a full signed .m3u8 URL below.' ) }>
-					<Input value={ source.playbackId || '' } onChange={ ( e ) => set( { playbackId: e.target.value.trim() } ) } placeholder={ __( 'e.g. a4nOgmxGWg6gULfcBbAa00…' ) } />
-				</Field>
-			) }
-
-			{ source.type === 'bunnyStorage' && (
-				<Field label={ audio ? __( 'Audio file' ) : __( 'Video file' ) } required hint={ audio
-					? __( 'Upload straight to your storage zone, reuse a file already in it, or paste a URL.' )
-					: __( 'Upload straight to your storage zone, reuse a file already in it, or paste a URL.' ) }>
-					<BunnyStorageField value={ source.src || '' } onChange={ ( src ) => set( { src } ) } audio={ audio } />
-				</Field>
-			) }
-
-			{ source.type === 'gumletStorage' && (
-				<Field label={ audio ? __( 'Audio file' ) : __( 'Video file' ) } required hint={ audio
-					? __( 'Upload straight to Gumlet, reuse a file already in your library, or paste an ID.' )
-					: __( 'Upload straight to Gumlet, reuse a video already in your library, or paste an ID.' ) }>
-					<GumletField type="gumletStorage" value={ source } onChange={ ( partial ) => set( partial ) } audio={ audio } />
-				</Field>
-			) }
-
-			{ source.type === 'gumlet' && (
-				<Field label={ __( 'Gumlet video' ) } required hint={ __( 'The video ID from your Gumlet dashboard. A share or playback URL works too — the ID is read out of it.' ) }>
-					<GumletField type="gumlet" value={ source } onChange={ ( partial ) => set( partial ) } />
-				</Field>
-			) }
-
-			{ [ 'hls', 'youtube', 'vimeo', 'url', 'mux' ].includes( source.type ) && ! ( source.type === 'mux' && ! source.src ) && (
+			{ [ 'hls', 'youtube', 'vimeo', 'url' ].includes( source.type ) && (
 				<Field
-					label={ source.type === 'youtube' || source.type === 'vimeo' ? __( 'Video URL or ID' ) : ( source.type === 'mux' ? __( 'Signed playlist URL (optional)' ) : __( 'Media URL' ) ) }
-					required={ source.type !== 'mux' }
+					label={ source.type === 'youtube' || source.type === 'vimeo' ? __( 'Video URL or ID' ) : __( 'Media URL' ) }
+					required
 				>
 					<Input value={ source.src || '' } onChange={ ( e ) => set( { src: e.target.value } ) } placeholder={ source.type === 'youtube' ? 'https://youtube.com/watch?v=…' : 'https://…' } />
 				</Field>

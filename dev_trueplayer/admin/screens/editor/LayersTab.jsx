@@ -1,21 +1,17 @@
 import { useEffect, useRef, useState } from '@wordpress/element';
 import { Card, Field, FieldGroup, Input, Select, Button, Textarea, Toggle, ColorInput } from '../../components/UI';
-import MediaPicker from '../../components/MediaPicker';
-import { api } from '../../api';
-import { isPro } from '../../pro';
 import { BsTrash } from 'react-icons/bs';
 import { Icon } from '../../components/icons';
 import { formatTime } from '@Utils/format';
-import { IoClose } from 'react-icons/io5';
+import { layerEditors, loadProviders, ExtSlot } from '@Ext/admin';
 import { __, __sprintf } from '@Utils/translation';
 
 const uid = () => 'ly_' + Math.random().toString( 36 ).slice( 2, 8 );
 
+// Layer types: the email form, plus any type an extension supplies.
 const TYPE_META = {
-	hotspot: { label: __( 'Hotspot' ), hint: __( 'A pulsing clickable region over the picture.' ) },
-	banner: { label: __( 'Banner' ), hint: __( 'An image (optionally linked) shown during a window.' ) },
-	shortcode: { label: __( 'Shortcode' ), hint: __( 'Any WordPress shortcode, rendered over the video.' ) },
-	form: { label: __( 'Email form' ), hint: __( 'Inline email capture (uses your Subscribe integration).' ) },
+	...Object.fromEntries( Object.entries( layerEditors ).map( ( [ k, e ] ) => [ k, { label: e.label, hint: e.hint } ] ) ),
+	form: { label: __( 'Email form' ), hint: __( 'Email capture over the video.' ) },
 };
 
 const POSITIONS = [
@@ -24,112 +20,12 @@ const POSITIONS = [
 	[ 'bottom-left', __( 'Bottom left' ) ], [ 'bottom-center', __( 'Bottom center' ) ], [ 'bottom-right', __( 'Bottom right' ) ],
 ];
 
-const RULE_FIELDS = [
-	[ 'logged_in', __( 'Viewer is logged in' ) ],
-	[ 'crm_contact', __( 'Is a CRM contact' ) ],
-	[ 'crm_tag', __( 'Has CRM tag' ) ],
-	[ 'crm_list', __( 'In CRM list' ) ],
-	[ 'email_submitted', __( 'Has submitted email' ) ],
-	[ 'url_param', __( 'URL parameter' ) ],
-	[ 'layer_seen', __( 'Has seen layer (id)' ) ],
-	[ 'layer_completed', __( 'Completed layer (id)' ) ],
-];
-const BOOL_FIELDS = [ 'logged_in', 'crm_contact', 'email_submitted' ];
-
-// Compact per-layer conditional-rules builder (pro). Shows the layer only to
-// viewers matching the rules — mirrors TruePlayer\Services\Rules.
-/**
- * The section's own PRO mark. Shown whether or not the licence is present: on
- * free it says why the editor is missing, and on Pro it says which part of the
- * feature the licence is paying for — the form beside it is free either way,
- * and without the mark the split isn't visible from the panel.
- */
-function ProBadge() {
-	return (
-		<span className="text-[10px] font-semibold text-brand-600 bg-brand-50 rounded px-1.5 py-0.5 leading-none shrink-0">
-			{ __( 'PRO' ) }
-		</span>
-	);
-}
-
-function ConditionsEditor( { value, onChange } ) {
-	const group = value && value.rules ? value : { match: 'all', rules: [] };
-	const set = ( partial ) => onChange( { ...group, ...partial } );
-	const setRule = ( idx, partial ) =>
-		set( { rules: group.rules.map( ( r, i ) => ( i === idx ? { ...r, ...partial } : r ) ) } );
-	const addRule = () => set( { rules: [ ...group.rules, { field: 'logged_in', operator: 'is', value: 'yes' } ] } );
-	const removeRule = ( idx ) => set( { rules: group.rules.filter( ( _, i ) => i !== idx ) } );
-
-	return (
-		<div className="mt-4 border-t border-line pt-4">
-			<div className="flex items-center justify-between mb-2">
-				<span className="flex items-center gap-2">
-					<span className="text-xs font-semibold text-ink uppercase tracking-wide">{ __( 'Display rules' ) }</span>
-					<ProBadge />
-				</span>
-				{ group.rules.length > 1 && (
-					<Select value={ group.match } onChange={ ( e ) => set( { match: e.target.value } ) } className="w-36">
-						<option value="all">{ __( 'Match all' ) }</option>
-						<option value="any">{ __( 'Match any' ) }</option>
-					</Select>
-				) }
-			</div>
-			{ ! group.rules.length && <p className="text-xs text-gray-400 mb-2">{ __( 'Always shown. Add a rule to target specific viewers.' ) }</p> }
-			{ group.rules.map( ( r, idx ) => {
-				const isBool = BOOL_FIELDS.includes( r.field );
-				return (
-					// One rule, one line. The controls share the width rather than
-					// each sizing to its own longest option (`w-auto`, which left no
-					// two rules aligned) and rather than wrapping onto a second line,
-					// which broke the rule apart mid-sentence. Each keeps a floor so
-					// it stays readable, and the field name — the longest label —
-					// takes whatever is left over. The remove control is a 40px
-					// square, matching the height of everything beside it.
-					<div key={ idx } className="flex items-center gap-2 mb-2">
-						<Select value={ r.field } onChange={ ( e ) => setRule( idx, { field: e.target.value } ) } className="flex-[2] min-w-[90px]">
-							{ RULE_FIELDS.map( ( [ v, label ] ) => <option key={ v } value={ v }>{ label }</option> ) }
-						</Select>
-						<Select value={ r.operator } onChange={ ( e ) => setRule( idx, { operator: e.target.value } ) } className="w-[104px] shrink-0">
-							<option value="is">{ __( 'is' ) }</option>
-							<option value="is_not">{ __( 'is not' ) }</option>
-							{ ! isBool && <option value="contains">{ __( 'contains' ) }</option> }
-						</Select>
-						{ r.field === 'url_param' && (
-							<Input value={ r.key || '' } onChange={ ( e ) => setRule( idx, { key: e.target.value } ) } placeholder={ __( 'param key' ) } className="flex-1 min-w-[80px]" />
-						) }
-						{ isBool ? (
-							<Select value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } className="w-[92px] shrink-0">
-								<option value="yes">{ __( 'yes' ) }</option>
-								<option value="no">{ __( 'no' ) }</option>
-							</Select>
-						) : (
-							<Input value={ r.value } onChange={ ( e ) => setRule( idx, { value: e.target.value } ) } placeholder={ __( 'value' ) } className="flex-1 min-w-[80px]" />
-						) }
-						<button
-							type="button"
-							onClick={ () => removeRule( idx ) }
-							aria-label={ __( 'Remove rule' ) }
-							className="shrink-0 w-10 h-10 inline-flex items-center justify-center rounded border border-line bg-white text-muted hover:border-danger hover:text-danger transition-colors"
-						>
-							<IoClose className="w-4 h-4" />
-						</button>
-					</div>
-				);
-			} ) }
-			<Button variant="ghost" size="sm" onClick={ addRule }>{ __( '+ Add rule' ) }</Button>
-		</div>
-	);
-}
-
 const newLayer = ( type ) => {
 	const base = { id: uid(), type, start: 0, end: '' };
+	if ( layerEditors[ type ] ) {
+		return layerEditors[ type ].create( base );
+	}
 	switch ( type ) {
-		case 'hotspot':
-			return { ...base, x: 40, y: 40, w: 20, h: 20, tooltip: '', url: '' };
-		case 'banner':
-			return { ...base, image: '', url: '', position: 'bottom-center' };
-		case 'shortcode':
-			return { ...base, shortcode: '', position: 'middle-center' };
 		case 'form':
 			// `gate` by default: asking for an address is the point of this
 			// layer, and a blocking panel is what actually gets it. An author who
@@ -287,7 +183,7 @@ function EmailFormContent( { layer, set } ) {
 	const [ providers, setProviders ] = useState( null );
 
 	useEffect( () => {
-		api.getIntegrations().then( setProviders ).catch( () => setProviders( [] ) );
+		loadProviders().then( setProviders ).catch( () => setProviders( [] ) );
 	}, [] );
 
 	const gate = 'inline' !== layer.mode;
@@ -359,8 +255,8 @@ function EmailFormContent( { layer, set } ) {
 				<Select value={ layer.provider || '' } onChange={ ( e ) => set( { provider: e.target.value, lists: [] } ) }>
 					<option value="">{ __( '— Select a provider —' ) }</option>
 					{ ( providers || [] ).map( ( p ) => (
-						<option key={ p.id } value={ p.id } disabled={ ! p.available || p.requiresPro }>
-							{ p.name }{ p.requiresPro ? __( ' (Pro)' ) : ( ! p.available ? __( ' (not installed)' ) : '' ) }
+						<option key={ p.id } value={ p.id } disabled={ ! p.available }>
+							{ p.name }{ ! p.available ? __( ' (not installed)' ) : '' }
 						</option>
 					) ) }
 				</Select>
@@ -409,27 +305,12 @@ function EmailFormContent( { layer, set } ) {
 	);
 }
 
-/** What the rules editor is replaced with when the licence doesn't cover it. */
-function RulesUpsell() {
-	return (
-		<div className="mt-4 border-t border-line pt-4">
-			<span className="flex items-center gap-2">
-				<span className="text-xs font-semibold text-ink uppercase tracking-wide">{ __( 'Display rules' ) }</span>
-				<ProBadge />
-			</span>
-			<p className="text-xs text-muted mt-1.5">
-				{ __( 'Showing a layer only to certain viewers — logged in, a CRM contact, carrying a URL parameter — needs TruePlayer Pro. Without it the layer is shown to everyone.' ) }
-			</p>
-		</div>
-	);
-}
-
 export default function LayersTab( { config, patch, onPreviewLayer, previewingLayerId = null } ) {
 	const layers = config.layers || [];
-	// Hotspot / banner / shortcode no longer expose an "Until" control — they
-	// always run to the end of the video. A layer saved earlier with a numeric
-	// `end` would still vanish part-way through with nothing in the editor to
-	// explain why, so it is cleared as soon as the layer is touched.
+	// Non-form layers have no "Until" control — they always run to the end of
+	// the video. A layer saved earlier with a numeric `end` would still vanish
+	// part-way through with nothing in the editor to explain why, so it is
+	// cleared as soon as the layer is touched.
 	const setOne = ( i, partial ) => patch( {
 		layers: layers.map( ( l, idx ) => {
 			if ( idx !== i ) {
@@ -474,14 +355,14 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 	return (
 		<div className="space-y-4">
 			<div>
-				<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Interactive layers' ) }</h3>
-				<p className="text-sm text-gray-500">{ __( 'Timed elements over the video — hotspots, banners, shortcodes and email forms.' ) }</p>
+				<h3 className="font-semibold text-gray-900 !mb-1">{ __( 'Layers' ) }</h3>
+				<p className="text-sm text-gray-500">{ __( 'Timed elements over the video.' ) }</p>
 			</div>
 
 			{ layers.length === 0 && (
 				<Card className="p-10 text-center border-dashed">
 					<p className="text-sm text-gray-500">{ __( 'No layers yet.' ) }</p>
-					<p className="text-xs text-gray-400 mt-1">{ __( 'Add a hotspot, banner, shortcode or email form below.' ) }</p>
+					<p className="text-xs text-gray-400 mt-1">{ __( 'Add one below.' ) }</p>
 				</Card>
 			) }
 
@@ -544,7 +425,7 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 						<FieldGroup label={ __( 'Show from' ) } hint={ __( 'How far into the video this appears.' ) }>
 							<TimeParts seconds={ l.start } onChange={ ( v ) => setOne( i, { start: v } ) } />
 						</FieldGroup>
-						{ l.type !== 'hotspot' && (
+						{ ! layerEditors[ l.type ]?.unpositioned && (
 							<Field label={ __( 'Position' ) } hint={ __( 'Where it sits over the picture.' ) }>
 								<Select value={ l.position || 'middle-center' } onChange={ ( e ) => setOne( i, { position: e.target.value } ) }>
 									{ POSITIONS.map( ( [ v, lab ] ) => <option key={ v } value={ v }>{ lab }</option> ) }
@@ -554,56 +435,22 @@ export default function LayersTab( { config, patch, onPreviewLayer, previewingLa
 					</>
 					) }
 
-					{ l.type === 'hotspot' && (
-						<>
-							<div className="grid grid-cols-4 gap-x-4">
-								<Field label={ __( 'Left (%)' ) }><Input type="number" min="0" max="100" value={ l.x ?? 40 } onChange={ ( e ) => setOne( i, { x: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
-								<Field label={ __( 'Top (%)' ) }><Input type="number" min="0" max="100" value={ l.y ?? 40 } onChange={ ( e ) => setOne( i, { y: parseInt( e.target.value, 10 ) || 0 } ) } /></Field>
-								<Field label={ __( 'Width (%)' ) }><Input type="number" min="2" max="100" value={ l.w ?? 20 } onChange={ ( e ) => setOne( i, { w: parseInt( e.target.value, 10 ) || 2 } ) } /></Field>
-								<Field label={ __( 'Height (%)' ) }><Input type="number" min="2" max="100" value={ l.h ?? 20 } onChange={ ( e ) => setOne( i, { h: parseInt( e.target.value, 10 ) || 2 } ) } /></Field>
-							</div>
-							<div className="grid md:grid-cols-2 gap-x-6">
-								<Field label={ __( 'Tooltip' ) }><Input value={ l.tooltip || '' } onChange={ ( e ) => setOne( i, { tooltip: e.target.value } ) } placeholder={ __( 'See the product' ) } /></Field>
-								<Field label={ __( 'Link URL' ) }><Input value={ l.url || '' } onChange={ ( e ) => setOne( i, { url: e.target.value } ) } placeholder="https://…" /></Field>
-							</div>
-						</>
-					) }
-
-					{ l.type === 'banner' && (
-						<>
-							<Field label={ __( 'Image' ) }>
-								<MediaPicker value={ l.image || '' } onChange={ ( url ) => setOne( i, { image: url } ) } accept="image" label={ __( 'Upload an image' ) } />
-							</Field>
-							<Field label={ __( 'Link URL (optional)' ) }><Input value={ l.url || '' } onChange={ ( e ) => setOne( i, { url: e.target.value } ) } placeholder="https://…" /></Field>
-						</>
-					) }
-
-					{ l.type === 'shortcode' && (
-						<Field
-								label={ __( 'Shortcode' ) }
-								hint={ __( 'Rendered on the server when the page loads. Best for self-contained markup — a shortcode whose JavaScript starts up on page load (video players, sliders, some forms) will show its markup but not run, because the layer only enters the page when the playhead reaches it.' ) }
-							>
-							<Textarea rows={ 2 } className="font-mono text-xs" value={ l.shortcode || '' } onChange={ ( e ) => setOne( i, { shortcode: e.target.value } ) } placeholder='[contact-form-7 id="123"]' />
-						</Field>
-					) }
+					{ layerEditors[ l.type ] && ( () => {
+						const Fields = layerEditors[ l.type ].Fields;
+						return <Fields layer={ l } set={ ( p ) => setOne( i, p ) } />;
+					} )() }
 
 					{ l.type === 'form' && (
 						<EmailFormFields
 							layer={ l }
 							set={ ( p ) => setOne( i, p ) }
-							rules={ isPro()
-								? <ConditionsEditor value={ l.conditions } onChange={ ( c ) => setOne( i, { conditions: c } ) } />
-								: <RulesUpsell /> }
+							rules={ <ExtSlot name="layers.rules" layer={ l } set={ ( p ) => setOne( i, p ) } /> }
 						/>
 					) }
 
-					{ /* Who sees a layer is the Pro half of this feature; that a free
-					     install can capture an address at all is not. The email form
-					     renders these inside its Content tab instead, so they don't
-					     also show up under Style. */ }
-					{ 'form' !== l.type && ( isPro()
-						? <ConditionsEditor value={ l.conditions } onChange={ ( c ) => setOne( i, { conditions: c } ) } />
-						: <RulesUpsell /> ) }
+					{ /* The email form renders these inside its Content tab instead,
+					     so they don't also show up under Style. */ }
+					{ 'form' !== l.type && <ExtSlot name="layers.rules" layer={ l } set={ ( p ) => setOne( i, p ) } /> }
 					<div className="text-right mt-2"><Button variant="danger" size="sm" onClick={ () => remove( i ) }><BsTrash /></Button></div>
 					</div>
 					) }

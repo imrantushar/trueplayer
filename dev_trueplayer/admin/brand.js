@@ -1,7 +1,7 @@
 /**
  * The product's name and mark as this install shows them.
  *
- * White-label (pro) replaces both; PHP resolves them once
+ * A `trueplayer/brand_name` / `trueplayer/brand_logo` filter can replace both; PHP resolves them once
  * (Helper::brand_name / Helper::brand_logo) so the WordPress menu, the page
  * titles and this React admin can't drift apart.
  *

@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from '@wordpress/element';
 import Library from './screens/Library';
 import Editor from './screens/Editor';
 import Settings from './screens/Settings';
-import Analytics from './screens/Analytics';
 import Presets from './screens/Presets';
 import Dashboard from './screens/Dashboard';
 import Header from './components/Header';
 import { Button, Modal } from './components/UI';
 import { parseRoute, routeUrl, PAGE_OF } from './nav';
 import { __ } from '@Utils/translation';
+import { extRoutes } from '@Ext/admin';
 
 export default function App() {
 	const [ route, setRoute ] = useState( () => parseRoute() );
@@ -148,6 +148,10 @@ export default function App() {
 		// editState.onBack, which keeps its own filter — so the crumb names the
 		// filter it actually returns to.
 		const toMedia = { label: __( 'Media' ), onClick: () => go( 'library', { kind: 'media' } ) };
+		const extRoute = extRoutes.find( ( r ) => r.name === name );
+		if ( extRoute ) {
+			return [ toMedia, { label: extRoute.label } ];
+		}
 		switch ( name ) {
 			case 'dashboard': return [ { label: __( 'Dashboard' ) } ];
 			case 'library': return editState
@@ -156,7 +160,6 @@ export default function App() {
 			// Not editable: the title is a field in the editor's Source step now,
 			// so the crumb is purely where-you-are, like every other crumb.
 			case 'editor': return [ toMedia, { label: editState?.title || '' } ];
-			case 'analytics': return [ toMedia, { label: __( 'Analytics' ) } ];
 			case 'presets': return editState
 				? [ { label: __( 'Presets' ), onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
 				: [ { label: __( 'Presets' ) } ];
@@ -196,16 +199,17 @@ export default function App() {
 								<Library
 									kind={ route.kind || 'all' }
 									onEdit={ ( id ) => go( 'editor', { id } ) }
-									onViewers={ ( id ) => go( 'analytics', { id } ) }
 									onEditState={ setEditState }
 									onNavigate={ go }
 									createIntent={ createIntent }
 									onCreateHandled={ () => setCreateIntent( null ) }
 								/>
 							) }
-							{ /* Back lands on the same filter the Media crumb does — analytics
-							     is reached from a media row, so All would drop the filter. */ }
-							{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library', { kind: 'media' } ) } /> }
+							{ /* Extension screens are reached from a media row, so Back lands
+							     on the same filter the Media crumb does. */ }
+							{ extRoutes.filter( ( r ) => r.name === route.name ).map( ( r ) => (
+								<r.Component key={ r.name } id={ route.id } onBack={ () => go( 'library', { kind: 'media' } ) } />
+							) ) }
 							{ route.name === 'presets' && <Presets onEditState={ setEditState } /> }
 							{ /* The settings section rides in the URL, so a reload keeps it —
 							     replaceState, not push, so switching sections doesn't bury the

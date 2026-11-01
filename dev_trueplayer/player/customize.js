@@ -29,7 +29,7 @@ export const CUSTOMIZE_DEFAULTS = {
 		hoverPreview: false, // muted inline preview when hovering the poster facade (direct-file sources)
 	},
 	appearance: {
-		skin: 'default', // default | modern | simple | minimal | standard | floating (pro) | ambient (pro)
+		skin: 'default', // default | modern | simple | minimal | standard
 		// Audio only — the shape of the audio bar. `compact` is what audio has
 		// always rendered as, so every existing item keeps its current look.
 		// Flat, like the caption keys below and for the same reason: the section
