@@ -2,11 +2,31 @@ import { Card } from './UI';
 import { Icon } from './icons';
 import { __ } from '@Utils/translation';
 
-export const PURCHASE = ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.purchase_url ) || 'https://true-player.net/';
+export const PURCHASE = ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.purchase_url ) || 'https://true-player.net/pricing/';
+
+/** The store link with campaign tags, `content` saying which button was clicked. */
+export const upgradeUrl = ( content ) => {
+	const url = new URL( PURCHASE, window.location.href );
+	url.searchParams.set( 'utm_source', 'trueplayer-free' );
+	url.searchParams.set( 'utm_medium', 'plugin' );
+	url.searchParams.set( 'utm_campaign', 'upgrade' );
+	url.searchParams.set( 'utm_content', content );
+	return url.toString();
+};
 
 // What each Pro screen does. Copy only: the features themselves ship in the
 // TruePlayer Pro add-on, which replaces these screens when it is active.
 const TEASERS = {
+	interactive: {
+		icon: 'spark',
+		title: __( 'Interactive content' ),
+		body: __( 'Build quizzes, flashcards and other H5P activities alongside your videos, and embed them anywhere with a shortcode.' ),
+		points: [
+			__( 'Multiple choice, true/false & fill in the blanks' ),
+			__( 'Flashcards, drag the words & mark the words' ),
+			__( 'Results feed the same analytics, webhooks & LMS pipeline as video' ),
+		],
+	},
 	gating: {
 		icon: 'shield',
 		title: __( 'Verification & quiz' ),
@@ -98,13 +118,14 @@ const TEASERS = {
  * The stand-in for a Pro screen while Pro is not active. Informational only:
  * no controls, no saved state.
  */
-export function ProTeaser( { id } ) {
+export function ProTeaser( { id, bare = false } ) {
 	const t = TEASERS[ id ];
 	if ( ! t ) {
 		return null;
 	}
+	const Shell = bare ? 'div' : Card;
 	return (
-		<Card className="p-8 max-w-2xl border-brand-100 bg-gradient-to-br from-brand-50 to-white">
+		<Shell className={ bare ? '' : 'p-8 max-w-2xl border-brand-100 bg-gradient-to-br from-brand-50 to-white' }>
 			<span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-brand-600">
 				<Icon name="spark" className="w-3.5 h-3.5" /> { __( 'TruePlayer Pro' ) }
 			</span>
@@ -122,8 +143,10 @@ export function ProTeaser( { id } ) {
 				) ) }
 			</ul>
 			{ /* hover/focus colors: WP admin restyles every anchor, which would turn the label blue on the blue fill. */ }
-			<a href={ PURCHASE } target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-white hover:text-white focus:text-white bg-brand-500 hover:bg-brand-600 rounded-md px-4 py-2">{ __( 'Upgrade to Pro' ) }</a>
-		</Card>
+			{ ! bare && (
+				<a href={ upgradeUrl( id ) } target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-white hover:text-white focus:text-white no-underline hover:no-underline focus:no-underline bg-brand-500 hover:bg-brand-600 rounded-md px-4 py-2">{ __( 'Upgrade to Pro' ) }</a>
+			) }
+		</Shell>
 	);
 }
 

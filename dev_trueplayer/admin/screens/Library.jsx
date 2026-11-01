@@ -246,6 +246,8 @@ export default function Library( { kind = 'all', onEdit, onEditState, onNavigate
 
 	const byId = Object.fromEntries( ( videos || [] ).map( ( v ) => [ v.id, v ] ) );
 	const filters = FILTERS;
+	// A kind that only has a teaser (Pro feature) replaces the list outright.
+	const Teaser = ( libraryKinds.find( ( k ) => k.kind === kind ) || {} ).Teaser;
 	const createKinds = [ 'media', 'playlist', ...libraryKinds.map( ( k ) => k.kind ) ];
 
 	// The split button's default is the kind you're looking at — so the filter
@@ -285,6 +287,7 @@ export default function Library( { kind = 'all', onEdit, onEditState, onNavigate
 				) ) }
 			</div>
 
+			{ Teaser ? <Teaser /> : (
 			<RowList
 				rows={ loading ? null : paged }
 				kind={ kind }
@@ -296,7 +299,8 @@ export default function Library( { kind = 'all', onEdit, onEditState, onNavigate
 				onRemove={ setConfirming }
 				onAdd={ () => setCreate( defaultKind ) }
 			/>
-			{ ! loading && <Pagination page={ current } pages={ pages } onPage={ setPage } /> }
+			) }
+			{ ! Teaser && ! loading && <Pagination page={ current } pages={ pages } onPage={ setPage } /> }
 
 			{ create && (
 				<CreateModal

@@ -15,6 +15,9 @@ export const PAGE_OF = {
 	settings: SLUG + '-settings',
 	// Extension screens live under the media page as ?action={name}&id=N.
 	...Object.fromEntries( extRoutes.map( ( r ) => [ r.name, SLUG + '-videos' ] ) ),
+	// Analytics has its own menu page: the list of every player, and with an
+	// id the detail for one. Listed after the spread so it wins over it.
+	analytics: SLUG + '-analytics',
 };
 
 /** Legacy page slugs, still registered in WP, that are now library filters. */
@@ -63,6 +66,9 @@ export function parseRoute() {
 	if ( LEGACY_KIND[ page ] ) {
 		return { name: 'library', kind: LEGACY_KIND[ page ] };
 	}
+	if ( page === SLUG + '-analytics' && extRoutes.some( ( r ) => 'analytics' === r.name ) ) {
+		return { name: 'analytics', id };
+	}
 	if ( page === SLUG + '-presets' ) {
 		return { name: 'presets' };
 	}
@@ -88,7 +94,7 @@ export function routeUrl( name, params = {} ) {
 			q.set( 'sub', params.sub );
 		}
 	}
-	if ( extRoutes.some( ( r ) => r.name === name ) ) {
+	if ( extRoutes.some( ( r ) => r.name === name ) && PAGE_OF[ name ] === SLUG + '-videos' ) {
 		q.set( 'action', name );
 	}
 	if ( params.id ) {

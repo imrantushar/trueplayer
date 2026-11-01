@@ -3,7 +3,7 @@
  * teasers only (copy and an upgrade link); TruePlayer Pro replaces this module.
  */
 import { __ } from '@Utils/translation';
-import { teaserOf } from '@Admin/components/ProTeaser';
+import { teaserOf, ProTeaser, upgradeUrl } from '@Admin/components/ProTeaser';
 
 /** Named render slots: <ExtSlot name="settings.sources" … /> renders nothing here. */
 export function ExtSlot() {
@@ -21,11 +21,33 @@ export const settingsTabs = [
 
 /** Extra admin screens under the media page: [ { name, label, Component } ]. */
 export const extRoutes = [
-	{ name: 'analytics', label: __( 'Analytics' ), Component: teaserOf( 'analytics' ) },
+	{ name: 'analytics', label: __( 'Analytics' ), Component: () => <div className="flex justify-center"><ProTeaser id="analytics" /></div> },
 ];
 
 /** Extra library kinds (see Library.jsx / CreateModal.jsx for the shape). */
-export const libraryKinds = [];
+export const libraryKinds = [
+	{
+		kind: 'interactive',
+		label: __( 'Interactive' ),
+		heading: __( 'Create interactive' ),
+		menu: { label: __( 'Interactive' ), hint: __( 'Quizzes, flashcards and H5P activities' ) },
+		empty: { icon: 'spark', title: __( 'Interactive content is a Pro feature' ), body: __( 'Upgrade to TruePlayer Pro to build quizzes, flashcards and other H5P activities.' ) },
+		// Shown in place of the list when this kind's filter is open.
+		Teaser: () => <div className="flex justify-center"><ProTeaser id="interactive" /></div>,
+		load: () => Promise.resolve( [] ),
+		toRow: () => ( {} ),
+		Editor: () => null,
+		// Nothing to create on a free install: the tab shows the pitch and an upgrade link.
+		useCreate: () => ( {
+			canCreate: false,
+			hideName: true,
+			values: {},
+			note: null,
+			body: <ProTeaser id="interactive" bare />,
+			action: <a href={ upgradeUrl( 'interactive-create' ) } target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-white hover:text-white focus:text-white no-underline hover:no-underline focus:no-underline bg-brand-500 hover:bg-brand-600 rounded-md px-4 py-2">{ __( 'Upgrade to Pro' ) }</a>,
+		} ),
+	},
+];
 
 /** Extra row menu items for a library row. */
 export function rowActions( row, { navigate } ) {

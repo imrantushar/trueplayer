@@ -149,6 +149,12 @@ export default function App() {
 		// filter it actually returns to.
 		const toMedia = { label: __( 'Media' ), onClick: () => go( 'library', { kind: 'media' } ) };
 		const extRoute = extRoutes.find( ( r ) => r.name === name );
+		// Analytics is its own menu page, so its crumb trail starts there, not at Media.
+		if ( extRoute && 'analytics' === name ) {
+			return route.id
+				? [ { label: extRoute.label, onClick: () => go( 'analytics' ) }, { label: __( 'Details' ) } ]
+				: [ { label: extRoute.label } ];
+		}
 		if ( extRoute ) {
 			return [ toMedia, { label: extRoute.label } ];
 		}
@@ -208,7 +214,12 @@ export default function App() {
 							{ /* Extension screens are reached from a media row, so Back lands
 							     on the same filter the Media crumb does. */ }
 							{ extRoutes.filter( ( r ) => r.name === route.name ).map( ( r ) => (
-								<r.Component key={ r.name } id={ route.id } onBack={ () => go( 'library', { kind: 'media' } ) } />
+								<r.Component
+									key={ r.name }
+									id={ route.id }
+									onBack={ () => go( 'analytics' === r.name ? 'analytics' : 'library', 'analytics' === r.name ? {} : { kind: 'media' } ) }
+									onOpen={ ( id ) => go( r.name, { id } ) }
+								/>
 							) ) }
 							{ route.name === 'presets' && <Presets onEditState={ setEditState } /> }
 							{ /* The settings section rides in the URL, so a reload keeps it —

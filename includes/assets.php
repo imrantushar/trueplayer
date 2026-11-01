@@ -157,6 +157,7 @@ class Assets {
 		$pages = [
 			'toplevel_page_' . $slug,
 			$slug . '_page_' . $slug . '-videos',
+			$slug . '_page_' . $slug . '-analytics',
 			$slug . '_page_' . $slug . '-presets',
 			$slug . '_page_' . $slug . '-settings',
 		];
