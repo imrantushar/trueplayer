@@ -2,6 +2,7 @@ import { useEffect, useState } from '@wordpress/element';
 import { api } from '../api';
 import { Card, Button, Thumb, Badge, sourceMeta } from '../components/UI';
 import { Icon } from '../components/icons';
+import { PURCHASE } from '../components/ProTeaser';
 import { libraryKinds, extended } from '@Ext/admin';
 import { isAudioSource } from '@Utils/audio';
 import { __ } from '@Utils/translation';
@@ -15,8 +16,6 @@ const PRO_FEATURES = [
 	__( 'Bunny.net, Gumlet, Mux and HLS sources' ),
 	__( 'Premium skins, audio bars and interactive (H5P) content' ),
 ];
-
-const PURCHASE = ( typeof window !== 'undefined' && window.TruePlayerGlobal && window.TruePlayerGlobal.purchase_url ) || 'https://true-player.net/';
 
 function Stat( { icon, label, value, tone = 'brand' } ) {
 	const tones = {

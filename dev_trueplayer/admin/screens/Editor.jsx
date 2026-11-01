@@ -18,7 +18,7 @@ import { __ } from '@Utils/translation';
 const INTERACTIONS_SUBS = [
 	[ 'overlays', __( 'Call to action' ) ],
 	[ 'layers', __( 'Layers' ) ],
-	...( editorSubs.interactions || [] ).map( ( x ) => [ x.key, x.label ] ),
+	...( editorSubs.interactions || [] ).map( ( x ) => [ x.key, x.label, x.pro ] ),
 ];
 
 const TABS = [
@@ -26,7 +26,7 @@ const TABS = [
 	{ key: 'player', label: __( 'Player' ), icon: 'sliders', subs: PLAYER_SUBS },
 	{ key: 'appearance', label: __( 'Chapters & branding' ), icon: 'bookmark' },
 	{ key: 'interactions', label: __( 'Interactions' ), icon: 'puzzle', subs: INTERACTIONS_SUBS },
-	...editorTabs.map( ( t ) => ( { key: t.key, label: t.label, icon: t.icon, subs: t.subs } ) ),
+	...editorTabs.map( ( t ) => ( { key: t.key, label: t.label, icon: t.icon, subs: t.subs, pro: t.pro } ) ),
 ];
 
 // Interactions = everything shown on/around the video. The sub-nav lives in
@@ -251,6 +251,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 										>
 											<Icon name={ t.icon } className="w-[18px] h-[18px] shrink-0" />
 											<span className="flex-1">{ t.label }</span>
+											{ t.pro && <Badge tone="brand">{ __( 'Pro' ) }</Badge> }
 											{ t.subs && (
 												<svg className={ `w-3.5 h-3.5 shrink-0 transition-transform ${ open ? 'rotate-90' : '' }` } viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M9 6l6 6-6 6" /></svg>
 											) }
@@ -260,7 +261,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 											content column shows only the active one. */ }
 										{ t.subs && open && (
 											<div className="mt-1 mb-1 ml-4 pl-3 border-l-2 border-brand-100 space-y-0.5">
-												{ t.subs.map( ( [ subKey, subLabel ] ) => (
+												{ t.subs.map( ( [ subKey, subLabel, subPro ] ) => (
 													<button
 														key={ subKey }
 														onClick={ () => selectSub( t.key, subKey ) }
@@ -269,6 +270,7 @@ export default function Editor( { id, onEditState, tab: tabProp, sub: subProp, o
 														}` }
 													>
 														<span className="truncate">{ subLabel }</span>
+														{ subPro && <Badge tone="brand">{ __( 'Pro' ) }</Badge> }
 													</button>
 												) ) }
 											</div>

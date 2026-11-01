@@ -592,7 +592,8 @@ export default function Settings({ tab = 'general', onTabChange, onEditState }) 
 											}`}
 									>
 										<Icon name={t.icon} className="w-[17px] h-[17px] shrink-0" />
-										<span className="truncate">{t.label}</span>
+										<span className="truncate flex-1">{t.label}</span>
+										{t.pro && <Badge tone="brand">{ __( 'Pro' ) }</Badge>}
 									</button>
 								))}
 							</div>
