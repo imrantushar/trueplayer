@@ -271,7 +271,7 @@ export default function Library( { kind = 'all', onEdit, onEditState, onNavigate
 					onClick={ () => setCreate( defaultKind ) }
 					items={ menuKinds.map( ( k ) => ( { ...KIND_MENU[ k ], onClick: () => setCreate( k ) } ) ) }
 				>
-					<Icon name="plus" className="w-4 h-4" /> Add { KIND_MENU[ defaultKind ].label.toLowerCase() }
+					<Icon name="plus" className="w-4 h-4" /> { __sprintf( 'Add %s', KIND_MENU[ defaultKind ].label ) }
 				</SplitButton>
 			</div>
 
