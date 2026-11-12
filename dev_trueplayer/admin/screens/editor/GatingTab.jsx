@@ -359,6 +359,91 @@ function CheckpointRow( {
 	);
 }
 
+const DRIP_MODES = [
+	{ value: 'none', label: __( 'No drip — always available' ) },
+	{ value: 'by_date', label: __( 'On a fixed date' ) },
+	{ value: 'after_enroll', label: __( 'Days after enrollment' ) },
+	{ value: 'sequential', label: __( 'After the previous item is complete' ) },
+	{ value: 'after_previous', label: __( 'Days after the previous item is complete' ) },
+	{ value: 'by_section', label: __( 'By course section' ) },
+];
+
+/**
+ * When this video should become available. `by_date` writes the pre-existing
+ * `gating.availableFrom`; the other four modes write `gating.drip` (requires
+ * this video to belong to a playlist, since "the previous item"/"enrollment"
+ * are relative to one). The backend (ProgressService::available_from() +
+ * the Pro drip addon's filter) actually lets both stack — whichever resolves
+ * later wins — but offering that as two independently-combinable controls
+ * here would be a confusing editor for a case nobody's asked for; switching
+ * mode clears whichever of the two this editor isn't using.
+ */
+function DripCard( { config, patch } ) {
+	const gating = config.gating || {};
+	const drip = gating.drip || {};
+	const mode = drip.mode || ( gating.availableFrom ? 'by_date' : 'none' );
+	const [ playlists, setPlaylists ] = useState( null );
+	useEffect( () => { api.listPlaylists().then( setPlaylists ).catch( () => setPlaylists( [] ) ); }, [] );
+
+	const setMode = ( next ) => patch( {
+		gating: {
+			...gating,
+			availableFrom: 'by_date' === next ? ( gating.availableFrom || '' ) : '',
+			drip: { ...drip, mode: next },
+		},
+	} );
+	const setDrip = ( partial ) => patch( { gating: { ...gating, drip: { ...drip, ...partial } } } );
+	const setAvailableFrom = ( value ) => patch( { gating: { ...gating, availableFrom: value } } );
+
+	const needsPlaylist = [ 'after_enroll', 'sequential', 'after_previous', 'by_section' ].includes( mode );
+	const needsDays = [ 'after_enroll', 'after_previous' ].includes( mode );
+
+	return (
+		<Card className="p-6 max-w-2xl">
+			<h3 className="font-semibold text-gray-900 mb-1">{ __( 'Drip content' ) }</h3>
+			<p className="text-sm text-gray-500 mb-4">{ __( 'Hold this video back until a date, or until the viewer has earned it.' ) }</p>
+			<Field label={ __( 'Release' ) }>
+				<Select value={ mode } onChange={ ( e ) => setMode( e.target.value ) }>
+					{ DRIP_MODES.map( ( m ) => <option key={ m.value } value={ m.value }>{ m.label }</option> ) }
+				</Select>
+			</Field>
+
+			{ 'by_date' === mode && (
+				<Field className="mt-3" label={ __( 'Available from' ) }>
+					<Input type="datetime-local" value={ ( gating.availableFrom || '' ).slice( 0, 16 ) } onChange={ ( e ) => setAvailableFrom( e.target.value ) } />
+				</Field>
+			) }
+
+			{ needsPlaylist && (
+				<div className="mt-3 grid grid-cols-2 gap-4">
+					<Field
+						label={ __( 'Playlist' ) }
+						hint={ null === playlists ? __( 'Loading…' ) : ( playlists.length ? __( 'This item’s position in the playlist decides what “previous” means.' ) : __( 'Create a playlist and add this video to it first.' ) ) }
+					>
+						<Select value={ drip.playlistId || '' } onChange={ ( e ) => setDrip( { playlistId: parseInt( e.target.value, 10 ) || 0 } ) }>
+							<option value="">{ __( '— select —' ) }</option>
+							{ ( playlists || [] ).map( ( p ) => <option key={ p.id } value={ p.id }>{ p.title }</option> ) }
+						</Select>
+					</Field>
+					{ needsDays && (
+						<Field label={ 'after_enroll' === mode ? __( 'Days after enrollment' ) : __( 'Days after the previous item' ) }>
+							<Input type="number" min="0" value={ drip.days || 0 } onChange={ ( e ) => setDrip( { days: parseInt( e.target.value, 10 ) || 0 } ) } />
+						</Field>
+					) }
+				</div>
+			) }
+
+			{ 'by_section' === mode && (
+				<p className="text-xs text-muted mt-3">{ __( 'Section grouping and the release interval are set on the playlist itself — not yet exposed in this editor. Until then this behaves like one section, so every item in this playlist unlocks together at enrollment.' ) }</p>
+			) }
+
+			{ needsPlaylist && ! drip.playlistId && (
+				<p className="text-xs text-warning mt-3">{ __( 'Pick a playlist above — without one this mode has nothing to sequence against, and the video stays always-available.' ) }</p>
+			) }
+		</Card>
+	);
+}
+
 /**
  * The site-wide watch-verification policy (Settings → Enforcement), which this
  * tab inherits from. Localized by PHP so both sides agree on one set of
@@ -562,6 +647,8 @@ export default function GatingTab( { config, patch } ) {
 					</div>
 				) }
 			</Card>
+
+			<DripCard config={ config } patch={ patch } />
 
 			{ SHOW_LMS_LINK && <LmsLink config={ config } patch={ patch } /> }
 		</div>
