@@ -92,6 +92,18 @@ export const api = {
 	// Webhook delivery logs (pro)
 	getWebhookLogs: ( limit = 100 ) => rest.get( `webhook-logs?limit=${ limit }` ),
 
+	// Assignments (pro)
+	listAssignments: () => rest.get( 'assignments' ),
+	getAssignment: ( id ) => rest.get( `assignments/${ id }` ),
+	createAssignment: ( title, config = {} ) => rest.post( 'assignments', { title, config } ),
+	updateAssignment: ( id, data ) => rest.put( `assignments/${ id }`, data ),
+	deleteAssignment: ( id ) => rest.del( `assignments/${ id }` ),
+	getAssignmentSubmissions: ( id ) => rest.get( `assignments/${ id }/submissions` ),
+	gradeSubmission: ( id, score, feedback ) => rest.post( `assignments/submissions/${ id }/grade`, { score, feedback } ),
+	// rest.url, not rest.base + '?': same reasoning as attestationExportUrl —
+	// a plain-permalinks REST root already carries its own query string.
+	submissionFileUrl: ( id ) => rest.url( `assignments/submissions/${ id }/file?_wpnonce=${ nonce() }` ),
+
 	/**
 	 * Switch an addon on or off.
 	 *

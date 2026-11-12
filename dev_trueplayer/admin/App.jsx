@@ -4,6 +4,7 @@ import Editor from './screens/Editor';
 import Settings from './screens/Settings';
 import Analytics from './screens/Analytics';
 import Presets from './screens/Presets';
+import Assignments from './screens/Assignments';
 import Dashboard from './screens/Dashboard';
 import Header from './components/Header';
 import { Button, Modal } from './components/UI';
@@ -160,6 +161,9 @@ export default function App() {
 			case 'presets': return editState
 				? [ { label: __( 'Presets' ), onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
 				: [ { label: __( 'Presets' ) } ];
+			case 'assignments': return editState
+				? [ { label: __( 'Assignments' ), onClick: () => requestNav( editState.onBack ) }, { label: editState.title, editable: true, onChange: editState.onTitleChange } ]
+				: [ { label: __( 'Assignments' ) } ];
 			case 'settings': return [ { label: __( 'Settings' ) } ];
 			default: return [];
 		}
@@ -207,6 +211,7 @@ export default function App() {
 							     is reached from a media row, so All would drop the filter. */ }
 							{ route.name === 'analytics' && <Analytics id={ route.id } onBack={ () => go( 'library', { kind: 'media' } ) } /> }
 							{ route.name === 'presets' && <Presets onEditState={ setEditState } /> }
+							{ route.name === 'assignments' && <Assignments onEditState={ setEditState } /> }
 							{ /* The settings section rides in the URL, so a reload keeps it —
 							     replaceState, not push, so switching sections doesn't bury the
 							     page the user arrived from under a stack of back-button steps. */ }
