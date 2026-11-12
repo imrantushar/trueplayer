@@ -89,6 +89,7 @@ class Playlist {
 		$config = Helper::enforce_pro_limits( $config );
 		$config = Shortcode::strip_answer_keys( $config );
 		return [
+			'type'    => 'video',
 			'videoId' => $video_id,
 			'title'   => get_the_title( $video_id ),
 			'poster'  => $config['source']['poster'] ?? '',
@@ -111,6 +112,20 @@ class Playlist {
 				$items[] = $payload;
 			}
 		}
+
+		/**
+		 * Non-video items attached to this playlist, appended after every
+		 * video rather than interleaved with it: an item's own `position`
+		 * (e.g. trueplayer-pro's assignments addon) only orders it against
+		 * other items of its kind today, not against a video's place in
+		 * `videos` — those are different scales, so merging them by position
+		 * would not mean what it looks like it means. Each entry needs at
+		 * least `type` (not `'video'`) and `title`; everything else is
+		 * specific to that type and read by the frontend component that
+		 * renders it (see TruePlayer's AssignmentPanel for `type: 'assignment'`).
+		 */
+		$items = array_merge( $items, (array) apply_filters( 'trueplayer/playlist/extra_items', [], $playlist_id ) );
+
 		if ( empty( $items ) ) {
 			return '';
 		}
