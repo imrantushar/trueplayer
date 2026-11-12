@@ -371,6 +371,13 @@ class ProgressService {
 		return (int) $wpdb->insert_id;
 	}
 
+	/**
+	 * This shape (and the checkpoint/question/drip shapes nested in it) is
+	 * frozen in trueplayer-cloud's docs/api/wordpress-schema.md as the
+	 * contract a future cloud-native course engine would need to read and
+	 * write unchanged. Renaming or retyping a field here is a breaking
+	 * change for that document, not just for this file's own callers.
+	 */
 	public static function gating_config( $video_id ) {
 		$config = Helper::get_video_config( $video_id );
 		$gating = isset( $config['gating'] ) && is_array( $config['gating'] ) ? $config['gating'] : [];
