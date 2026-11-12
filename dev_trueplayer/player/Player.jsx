@@ -291,7 +291,10 @@ export default function Player( { videoId, config, title = '', preview = false, 
 					autoplay: autoplayOn,
 					autoplaySound: apMode === 'sound',
 				};
-				provider = await createProvider( containerRef.current, source, { behavior: providerBehavior, appearance, autoStart } );
+				// videoId: only the cloud provider reads it (to mint its playback
+				// token through TruePlayer's own gate); every other provider
+				// ignores the extra field.
+				provider = await createProvider( containerRef.current, source, { behavior: providerBehavior, appearance, autoStart, videoId } );
 			} catch ( e ) {
 				// Surface the real cause — a blocked/neutered YouTube IFrame API,
 				// a failed lazy provider chunk and a bad source URL all look

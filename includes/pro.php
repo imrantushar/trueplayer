@@ -46,7 +46,7 @@ class Pro {
 	 * Mirrored in the browser by SOURCE_TYPES in
 	 * dev_trueplayer/utils/source-types.js — keep the two in step.
 	 */
-	const PREMIUM_SOURCES = [ 'bunny', 'bunnyStorage', 'mux', 'hls', 'gumlet', 'gumletStorage' ];
+	const PREMIUM_SOURCES = [ 'bunny', 'bunnyStorage', 'mux', 'hls', 'gumlet', 'gumletStorage', 'cloud' ];
 
 	/**
 	 * Skins available only with pro.

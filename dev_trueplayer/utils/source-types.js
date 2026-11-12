@@ -91,6 +91,13 @@ export const SOURCE_TYPES = [
 		pro: true, embed: false, file: true, privatable: true, audio: true, quickCreate: false,
 	},
 	{
+		value: 'cloud',
+		label: __( 'TruePlayer Cloud' ),
+		hint: __( 'A video already uploaded to your TruePlayer Cloud account.' ),
+		badge: __( 'TruePlayer Cloud' ), tone: 'brand',
+		pro: true, embed: false, file: false, privatable: true, audio: false, quickCreate: false,
+	},
+	{
 		value: 'mux',
 		label: __( 'Mux' ),
 		hint: __( 'A Mux playback ID.' ),

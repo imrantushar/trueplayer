@@ -63,6 +63,10 @@ export async function createProvider( container, source, opts = {} ) {
 			const { createVimeoProvider } = await import( /* webpackChunkName: "vimeo" */ './vimeo' );
 			return createVimeoProvider( container, source, opts );
 		}
+		case 'cloud': {
+			const { createCloudProvider } = await import( /* webpackChunkName: "cloud" */ './cloud' );
+			return createCloudProvider( container, source, opts );
+		}
 		case 'self':
 		case 'url':
 		case 'hls':
