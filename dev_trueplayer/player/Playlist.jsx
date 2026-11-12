@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import Player from './Player';
+import AssignmentPanel from './components/AssignmentPanel';
 import { resolveCustomize } from './customize';
 import { normalizeConfig } from '@Utils/audio';
 import { __, __sprintf } from '@Utils/translation';
@@ -68,11 +69,13 @@ export default function Playlist( { data } ) {
 	// the Player below read from these, so doing it here is what keeps them
 	// agreeing about whether an item is audio.
 	const items = useMemo(
-		() => ( data.items || [] ).map( ( item ) => ( { ...item, config: normalizeConfig( item.config || {} ) } ) ),
+		() => ( data.items || [] ).map( ( item ) => (
+			'video' === ( item.type || 'video' ) ? { ...item, config: normalizeConfig( item.config || {} ) } : item
+		) ),
 		[ data.items ]
 	);
 	const first = items[ 0 ];
-	const initial = first ? resolveLoadStrategy( first.config ) : { strategy: 'eager', autoplay: false };
+	const initial = ( first && 'video' === ( first.type || 'video' ) ) ? resolveLoadStrategy( first.config ) : { strategy: 'eager', autoplay: false };
 
 	const [ active, setActive ] = useState( 0 );
 	const [ autoStart, setAutoStart ] = useState( initial.autoplay );
@@ -153,7 +156,9 @@ export default function Playlist( { data } ) {
 			<div className="tp-pl-body">
 				<div className="tp-pl-main">
 					<div className="trueplayer-mount">
-						{ booted ? (
+						{ 'assignment' === item.type ? (
+							<AssignmentPanel assignmentId={ item.assignmentId } title={ item.title } />
+						) : booted ? (
 							<Player
 								key={ item.videoId }
 								videoId={ item.videoId }
@@ -172,20 +177,32 @@ export default function Playlist( { data } ) {
 					</div>
 				</div>
 				<div className="tp-pl-list">
-					{ items.map( ( it, i ) => (
-						<button key={ it.videoId } className={ `tp-pl-item ${ i === active ? 'is-active' : '' }` } onClick={ () => pick( i ) }>
-							{ isGrid ? (
-								<span className="tp-pl-thumb" style={ it.poster ? { backgroundImage: `url("${ it.poster }")` } : undefined }>
-									{ ! it.poster && ( i + 1 ) }
-								</span>
-							) : (
-								<span className="tp-pl-icon" aria-hidden="true">
-									<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-								</span>
-							) }
-							{ data.showTitles && <span className="tp-pl-item-title">{ it.title || __sprintf( 'Video %d', i + 1 ) }</span> }
-						</button>
-					) ) }
+					{ items.map( ( it, i ) => {
+						const isAssignment = 'assignment' === it.type;
+						const itemKey = isAssignment ? `a${ it.assignmentId }` : it.videoId;
+						return (
+							<button key={ itemKey } className={ `tp-pl-item ${ i === active ? 'is-active' : '' }` } onClick={ () => pick( i ) }>
+								{ isAssignment ? (
+									<span className="tp-pl-icon tp-pl-icon--assignment" aria-hidden="true">
+										<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5V5.5z" /><path d="M4 20.5A2.5 2.5 0 016.5 18H20" /></svg>
+									</span>
+								) : isGrid ? (
+									<span className="tp-pl-thumb" style={ it.poster ? { backgroundImage: `url("${ it.poster }")` } : undefined }>
+										{ ! it.poster && ( i + 1 ) }
+									</span>
+								) : (
+									<span className="tp-pl-icon" aria-hidden="true">
+										<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+									</span>
+								) }
+								{ data.showTitles && (
+									<span className="tp-pl-item-title">
+										{ it.title || ( isAssignment ? __( 'Assignment' ) : __sprintf( 'Video %d', i + 1 ) ) }
+									</span>
+								) }
+							</button>
+						);
+					} ) }
 				</div>
 			</div>
 		</div>

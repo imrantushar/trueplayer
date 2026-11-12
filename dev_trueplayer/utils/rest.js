@@ -93,12 +93,51 @@ async function upload( path, blob ) {
 	return json;
 }
 
+/**
+ * POST a `FormData` body (a file plus any ordinary fields appended onto the
+ * same form) — for an actual file upload a REST callback reads back with
+ * `WP_REST_Request::get_file_params()` (populated from `$_FILES`, which PHP
+ * only fills in for a real multipart/form-data request body). `upload()`
+ * above sends raw bytes with no multipart envelope at all, so it answers a
+ * different need (a blob built in the browser, like a captured poster
+ * frame) and can't stand in for this one.
+ *
+ * No `Content-Type` header here on purpose — the browser sets
+ * `multipart/form-data; boundary=…` itself from the FormData body, and a
+ * boundary this code made up would not match what it actually sent.
+ *
+ * @param {string}   path Endpoint path, relative to the plugin namespace.
+ * @param {FormData} form The fields (and file) to send.
+ * @return {Promise<Object>} The decoded JSON response.
+ */
+async function postForm( path, form ) {
+	const g = G();
+	const res = await fetch( url( path ), {
+		method: 'POST',
+		headers: { 'X-WP-Nonce': g.nonce || '' },
+		credentials: 'same-origin',
+		body: form,
+	} );
+	let detail = {};
+	try {
+		detail = await res.json();
+	} catch ( e ) {}
+	if ( ! res.ok ) {
+		const err = new Error( detail.message || __sprintf( 'Request failed (%d)', res.status ) );
+		err.status = res.status;
+		err.detail = detail;
+		throw err;
+	}
+	return detail;
+}
+
 export const rest = {
 	get: ( path ) => request( path ),
 	post: ( path, body ) => request( path, { method: 'POST', body } ),
 	put: ( path, body ) => request( path, { method: 'PUT', body } ),
 	del: ( path ) => request( path, { method: 'DELETE' } ),
 	upload,
+	postForm,
 	base,
 	url,
 };
