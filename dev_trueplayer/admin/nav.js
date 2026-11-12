@@ -11,6 +11,7 @@ export const PAGE_OF = {
 	editor: SLUG + '-videos',
 	analytics: SLUG + '-videos',
 	presets: SLUG + '-presets',
+	assignments: SLUG + '-assignments',
 	settings: SLUG + '-settings',
 };
 
@@ -65,6 +66,9 @@ export function parseRoute() {
 	}
 	if ( page === SLUG + '-presets' ) {
 		return { name: 'presets' };
+	}
+	if ( page === SLUG + '-assignments' ) {
+		return { name: 'assignments' };
 	}
 	if ( page === SLUG + '-settings' ) {
 		// The section is part of the address, so a reload (or a shared link)
