@@ -1,5 +1,5 @@
 import { rest } from '@Utils/rest';
-import { __ } from '@Utils/translation';
+import { __, __sprintf } from '@Utils/translation';
 
 export const api = {
 	listVideos: () => rest.get( 'videos' ),
@@ -92,6 +92,13 @@ export const api = {
 	// Webhook delivery logs (pro)
 	getWebhookLogs: ( limit = 100 ) => rest.get( `webhook-logs?limit=${ limit }` ),
 
+	// TruePlayer Cloud (pro) — a different REST namespace (tpc/v1, not
+	// trueplayer/v1 — the cloud addon kept the standalone connector plugin's
+	// own routes so an existing connection needs no re-setup), hence tpcFetch
+	// rather than the `rest` helper above.
+	cloudStatus: () => tpcFetch( 'status' ),
+	cloudVideos: ( params = {} ) => tpcFetch( 'cloud/videos?' + new URLSearchParams( params ).toString() ),
+
 	/**
 	 * Switch an addon on or off.
 	 *
@@ -128,6 +135,20 @@ export const api = {
 
 function nonce() {
 	return ( window.TruePlayerGlobal || {} ).nonce || '';
+}
+
+/** A GET against the `tpc/v1` namespace (the TruePlayer Cloud addon's own routes), outside `rest`'s `trueplayer/v1` lock-in. */
+async function tpcFetch( path ) {
+	const g = window.TruePlayerGlobal || {};
+	const res = await fetch( `${ g.rest_url || '/wp-json/' }tpc/v1/${ path }`, {
+		credentials: 'same-origin',
+		headers: { 'X-WP-Nonce': nonce() },
+	} );
+	const data = await res.json().catch( () => ( {} ) );
+	if ( ! res.ok ) {
+		throw new Error( data.message || __sprintf( 'Request failed (%d)', res.status ) );
+	}
+	return data;
 }
 
 export const EVENT_TYPES = [

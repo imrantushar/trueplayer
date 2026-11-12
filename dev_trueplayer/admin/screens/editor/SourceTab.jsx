@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { Card, Field, FieldGroup, Input, Select, SectionTitle, Toggle } from '../../components/UI';
 import BunnyStorageField from '../../components/BunnyStorageField';
 import GumletField from '../../components/GumletField';
+import CloudVideoField from '../../components/CloudVideoField';
 import MediaFileCard from '../../components/MediaFileCard';
 import PosterField from '../../components/PosterField';
 import { isPro } from '../../pro';
@@ -203,6 +204,12 @@ export default function SourceTab( { config, patch, videoId, title = '', onTitle
 						<Input value={ source.videoId || '' } onChange={ ( e ) => set( { videoId: e.target.value.trim() } ) } placeholder={ __( 'e.g. 8f3b…-video-guid' ) } />
 					</Field>
 				</>
+			) }
+
+			{ source.type === 'cloud' && (
+				<Field label={ __( 'TruePlayer Cloud video' ) } required hint={ __( 'A video already uploaded to your TruePlayer Cloud account. Gated by TruePlayer’s own access rules — enrollment, purchase, login — the same as any other video.' ) }>
+					<CloudVideoField value={ source } onChange={ ( partial ) => set( partial ) } />
+				</Field>
 			) }
 
 			{ source.type === 'mux' && (
